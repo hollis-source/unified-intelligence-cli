@@ -66,6 +66,6 @@ class TestAgent:
         assert coder_agent.can_handle(analysis_task) is True
 
         # Specialized can handle more
-        coding_task = Task(description="Generate code for API endpoint")
+        coding_task = Task(description="code_gen for API endpoint")
         assert base_agent.can_handle(coding_task) is False
         assert coder_agent.can_handle(coding_task) is True
