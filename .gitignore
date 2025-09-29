@@ -1,0 +1,89 @@
+# Environment variables - CRITICAL SECURITY
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Virtual environments
+bin/
+include/
+lib/
+lib64/
+share/
+pyvenv.cfg
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Testing
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+htmlcov/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Models and data
+/data/ai-models/
+*.gguf
+*.bin
+*.safetensors
+models/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+tmp/
+temp/
