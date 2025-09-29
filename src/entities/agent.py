@@ -1,11 +1,13 @@
 # src/entities/agent.py - Pure, no deps
-from dataclasses import dataclass
-from typing import List
+from dataclasses import dataclass, field
+from typing import List, Optional
 
 @dataclass
 class Task:
     description: str
     priority: int = 1
+    task_id: Optional[str] = None
+    dependencies: List[str] = field(default_factory=list)
 
 @dataclass
 class Agent:
