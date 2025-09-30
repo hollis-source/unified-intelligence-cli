@@ -3,6 +3,8 @@ Dev tools for agent workflows - Simple, focused implementations.
 
 Clean Architecture: Tools are pure functions, no dependencies.
 Can be injected into providers that support tool calling.
+
+Uses ToolRegistry for extensible tool management (OCP compliance).
 """
 
 import subprocess
@@ -18,6 +20,7 @@ from src.exceptions import (
     FileWriteError,
     DirectoryNotFoundError
 )
+from src.tool_registry import default_registry
 
 
 # ============================================================================
@@ -138,97 +141,87 @@ def list_files(directory: str = ".", pattern: str = "*") -> str:
 
 
 # ============================================================================
-# Tool Definitions (OpenAI Format)
+# Tool Registration (Using Registry Pattern)
 # ============================================================================
 
-DEV_TOOLS: List[Dict[str, Any]] = [
-    {
-        "type": "function",
-        "function": {
-            "name": "run_command",
-            "description": "Execute a shell command (git, pytest, npm, etc.)",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "command": {
-                        "type": "string",
-                        "description": "Shell command to execute (e.g., 'pytest tests/', 'git status')"
-                    },
-                    "cwd": {
-                        "type": "string",
-                        "description": "Working directory (default: current directory)"
-                    }
-                },
-                "required": ["command"]
-            }
+# Register all tools using the extensible registry
+# This follows Open-Closed Principle: extend by adding new registrations,
+# no need to modify existing code
+
+default_registry.register_function(
+    function=run_command,
+    name="run_command",
+    description="Execute a shell command (git, pytest, npm, etc.)",
+    parameters={
+        "command": {
+            "type": "string",
+            "description": "Shell command to execute (e.g., 'pytest tests/', 'git status')"
+        },
+        "cwd": {
+            "type": "string",
+            "description": "Working directory (default: current directory)"
         }
     },
-    {
-        "type": "function",
-        "function": {
-            "name": "read_file_content",
-            "description": "Read the contents of a file",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "file_path": {
-                        "type": "string",
-                        "description": "Path to the file to read"
-                    }
-                },
-                "required": ["file_path"]
-            }
+    required=["command"]
+)
+
+default_registry.register_function(
+    function=read_file_content,
+    name="read_file_content",
+    description="Read the contents of a file",
+    parameters={
+        "file_path": {
+            "type": "string",
+            "description": "Path to the file to read"
         }
     },
-    {
-        "type": "function",
-        "function": {
-            "name": "write_file_content",
-            "description": "Write content to a file (creates if doesn't exist)",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "file_path": {
-                        "type": "string",
-                        "description": "Path to the file to write"
-                    },
-                    "content": {
-                        "type": "string",
-                        "description": "Content to write to the file"
-                    }
-                },
-                "required": ["file_path", "content"]
-            }
+    required=["file_path"]
+)
+
+default_registry.register_function(
+    function=write_file_content,
+    name="write_file_content",
+    description="Write content to a file (creates if doesn't exist)",
+    parameters={
+        "file_path": {
+            "type": "string",
+            "description": "Path to the file to write"
+        },
+        "content": {
+            "type": "string",
+            "description": "Content to write to the file"
         }
     },
-    {
-        "type": "function",
-        "function": {
-            "name": "list_files",
-            "description": "List files in a directory",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "directory": {
-                        "type": "string",
-                        "description": "Directory to list (default: current)"
-                    },
-                    "pattern": {
-                        "type": "string",
-                        "description": "Glob pattern (default: *)"
-                    }
-                },
-                "required": []
-            }
+    required=["file_path", "content"]
+)
+
+default_registry.register_function(
+    function=list_files,
+    name="list_files",
+    description="List files in a directory",
+    parameters={
+        "directory": {
+            "type": "string",
+            "description": "Directory to list (default: current)"
+        },
+        "pattern": {
+            "type": "string",
+            "description": "Glob pattern (default: *)"
         }
-    }
-]
+    },
+    required=[]
+)
 
 
-# Tool function registry for execution
-TOOL_FUNCTIONS = {
-    "run_command": run_command,
-    "read_file_content": read_file_content,
-    "write_file_content": write_file_content,
-    "list_files": list_files
+# ============================================================================
+# Backward Compatibility Exports
+# ============================================================================
+
+# Export OpenAI-format tools from registry (maintains existing API)
+DEV_TOOLS: List[Dict[str, Any]] = default_registry.get_openai_tools()
+
+# Export function registry (maintains existing API)
+TOOL_FUNCTIONS: Dict[str, Any] = {
+    name: default_registry.get_tool(name)
+    for name in default_registry.list_tools()
 }
