@@ -1,4 +1,5 @@
 # src/entities/agent.py - Pure, no deps
+import difflib
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -15,4 +16,5 @@ class Agent:
     capabilities: List[str]  # e.g., ["code_gen", "test"]
 
     def can_handle(self, task: Task) -> bool:
-        return any(cap in task.description.lower() for cap in self.capabilities)
+        desc_words = task.description.lower().split()
+        return any(any(difflib.SequenceMatcher(None, cap.lower(), word).ratio() > 0.8 for word in desc_words) for cap in self.capabilities)

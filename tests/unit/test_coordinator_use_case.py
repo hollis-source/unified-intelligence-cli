@@ -1,21 +1,26 @@
-"""Unit tests for CoordinateAgentsUseCase - TDD approach."""
+"""Unit tests for TaskCoordinatorUseCase - TDD approach."""
 
 import pytest
 import asyncio
 from unittest.mock import Mock, AsyncMock, MagicMock
 from src.entities import Agent, Task, ExecutionResult, ExecutionStatus, ExecutionContext
-from src.interfaces import ITextGenerator, IAgentExecutor, IAgentSelector, LLMConfig
+from src.interfaces import ITaskPlanner, IAgentExecutor, ExecutionPlan
 
 
 class TestCoordinateAgentsUseCase:
     """Test the agent coordination use case."""
 
     @pytest.fixture
-    def mock_llm_provider(self):
-        """Create a mock LLM provider."""
-        provider = Mock(spec=ITextGenerator)
-        provider.generate = Mock(return_value="Task completed successfully")
-        return provider
+    def mock_task_planner(self):
+        """Create a mock task planner."""
+        planner = AsyncMock(spec=ITaskPlanner)
+        # Default plan - will be overridden in tests
+        planner.create_plan.return_value = ExecutionPlan(
+            task_order=["0"],
+            task_assignments={"0": "coder"},
+            parallel_groups=[["0"]]
+        )
+        return planner
 
     @pytest.fixture
     def mock_agent_executor(self):
@@ -28,13 +33,6 @@ class TestCoordinateAgentsUseCase:
             metadata={"duration": 1.5}
         )
         return executor
-
-    @pytest.fixture
-    def mock_agent_selector(self):
-        """Create a mock agent selector."""
-        selector = Mock(spec=IAgentSelector)
-        selector.select_agent = Mock()
-        return selector
 
     @pytest.fixture
     def sample_agents(self):
@@ -57,26 +55,29 @@ class TestCoordinateAgentsUseCase:
     @pytest.mark.asyncio
     async def test_coordinate_single_task(
         self,
-        mock_llm_provider,
+        mock_task_planner,
         mock_agent_executor,
-        mock_agent_selector,
         sample_agents,
         sample_tasks
     ):
         """Test coordinating a single task."""
-        # Import here to avoid import errors before implementation
-        from src.use_cases.coordinator import CoordinateAgentsUseCase
+        from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 
         # Setup
         task = sample_tasks[0]
         agent = sample_agents[0]
-        mock_agent_selector.select_agent.return_value = agent
+
+        # Configure planner to return execution plan
+        mock_task_planner.create_plan.return_value = ExecutionPlan(
+            task_order=["0"],
+            task_assignments={"0": "coder"},
+            parallel_groups=[["0"]]
+        )
 
         # Create use case
-        use_case = CoordinateAgentsUseCase(
-            llm_provider=mock_llm_provider,
-            agent_executor=mock_agent_executor,
-            agent_selector=mock_agent_selector
+        use_case = TaskCoordinatorUseCase(
+            task_planner=mock_task_planner,
+            agent_executor=mock_agent_executor
         )
 
         # Execute
@@ -88,32 +89,30 @@ class TestCoordinateAgentsUseCase:
         # Verify
         assert len(results) == 1
         assert results[0].status == ExecutionStatus.SUCCESS
-        mock_agent_selector.select_agent.assert_called_once_with(task, sample_agents)
+        mock_task_planner.create_plan.assert_called_once()
         mock_agent_executor.execute.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_coordinate_multiple_tasks(
         self,
-        mock_llm_provider,
+        mock_task_planner,
         mock_agent_executor,
-        mock_agent_selector,
         sample_agents,
         sample_tasks
     ):
         """Test coordinating multiple tasks with different agents."""
-        from src.use_cases.coordinator import CoordinateAgentsUseCase
+        from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 
-        # Setup - each task gets appropriate agent
-        mock_agent_selector.select_agent.side_effect = [
-            sample_agents[0],  # coder for task 1
-            sample_agents[1],  # tester for task 2
-            sample_agents[2]   # reviewer for task 3
-        ]
+        # Configure planner for multiple tasks
+        mock_task_planner.create_plan.return_value = ExecutionPlan(
+            task_order=["0", "1", "2"],
+            task_assignments={"0": "coder", "1": "tester", "2": "reviewer"},
+            parallel_groups=[["0"], ["1"], ["2"]]
+        )
 
-        use_case = CoordinateAgentsUseCase(
-            llm_provider=mock_llm_provider,
-            agent_executor=mock_agent_executor,
-            agent_selector=mock_agent_selector
+        use_case = TaskCoordinatorUseCase(
+            task_planner=mock_task_planner,
+            agent_executor=mock_agent_executor
         )
 
         # Execute
@@ -125,28 +124,30 @@ class TestCoordinateAgentsUseCase:
         # Verify
         assert len(results) == 3
         assert all(r.status == ExecutionStatus.SUCCESS for r in results)
-        assert mock_agent_selector.select_agent.call_count == 3
+        mock_task_planner.create_plan.assert_called_once()
         assert mock_agent_executor.execute.call_count == 3
 
     @pytest.mark.asyncio
     async def test_coordinate_with_no_suitable_agent(
         self,
-        mock_llm_provider,
+        mock_task_planner,
         mock_agent_executor,
-        mock_agent_selector,
         sample_agents
     ):
         """Test handling when no suitable agent is found."""
-        from src.use_cases.coordinator import CoordinateAgentsUseCase
+        from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 
-        # Setup
+        # Setup - configure planner to return empty assignment (no agent found)
         task = Task(description="Deploy to production", priority=1)
-        mock_agent_selector.select_agent.return_value = None
+        mock_task_planner.create_plan.return_value = ExecutionPlan(
+            task_order=["0"],
+            task_assignments={},  # Empty - no agent assigned
+            parallel_groups=[["0"]]
+        )
 
-        use_case = CoordinateAgentsUseCase(
-            llm_provider=mock_llm_provider,
-            agent_executor=mock_agent_executor,
-            agent_selector=mock_agent_selector
+        use_case = TaskCoordinatorUseCase(
+            task_planner=mock_task_planner,
+            agent_executor=mock_agent_executor
         )
 
         # Execute
@@ -163,26 +164,29 @@ class TestCoordinateAgentsUseCase:
     @pytest.mark.asyncio
     async def test_coordinate_with_context(
         self,
-        mock_llm_provider,
+        mock_task_planner,
         mock_agent_executor,
-        mock_agent_selector,
         sample_agents,
         sample_tasks
     ):
         """Test coordination with execution context."""
-        from src.use_cases.coordinator import CoordinateAgentsUseCase
+        from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 
         # Setup
         context = ExecutionContext(
             session_id="test-session",
             history=[{"role": "user", "content": "Start coding"}]
         )
-        mock_agent_selector.select_agent.return_value = sample_agents[0]
 
-        use_case = CoordinateAgentsUseCase(
-            llm_provider=mock_llm_provider,
-            agent_executor=mock_agent_executor,
-            agent_selector=mock_agent_selector
+        mock_task_planner.create_plan.return_value = ExecutionPlan(
+            task_order=["0"],
+            task_assignments={"0": "coder"},
+            parallel_groups=[["0"]]
+        )
+
+        use_case = TaskCoordinatorUseCase(
+            task_planner=mock_task_planner,
+            agent_executor=mock_agent_executor
         )
 
         # Execute

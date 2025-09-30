@@ -16,9 +16,13 @@ class ProviderFactory(IProviderFactory):
 
     def __init__(self):
         """Initialize provider factory with registry."""
-        self._providers: Dict[str, Any] = {
-            "mock": MockLLMProvider,
+        self._creators = {
+            "mock": lambda config: MockLLMProvider(
+                default_response=config.get("response", "Mock response") if config else "Mock response"
+            ),
+            "grok": lambda config: self._create_grok_provider(config),
         }
+        self._providers: Dict[str, Any] = {}
 
     def register_provider(self, name: str, provider_class: Any) -> None:
         """
@@ -27,6 +31,13 @@ class ProviderFactory(IProviderFactory):
         OCP: Extend without modifying existing code.
         """
         self._providers[name] = provider_class
+
+    def _create_grok_provider(self, config: Optional[Dict[str, Any]]) -> ITextGenerator:
+        """Create Grok provider with validation."""
+        if not os.getenv("XAI_API_KEY"):
+            raise ValueError("XAI_API_KEY not set for Grok provider")
+        from src.adapters.llm.grok_adapter import GrokAdapter
+        return GrokAdapter()
 
     def create_provider(
         self,
@@ -46,23 +57,10 @@ class ProviderFactory(IProviderFactory):
         Raises:
             ValueError: If provider type not found
         """
-        if provider_type == "grok":
-            # Lazy import to avoid dependency if not used
-            if not os.getenv("XAI_API_KEY"):
-                raise ValueError("XAI_API_KEY not set for Grok provider")
-
-            from src.adapters.llm.grok_adapter import GrokAdapter
-            return GrokAdapter()
-
-        elif provider_type == "mock":
-            return MockLLMProvider(
-                default_response=config.get("response", "Mock response") if config else "Mock response"
-            )
-
+        if provider_type in self._creators:
+            return self._creators[provider_type](config)
         elif provider_type in self._providers:
-            # Use registered provider
             provider_class = self._providers[provider_type]
             return provider_class(**(config or {}))
-
         else:
             raise ValueError(f"Unknown provider type: {provider_type}")

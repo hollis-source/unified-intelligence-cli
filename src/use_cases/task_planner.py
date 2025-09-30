@@ -1,5 +1,6 @@
 """Task planner use case - SRP: Focused on planning execution strategy."""
 
+import json
 import logging
 from typing import List, Optional, Set
 from src.entities import Agent, Task, ExecutionContext
@@ -120,11 +121,20 @@ Return a structured plan with task order and assignments."""
         Clean Code: Single parsing responsibility.
         """
         task_ids = [t.task_id or str(i) for i, t in enumerate(tasks)]
-        assignments = self._assign_tasks_to_agents(tasks, agents)
-        parallel_groups = self._compute_parallel_groups(tasks)
+
+        try:
+            data = json.loads(llm_response)
+            task_order = data.get('task_order', task_ids)
+            assignments = data.get('task_assignments', self._assign_tasks_to_agents(tasks, agents))
+            parallel_groups = data.get('parallel_groups', self._compute_parallel_groups(tasks))
+        except json.JSONDecodeError:
+            # Fallback if JSON parsing fails
+            task_order = task_ids
+            assignments = self._assign_tasks_to_agents(tasks, agents)
+            parallel_groups = self._compute_parallel_groups(tasks)
 
         return ExecutionPlan(
-            task_order=task_ids,
+            task_order=task_order,
             task_assignments=assignments,
             parallel_groups=parallel_groups
         )
