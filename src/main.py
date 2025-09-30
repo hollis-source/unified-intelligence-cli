@@ -6,11 +6,21 @@ Clean Architecture: Composition root with minimal responsibilities.
 import click
 import asyncio
 import logging
+from pathlib import Path
 from typing import List
+from dotenv import load_dotenv
 
 from src.entities import Task
 from src.composition import compose_dependencies
 from src.factories import AgentFactory, ProviderFactory
+from src.adapters.cli import ResultFormatter
+
+# Load environment variables from .env file
+# Security: API keys and secrets should be in .env, not hardcoded
+env_file = Path(__file__).parent.parent / ".env"
+if env_file.exists():
+    load_dotenv(env_file)
+    logging.debug(f"Loaded environment variables from {env_file}")
 
 
 @click.command()
@@ -79,21 +89,25 @@ def main(
             )
         )
 
-        # Display results
-        display_results(results, verbose)
+        # Display results (Clean Architecture: Use CLI adapter)
+        formatter = ResultFormatter(verbose=verbose)
+        formatter.format_results(results)
 
     except asyncio.TimeoutError:
-        click.echo(f"Error: Operation timed out after {timeout} seconds", err=True)
+        formatter = ResultFormatter()
+        formatter.format_error(f"Operation timed out after {timeout} seconds", "Timeout")
         raise click.Abort()
     except ValueError as e:
-        click.echo(f"Configuration error: {e}", err=True)
+        formatter = ResultFormatter()
+        formatter.format_error(str(e), "Configuration Error")
         raise click.Abort()
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
+        formatter = ResultFormatter(verbose=verbose)
         if verbose:
             raise
         else:
-            click.echo(f"Error: {e}", err=True)
+            formatter.format_error(str(e))
             raise click.Abort()
 
 
@@ -118,40 +132,6 @@ async def execute_with_timeout(coro, timeout: int):
     Production: Prevent hanging operations.
     """
     return await asyncio.wait_for(coro, timeout=timeout)
-
-
-def display_results(results: List, verbose: bool) -> None:
-    """
-    Display execution results.
-
-    Clean Code: Separate display logic.
-    """
-    for i, result in enumerate(results):
-        click.echo(f"\n{'=' * 40}")
-        click.echo(f"Result #{i + 1}")
-        click.echo(f"{'=' * 40}")
-
-        # Status with color
-        if result.status.value == "success":
-            click.echo(click.style(f"Status: {result.status.value}", fg="green"))
-        else:
-            click.echo(click.style(f"Status: {result.status.value}", fg="red"))
-
-        # Output (truncated unless verbose)
-        if result.output:
-            max_length = None if verbose else 200
-            output = result.output[:max_length] if max_length else result.output
-            if max_length and len(result.output) > max_length:
-                output += "..."
-            click.echo(f"Output: {output}")
-
-        # Errors
-        if result.errors:
-            click.echo(click.style(f"Errors: {', '.join(result.errors)}", fg="red"))
-
-        # Metadata in verbose mode
-        if verbose and result.metadata:
-            click.echo(f"Metadata: {result.metadata}")
 
 
 if __name__ == "__main__":
