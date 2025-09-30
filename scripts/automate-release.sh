@@ -162,11 +162,42 @@ else
     exit 1
 fi
 
-print_step "Installing/updating Python dependencies..."
-if python3 -m pip install -r requirements-dev.txt --quiet; then
-    print_success "Dependencies installed"
+print_step "Checking pip availability..."
+if python3 -m pip --version &> /dev/null; then
+    print_success "pip is available"
+
+    print_step "Installing/updating Python dependencies..."
+    if python3 -m pip install -r requirements-dev.txt --quiet; then
+        print_success "Dependencies installed"
+    else
+        print_error "Failed to install dependencies"
+        exit 1
+    fi
+elif [ -n "$VIRTUAL_ENV" ]; then
+    # In virtual environment but pip failed
+    print_error "pip not available in virtual environment"
+    exit 1
 else
-    print_error "Failed to install dependencies"
+    # Not in virtual environment and pip not available
+    print_error "pip module not available for system Python"
+    echo ""
+    print_warning "This is common on Debian/Ubuntu systems."
+    echo ""
+    print_info "Solution: Use a virtual environment (recommended)"
+    echo ""
+    echo "  1. Setup automation environment:"
+    echo "     ${BOLD}./scripts/setup-automation-env.sh${NC}"
+    echo ""
+    echo "  2. Then run via wrapper:"
+    echo "     ${BOLD}./scripts/release-wrapper.sh${NC}"
+    echo ""
+    echo "  Or activate manually:"
+    echo "     ${BOLD}source venv-automation/bin/activate${NC}"
+    echo "     ${BOLD}./scripts/automate-release.sh${NC}"
+    echo ""
+    print_info "Alternative: Install system pip (not recommended)"
+    echo "     ${BOLD}sudo apt install python3-pip${NC}"
+    echo ""
     exit 1
 fi
 
