@@ -27,7 +27,7 @@ if env_file.exists():
 @click.command()
 @click.option("--task", "-t", "task_descriptions", multiple=True, required=True,
               help="Task description (can be specified multiple times)")
-@click.option("--provider", type=click.Choice(["mock", "grok"]), default="mock",
+@click.option("--provider", type=click.Choice(["mock", "grok", "tongyi"]), default="mock",
               help="LLM provider to use")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.option("--parallel/--sequential", default=True,
