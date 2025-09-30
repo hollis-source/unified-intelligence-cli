@@ -10,6 +10,7 @@ from src.interfaces import (
     ITaskPlanner,
     ExecutionPlan
 )
+from src.validators import TaskValidator, ValidationError
 
 
 class TaskCoordinatorUseCase(IAgentCoordinator):
@@ -54,6 +55,83 @@ class TaskCoordinatorUseCase(IAgentCoordinator):
 
         self.logger.info(f"Coordination complete: {len(results)} results")
         return results
+
+    async def coordinate_task(
+        self,
+        task: Task,
+        context: Optional[ExecutionContext] = None
+    ) -> ExecutionResult:
+        """
+        Convenience method to coordinate a single task.
+
+        User-friendly API discovered via user simulation testing.
+        Wraps coordinate() for single-task use case.
+
+        Enhanced with validation (Week 1: Error Infrastructure).
+
+        Args:
+            task: Single task to execute
+            context: Optional execution context
+
+        Returns:
+            Single ExecutionResult
+
+        Raises:
+            Same exceptions as coordinate()
+        """
+        # Validate task early (Week 1: Error Infrastructure)
+        is_valid, validation_error = TaskValidator.validate(task)
+        if not is_valid:
+            self.logger.warning(f"Task validation failed: {validation_error.message}")
+            return ExecutionResult(
+                status=ExecutionStatus.FAILURE,
+                output=None,
+                errors=[validation_error.message],
+                error_details={
+                    "error_type": "ValidationError",
+                    "component": "TaskValidator",
+                    "input": {
+                        "description": task.description,
+                        "priority": task.priority,
+                        "task_id": task.task_id
+                    },
+                    "root_cause": f"Field '{validation_error.field}' failed validation",
+                    "user_message": validation_error.message,
+                    "suggestion": validation_error.suggestion,
+                    "context": {
+                        "field": validation_error.field,
+                        "validator": "TaskValidator"
+                    }
+                }
+            )
+
+        # Get default agents from task planner
+        from src.factories.agent_factory import AgentFactory
+        agent_factory = AgentFactory()
+        agents = agent_factory.create_default_agents()
+
+        # Execute as single-item list
+        results = await self.coordinate(
+            tasks=[task],
+            agents=agents,
+            context=context
+        )
+
+        # Return first (and only) result
+        return results[0] if results else ExecutionResult(
+            status=ExecutionStatus.FAILURE,
+            output=None,
+            errors=["Coordination returned empty results"],
+            error_details={
+                "error_type": "ExecutionError",
+                "component": "TaskCoordinator",
+                "input": {"task_id": task.task_id},
+                "root_cause": "coordinate() returned empty result list",
+                "user_message": "Task coordination failed to produce a result",
+                "suggestion": "This is likely a bug. Please report with task details.",
+                "context": {"task_count": 1, "results_count": 0}
+            }
+        )
 
     async def _execute_plan(
         self,
@@ -209,12 +287,29 @@ class TaskCoordinatorUseCase(IAgentCoordinator):
         """Create async failure result."""
         return self._create_failure_result(error_message)
 
-    def _create_failure_result(self, error_message: str) -> ExecutionResult:
-        """Create failure result with error tracking."""
+    def _create_failure_result(
+        self,
+        error_message: str,
+        error_type: str = "ExecutionError",
+        component: str = "TaskCoordinator"
+    ) -> ExecutionResult:
+        """
+        Create failure result with error tracking.
+
+        Enhanced with error_details (Week 1: Error Infrastructure).
+        """
         return ExecutionResult(
             status=ExecutionStatus.FAILURE,
             output=None,
             errors=[error_message],
+            error_details={
+                "error_type": error_type,
+                "component": component,
+                "root_cause": error_message,
+                "user_message": f"Task execution failed: {error_message}",
+                "suggestion": "Check task description and try again. Use --verbose flag for more details.",
+                "context": {}
+            },
             metadata={"error_type": "execution_failure"}
         )
 

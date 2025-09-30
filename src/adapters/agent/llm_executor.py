@@ -1,8 +1,13 @@
-"""LLM-powered agent executor - Adapter layer implementation."""
+"""
+LLM-powered agent executor - Adapter layer implementation.
+
+Week 1: Enhanced with error_details propagation for better debugging.
+"""
 
 from typing import Optional
 from src.entities import Agent, Task, ExecutionResult, ExecutionStatus, ExecutionContext
 from src.interfaces import IAgentExecutor, ITextGenerator, LLMConfig
+from src.exceptions import ToolExecutionError
 
 
 class LLMAgentExecutor(IAgentExecutor):
@@ -77,10 +82,36 @@ class LLMAgentExecutor(IAgentExecutor):
             )
 
         except Exception as e:
+            # Week 1: Propagate tool errors with full context
+            error_details = None
+
+            # Check if it's a ToolExecutionError with structured details
+            if isinstance(e, ToolExecutionError):
+                error_details = e.to_error_details()
+            else:
+                # Generic exception - create basic error_details
+                error_details = {
+                    "error_type": "ExecutionError",
+                    "component": "LLMAgentExecutor",
+                    "input": {
+                        "task_description": task.description,
+                        "agent_role": agent.role
+                    },
+                    "root_cause": str(e),
+                    "user_message": f"Task execution failed: {str(e)}",
+                    "suggestion": "Check the error message and task description. Use --verbose for more details.",
+                    "context": {
+                        "exception_type": type(e).__name__,
+                        "agent_role": agent.role,
+                        "task_id": task.task_id
+                    }
+                }
+
             return ExecutionResult(
                 status=ExecutionStatus.FAILURE,
                 output=None,
                 errors=[str(e)],
+                error_details=error_details,
                 metadata={"agent_role": agent.role}
             )
 

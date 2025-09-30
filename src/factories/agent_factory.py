@@ -17,28 +17,56 @@ class AgentFactory(IAgentFactory):
         """
         Create default agent team.
 
+        Enhanced capabilities based on user simulation testing.
+        Includes natural language keywords users actually use in task descriptions.
+
         Future: Load from config file.
         """
         return [
             Agent(
                 role="coder",
-                capabilities=["code", "coding", "implement", "develop", "program", "refactor", "debug", "build"]
+                capabilities=[
+                    # Core coding terms
+                    "code", "coding", "program", "programming",
+                    # Actions
+                    "write", "create", "build", "develop", "implement", "fix",
+                    # Artifacts
+                    "function", "class", "method", "script", "application", "feature",
+                    # Languages (common ones)
+                    "python", "javascript", "java", "typescript",
+                    # Maintenance
+                    "refactor", "debug", "optimize", "improve"
+                ]
             ),
             Agent(
                 role="tester",
-                capabilities=["test", "testing", "validate", "verify", "qa", "quality"]
+                capabilities=[
+                    "test", "testing", "tests",
+                    "validate", "verify", "check",
+                    "qa", "quality", "unit", "integration"
+                ]
             ),
             Agent(
                 role="reviewer",
-                capabilities=["review", "reviewing", "analyze", "inspect", "evaluate", "approve"]
+                capabilities=[
+                    "review", "reviewing", "reviews",
+                    "analyze", "inspect", "evaluate", "assess",
+                    "approve", "feedback", "critique"
+                ]
             ),
             Agent(
                 role="coordinator",
-                capabilities=["plan", "planning", "organize", "coordinate", "delegate", "manage"]
+                capabilities=[
+                    "plan", "planning", "organize", "coordinate",
+                    "delegate", "manage", "schedule", "prioritize"
+                ]
             ),
             Agent(
                 role="researcher",
-                capabilities=["research", "investigate", "study", "explore", "analyze", "document"]
+                capabilities=[
+                    "research", "investigate", "study", "explore",
+                    "analyze", "document", "find", "search", "learn"
+                ]
             )
         ]
 

@@ -8,6 +8,8 @@ from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 from src.adapters.agent.capability_selector import CapabilityBasedSelector
 from src.adapters.agent.llm_executor import LLMAgentExecutor
 from src.interfaces import ITextGenerator, IAgentCoordinator
+from src.factories.provider_factory import ProviderFactory
+from src.factories.agent_factory import AgentFactory
 
 
 def compose_dependencies(
@@ -49,3 +51,42 @@ def compose_dependencies(
     )
 
     return task_coordinator
+
+
+def create_coordinator(
+    provider_type: str = "mock",
+    verbose: bool = False
+) -> IAgentCoordinator:
+    """
+    Convenience function to create coordinator with defaults.
+
+    Uses factory pattern to create dependencies from provider type string.
+    Useful for testing and simple use cases.
+
+    Args:
+        provider_type: LLM provider type ("mock", "grok", etc.)
+        verbose: Enable verbose logging
+
+    Returns:
+        Configured IAgentCoordinator
+    """
+    # Create factories
+    agent_factory = AgentFactory()
+    provider_factory = ProviderFactory()
+
+    # Create dependencies via factories
+    agents = agent_factory.create_default_agents()
+    llm_provider = provider_factory.create_provider(provider_type)
+
+    # Setup logging if verbose
+    logger = None
+    if verbose:
+        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger(__name__)
+
+    # Compose and return
+    return compose_dependencies(
+        llm_provider=llm_provider,
+        agents=agents,
+        logger=logger
+    )
