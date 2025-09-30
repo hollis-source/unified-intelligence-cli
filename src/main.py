@@ -24,7 +24,8 @@ if env_file.exists():
 
 
 @click.command()
-@click.argument("task_description")
+@click.option("--task", "-t", "task_descriptions", multiple=True, required=True,
+              help="Task description (can be specified multiple times)")
 @click.option("--provider", type=click.Choice(["mock", "grok"]), default="mock",
               help="LLM provider to use")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
@@ -35,7 +36,7 @@ if env_file.exists():
 @click.option("--timeout", type=int, default=60,
               help="Timeout in seconds for async operations")
 def main(
-    task_description: str,
+    task_descriptions: tuple,
     provider: str,
     verbose: bool,
     parallel: bool,
@@ -64,12 +65,16 @@ def main(
         llm_provider = provider_factory.create_provider(provider)
         logger.info(f"Using {provider} LLM provider")
 
-        # Create task
-        task = Task(
-            description=task_description,
-            task_id="main_task",
-            priority=1
-        )
+        # Create tasks from descriptions
+        tasks = [
+            Task(
+                description=desc,
+                task_id=f"task_{i+1}",
+                priority=i+1
+            )
+            for i, desc in enumerate(task_descriptions)
+        ]
+        logger.info(f"Created {len(tasks)} tasks")
 
         # Compose dependencies
         coordinator = compose_dependencies(
@@ -82,7 +87,7 @@ def main(
         results = asyncio.run(
             execute_with_timeout(
                 coordinator.coordinate(
-                    tasks=[task],
+                    tasks=tasks,
                     agents=agents
                 ),
                 timeout

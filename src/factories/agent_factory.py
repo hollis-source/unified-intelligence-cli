@@ -22,23 +22,23 @@ class AgentFactory(IAgentFactory):
         return [
             Agent(
                 role="coder",
-                capabilities=["code_gen", "refactor", "debug", "implement"]
+                capabilities=["code", "coding", "implement", "develop", "program", "refactor", "debug", "build"]
             ),
             Agent(
                 role="tester",
-                capabilities=["test", "validate", "verify", "quality_check"]
+                capabilities=["test", "testing", "validate", "verify", "qa", "quality"]
             ),
             Agent(
                 role="reviewer",
-                capabilities=["review", "analyze", "approve", "suggest"]
+                capabilities=["review", "reviewing", "analyze", "inspect", "evaluate", "approve"]
             ),
             Agent(
                 role="coordinator",
-                capabilities=["plan", "organize", "delegate", "prioritize"]
+                capabilities=["plan", "planning", "organize", "coordinate", "delegate", "manage"]
             ),
             Agent(
                 role="researcher",
-                capabilities=["research", "analyze", "summarize", "investigate"]
+                capabilities=["research", "investigate", "study", "explore", "analyze", "document"]
             )
         ]
 
