@@ -184,7 +184,8 @@ def setup_logging(verbose: bool, debug: bool) -> logging.Logger:
         level = logging.WARNING
         log_format = "%(levelname)s - %(message)s"
 
-    logging.basicConfig(level=level, format=log_format)
+    # Week 4: force=True ensures reconfiguration works
+    logging.basicConfig(level=level, format=log_format, force=True)
     return logging.getLogger(__name__)
 
 

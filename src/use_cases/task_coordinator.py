@@ -46,9 +46,11 @@ class TaskCoordinatorUseCase(IAgentCoordinator):
         Clean Code: Orchestration - delegates to planner and executor.
         """
         self.logger.info(f"Coordinating {len(tasks)} tasks")
+        self.logger.debug(f"Available agents: {[a.role for a in agents]}")
 
         # Delegate planning to TaskPlannerUseCase
         plan = await self.task_planner.create_plan(tasks, agents, context)
+        self.logger.debug(f"Plan created: {len(plan.task_assignments)} task assignments")
 
         # Execute the plan
         results = await self._execute_plan(plan, tasks, agents, context)
@@ -212,9 +214,14 @@ class TaskCoordinatorUseCase(IAgentCoordinator):
         agent_role = plan.task_assignments[task_id]
         agent = agent_map.get(agent_role)
 
+        # Week 4: Debug logging for agent selection
+        self.logger.debug(f"Task '{task.description[:50]}...' assigned to agent: {agent_role}")
+
         if agent:
+            self.logger.debug(f"Agent '{agent_role}' found, executing task {task_id}")
             return self._execute_with_retry(task, agent, context, task_id)
         else:
+            self.logger.debug(f"Agent '{agent_role}' not available for task {task_id}")
             return self._create_failure_coroutine(
                 f"No suitable agent ({agent_role}) available for task {task_id}"
             )

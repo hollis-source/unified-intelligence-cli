@@ -9,6 +9,7 @@ Uses ToolRegistry for extensible tool management (OCP compliance).
 
 import subprocess
 import os
+import logging
 from pathlib import Path
 from typing import Dict, Any, List
 
@@ -21,6 +22,9 @@ from src.exceptions import (
     DirectoryNotFoundError
 )
 from src.tool_registry import default_registry
+
+# Week 4: Debug logging for tool execution
+logger = logging.getLogger(__name__)
 
 
 # ============================================================================
@@ -46,6 +50,9 @@ def run_command(command: str, cwd: str = ".") -> str:
         CommandTimeoutError: If command exceeds 30s timeout
         CommandExecutionError: If command execution fails
     """
+    logger.debug(f"Executing command: {command}")
+    logger.debug(f"Working directory: {cwd}")
+
     try:
         # nosec B602: shell=True is intentional for tool execution.
         # Commands come from AI provider (controlled context), with 30s timeout protection.
@@ -59,10 +66,17 @@ def run_command(command: str, cwd: str = ".") -> str:
         )
 
         output = result.stdout if result.stdout else result.stderr
-        return output if output else "Command completed with no output"
+        result_output = output if output else "Command completed with no output"
+
+        logger.debug(f"Command exit code: {result.returncode}")
+        logger.debug(f"Command output length: {len(result_output)} characters")
+
+        return result_output
     except subprocess.TimeoutExpired:
+        logger.debug(f"Command timed out after 30 seconds: {command}")
         raise CommandTimeoutError(command, 30)
     except Exception as e:
+        logger.debug(f"Command execution failed: {e}")
         raise CommandExecutionError(command, str(e))
 
 
@@ -80,16 +94,26 @@ def read_file_content(file_path: str) -> str:
         FileNotFoundError: If file doesn't exist
         FileSizeLimitError: If file exceeds 100KB limit
     """
+    logger.debug(f"Reading file: {file_path}")
+
     path = Path(file_path)
     if not path.exists():
+        logger.debug(f"File not found: {file_path}")
         raise FileNotFoundError(file_path)
 
     size = path.stat().st_size
     limit = 100000  # 100KB
+
+    logger.debug(f"File size: {size} bytes (limit: {limit})")
+
     if size > limit:
+        logger.debug(f"File exceeds size limit: {size} > {limit}")
         raise FileSizeLimitError(file_path, size, limit)
 
-    return path.read_text()
+    content = path.read_text()
+    logger.debug(f"Successfully read {len(content)} characters from {file_path}")
+
+    return content
 
 
 def write_file_content(file_path: str, content: str) -> str:
@@ -106,12 +130,18 @@ def write_file_content(file_path: str, content: str) -> str:
     Raises:
         FileWriteError: If file write fails
     """
+    logger.debug(f"Writing to file: {file_path}")
+    logger.debug(f"Content length: {len(content)} characters")
+
     try:
         path = Path(file_path)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
+
+        logger.debug(f"Successfully wrote {len(content)} characters to {file_path}")
         return f"Successfully wrote {len(content)} characters to {file_path}"
     except Exception as e:
+        logger.debug(f"File write failed for {file_path}: {e}")
         raise FileWriteError(file_path, str(e))
 
 
@@ -129,11 +159,17 @@ def list_files(directory: str = ".", pattern: str = "*") -> str:
     Raises:
         DirectoryNotFoundError: If directory doesn't exist or isn't a directory
     """
+    logger.debug(f"Listing files in directory: {directory}")
+    logger.debug(f"Pattern: {pattern}")
+
     path = Path(directory)
     if not path.exists() or not path.is_dir():
+        logger.debug(f"Directory not found or not a directory: {directory}")
         raise DirectoryNotFoundError(directory)
 
     files = sorted(path.glob(pattern))
+    logger.debug(f"Found {len(files)} files matching pattern")
+
     if not files:
         return f"No files matching '{pattern}' in {directory}"
 
@@ -143,6 +179,7 @@ def list_files(directory: str = ".", pattern: str = "*") -> str:
         size = f.stat().st_size if f.is_file() else "-"
         file_list.append(f"{file_type:5} {size:>10} {f.name}")
 
+    logger.debug(f"Returning {len(file_list)} file entries")
     return "\n".join(file_list)
 
 

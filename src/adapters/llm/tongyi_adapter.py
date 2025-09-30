@@ -5,8 +5,13 @@ Follows DIP: Implements ITextGenerator interface, hides HTTP client details.
 """
 
 import requests
+import logging
+import time
 from typing import List, Dict, Any, Optional
 from src.interfaces import ITextGenerator, LLMConfig
+
+# Week 4: Debug logging for HTTP operations
+logger = logging.getLogger(__name__)
 
 
 class TongyiDeepResearchAdapter(ITextGenerator):
@@ -105,44 +110,65 @@ class TongyiDeepResearchAdapter(ITextGenerator):
             ConnectionError: If server is unreachable
             ValueError: If generation fails
         """
+        logger.debug(f"Tongyi generate() called with {len(messages)} messages")
+
         # Convert messages to prompt
         prompt = self._messages_to_prompt(messages)
+        logger.debug(f"Prompt length: {len(prompt)} characters")
 
         # Build request payload
+        max_tokens = config.max_tokens if config and config.max_tokens else 512
+        temperature = config.temperature if config and config.temperature else 0.7
+
         payload = {
             "prompt": prompt,
-            "n_predict": config.max_tokens if config and config.max_tokens else 512,
-            "temperature": config.temperature if config and config.temperature else 0.7,
+            "n_predict": max_tokens,
+            "temperature": temperature,
             "stop": ["<|im_end|>"],
             "stream": False
         }
 
+        logger.debug(f"HTTP Request: POST {self.server_url}/completion")
+        logger.debug(f"Parameters: max_tokens={max_tokens}, temperature={temperature}")
+
         # Call llama.cpp server
         try:
+            start_time = time.time()
+
             response = requests.post(
                 f"{self.server_url}/completion",
                 json=payload,
                 timeout=self.timeout
             )
+
+            elapsed_time = time.time() - start_time
+            logger.debug(f"HTTP Response: {response.status_code} ({elapsed_time:.2f}s)")
+
             response.raise_for_status()
 
             result = response.json()
             content = result.get("content", "")
 
+            logger.debug(f"Response content length: {len(content)} characters")
+
             if not content:
+                logger.debug("Empty response from server")
                 raise ValueError("Empty response from llama.cpp server")
 
             return content.strip()
 
         except requests.Timeout:
+            logger.debug(f"Request timed out after {self.timeout}s")
             raise TimeoutError(
                 f"Request timed out after {self.timeout}s"
             )
         except requests.RequestException as e:
+            logger.debug(f"HTTP request failed: {e}")
             raise ConnectionError(
                 f"HTTP request failed: {e}"
             )
         except (KeyError, ValueError) as e:
+            logger.debug(f"Invalid response format: {e}")
             raise ValueError(
                 f"Invalid response format: {e}"
             )
