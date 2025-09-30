@@ -7,7 +7,7 @@ import click
 import asyncio
 import logging
 from pathlib import Path
-from typing import List
+from typing import List, Any, Coroutine
 from dotenv import load_dotenv
 
 from src.entities import Task
@@ -43,7 +43,7 @@ def main(
     parallel: bool,
     config: str,
     timeout: int
-):
+) -> None:
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.
 
@@ -175,7 +175,7 @@ def setup_logging(verbose: bool) -> logging.Logger:
     return logging.getLogger(__name__)
 
 
-async def execute_with_timeout(coro, timeout: int):
+async def execute_with_timeout(coro: Coroutine[Any, Any, Any], timeout: int) -> Any:
     """
     Execute coroutine with timeout.
 
