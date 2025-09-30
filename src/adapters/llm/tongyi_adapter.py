@@ -7,14 +7,16 @@ Follows DIP: Implements ITextGenerator interface, hides HTTP client details.
 import requests
 import logging
 import time
+import re
+import json
 from typing import List, Dict, Any, Optional
-from src.interfaces import ITextGenerator, LLMConfig
+from src.interfaces import ITextGenerator, IToolSupportedProvider, LLMConfig
 
 # Week 4: Debug logging for HTTP operations
 logger = logging.getLogger(__name__)
 
 
-class TongyiDeepResearchAdapter(ITextGenerator):
+class TongyiDeepResearchAdapter(IToolSupportedProvider):
     """
     Adapter for Tongyi-DeepResearch-30B via llama.cpp server.
 
@@ -172,3 +174,177 @@ class TongyiDeepResearchAdapter(ITextGenerator):
             raise ValueError(
                 f"Invalid response format: {e}"
             )
+    def supports_tools(self) -> bool:
+        """
+        Check if this provider supports tool calling.
+
+        Week 5: Tongyi supports tools via prompt-based approach.
+        """
+        return True
+
+    def generate_with_tools(
+        self,
+        messages: List[Dict[str, Any]],
+        tools: List[Dict[str, Any]],
+        config: Optional[LLMConfig] = None
+    ) -> Dict[str, Any]:
+        """
+        Generate response with tool calling capability.
+
+        Week 5: Prompt-based tool calling implementation.
+        Uses special markers for tool calls: TOOL_CALL: tool_name(args)
+
+        Args:
+            messages: Conversation messages
+            tools: Tool definitions in OpenAI format
+            config: Optional configuration
+
+        Returns:
+            Dict with response, tool_calls, tool_results
+        """
+        logger.debug(f"generate_with_tools called with {len(tools)} tools")
+
+        # Build tool descriptions for prompt
+        tool_descriptions = self._format_tools_for_prompt(tools)
+
+        # Inject tool instructions into system message
+        enhanced_messages = self._inject_tool_instructions(messages, tool_descriptions)
+
+        # Initial generation
+        response_text = self.generate(enhanced_messages, config)
+        logger.debug(f"Initial response length: {len(response_text)} characters")
+
+        # Parse tool calls from response
+        tool_calls = self._parse_tool_calls(response_text)
+        logger.debug(f"Parsed {len(tool_calls)} tool calls")
+
+        # Execute tools
+        tool_results = []
+        if tool_calls:
+            tool_results = self._execute_tools(tool_calls)
+            logger.debug(f"Executed {len(tool_results)} tools")
+
+            # Continue generation with tool results
+            result_messages = enhanced_messages + [
+                {"role": "assistant", "content": response_text},
+                {"role": "user", "content": f"Tool results: {json.dumps(tool_results)}"}
+            ]
+
+            response_text = self.generate(result_messages, config)
+            logger.debug("Generated final response with tool results")
+
+        return {
+            "response": response_text,
+            "tool_calls": tool_calls,
+            "tool_results": tool_results
+        }
+
+    def _format_tools_for_prompt(self, tools: List[Dict[str, Any]]) -> str:
+        """Format tool definitions for prompt injection."""
+        tool_lines = ["Available tools:"]
+        for tool in tools:
+            func = tool.get("function", {})
+            name = func.get("name", "unknown")
+            desc = func.get("description", "")
+            params = func.get("parameters", {}).get("properties", {})
+
+            param_str = ", ".join(params.keys()) if params else "no parameters"
+            tool_lines.append(f"- {name}({param_str}): {desc}")
+
+        return "\n".join(tool_lines)
+
+    def _inject_tool_instructions(
+        self,
+        messages: List[Dict[str, Any]],
+        tool_descriptions: str
+    ) -> List[Dict[str, Any]]:
+        """Inject tool calling instructions into messages."""
+        tool_instruction = f"""
+{tool_descriptions}
+
+To use a tool, output: TOOL_CALL: tool_name(arg1="value1", arg2="value2")
+Example: TOOL_CALL: list_files(directory="src/", pattern="*.py")
+"""
+        enhanced = messages.copy()
+
+        # Find or create system message
+        if enhanced and enhanced[0].get("role") == "system":
+            enhanced[0] = {
+                "role": "system",
+                "content": enhanced[0]["content"] + "\n\n" + tool_instruction
+            }
+        else:
+            enhanced.insert(0, {"role": "system", "content": tool_instruction})
+
+        return enhanced
+
+    def _parse_tool_calls(self, response: str) -> List[Dict[str, Any]]:
+        """
+        Parse tool calls from model response.
+
+        Looks for pattern: TOOL_CALL: tool_name(args)
+        """
+        tool_calls = []
+
+        # Pattern: TOOL_CALL: tool_name(arg1="value", arg2="value")
+        pattern = r'TOOL_CALL:\s*(\w+)\((.*?)\)'
+
+        matches = re.finditer(pattern, response, re.MULTILINE)
+
+        for match in matches:
+            tool_name = match.group(1)
+            args_str = match.group(2)
+
+            # Parse arguments (simple key="value" format)
+            args = {}
+            if args_str:
+                # Match key="value" or key='value'
+                arg_pattern = r'(\w+)=["\'](.*?)["\']'
+                for arg_match in re.finditer(arg_pattern, args_str):
+                    key = arg_match.group(1)
+                    value = arg_match.group(2)
+                    args[key] = value
+
+            tool_calls.append({
+                "name": tool_name,
+                "arguments": args
+            })
+
+            logger.debug(f"Parsed tool call: {tool_name}({args})")
+
+        return tool_calls
+
+    def _execute_tools(self, tool_calls: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Execute tool calls using ToolRegistry."""
+        from src.tool_registry import default_registry
+
+        results = []
+
+        for call in tool_calls:
+            tool_name = call["name"]
+            tool_args = call["arguments"]
+
+            logger.debug(f"Executing tool: {tool_name} with args {tool_args}")
+
+            try:
+                # Execute tool via registry
+                result = default_registry.execute_tool(tool_name, **tool_args)
+
+                results.append({
+                    "tool": tool_name,
+                    "status": "success",
+                    "output": result
+                })
+
+                logger.debug(f"Tool {tool_name} executed successfully")
+
+            except Exception as e:
+                logger.debug(f"Tool {tool_name} failed: {e}")
+
+                results.append({
+                    "tool": tool_name,
+                    "status": "error",
+                    "error": str(e)
+                })
+
+        return results
