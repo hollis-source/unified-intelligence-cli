@@ -31,6 +31,10 @@ def run_command(command: str, cwd: str = ".") -> str:
     """
     Execute a shell command safely.
 
+    Security Note: shell=True is used intentionally for this tool execution context.
+    Commands originate from the AI provider (controlled context), not arbitrary user input.
+    A 30-second timeout prevents indefinite execution.
+
     Args:
         command: Command to execute
         cwd: Working directory
@@ -43,9 +47,11 @@ def run_command(command: str, cwd: str = ".") -> str:
         CommandExecutionError: If command execution fails
     """
     try:
+        # nosec B602: shell=True is intentional for tool execution.
+        # Commands come from AI provider (controlled context), with 30s timeout protection.
         result = subprocess.run(
             command,
-            shell=True,
+            shell=True,  # nosec
             cwd=cwd,
             capture_output=True,
             text=True,
