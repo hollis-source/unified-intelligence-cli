@@ -27,8 +27,8 @@ if env_file.exists():
 @click.command()
 @click.option("--task", "-t", "task_descriptions", multiple=True, required=True,
               help="Task description (can be specified multiple times)")
-@click.option("--provider", type=click.Choice(["mock", "grok", "tongyi"]), default="mock",
-              help="LLM provider to use")
+@click.option("--provider", type=click.Choice(["mock", "grok", "tongyi", "tongyi-local"]), default="mock",
+              help="LLM provider to use (tongyi-local: Week 8 async local model)")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.option("--debug", is_flag=True, help="Enable debug output (LLM calls, tool details)")
 @click.option("--parallel/--sequential", default=True,

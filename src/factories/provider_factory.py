@@ -22,6 +22,7 @@ class ProviderFactory(IProviderFactory):
             ),
             "grok": lambda config: self._create_grok_provider(config),
             "tongyi": lambda config: self._create_tongyi_provider(config),
+            "tongyi-local": lambda config: self._create_tongyi_local_provider(config),
         }
         self._providers: Dict[str, Any] = {}
 
@@ -41,10 +42,22 @@ class ProviderFactory(IProviderFactory):
         return GrokAdapter()
 
     def _create_tongyi_provider(self, config: Optional[Dict[str, Any]]) -> ITextGenerator:
-        """Create Tongyi-DeepResearch-30B provider via llama.cpp."""
+        """Create Tongyi-DeepResearch-30B provider via llama.cpp (sync, requests)."""
         from src.adapters.llm.tongyi_adapter import TongyiDeepResearchAdapter
         server_url = config.get("server_url", "http://localhost:8080") if config else "http://localhost:8080"
         return TongyiDeepResearchAdapter(server_url=server_url)
+
+    def _create_tongyi_local_provider(self, config: Optional[Dict[str, Any]]) -> ITextGenerator:
+        """
+        Create local Tongyi provider via llama.cpp (async, aiohttp).
+
+        Week 8: LocalTongyiAdapter with async HTTP for better performance.
+        Default: http://localhost:8080 (llama-cpp-server Docker container)
+        """
+        from src.adapters.llm.tongyi_local_adapter import LocalTongyiAdapter
+        base_url = config.get("base_url", "http://localhost:8080") if config else "http://localhost:8080"
+        timeout = config.get("timeout", 120) if config else 120
+        return LocalTongyiAdapter(base_url=base_url, timeout=timeout)
 
     def create_provider(
         self,
