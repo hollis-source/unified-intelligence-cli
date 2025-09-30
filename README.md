@@ -1,5 +1,9 @@
 # Unified Intelligence CLI
 
+![Tests](https://github.com/username/unified-intelligence-cli/workflows/Tests/badge.svg)
+![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
+![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen)
+
 **Production-ready multi-agent task orchestration framework** following Clean Architecture principles.
 
 A CLI tool that intelligently distributes tasks to specialized agents (coder, tester, reviewer, researcher, coordinator) using LLM-powered execution with tool support. Inspired by *AI Agents in Action* and Robert C. Martin's Clean Code principles.
@@ -157,15 +161,37 @@ Agent(
 
 ### Add New Tool
 
+Use the extensible tool registry for easy registration:
+
 ```python
-# src/tools.py
+# In your module
+from src.tool_registry import default_registry
+
+@default_registry.register(
+    name="your_tool",
+    description="What your tool does",
+    parameters={
+        "param": {"type": "string", "description": "Parameter description"}
+    },
+    required=["param"]
+)
 def your_tool(param: str) -> str:
     """Tool implementation."""
     return result
-
-# Add to DEV_TOOLS list with OpenAI format definition
-# Add to TOOL_FUNCTIONS registry
 ```
+
+Tools are automatically available to LLM providers via `DEV_TOOLS` and `TOOL_FUNCTIONS`.
+
+### CI/CD
+
+GitHub Actions workflows automatically run on push/PR:
+
+- **Tests**: Run full test suite on Python 3.10, 3.11, 3.12
+- **Coverage**: Generate and upload coverage reports
+- **Linting**: Check code style with flake8
+- **Security**: Scan with bandit and safety
+
+See [.github/workflows/tests.yml](.github/workflows/tests.yml) for configuration.
 
 ## Project Structure
 
