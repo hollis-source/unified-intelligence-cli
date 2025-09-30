@@ -10,6 +10,15 @@ import os
 from pathlib import Path
 from typing import Dict, Any, List
 
+from src.exceptions import (
+    CommandTimeoutError,
+    CommandExecutionError,
+    FileNotFoundError,
+    FileSizeLimitError,
+    FileWriteError,
+    DirectoryNotFoundError
+)
+
 
 # ============================================================================
 # Tool Execution Functions
@@ -24,7 +33,11 @@ def run_command(command: str, cwd: str = ".") -> str:
         cwd: Working directory
 
     Returns:
-        Command output or error message
+        Command output
+
+    Raises:
+        CommandTimeoutError: If command exceeds 30s timeout
+        CommandExecutionError: If command execution fails
     """
     try:
         result = subprocess.run(
@@ -39,9 +52,9 @@ def run_command(command: str, cwd: str = ".") -> str:
         output = result.stdout if result.stdout else result.stderr
         return output if output else "Command completed with no output"
     except subprocess.TimeoutExpired:
-        return "Error: Command timed out after 30 seconds"
+        raise CommandTimeoutError(command, 30)
     except Exception as e:
-        return f"Error executing command: {str(e)}"
+        raise CommandExecutionError(command, str(e))
 
 
 def read_file_content(file_path: str) -> str:
@@ -52,19 +65,22 @@ def read_file_content(file_path: str) -> str:
         file_path: Path to file
 
     Returns:
-        File contents or error message
+        File contents
+
+    Raises:
+        FileNotFoundError: If file doesn't exist
+        FileSizeLimitError: If file exceeds 100KB limit
     """
-    try:
-        path = Path(file_path)
-        if not path.exists():
-            return f"Error: File not found: {file_path}"
+    path = Path(file_path)
+    if not path.exists():
+        raise FileNotFoundError(file_path)
 
-        if path.stat().st_size > 100000:  # 100KB limit
-            return f"Error: File too large (>{100}KB): {file_path}"
+    size = path.stat().st_size
+    limit = 100000  # 100KB
+    if size > limit:
+        raise FileSizeLimitError(file_path, size, limit)
 
-        return path.read_text()
-    except Exception as e:
-        return f"Error reading file: {str(e)}"
+    return path.read_text()
 
 
 def write_file_content(file_path: str, content: str) -> str:
@@ -76,7 +92,10 @@ def write_file_content(file_path: str, content: str) -> str:
         content: Content to write
 
     Returns:
-        Success or error message
+        Success message
+
+    Raises:
+        FileWriteError: If file write fails
     """
     try:
         path = Path(file_path)
@@ -84,7 +103,7 @@ def write_file_content(file_path: str, content: str) -> str:
         path.write_text(content)
         return f"Successfully wrote {len(content)} characters to {file_path}"
     except Exception as e:
-        return f"Error writing file: {str(e)}"
+        raise FileWriteError(file_path, str(e))
 
 
 def list_files(directory: str = ".", pattern: str = "*") -> str:
@@ -96,29 +115,26 @@ def list_files(directory: str = ".", pattern: str = "*") -> str:
         pattern: Glob pattern
 
     Returns:
-        List of files or error message
+        List of files (formatted string)
+
+    Raises:
+        DirectoryNotFoundError: If directory doesn't exist or isn't a directory
     """
-    try:
-        path = Path(directory)
-        if not path.exists():
-            return f"Error: Directory not found: {directory}"
+    path = Path(directory)
+    if not path.exists() or not path.is_dir():
+        raise DirectoryNotFoundError(directory)
 
-        if not path.is_dir():
-            return f"Error: Not a directory: {directory}"
+    files = sorted(path.glob(pattern))
+    if not files:
+        return f"No files matching '{pattern}' in {directory}"
 
-        files = sorted(path.glob(pattern))
-        if not files:
-            return f"No files matching '{pattern}' in {directory}"
+    file_list = []
+    for f in files[:50]:  # Limit to 50 files
+        file_type = "DIR" if f.is_dir() else "FILE"
+        size = f.stat().st_size if f.is_file() else "-"
+        file_list.append(f"{file_type:5} {size:>10} {f.name}")
 
-        file_list = []
-        for f in files[:50]:  # Limit to 50 files
-            file_type = "DIR" if f.is_dir() else "FILE"
-            size = f.stat().st_size if f.is_file() else "-"
-            file_list.append(f"{file_type:5} {size:>10} {f.name}")
-
-        return "\n".join(file_list)
-    except Exception as e:
-        return f"Error listing files: {str(e)}"
+    return "\n".join(file_list)
 
 
 # ============================================================================
