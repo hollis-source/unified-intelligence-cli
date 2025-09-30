@@ -12,7 +12,7 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 ✅ **LLM Providers**: Mock (testing) and Grok (production) with extensible architecture
 ✅ **Parallel Execution**: Concurrent task processing with dependency handling
 ✅ **Clean Architecture**: Entities → Use Cases → Interfaces → Adapters
-✅ **70% Test Coverage**: 30 tests (10 unit + 20 integration)
+✅ **85% Test Coverage**: 104 tests (73 unit + 31 integration)
 
 ## Quick Start
 
@@ -114,6 +114,16 @@ src/
 
 **Dependency Rule**: Dependencies point inward only. Inner layers never depend on outer layers.
 
+## Security
+
+This CLI enables LLM agents to execute shell commands and file operations. See [SECURITY.md](SECURITY.md) for:
+- Command execution security model
+- File operation safety
+- API key protection
+- Best practices and threat model
+
+**TL;DR**: The CLI is a power tool for trusted local development. Run in isolated workspaces, review agent actions, use version control, and see SECURITY.md for full details.
+
 ## Development
 
 ### Run Tests
@@ -167,9 +177,9 @@ def your_tool(param: str) -> str:
 
 ## Testing Strategy
 
-- **Unit Tests** (10): Test entities and use case logic in isolation
-- **Integration Tests** (20): Test component interactions and real workflows
-- **Coverage**: 70% (acceptable given CLI/composition complexity)
+- **Unit Tests** (73): Test entities, use cases, tools, and CLI logic in isolation
+- **Integration Tests** (31): Test component interactions, end-to-end workflows, and real file operations
+- **Coverage**: 85% (tools: 96%, composition: 100%, use cases: 87-89%)
 
 ## Configuration
 
