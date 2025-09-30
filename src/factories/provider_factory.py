@@ -21,6 +21,7 @@ class ProviderFactory(IProviderFactory):
                 default_response=config.get("response", "Mock response") if config else "Mock response"
             ),
             "grok": lambda config: self._create_grok_provider(config),
+            "tongyi": lambda config: self._create_tongyi_provider(config),
         }
         self._providers: Dict[str, Any] = {}
 
@@ -38,6 +39,12 @@ class ProviderFactory(IProviderFactory):
             raise ValueError("XAI_API_KEY not set for Grok provider")
         from src.adapters.llm.grok_adapter import GrokAdapter
         return GrokAdapter()
+
+    def _create_tongyi_provider(self, config: Optional[Dict[str, Any]]) -> ITextGenerator:
+        """Create Tongyi-DeepResearch-30B provider via llama.cpp."""
+        from src.adapters.llm.tongyi_adapter import TongyiDeepResearchAdapter
+        server_url = config.get("server_url", "http://localhost:8080") if config else "http://localhost:8080"
+        return TongyiDeepResearchAdapter(server_url=server_url)
 
     def create_provider(
         self,
