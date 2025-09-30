@@ -10,12 +10,14 @@ from src.adapters.agent.llm_executor import LLMAgentExecutor
 from src.interfaces import ITextGenerator, IAgentCoordinator
 from src.factories.provider_factory import ProviderFactory
 from src.factories.agent_factory import AgentFactory
+from src.factories.orchestration_factory import OrchestrationFactory
 
 
 def compose_dependencies(
     llm_provider: ITextGenerator,
     agents: List[Agent],
-    logger: Optional[logging.Logger] = None
+    logger: Optional[logging.Logger] = None,
+    orchestrator_mode: str = "simple"
 ) -> IAgentCoordinator:
     """
     Compose dependencies for the coordinator use case.
@@ -28,9 +30,10 @@ def compose_dependencies(
         llm_provider: LLM provider implementation
         agents: Available agents
         logger: Optional logger
+        orchestrator_mode: Orchestration mode ("simple" or "openai-agents")
 
     Returns:
-        Configured IAgentCoordinator (TaskCoordinatorUseCase)
+        Configured IAgentCoordinator (implementation depends on orchestrator_mode)
     """
     # Create adapters
     agent_executor = LLMAgentExecutor(llm_provider)
@@ -43,14 +46,17 @@ def compose_dependencies(
         logger=logger
     )
 
-    # Create coordinator use case (SRP: execution)
-    task_coordinator = TaskCoordinatorUseCase(
+    # Create coordinator via factory (Week 7: supports multiple orchestration modes)
+    coordinator = OrchestrationFactory.create_orchestrator(
+        mode=orchestrator_mode,
+        llm_provider=llm_provider,
         task_planner=task_planner,
         agent_executor=agent_executor,
-        logger=logger
+        agents=agents,
+        logger_instance=logger
     )
 
-    return task_coordinator
+    return coordinator
 
 
 def create_coordinator(

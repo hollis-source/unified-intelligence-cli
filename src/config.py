@@ -27,6 +27,7 @@ class Config:
     timeout: int = 60
     verbose: bool = False
     debug: bool = False  # Week 3: Debug mode (LLM calls, tool details)
+    orchestrator: str = "simple"  # Week 7: Orchestration mode (simple, openai-agents)
 
     # Agent settings (optional custom agent definitions)
     custom_agents: list = field(default_factory=list)
@@ -63,6 +64,7 @@ class Config:
             timeout=data.get("timeout", 60),
             verbose=data.get("verbose", False),
             debug=data.get("debug", False),
+            orchestrator=data.get("orchestrator", "simple"),
             custom_agents=data.get("custom_agents", [])
         )
 
@@ -72,7 +74,8 @@ class Config:
         parallel: Optional[bool] = None,
         timeout: Optional[int] = None,
         verbose: Optional[bool] = None,
-        debug: Optional[bool] = None
+        debug: Optional[bool] = None,
+        orchestrator: Optional[str] = None
     ) -> "Config":
         """
         Merge CLI arguments with config file settings.
@@ -85,6 +88,7 @@ class Config:
             timeout: CLI timeout value
             verbose: CLI verbose flag
             debug: CLI debug flag (Week 3)
+            orchestrator: CLI orchestrator mode (Week 7)
 
         Returns:
             New Config with merged values
@@ -96,6 +100,7 @@ class Config:
             timeout=timeout if timeout is not None else self.timeout,
             verbose=verbose if verbose is not None else self.verbose,
             debug=debug if debug is not None else self.debug,
+            orchestrator=orchestrator if orchestrator is not None else self.orchestrator,
             custom_agents=self.custom_agents
         )
 
@@ -112,5 +117,6 @@ class Config:
             "timeout": self.timeout,
             "verbose": self.verbose,
             "debug": self.debug,
+            "orchestrator": self.orchestrator,
             "custom_agents": self.custom_agents
         }

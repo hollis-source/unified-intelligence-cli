@@ -37,6 +37,8 @@ if env_file.exists():
               help="Path to configuration file")
 @click.option("--timeout", type=int, default=60,
               help="Timeout in seconds for async operations")
+@click.option("--orchestrator", type=click.Choice(["simple", "openai-agents"]), default="simple",
+              help="Orchestration mode: simple (current) or openai-agents (Week 7)")
 def main(
     task_descriptions: tuple,
     provider: str,
@@ -44,7 +46,8 @@ def main(
     debug: bool,
     parallel: bool,
     config: str,
-    timeout: int
+    timeout: int,
+    orchestrator: str
 ) -> None:
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.
@@ -53,7 +56,7 @@ def main(
     Composition logic is delegated to compose_dependencies.
     """
     # Load configuration
-    app_config = load_config(config, provider, verbose, debug, parallel, timeout)
+    app_config = load_config(config, provider, verbose, debug, parallel, timeout, orchestrator)
 
     # Setup logging based on verbosity
     logger = setup_logging(app_config.verbose, app_config.debug)
@@ -82,11 +85,12 @@ def main(
         ]
         logger.info(f"Created {len(tasks)} tasks")
 
-        # Compose dependencies
+        # Compose dependencies (Week 7: with orchestrator mode)
         coordinator = compose_dependencies(
             llm_provider=llm_provider,
             agents=agents,
-            logger=logger if app_config.verbose else None
+            logger=logger if app_config.verbose else None,
+            orchestrator_mode=app_config.orchestrator
         )
 
         # Execute with timeout
@@ -128,7 +132,8 @@ def load_config(
     verbose: bool,
     debug: bool,
     parallel: bool,
-    timeout: int
+    timeout: int,
+    orchestrator: str = "simple"
 ) -> Config:
     """
     Load configuration from file and merge with CLI arguments.
@@ -154,7 +159,8 @@ def load_config(
             verbose=verbose,
             debug=debug,
             parallel=parallel,
-            timeout=timeout
+            timeout=timeout,
+            orchestrator=orchestrator
         )
     else:
         # Use CLI args only
@@ -163,7 +169,8 @@ def load_config(
             verbose=verbose,
             debug=debug,
             parallel=parallel,
-            timeout=timeout
+            timeout=timeout,
+            orchestrator=orchestrator
         )
 
 
