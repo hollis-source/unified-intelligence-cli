@@ -74,7 +74,7 @@ class CapabilityBasedSelector(IAgentSelector):
         """
         desc_words = task.description.lower().split()
         total_score = 0.0
-        threshold = 0.8  # Minimum similarity ratio to count as match
+        threshold = 0.6  # Week 6 Fix: Lowered from 0.8 for better real-world matching
 
         # For each word in task description, find best matching capability
         for word in desc_words:

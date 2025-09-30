@@ -16,5 +16,12 @@ class Agent:
     capabilities: List[str]  # e.g., ["code_gen", "test"]
 
     def can_handle(self, task: Task) -> bool:
+        """
+        Check if agent can handle task (fuzzy matching).
+
+        Week 6 Fix: Lower threshold to 0.6 for better real-world matching.
+        Previous 0.8 threshold was too strict, causing "no agent found" errors.
+        """
         desc_words = task.description.lower().split()
-        return any(any(difflib.SequenceMatcher(None, cap.lower(), word).ratio() > 0.8 for word in desc_words) for cap in self.capabilities)
+        threshold = 0.6  # Lowered from 0.8 (Week 6 bug fix)
+        return any(any(difflib.SequenceMatcher(None, cap.lower(), word).ratio() > threshold for word in desc_words) for cap in self.capabilities)
