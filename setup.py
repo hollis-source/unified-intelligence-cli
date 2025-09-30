@@ -1,10 +1,11 @@
-from setuptools import setup, find_packages
+"""
+Setup script for unified-intelligence-cli package.
 
-setup(
-    name="unified-intelligence-cli",
-    version="0.1.0",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
-    install_requires=open("requirements.txt").readlines(),
-    entry_points={"console_scripts": ["uicli = main:main"]},  # CLI entry
-)
+This is a minimal setup.py for backward compatibility.
+Package metadata is defined in pyproject.toml (PEP 621).
+"""
+
+from setuptools import setup
+
+# Package metadata and configuration are in pyproject.toml
+setup()

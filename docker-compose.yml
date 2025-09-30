@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  ui-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: unified-intelligence-cli:latest
+    container_name: ui-cli
+    environment:
+      # Load API key from .env file or environment
+      - XAI_API_KEY=${XAI_API_KEY}
+      # Optional: Override provider
+      - UI_CLI_PROVIDER=${UI_CLI_PROVIDER:-grok}
+    volumes:
+      # Mount current directory for live code updates (development)
+      - ./src:/app/src:ro
+      # Mount workspace for file operations
+      - ./workspace:/workspace
+    working_dir: /workspace
+    # Override entrypoint for development
+    entrypoint: ["python", "-m", "src.main"]
+    # Example: Run with tasks
+    command: ["--help"]
+    networks:
+      - ui-cli-network
+    # Restart policy
+    restart: unless-stopped
+    # Health check (matches Dockerfile)
+    healthcheck:
+      test: ["CMD", "python", "-c", "import src.main; print('healthy')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+networks:
+  ui-cli-network:
+    driver: bridge
+
+volumes:
+  workspace:
+    driver: local
