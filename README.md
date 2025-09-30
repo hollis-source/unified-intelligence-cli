@@ -12,8 +12,9 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 
 ✅ **Multi-Task CLI**: Accept multiple tasks in a single command
 ✅ **Intelligent Agent Selection**: Fuzzy matching assigns tasks to best-fit agents
+✅ **Multiple Orchestration Modes**: Simple (stable) or OpenAI Agents SDK (advanced features)
 ✅ **Tool Support**: Agents can execute shell commands, read/write files, run tests
-✅ **LLM Providers**: Mock (testing) and Grok (production) with extensible architecture
+✅ **LLM Providers**: Mock (testing), Grok, and Tongyi (production) with extensible architecture
 ✅ **Parallel Execution**: Concurrent task processing with dependency handling
 ✅ **Clean Architecture**: Entities → Use Cases → Interfaces → Adapters
 ✅ **85% Test Coverage**: 104 tests (73 unit + 31 integration)
@@ -85,6 +86,36 @@ python3 src/main.py \
   --verbose  # CLI args override config file
 ```
 
+### Orchestration Modes (Week 7)
+
+Choose between two orchestration strategies:
+
+**Simple Orchestrator (default, stable)**:
+```bash
+python3 src/main.py \
+  --task "Research AI frameworks" \
+  --task "Compare performance metrics" \
+  --orchestrator simple \
+  --provider tongyi
+```
+
+**OpenAI Agents SDK Orchestrator (advanced, Phase 1)**:
+```bash
+python3 src/main.py \
+  --task "Research AI frameworks" \
+  --task "Compare performance metrics" \
+  --orchestrator openai-agents \
+  --provider tongyi
+```
+
+**Performance Comparison**:
+- **Simple**: Proven stability, full planning pipeline, best for complex workflows
+- **OpenAI Agents**: 4x faster (Phase 1), future support for handoffs and tool calling
+
+**Recommendation**: Use `simple` (default) for production. Use `openai-agents` for testing advanced features.
+
+See [docs/PHASE_1.5_VALIDATION_SUMMARY.md](docs/PHASE_1.5_VALIDATION_SUMMARY.md) for benchmark results.
+
 ### End-to-End Demo
 
 ```bash
@@ -98,12 +129,13 @@ python3 demo_full_workflow.py
 src/
 ├── entities/          # Core business objects (Agent, Task, ExecutionResult)
 ├── use_cases/         # Business logic (TaskCoordinator, TaskPlanner)
-├── interfaces/        # Abstractions (ITextGenerator, IAgentExecutor)
+├── interfaces/        # Abstractions (ITextGenerator, IAgentExecutor, IAgentCoordinator)
 ├── adapters/          # External integrations
-│   ├── llm/          # LLM providers (GrokAdapter, MockProvider)
+│   ├── llm/          # LLM providers (GrokAdapter, MockProvider, TongyiAdapter)
 │   ├── agent/        # Agent implementations (LLMAgentExecutor)
+│   ├── orchestration/ # Orchestration adapters (OpenAIAgentsSDKAdapter)
 │   └── cli/          # CLI adapters (ResultFormatter)
-├── factories/         # Dependency Injection (AgentFactory, ProviderFactory)
+├── factories/         # Dependency Injection (AgentFactory, ProviderFactory, OrchestrationFactory)
 ├── composition.py     # Composition root
 ├── tools.py           # Dev tools (run_command, read_file, write_file, list_files)
 └── main.py            # CLI entry point
@@ -243,19 +275,28 @@ See `config.example.json` for complete example.
 
 ## Roadmap
 
-**Completed (100% Core Functionality):**
+**Completed (Phase 1):**
 - ✅ Multi-task CLI input
 - ✅ Intelligent agent selection with fuzzy matching
 - ✅ Tool-supported LLM execution
 - ✅ Clean Architecture foundation
-- ✅ End-to-end dev workflow demo
+- ✅ Multiple LLM providers (Mock, Grok, Tongyi)
+- ✅ OpenAI Agents SDK integration (Phase 1: adapter + fallback)
+- ✅ Orchestration modes (simple, openai-agents)
+- ✅ Performance benchmarking infrastructure
+
+**In Progress (Phase 2):**
+- 🔄 Full OpenAI Agents SDK execution (remove fallback)
+- 🔄 Agent handoffs and delegation
+- 🔄 Advanced tool calling via SDK
+- 🔄 Guardrails and validation
 
 **Future Enhancements:**
-- 🔄 Runtime provider switching via --config flag
-- 🔄 Additional LLM providers (OpenAI, Anthropic)
+- 🔄 Additional LLM providers (OpenAI GPT-4, Anthropic Claude)
 - 🔄 Persistent task history and context
 - 🔄 Web UI for task management
 - 🔄 Plugin system for custom agents and tools
+- 🔄 Tracing and observability (OpenTelemetry)
 
 ## Principles
 
