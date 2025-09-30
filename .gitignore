@@ -23,6 +23,7 @@ include/
 lib64/
 share/
 pyvenv.cfg
+venv-automation/
 
 # Distribution / packaging
 .Python
