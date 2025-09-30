@@ -26,6 +26,7 @@ class Config:
     parallel: bool = True
     timeout: int = 60
     verbose: bool = False
+    debug: bool = False  # Week 3: Debug mode (LLM calls, tool details)
 
     # Agent settings (optional custom agent definitions)
     custom_agents: list = field(default_factory=list)
@@ -61,6 +62,7 @@ class Config:
             parallel=data.get("parallel", True),
             timeout=data.get("timeout", 60),
             verbose=data.get("verbose", False),
+            debug=data.get("debug", False),
             custom_agents=data.get("custom_agents", [])
         )
 
@@ -69,7 +71,8 @@ class Config:
         provider: Optional[str] = None,
         parallel: Optional[bool] = None,
         timeout: Optional[int] = None,
-        verbose: Optional[bool] = None
+        verbose: Optional[bool] = None,
+        debug: Optional[bool] = None
     ) -> "Config":
         """
         Merge CLI arguments with config file settings.
@@ -81,6 +84,7 @@ class Config:
             parallel: CLI parallel flag
             timeout: CLI timeout value
             verbose: CLI verbose flag
+            debug: CLI debug flag (Week 3)
 
         Returns:
             New Config with merged values
@@ -91,6 +95,7 @@ class Config:
             parallel=parallel if parallel is not None else self.parallel,
             timeout=timeout if timeout is not None else self.timeout,
             verbose=verbose if verbose is not None else self.verbose,
+            debug=debug if debug is not None else self.debug,
             custom_agents=self.custom_agents
         )
 
@@ -106,5 +111,6 @@ class Config:
             "parallel": self.parallel,
             "timeout": self.timeout,
             "verbose": self.verbose,
+            "debug": self.debug,
             "custom_agents": self.custom_agents
         }

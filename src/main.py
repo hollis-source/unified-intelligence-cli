@@ -30,6 +30,7 @@ if env_file.exists():
 @click.option("--provider", type=click.Choice(["mock", "grok", "tongyi"]), default="mock",
               help="LLM provider to use")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
+@click.option("--debug", is_flag=True, help="Enable debug output (LLM calls, tool details)")
 @click.option("--parallel/--sequential", default=True,
               help="Enable/disable parallel execution")
 @click.option("--config", type=click.Path(exists=True),
@@ -40,6 +41,7 @@ def main(
     task_descriptions: tuple,
     provider: str,
     verbose: bool,
+    debug: bool,
     parallel: bool,
     config: str,
     timeout: int
@@ -51,10 +53,10 @@ def main(
     Composition logic is delegated to compose_dependencies.
     """
     # Load configuration
-    app_config = load_config(config, provider, verbose, parallel, timeout)
+    app_config = load_config(config, provider, verbose, debug, parallel, timeout)
 
     # Setup logging based on verbosity
-    logger = setup_logging(app_config.verbose)
+    logger = setup_logging(app_config.verbose, app_config.debug)
 
     try:
         # Create factory instances (DIP: depend on abstractions)
@@ -124,6 +126,7 @@ def load_config(
     config_file: str,
     provider: str,
     verbose: bool,
+    debug: bool,
     parallel: bool,
     timeout: int
 ) -> Config:
@@ -136,6 +139,7 @@ def load_config(
         config_file: Path to config file (optional)
         provider: CLI provider argument
         verbose: CLI verbose flag
+        debug: CLI debug flag (Week 3)
         parallel: CLI parallel flag
         timeout: CLI timeout value
 
@@ -148,6 +152,7 @@ def load_config(
         return file_config.merge_cli_args(
             provider=provider,
             verbose=verbose,
+            debug=debug,
             parallel=parallel,
             timeout=timeout
         )
@@ -156,22 +161,30 @@ def load_config(
         return Config(
             provider=provider,
             verbose=verbose,
+            debug=debug,
             parallel=parallel,
             timeout=timeout
         )
 
 
-def setup_logging(verbose: bool) -> logging.Logger:
+def setup_logging(verbose: bool, debug: bool) -> logging.Logger:
     """
     Configure logging based on verbosity.
 
+    Week 3: Three-level logging (WARNING/INFO/DEBUG).
     Clean Code: Extract method for clarity.
     """
-    level = logging.DEBUG if verbose else logging.WARNING
-    logging.basicConfig(
-        level=level,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
+    if debug:
+        level = logging.DEBUG
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+    elif verbose:
+        level = logging.INFO
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    else:
+        level = logging.WARNING
+        log_format = "%(levelname)s - %(message)s"
+
+    logging.basicConfig(level=level, format=log_format)
     return logging.getLogger(__name__)
 
 
