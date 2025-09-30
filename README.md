@@ -70,6 +70,17 @@ python3 src/main.py \
   --parallel
 ```
 
+### With Configuration File
+
+```bash
+# Create config file (see config.example.json)
+python3 src/main.py \
+  --task "Implement feature X" \
+  --task "Write tests for feature X" \
+  --config config.example.json \
+  --verbose  # CLI args override config file
+```
+
 ### End-to-End Demo
 
 ```bash
@@ -162,11 +173,37 @@ def your_tool(param: str) -> str:
 
 ## Configuration
 
-Environment variables (`.env` file):
+### Environment Variables (`.env` file)
 
 ```bash
 XAI_API_KEY=your_grok_api_key_here
 ```
+
+### Configuration File (Optional)
+
+Use `--config` flag to load settings from JSON file. CLI arguments override config file values.
+
+Example `config.json`:
+```json
+{
+  "provider": "grok",
+  "provider_config": {
+    "model": "grok-code-fast-1",
+    "temperature": 0.7
+  },
+  "parallel": true,
+  "timeout": 120,
+  "verbose": true,
+  "custom_agents": [
+    {
+      "role": "security_analyst",
+      "capabilities": ["security", "audit", "vulnerability"]
+    }
+  ]
+}
+```
+
+See `config.example.json` for complete example.
 
 ## Roadmap
 

@@ -14,6 +14,7 @@ from src.entities import Task
 from src.composition import compose_dependencies
 from src.factories import AgentFactory, ProviderFactory
 from src.adapters.cli import ResultFormatter
+from src.config import Config
 
 # Load environment variables from .env file
 # Security: API keys and secrets should be in .env, not hardcoded
@@ -49,8 +50,11 @@ def main(
     Clean Architecture: Main only handles CLI concerns.
     Composition logic is delegated to compose_dependencies.
     """
+    # Load configuration
+    app_config = load_config(config, provider, verbose, parallel, timeout)
+
     # Setup logging based on verbosity
-    logger = setup_logging(verbose)
+    logger = setup_logging(app_config.verbose)
 
     try:
         # Create factory instances (DIP: depend on abstractions)
@@ -62,8 +66,8 @@ def main(
         logger.info(f"Created {len(agents)} agents")
 
         # Create LLM provider via factory
-        llm_provider = provider_factory.create_provider(provider)
-        logger.info(f"Using {provider} LLM provider")
+        llm_provider = provider_factory.create_provider(app_config.provider)
+        logger.info(f"Using {app_config.provider} LLM provider")
 
         # Create tasks from descriptions
         tasks = [
@@ -80,7 +84,7 @@ def main(
         coordinator = compose_dependencies(
             llm_provider=llm_provider,
             agents=agents,
-            logger=logger if verbose else None
+            logger=logger if app_config.verbose else None
         )
 
         # Execute with timeout
@@ -90,17 +94,17 @@ def main(
                     tasks=tasks,
                     agents=agents
                 ),
-                timeout
+                app_config.timeout
             )
         )
 
         # Display results (Clean Architecture: Use CLI adapter)
-        formatter = ResultFormatter(verbose=verbose)
+        formatter = ResultFormatter(verbose=app_config.verbose)
         formatter.format_results(results)
 
     except asyncio.TimeoutError:
         formatter = ResultFormatter()
-        formatter.format_error(f"Operation timed out after {timeout} seconds", "Timeout")
+        formatter.format_error(f"Operation timed out after {app_config.timeout} seconds", "Timeout")
         raise click.Abort()
     except ValueError as e:
         formatter = ResultFormatter()
@@ -108,12 +112,53 @@ def main(
         raise click.Abort()
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
-        formatter = ResultFormatter(verbose=verbose)
-        if verbose:
+        formatter = ResultFormatter(verbose=app_config.verbose)
+        if app_config.verbose:
             raise
         else:
             formatter.format_error(str(e))
             raise click.Abort()
+
+
+def load_config(
+    config_file: str,
+    provider: str,
+    verbose: bool,
+    parallel: bool,
+    timeout: int
+) -> Config:
+    """
+    Load configuration from file and merge with CLI arguments.
+
+    CLI arguments override config file settings.
+
+    Args:
+        config_file: Path to config file (optional)
+        provider: CLI provider argument
+        verbose: CLI verbose flag
+        parallel: CLI parallel flag
+        timeout: CLI timeout value
+
+    Returns:
+        Merged configuration
+    """
+    if config_file:
+        # Load from file and merge with CLI args
+        file_config = Config.from_file(config_file)
+        return file_config.merge_cli_args(
+            provider=provider,
+            verbose=verbose,
+            parallel=parallel,
+            timeout=timeout
+        )
+    else:
+        # Use CLI args only
+        return Config(
+            provider=provider,
+            verbose=verbose,
+            parallel=parallel,
+            timeout=timeout
+        )
 
 
 def setup_logging(verbose: bool) -> logging.Logger:
