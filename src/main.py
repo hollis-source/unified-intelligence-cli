@@ -42,12 +42,16 @@ def main(
     logger = setup_logging(verbose)
 
     try:
+        # Create factory instances (DIP: depend on abstractions)
+        agent_factory = AgentFactory()
+        provider_factory = ProviderFactory()
+
         # Create agents via factory
-        agents = AgentFactory.create_default_agents()
+        agents = agent_factory.create_default_agents()
         logger.info(f"Created {len(agents)} agents")
 
         # Create LLM provider via factory
-        llm_provider = ProviderFactory.create_provider(provider)
+        llm_provider = provider_factory.create_provider(provider)
         logger.info(f"Using {provider} LLM provider")
 
         # Create task

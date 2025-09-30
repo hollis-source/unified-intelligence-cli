@@ -2,11 +2,11 @@
 
 import os
 from typing import Optional, Dict, Any
-from src.interfaces import ITextGenerator
+from src.interfaces import ITextGenerator, IProviderFactory
 from src.adapters.llm.mock_provider import MockLLMProvider
 
 
-class ProviderFactory:
+class ProviderFactory(IProviderFactory):
     """
     Factory for creating LLM providers.
 
@@ -14,23 +14,22 @@ class ProviderFactory:
     DIP: Returns interface, hides implementation.
     """
 
-    # Registry of available providers
-    _providers: Dict[str, Any] = {
-        "mock": MockLLMProvider,
-    }
+    def __init__(self):
+        """Initialize provider factory with registry."""
+        self._providers: Dict[str, Any] = {
+            "mock": MockLLMProvider,
+        }
 
-    @classmethod
-    def register_provider(cls, name: str, provider_class: Any) -> None:
+    def register_provider(self, name: str, provider_class: Any) -> None:
         """
         Register a new provider type.
 
         OCP: Extend without modifying existing code.
         """
-        cls._providers[name] = provider_class
+        self._providers[name] = provider_class
 
-    @classmethod
     def create_provider(
-        cls,
+        self,
         provider_type: str,
         config: Optional[Dict[str, Any]] = None
     ) -> ITextGenerator:
@@ -60,9 +59,9 @@ class ProviderFactory:
                 default_response=config.get("response", "Mock response") if config else "Mock response"
             )
 
-        elif provider_type in cls._providers:
+        elif provider_type in self._providers:
             # Use registered provider
-            provider_class = cls._providers[provider_type]
+            provider_class = self._providers[provider_type]
             return provider_class(**(config or {}))
 
         else:

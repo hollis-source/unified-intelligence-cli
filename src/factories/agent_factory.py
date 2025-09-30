@@ -2,9 +2,10 @@
 
 from typing import List, Dict, Any
 from src.entities import Agent
+from src.interfaces import IAgentFactory
 
 
-class AgentFactory:
+class AgentFactory(IAgentFactory):
     """
     Factory for creating agents.
 
@@ -12,8 +13,7 @@ class AgentFactory:
     SRP: Single responsibility - agent creation.
     """
 
-    @staticmethod
-    def create_default_agents() -> List[Agent]:
+    def create_default_agents(self) -> List[Agent]:
         """
         Create default agent team.
 
@@ -42,8 +42,7 @@ class AgentFactory:
             )
         ]
 
-    @staticmethod
-    def create_from_config(config: List[Dict[str, Any]]) -> List[Agent]:
+    def create_from_config(self, config: List[Dict[str, Any]]) -> List[Agent]:
         """
         Create agents from configuration.
 
