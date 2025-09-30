@@ -19,7 +19,7 @@ venv.bak/
 # Virtual environments
 bin/
 include/
-lib/
+/lib/
 lib64/
 share/
 pyvenv.cfg

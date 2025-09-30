@@ -17,3 +17,8 @@ safety>=3.0.0
 
 # Type checking
 mypy>=1.8.0
+
+# Release automation
+toml>=0.10.2
+build>=1.0.0
+twine>=5.0.0
