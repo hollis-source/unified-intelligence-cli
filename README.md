@@ -1,17 +1,196 @@
 # Unified Intelligence CLI
 
-A modular CLI for multi-agent orchestration: A coordinator distributes tasks to specialized agents (e.g., coder, tester) for optimal execution, inspired by *AI Agents in Action*.
+**Production-ready multi-agent task orchestration framework** following Clean Architecture principles.
+
+A CLI tool that intelligently distributes tasks to specialized agents (coder, tester, reviewer, researcher, coordinator) using LLM-powered execution with tool support. Inspired by *AI Agents in Action* and Robert C. Martin's Clean Code principles.
+
+## Features
+
+✅ **Multi-Task CLI**: Accept multiple tasks in a single command
+✅ **Intelligent Agent Selection**: Fuzzy matching assigns tasks to best-fit agents
+✅ **Tool Support**: Agents can execute shell commands, read/write files, run tests
+✅ **LLM Providers**: Mock (testing) and Grok (production) with extensible architecture
+✅ **Parallel Execution**: Concurrent task processing with dependency handling
+✅ **Clean Architecture**: Entities → Use Cases → Interfaces → Adapters
+✅ **70% Test Coverage**: 30 tests (10 unit + 20 integration)
 
 ## Quick Start
 
-1. `source .venv/bin/activate`
-2. `pip install -e .` (editable install)
-3. `python src/main.py --help` (CLI bootstrap)
+```bash
+# Setup
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 
-## Structure
+# Configure API key (for Grok provider)
+echo "XAI_API_KEY=your_api_key_here" > .env
 
-- `src/`: Production layers (Clean Architecture).
-- `dev/`: Prototypes (e.g., agent network sims).
-- `tests/`: TDD-first (mirror src/).
+# Run with mock provider (no API needed)
+python3 src/main.py \
+  --task "Write a Python function for factorial" \
+  --task "Write tests for factorial function" \
+  --provider mock
 
-See `docs/architecture.md` for details. Iterate: Add entities next.
+# Run with live Grok (requires API key)
+python3 src/main.py \
+  --task "Implement FizzBuzz in Python" \
+  --task "Create comprehensive tests" \
+  --task "Run the tests and report results" \
+  --provider grok \
+  --verbose
+```
+
+## Usage Examples
+
+### Single Task
+
+```bash
+python3 src/main.py --task "Review the codebase for security issues" --provider mock
+```
+
+### Multi-Task Workflow
+
+```bash
+python3 src/main.py \
+  --task "Implement binary search function" \
+  --task "Write unit tests with edge cases" \
+  --task "Review code for optimization opportunities" \
+  --provider grok \
+  --verbose
+```
+
+### With Timeout and Parallel Execution
+
+```bash
+python3 src/main.py \
+  --task "Analyze performance bottlenecks" \
+  --task "Generate optimization report" \
+  --provider grok \
+  --timeout 120 \
+  --parallel
+```
+
+### End-to-End Demo
+
+```bash
+# Run complete dev workflow demo (requires API key)
+python3 demo_full_workflow.py
+```
+
+## Architecture
+
+```
+src/
+├── entities/          # Core business objects (Agent, Task, ExecutionResult)
+├── use_cases/         # Business logic (TaskCoordinator, TaskPlanner)
+├── interfaces/        # Abstractions (ITextGenerator, IAgentExecutor)
+├── adapters/          # External integrations
+│   ├── llm/          # LLM providers (GrokAdapter, MockProvider)
+│   ├── agent/        # Agent implementations (LLMAgentExecutor)
+│   └── cli/          # CLI adapters (ResultFormatter)
+├── factories/         # Dependency Injection (AgentFactory, ProviderFactory)
+├── composition.py     # Composition root
+├── tools.py           # Dev tools (run_command, read_file, write_file, list_files)
+└── main.py            # CLI entry point
+```
+
+### Clean Architecture Layers
+
+1. **Entities** (innermost): Core business objects with no external dependencies
+2. **Use Cases**: Business logic orchestrating entities
+3. **Interfaces**: Abstractions following Dependency Inversion Principle
+4. **Adapters** (outermost): External integrations (LLMs, CLI, tools)
+
+**Dependency Rule**: Dependencies point inward only. Inner layers never depend on outer layers.
+
+## Development
+
+### Run Tests
+
+```bash
+source venv/bin/activate
+PYTHONPATH=. pytest tests/ -v
+```
+
+### Check Coverage
+
+```bash
+PYTHONPATH=. pytest tests/ --cov=src --cov-report=term-missing
+```
+
+### Add New Agent Type
+
+```python
+# src/factories/agent_factory.py
+Agent(
+    role="your_role",
+    capabilities=["capability1", "capability2"]
+)
+```
+
+### Add New LLM Provider
+
+1. Implement `ITextGenerator` interface in `src/adapters/llm/`
+2. Register in `ProviderFactory.create_provider()`
+3. Add tests in `tests/integration/test_provider_integration.py`
+
+### Add New Tool
+
+```python
+# src/tools.py
+def your_tool(param: str) -> str:
+    """Tool implementation."""
+    return result
+
+# Add to DEV_TOOLS list with OpenAI format definition
+# Add to TOOL_FUNCTIONS registry
+```
+
+## Project Structure
+
+- `src/`: Production code (Clean Architecture layers)
+- `tests/`: Unit and integration tests (TDD approach)
+- `scripts/`: Utilities (GrokSession, API clients)
+- `demo_full_workflow.py`: End-to-end workflow demonstration
+- `REFACTORING_ASSESSMENT.md`: Code quality analysis
+
+## Testing Strategy
+
+- **Unit Tests** (10): Test entities and use case logic in isolation
+- **Integration Tests** (20): Test component interactions and real workflows
+- **Coverage**: 70% (acceptable given CLI/composition complexity)
+
+## Configuration
+
+Environment variables (`.env` file):
+
+```bash
+XAI_API_KEY=your_grok_api_key_here
+```
+
+## Roadmap
+
+**Completed (100% Core Functionality):**
+- ✅ Multi-task CLI input
+- ✅ Intelligent agent selection with fuzzy matching
+- ✅ Tool-supported LLM execution
+- ✅ Clean Architecture foundation
+- ✅ End-to-end dev workflow demo
+
+**Future Enhancements:**
+- 🔄 Runtime provider switching via --config flag
+- 🔄 Additional LLM providers (OpenAI, Anthropic)
+- 🔄 Persistent task history and context
+- 🔄 Web UI for task management
+- 🔄 Plugin system for custom agents and tools
+
+## Principles
+
+This project follows:
+- **Clean Code** (Robert C. Martin): Small functions, meaningful names, explicit error handling
+- **Clean Architecture**: Dependency inversion, use case-driven design
+- **SOLID Principles**: SRP, OCP, LSP, ISP, DIP
+- **TDD**: Tests first, refactor later
+- **Pragmatic**: Fact-based decisions, avoid premature optimization
+
+See `CLAUDE.md` for development guidelines.
