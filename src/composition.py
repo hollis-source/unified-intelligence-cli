@@ -11,13 +11,17 @@ from src.interfaces import ITextGenerator, IAgentCoordinator
 from src.factories.provider_factory import ProviderFactory
 from src.factories.agent_factory import AgentFactory
 from src.factories.orchestration_factory import OrchestrationFactory
+from src.utils.data_collector import DataCollector
 
 
 def compose_dependencies(
     llm_provider: ITextGenerator,
     agents: List[Agent],
     logger: Optional[logging.Logger] = None,
-    orchestrator_mode: str = "simple"
+    orchestrator_mode: str = "simple",
+    collect_data: bool = False,
+    data_dir: str = "data/training",
+    provider_name: str = "unknown"
 ) -> IAgentCoordinator:
     """
     Compose dependencies for the coordinator use case.
@@ -31,12 +35,27 @@ def compose_dependencies(
         agents: Available agents
         logger: Optional logger
         orchestrator_mode: Orchestration mode ("simple" or "openai-agents")
+        collect_data: Enable data collection for training (Week 9)
+        data_dir: Directory to store collected data (Week 9)
+        provider_name: LLM provider name (Week 9)
 
     Returns:
         Configured IAgentCoordinator (implementation depends on orchestrator_mode)
     """
+    # Week 9: Create data collector if enabled
+    data_collector = None
+    if collect_data:
+        data_collector = DataCollector(data_dir=data_dir, enabled=True)
+        if logger:
+            logger.info(f"Data collection enabled: {data_dir}")
+
     # Create adapters
-    agent_executor = LLMAgentExecutor(llm_provider)
+    agent_executor = LLMAgentExecutor(
+        llm_provider,
+        data_collector=data_collector,
+        provider_name=provider_name,
+        orchestrator=orchestrator_mode
+    )
     agent_selector = CapabilityBasedSelector()
 
     # Create planner use case (SRP: planning)

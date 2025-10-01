@@ -29,6 +29,10 @@ class Config:
     debug: bool = False  # Week 3: Debug mode (LLM calls, tool details)
     orchestrator: str = "simple"  # Week 7: Orchestration mode (simple, openai-agents)
 
+    # Data collection settings (Week 9: Model training pipeline)
+    collect_data: bool = False  # Enable passive data collection for fine-tuning
+    data_dir: str = "data/training"  # Directory to store collected interactions
+
     # Agent settings (optional custom agent definitions)
     custom_agents: list = field(default_factory=list)
 
@@ -65,6 +69,8 @@ class Config:
             verbose=data.get("verbose", False),
             debug=data.get("debug", False),
             orchestrator=data.get("orchestrator", "simple"),
+            collect_data=data.get("collect_data", False),
+            data_dir=data.get("data_dir", "data/training"),
             custom_agents=data.get("custom_agents", [])
         )
 
@@ -75,7 +81,9 @@ class Config:
         timeout: Optional[int] = None,
         verbose: Optional[bool] = None,
         debug: Optional[bool] = None,
-        orchestrator: Optional[str] = None
+        orchestrator: Optional[str] = None,
+        collect_data: Optional[bool] = None,
+        data_dir: Optional[str] = None
     ) -> "Config":
         """
         Merge CLI arguments with config file settings.
@@ -89,6 +97,8 @@ class Config:
             verbose: CLI verbose flag
             debug: CLI debug flag (Week 3)
             orchestrator: CLI orchestrator mode (Week 7)
+            collect_data: CLI data collection flag (Week 9)
+            data_dir: CLI data directory (Week 9)
 
         Returns:
             New Config with merged values
@@ -101,6 +111,8 @@ class Config:
             verbose=verbose if verbose is not None else self.verbose,
             debug=debug if debug is not None else self.debug,
             orchestrator=orchestrator if orchestrator is not None else self.orchestrator,
+            collect_data=collect_data if collect_data is not None else self.collect_data,
+            data_dir=data_dir if data_dir is not None else self.data_dir,
             custom_agents=self.custom_agents
         )
 
@@ -118,5 +130,7 @@ class Config:
             "verbose": self.verbose,
             "debug": self.debug,
             "orchestrator": self.orchestrator,
+            "collect_data": self.collect_data,
+            "data_dir": self.data_dir,
             "custom_agents": self.custom_agents
         }

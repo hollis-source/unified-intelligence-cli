@@ -2,9 +2,11 @@
 LLM-powered agent executor - Adapter layer implementation.
 
 Week 1: Enhanced with error_details propagation for better debugging.
+Week 9: Added passive data collection for model training pipeline.
 """
 
-from typing import Optional
+import time
+from typing import Optional, Any
 from src.entities import Agent, Task, ExecutionResult, ExecutionStatus, ExecutionContext
 from src.interfaces import IAgentExecutor, ITextGenerator, LLMConfig
 from src.exceptions import ToolExecutionError
@@ -14,12 +16,16 @@ class LLMAgentExecutor(IAgentExecutor):
     """
     Execute agents using LLM for task completion.
     DIP: Depends on ITextGenerator abstraction.
+    Week 9: Optionally collects execution data for model training.
     """
 
     def __init__(
         self,
         llm_provider: ITextGenerator,
-        default_config: Optional[LLMConfig] = None
+        default_config: Optional[LLMConfig] = None,
+        data_collector: Optional[Any] = None,
+        provider_name: str = "unknown",
+        orchestrator: str = "simple"
     ):
         """
         Initialize with LLM provider.
@@ -27,12 +33,18 @@ class LLMAgentExecutor(IAgentExecutor):
         Args:
             llm_provider: LLM for agent intelligence
             default_config: Default LLM configuration
+            data_collector: Optional DataCollector for training data (Week 9)
+            provider_name: LLM provider name (mock, grok, tongyi) (Week 9)
+            orchestrator: Orchestrator mode (simple, openai-agents) (Week 9)
         """
         self.llm_provider = llm_provider
         self.default_config = default_config or LLMConfig(
             temperature=0.7,
             max_tokens=500
         )
+        self.data_collector = data_collector
+        self.provider_name = provider_name
+        self.orchestrator = orchestrator
 
     async def execute(
         self,
@@ -44,6 +56,7 @@ class LLMAgentExecutor(IAgentExecutor):
         Execute task using agent's role and LLM.
 
         Clean Code: Clear async execution pattern.
+        Week 9: Logs interaction data for model training if enabled.
 
         Args:
             agent: Agent to execute
@@ -53,6 +66,9 @@ class LLMAgentExecutor(IAgentExecutor):
         Returns:
             ExecutionResult with LLM output
         """
+        # Week 9: Track execution time for data collection
+        start_time = time.time()
+
         # Build prompt based on agent role and task
         messages = self._build_messages(agent, task, context)
 
@@ -63,6 +79,9 @@ class LLMAgentExecutor(IAgentExecutor):
                 config=self.default_config
             )
 
+            # Calculate execution duration
+            duration_ms = int((time.time() - start_time) * 1000)
+
             # Update context if provided
             if context:
                 context.history.append({
@@ -70,6 +89,21 @@ class LLMAgentExecutor(IAgentExecutor):
                     "content": response,
                     "agent": agent.role
                 })
+
+            # Week 9: Log successful interaction for training data
+            if self.data_collector:
+                self.data_collector.log_interaction(
+                    task=task,
+                    agent=agent,
+                    messages=messages,
+                    output=response,
+                    status="success",
+                    duration_ms=duration_ms,
+                    llm_config=self.default_config,
+                    provider=self.provider_name,
+                    orchestrator=self.orchestrator,
+                    context_history_length=len(context.history) if context else 0
+                )
 
             return ExecutionResult(
                 status=ExecutionStatus.SUCCESS,
@@ -82,6 +116,9 @@ class LLMAgentExecutor(IAgentExecutor):
             )
 
         except Exception as e:
+            # Calculate execution duration
+            duration_ms = int((time.time() - start_time) * 1000)
+
             # Week 1: Propagate tool errors with full context
             error_details = None
 
@@ -106,6 +143,23 @@ class LLMAgentExecutor(IAgentExecutor):
                         "task_id": task.task_id
                     }
                 }
+
+            # Week 9: Log failed interaction for training data
+            if self.data_collector:
+                self.data_collector.log_interaction(
+                    task=task,
+                    agent=agent,
+                    messages=messages,
+                    output=None,
+                    status="failure",
+                    duration_ms=duration_ms,
+                    llm_config=self.default_config,
+                    provider=self.provider_name,
+                    errors=[str(e)],
+                    error_details=error_details,
+                    orchestrator=self.orchestrator,
+                    context_history_length=len(context.history) if context else 0
+                )
 
             return ExecutionResult(
                 status=ExecutionStatus.FAILURE,

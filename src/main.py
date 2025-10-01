@@ -39,6 +39,10 @@ if env_file.exists():
               help="Timeout in seconds for async operations")
 @click.option("--orchestrator", type=click.Choice(["simple", "openai-agents"]), default="simple",
               help="Orchestration mode: simple (current) or openai-agents (Week 7)")
+@click.option("--collect-data", is_flag=True,
+              help="Enable data collection for model training (Week 9)")
+@click.option("--data-dir", type=click.Path(), default="data/training",
+              help="Directory to store collected training data (default: data/training)")
 def main(
     task_descriptions: tuple,
     provider: str,
@@ -47,7 +51,9 @@ def main(
     parallel: bool,
     config: str,
     timeout: int,
-    orchestrator: str
+    orchestrator: str,
+    collect_data: bool,
+    data_dir: str
 ) -> None:
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.
@@ -56,7 +62,10 @@ def main(
     Composition logic is delegated to compose_dependencies.
     """
     # Load configuration
-    app_config = load_config(config, provider, verbose, debug, parallel, timeout, orchestrator)
+    app_config = load_config(
+        config, provider, verbose, debug, parallel, timeout,
+        orchestrator, collect_data, data_dir
+    )
 
     # Setup logging based on verbosity
     logger = setup_logging(app_config.verbose, app_config.debug)
@@ -85,12 +94,15 @@ def main(
         ]
         logger.info(f"Created {len(tasks)} tasks")
 
-        # Compose dependencies (Week 7: with orchestrator mode)
+        # Compose dependencies (Week 7: with orchestrator mode, Week 9: data collection)
         coordinator = compose_dependencies(
             llm_provider=llm_provider,
             agents=agents,
             logger=logger if app_config.verbose else None,
-            orchestrator_mode=app_config.orchestrator
+            orchestrator_mode=app_config.orchestrator,
+            collect_data=app_config.collect_data,
+            data_dir=app_config.data_dir,
+            provider_name=app_config.provider
         )
 
         # Execute with timeout
@@ -133,7 +145,9 @@ def load_config(
     debug: bool,
     parallel: bool,
     timeout: int,
-    orchestrator: str = "simple"
+    orchestrator: str = "simple",
+    collect_data: bool = False,
+    data_dir: str = "data/training"
 ) -> Config:
     """
     Load configuration from file and merge with CLI arguments.
@@ -147,6 +161,9 @@ def load_config(
         debug: CLI debug flag (Week 3)
         parallel: CLI parallel flag
         timeout: CLI timeout value
+        orchestrator: CLI orchestrator mode (Week 7)
+        collect_data: CLI data collection flag (Week 9)
+        data_dir: CLI data directory (Week 9)
 
     Returns:
         Merged configuration
@@ -160,7 +177,9 @@ def load_config(
             debug=debug,
             parallel=parallel,
             timeout=timeout,
-            orchestrator=orchestrator
+            orchestrator=orchestrator,
+            collect_data=collect_data,
+            data_dir=data_dir
         )
     else:
         # Use CLI args only
@@ -170,7 +189,9 @@ def load_config(
             debug=debug,
             parallel=parallel,
             timeout=timeout,
-            orchestrator=orchestrator
+            orchestrator=orchestrator,
+            collect_data=collect_data,
+            data_dir=data_dir
         )
 
 

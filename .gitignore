@@ -75,6 +75,7 @@ dmypy.json
 
 # Models and data
 /data/ai-models/
+/data/training/  # Week 9: Training data collection (JSONL files)
 *.gguf
 *.bin
 *.safetensors
