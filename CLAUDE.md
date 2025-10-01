@@ -47,4 +47,66 @@ Apply these rigorously when reviewing or generating code:
 - **Iterate and Commit**: Refactor per principles, commit with descriptive messages. Highlight any innovations' risks or data support.
 - **AI-Specific**: For Hugging Face/llama.cpp, use dependency inversion; cache responses. Quantize models (e.g., Q4) for CPU efficiency.
 
+## Clean Agile Practices
+Follow Clean Agile principles for sustainable development:
+
+- **Small, Frequent Commits**: Commit working code frequently (every 30-60 min or 200-500 lines). Each commit should be a coherent unit of work that compiles and passes tests. Never commit broken code.
+- **Descriptive Commit Messages**: Use format: "Category: Brief summary\n\nDetailed explanation of what and why, not how.\n\nBenefits:\n- Benefit 1\n- Benefit 2"
+- **Incremental Development**: Break large features into small, deliverable increments. Each increment should provide value and be testable.
+- **Continuous Refactoring**: Refactor continuously as you go, not as a separate phase. Keep code clean at all times.
+- **Test-Driven Development**: Write failing test → implement minimum code to pass → refactor → repeat.
+
+## Team-Based Agent Architecture (Week 12+)
+For multi-agent systems with 8+ agents, use team-based architecture for scalability:
+
+**Core Concept**: Route tasks to teams (not individual agents). Teams handle internal routing.
+
+**Architecture**:
+```
+Task → Router → Team (domain-based) → Team Internal Logic → Agent
+```
+
+**Benefits**:
+- 50% fewer routing decisions (7 teams vs 12 agents)
+- Encapsulated team logic (teams know nuanced differences)
+- Solves capability overlap (e.g., unit vs integration testing)
+- Natural scalability (add agents to teams, not router)
+- Mirrors real organizations
+
+**Implementation**:
+1. **AgentTeam Entity**: Base class with `route_internally(task)` method
+2. **Concrete Teams**: Override `route_internally()` for team-specific routing
+   - FrontendTeam: Design → lead, Implementation → specialist
+   - BackendTeam: Design → lead, Implementation → specialist
+   - TestingTeam: Strategy → lead, Unit tests → unit engineer, Integration → integration engineer
+3. **TeamFactory**: Creates teams from individual agents
+4. **TeamRouter**: Two-phase routing (domain → team, team → agent)
+
+**Example - Testing Team**:
+```python
+class TestingTeam(AgentTeam):
+    def route_internally(self, task: Task) -> Agent:
+        desc = task.description.lower()
+
+        # Strategy → Lead
+        if 'strategy' in desc or 'planning' in desc:
+            return self.lead_agent
+
+        # Unit tests → Unit engineer
+        if any(kw in desc for kw in ['unit', 'mock', 'fixture']):
+            return self.get_agent('unit-test-engineer')
+
+        # Integration → Integration engineer
+        if any(kw in desc for kw in ['integration', 'e2e']):
+            return self.get_agent('integration-test-engineer')
+
+        return self.lead_agent  # Default
+```
+
+**When to Use**:
+- 8+ agents: Consider team-based routing
+- 12+ agents: Strongly recommended
+- Agent overlap issues: Teams solve this naturally
+- Adding agents frequently: Teams scale better
+
 IMPORTANT: Always critique outputs against SOLID and Martin's principles, suggesting improvements with examples. Base advice on facts/data; be open to innovation but ground it in evidence. ultrathink
