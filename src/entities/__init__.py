@@ -2,5 +2,29 @@
 
 from .agent import Agent, Task
 from .execution import ExecutionResult, ExecutionContext, ExecutionStatus
+from .agent_team import (
+    AgentTeam,
+    FrontendTeam,
+    BackendTeam,
+    TestingTeam,
+    InfrastructureTeam,
+    ResearchTeam,
+    OrchestrationTeam,
+    QualityAssuranceTeam
+)
 
-__all__ = ["Agent", "Task", "ExecutionResult", "ExecutionContext", "ExecutionStatus"]
+__all__ = [
+    "Agent",
+    "Task",
+    "ExecutionResult",
+    "ExecutionContext",
+    "ExecutionStatus",
+    "AgentTeam",
+    "FrontendTeam",
+    "BackendTeam",
+    "TestingTeam",
+    "InfrastructureTeam",
+    "ResearchTeam",
+    "OrchestrationTeam",
+    "QualityAssuranceTeam"
+]
