@@ -36,7 +36,7 @@ def load_training_config():
     - Learning rate 2e-5
     """
     return {
-        "base_model": "Qwen/Qwen3-8B-Instruct",  # Updated from Tongyi-30B
+        "base_model": "Qwen/Qwen3-8B",  # Correct Qwen3 naming (no -Instruct suffix)
         "lora_r": 16,                   # Increased from 8 (Grok: better for small datasets)
         "lora_alpha": 32,               # 2× rank (Grok recommendation)
         "lora_dropout": 0.1,            # Prevents overfitting on 29 val examples
