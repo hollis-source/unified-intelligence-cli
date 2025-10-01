@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """
-LoRA Fine-Tuning Script for Qwen2.5-Coder-7B
+LoRA Fine-Tuning Script for Qwen3-8B-Instruct
 
-Week 9 Phase 3: CPU-based LoRA training on 298 interactions.
+Week 9 Phase 4: CPU-based LoRA training on 298 interactions.
+Based on Grok API recommendations (2025-10-01).
 
 Usage:
-    python3 train_lora.py --epochs 3 --batch-size 4
+    python3 train_lora.py --epochs 3 --batch-size 2
 """
 
 import argparse
@@ -25,17 +26,30 @@ from datasets import load_dataset
 
 
 def load_training_config():
-    """Load LoRA training configuration."""
+    """
+    Load LoRA training configuration for Qwen3-8B-Instruct.
+
+    Based on Grok API recommendations (2025-10-01):
+    - Rank 16 (optimal for 298 examples)
+    - Target attention + MLP layers
+    - Batch size 2 with grad_accum 16 (effective batch = 32)
+    - Learning rate 2e-5
+    """
     return {
-        "base_model": "Qwen/Qwen2.5-Coder-7B-Instruct",
-        "lora_r": 8,                    # Rank (8 = good balance)
-        "lora_alpha": 32,               # Scaling (typically 4×r)
-        "lora_dropout": 0.1,            # Regularization
-        "target_modules": ["q_proj", "v_proj", "k_proj", "o_proj"],  # Attention layers
-        "learning_rate": 2e-4,          # LoRA learning rate (higher than full FT)
-        "num_train_epochs": 3,          # Typical for LoRA
-        "per_device_train_batch_size": 2,  # Small for CPU
-        "gradient_accumulation_steps": 8,   # Effective batch = 2×8 = 16
+        "base_model": "Qwen/Qwen3-8B-Instruct",  # Updated from Tongyi-30B
+        "lora_r": 16,                   # Increased from 8 (Grok: better for small datasets)
+        "lora_alpha": 32,               # 2× rank (Grok recommendation)
+        "lora_dropout": 0.1,            # Prevents overfitting on 29 val examples
+        "target_modules": [
+            # Attention layers
+            "q_proj", "k_proj", "v_proj", "o_proj",
+            # MLP layers (Grok: core transformer components)
+            "gate_proj", "up_proj", "down_proj"
+        ],
+        "learning_rate": 2e-5,          # Grok: recommended for Qwen3
+        "num_train_epochs": 3,          # Test first, adjust if needed
+        "per_device_train_batch_size": 2,  # Increased from 1 (110GB RAM sufficient)
+        "gradient_accumulation_steps": 16,  # Effective batch = 2×16 = 32
         "warmup_steps": 50,             # Gradual LR warmup
         "weight_decay": 0.01,           # Regularization
         "max_grad_norm": 1.0,           # Gradient clipping
@@ -271,10 +285,10 @@ def train_lora(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="LoRA fine-tuning for Qwen2.5-Coder-7B")
+    parser = argparse.ArgumentParser(description="LoRA fine-tuning for Qwen3-8B-Instruct")
     parser.add_argument("--data-dir", type=str, default="training/data",
                         help="Directory with train/val JSONL files")
-    parser.add_argument("--output-dir", type=str, default="training/models/qwen2.5-coder-7b-lora",
+    parser.add_argument("--output-dir", type=str, default="training/models/qwen3-8b-instruct-lora",
                         help="Output directory for trained model")
     parser.add_argument("--epochs", type=int, help="Number of training epochs (overrides config)")
     parser.add_argument("--batch-size", type=int, help="Per-device batch size (overrides config)")
