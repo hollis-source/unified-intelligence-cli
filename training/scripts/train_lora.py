@@ -203,7 +203,7 @@ def train_lora(
         logging_steps=config["logging_steps"],
         save_steps=config["save_steps"],
         eval_steps=config["eval_steps"],
-        evaluation_strategy="steps",
+        eval_strategy="steps",  # Changed from evaluation_strategy (transformers 4.56+)
         save_strategy="steps",
         save_total_limit=config["save_total_limit"],
         load_best_model_at_end=True,
