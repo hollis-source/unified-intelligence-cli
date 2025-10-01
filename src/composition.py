@@ -2,10 +2,11 @@
 
 import logging
 from typing import Optional, List
-from src.entities import Agent
+from src.entities import Agent, AgentTeam
 from src.use_cases.task_planner import TaskPlannerUseCase
 from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 from src.adapters.agent.capability_selector import CapabilityBasedSelector
+from src.adapters.agent.team_selector import TeamBasedSelector
 from src.adapters.agent.llm_executor import LLMAgentExecutor
 from src.interfaces import ITextGenerator, IAgentCoordinator
 from src.factories.provider_factory import ProviderFactory
@@ -21,7 +22,9 @@ def compose_dependencies(
     orchestrator_mode: str = "simple",
     collect_data: bool = False,
     data_dir: str = "data/training",
-    provider_name: str = "unknown"
+    provider_name: str = "unknown",
+    routing_mode: str = "individual",
+    teams: Optional[List[AgentTeam]] = None
 ) -> IAgentCoordinator:
     """
     Compose dependencies for the coordinator use case.
@@ -38,6 +41,8 @@ def compose_dependencies(
         collect_data: Enable data collection for training (Week 9)
         data_dir: Directory to store collected data (Week 9)
         provider_name: LLM provider name (Week 9)
+        routing_mode: Routing mode ("individual" or "team") (Week 12)
+        teams: Available agent teams (required if routing_mode is "team") (Week 12)
 
     Returns:
         Configured IAgentCoordinator (implementation depends on orchestrator_mode)
@@ -56,7 +61,16 @@ def compose_dependencies(
         provider_name=provider_name,
         orchestrator=orchestrator_mode
     )
-    agent_selector = CapabilityBasedSelector()
+
+    # Week 12: Create agent selector based on routing mode
+    if routing_mode == "team" and teams:
+        agent_selector = TeamBasedSelector(teams)
+        if logger:
+            logger.info(f"Using team-based routing with {len(teams)} teams")
+    else:
+        agent_selector = CapabilityBasedSelector()
+        if logger and routing_mode == "team":
+            logger.warning("Team routing requested but no teams provided, using individual routing")
 
     # Create planner use case (SRP: planning)
     task_planner = TaskPlannerUseCase(

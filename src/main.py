@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 from src.entities import Task
 from src.composition import compose_dependencies
-from src.factories import AgentFactory, ProviderFactory
+from src.factories import AgentFactory, ProviderFactory, TeamFactory
 from src.adapters.cli import ResultFormatter
 from src.config import Config
 
@@ -79,22 +79,41 @@ def main(
     try:
         # Create factory instances (DIP: depend on abstractions)
         agent_factory = AgentFactory()
+        team_factory = TeamFactory(agent_factory)
         provider_factory = ProviderFactory()
 
-        # Create agents via factory (Week 11: Support extended/scaled agent modes)
-        if app_config.agent_mode == "scaled":
-            agents = agent_factory.create_scaled_agents()
-            logger.info(f"Created {len(agents)} agents (scaled mode: 12 agents, full 3-tier hierarchy)")
-        elif app_config.agent_mode == "extended":
-            agents = agent_factory.create_extended_agents()
-            logger.info(f"Created {len(agents)} agents (extended mode: 8 agents, 3-tier hierarchy)")
+        # Create agents or teams based on routing mode (Week 12: Team-based routing)
+        if app_config.routing_mode == "team":
+            # Team-based routing (Week 12)
+            if app_config.agent_mode == "scaled":
+                teams = team_factory.create_scaled_teams()
+                logger.info(f"Created {len(teams)} teams (scaled mode: 12 agents across 7 teams)")
+            elif app_config.agent_mode == "extended":
+                teams = team_factory.create_extended_teams()
+                logger.info(f"Created {len(teams)} teams (extended mode: 8 agents across teams)")
+            else:
+                teams = team_factory.create_default_teams()
+                logger.info(f"Created {len(teams)} teams (default mode: 5 single-agent teams)")
+
+            # Extract agents from teams for backward compatibility
+            agents = team_factory.get_all_agents_from_teams(teams)
         else:
-            agents = agent_factory.create_default_agents()
-            logger.info(f"Created {len(agents)} agents (default mode)")
+            # Individual agent routing (Week 11, backward compatible)
+            teams = None
+            if app_config.agent_mode == "scaled":
+                agents = agent_factory.create_scaled_agents()
+                logger.info(f"Created {len(agents)} agents (scaled mode: 12 agents, individual routing)")
+            elif app_config.agent_mode == "extended":
+                agents = agent_factory.create_extended_agents()
+                logger.info(f"Created {len(agents)} agents (extended mode: 8 agents, individual routing)")
+            else:
+                agents = agent_factory.create_default_agents()
+                logger.info(f"Created {len(agents)} agents (default mode)")
 
         # Create LLM provider via factory
         llm_provider = provider_factory.create_provider(app_config.provider)
         logger.info(f"Using {app_config.provider} LLM provider")
+        logger.info(f"Routing mode: {app_config.routing_mode}")
 
         # Create tasks from descriptions
         tasks = [
@@ -107,7 +126,7 @@ def main(
         ]
         logger.info(f"Created {len(tasks)} tasks")
 
-        # Compose dependencies (Week 7: with orchestrator mode, Week 9: data collection)
+        # Compose dependencies (Week 7: orchestrator mode, Week 9: data collection, Week 12: team routing)
         coordinator = compose_dependencies(
             llm_provider=llm_provider,
             agents=agents,
@@ -115,7 +134,9 @@ def main(
             orchestrator_mode=app_config.orchestrator,
             collect_data=app_config.collect_data,
             data_dir=app_config.data_dir,
-            provider_name=app_config.provider
+            provider_name=app_config.provider,
+            routing_mode=app_config.routing_mode,
+            teams=teams
         )
 
         # Execute with timeout
