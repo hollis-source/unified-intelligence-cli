@@ -1,0 +1,52 @@
+{"task_id": 25, "description": "Design an ITaskRepository interface for CRUD operations on tasks", "category": "1", "agent": "coder"}
+{"task_id": 116, "description": "Measure average function length and refactor functions over 20 lines", "category": "3", "agent": "coder"}
+{"task_id": 285, "description": "Design State pattern for task lifecycle management", "category": "9", "agent": "coder"}
+{"task_id": 295, "description": "Implement actor model for concurrent task processing", "category": "9", "agent": "coder"}
+{"task_id": 102, "description": "Design test utilities for asserting Clean Architecture layer dependencies", "category": "3", "agent": "coder"}
+{"task_id": 224, "description": "Simplify nested if statements using guard clauses", "category": "6", "agent": "coder"}
+{"task_id": 284, "description": "Implement Memento pattern for execution state checkpointing", "category": "9", "agent": "coder"}
+{"task_id": 40, "description": "Design a testing mock factory that provides test doubles for all interfaces", "category": "1", "agent": "coder"}
+{"task_id": 258, "description": "Design feature prioritization framework based on value and effort", "category": "8", "agent": "coder"}
+{"task_id": 103, "description": "Create performance benchmark tests for LLM adapter response times", "category": "3", "agent": "coder"}
+{"task_id": 288, "description": "Design Builder pattern for complex configuration construction", "category": "9", "agent": "coder"}
+{"task_id": 207, "description": "Eliminate dead code identified through coverage analysis", "category": "6", "agent": "coder"}
+{"task_id": 41, "description": "Identify SRP violations in task_coordinator.py and propose refactoring strategy", "category": "2", "agent": "coder"}
+{"task_id": 236, "description": "Document exceptions that can be raised by each function", "category": "7", "agent": "coder"}
+{"task_id": 223, "description": "Reduce cyclomatic complexity of high-complexity functions using early returns", "category": "6", "agent": "coder"}
+{"task_id": 2, "description": "Create an Agent entity that validates role and capabilities on initialization", "category": "1", "agent": "coder"}
+{"task_id": 255, "description": "Document llama.cpp integration patterns and optimization techniques", "category": "7", "agent": "coder"}
+{"task_id": 237, "description": "Write usage examples in docstrings showing common patterns", "category": "7", "agent": "coder"}
+{"task_id": 74, "description": "Create IFileSystem abstraction to eliminate direct Path/os.path dependencies", "category": "2", "agent": "coder"}
+{"task_id": 179, "description": "Design user-friendly error messages with suggestions and troubleshooting steps", "category": "5", "agent": "coder"}
+{"task_id": 141, "description": "Create data quality metrics: average token length, vocabulary diversity, error rate", "category": "4", "agent": "coder"}
+{"task_id": 59, "description": "Create a test suite that validates LSP compliance for all executor implementations", "category": "2", "agent": "coder"}
+{"task_id": 134, "description": "Design batching strategy for parallel inference requests with optimal batch size", "category": "4", "agent": "coder"}
+{"task_id": 291, "description": "Create Hexagonal Architecture ports and adapters mapping", "category": "9", "agent": "coder"}
+{"task_id": 208, "description": "Refactor complex conditionals into guard clauses and early returns", "category": "6", "agent": "coder"}
+{"task_id": 195, "description": "Design metrics collection system tracking execution time, tokens, costs", "category": "5", "agent": "coder"}
+{"task_id": 212, "description": "Standardize naming conventions across codebase (snake_case, PascalCase)", "category": "6", "agent": "coder"}
+{"task_id": 52, "description": "Design a middleware pipeline for LLM requests that's extensible via composition", "category": "2", "agent": "coder"}
+{"task_id": 172, "description": "Implement --format option supporting JSON, YAML, table, and markdown outputs", "category": "5", "agent": "coder"}
+{"task_id": 7, "description": "Design a TaskDependency value object that validates acyclic dependency graphs", "category": "1", "agent": "coder"}
+{"task_id": 183, "description": "Implement circuit breaker pattern for failing LLM providers with automatic recovery", "category": "5", "agent": "coder"}
+{"task_id": 158, "description": "Create temperature and top-p optimization based on task determinism requirements", "category": "4", "agent": "coder"}
+{"task_id": 62, "description": "Refactor RetryExecutor to maintain same exception types as base IAgentExecutor", "category": "2", "agent": "coder"}
+{"task_id": 58, "description": "Refactor MockLLMProvider to fully implement ITextGenerator contract including edge cases", "category": "2", "agent": "coder"}
+{"task_id": 24, "description": "Implement a RetryAdapter that retries failed LLM calls with configurable backoff", "category": "1", "agent": "coder"}
+{"task_id": 8, "description": "Implement a Task factory method from_dict that validates all required fields", "category": "1", "agent": "coder"}
+{"task_id": 9, "description": "Design a TaskPlannerUseCase interface with abstract plan() method signature", "category": "1", "agent": "coder"}
+{"task_id": 135, "description": "Create a model selection algorithm based on task complexity and latency requirements", "category": "4", "agent": "coder"}
+{"task_id": 180, "description": "Implement error aggregation for parallel task execution showing all failures", "category": "5", "agent": "coder"}
+{"task_id": 23, "description": "Design a LoggingAdapter that wraps any ITextGenerator with structured logging", "category": "1", "agent": "coder"}
+{"task_id": 168, "description": "Create streaming output handler for real-time LLM response display", "category": "5", "agent": "coder"}
+{"task_id": 267, "description": "Break down 'implement caching layer' into design, implement, test phases", "category": "8", "agent": "coder"}
+{"task_id": 218, "description": "Extract nested loops into separate well-named functions", "category": "6", "agent": "coder"}
+{"task_id": 202, "description": "Refactor god objects into focused single-responsibility classes", "category": "6", "agent": "coder"}
+{"task_id": 27, "description": "Refactor existing interfaces to follow Interface Segregation Principle (ISP)", "category": "1", "agent": "coder"}
+{"task_id": 217, "description": "Refactor functions doing multiple things into single-purpose functions", "category": "6", "agent": "coder"}
+{"task_id": 36, "description": "Design a configuration-based DI system that reads wiring from YAML files", "category": "1", "agent": "coder"}
+{"task_id": 5, "description": "Ensure each task is well-formed: clear, specific, actionable", "category": "9", "agent": "coder"}
+{"task_id": 65, "description": "Split ITextGenerator into ISimpleGenerator and IToolAwareGenerator interfaces", "category": "2", "agent": "coder"}
+{"task_id": 169, "description": "Implement --interactive mode for multi-turn conversations with persistent context", "category": "5", "agent": "coder"}
+{"task_id": 13, "description": "Design a TaskValidationUseCase that checks task descriptions against agent capabilities", "category": "1", "agent": "coder"}
+{"task_id": 60, "description": "Fix precondition strengthening in GrokAdapter that violates LSP for timeout parameters", "category": "2", "agent": "coder"}

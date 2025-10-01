@@ -1,0 +1,5 @@
+{"task_id": 272, "description": "Create CI/CD pipeline with automated testing, linting, and deployment", "category": "8", "agent": "tester"}
+{"task_id": 268, "description": "Decompose 'add CLI interactive mode' into UX, implementation, testing", "category": "8", "agent": "tester"}
+{"task_id": 96, "description": "Write integration tests for orchestrator mode switching (simple vs openai-agents)", "category": "3", "agent": "tester"}
+{"task_id": 100, "description": "Create custom pytest markers for slow, integration, and unit test categorization", "category": "3", "agent": "tester"}
+{"task_id": 248, "description": "Write testing guide showing how to write and run tests", "category": "7", "agent": "tester"}
