@@ -33,8 +33,12 @@ class Config:
     collect_data: bool = False  # Enable passive data collection for fine-tuning
     data_dir: str = "data/training"  # Directory to store collected interactions
 
-    # Agent settings (optional custom agent definitions)
+    # Agent settings (Week 11: Hierarchical agent scaling)
+    agent_mode: str = "default"  # Agent configuration: "default" (5 agents), "extended" (8 agents), "scaled" (12 agents)
     custom_agents: list = field(default_factory=list)
+
+    # Routing settings (Week 12: Team-based routing)
+    routing_mode: str = "individual"  # Routing mode: "individual" (agent-based) or "team" (team-based)
 
     @classmethod
     def from_file(cls, file_path: str) -> "Config":
@@ -71,7 +75,9 @@ class Config:
             orchestrator=data.get("orchestrator", "simple"),
             collect_data=data.get("collect_data", False),
             data_dir=data.get("data_dir", "data/training"),
-            custom_agents=data.get("custom_agents", [])
+            agent_mode=data.get("agent_mode", "default"),
+            custom_agents=data.get("custom_agents", []),
+            routing_mode=data.get("routing_mode", "individual")
         )
 
     def merge_cli_args(
@@ -83,7 +89,9 @@ class Config:
         debug: Optional[bool] = None,
         orchestrator: Optional[str] = None,
         collect_data: Optional[bool] = None,
-        data_dir: Optional[str] = None
+        data_dir: Optional[str] = None,
+        agent_mode: Optional[str] = None,
+        routing_mode: Optional[str] = None
     ) -> "Config":
         """
         Merge CLI arguments with config file settings.
@@ -99,6 +107,8 @@ class Config:
             orchestrator: CLI orchestrator mode (Week 7)
             collect_data: CLI data collection flag (Week 9)
             data_dir: CLI data directory (Week 9)
+            agent_mode: CLI agent mode (Week 11)
+            routing_mode: CLI routing mode (Week 12)
 
         Returns:
             New Config with merged values
@@ -113,7 +123,9 @@ class Config:
             orchestrator=orchestrator if orchestrator is not None else self.orchestrator,
             collect_data=collect_data if collect_data is not None else self.collect_data,
             data_dir=data_dir if data_dir is not None else self.data_dir,
-            custom_agents=self.custom_agents
+            agent_mode=agent_mode if agent_mode is not None else self.agent_mode,
+            custom_agents=self.custom_agents,
+            routing_mode=routing_mode if routing_mode is not None else self.routing_mode
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -132,5 +144,7 @@ class Config:
             "orchestrator": self.orchestrator,
             "collect_data": self.collect_data,
             "data_dir": self.data_dir,
-            "custom_agents": self.custom_agents
+            "agent_mode": self.agent_mode,
+            "custom_agents": self.custom_agents,
+            "routing_mode": self.routing_mode
         }

@@ -27,8 +27,8 @@ if env_file.exists():
 @click.command()
 @click.option("--task", "-t", "task_descriptions", multiple=True, required=True,
               help="Task description (can be specified multiple times)")
-@click.option("--provider", type=click.Choice(["mock", "grok", "tongyi", "tongyi-local"]), default="mock",
-              help="LLM provider to use (tongyi-local: Week 8 async local model)")
+@click.option("--provider", type=click.Choice(["mock", "grok", "tongyi", "tongyi-local", "replicate"]), default="mock",
+              help="LLM provider to use (tongyi-local: Week 8 async local model, replicate: Week 9 GPU inference)")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.option("--debug", is_flag=True, help="Enable debug output (LLM calls, tool details)")
 @click.option("--parallel/--sequential", default=True,
@@ -37,12 +37,16 @@ if env_file.exists():
               help="Path to configuration file")
 @click.option("--timeout", type=int, default=60,
               help="Timeout in seconds for async operations")
-@click.option("--orchestrator", type=click.Choice(["simple", "openai-agents"]), default="simple",
-              help="Orchestration mode: simple (current) or openai-agents (Week 7)")
+@click.option("--orchestrator", type=click.Choice(["simple", "openai-agents", "hybrid"]), default="hybrid",
+              help="Orchestration mode: simple (baseline), openai-agents (SDK), or hybrid (intelligent routing, default)")
 @click.option("--collect-data", is_flag=True,
               help="Enable data collection for model training (Week 9)")
 @click.option("--data-dir", type=click.Path(), default="data/training",
               help="Directory to store collected training data (default: data/training)")
+@click.option("--agents", type=click.Choice(["default", "extended", "scaled"]), default="default",
+              help="Agent configuration: default (5 agents), extended (8 agents, Phase 1), scaled (12 agents, Phase 2)")
+@click.option("--routing", type=click.Choice(["individual", "team"]), default="individual",
+              help="Routing mode: individual (agent-based, Week 11), team (team-based, Week 12, recommended for scaled)")
 def main(
     task_descriptions: tuple,
     provider: str,
@@ -53,7 +57,9 @@ def main(
     timeout: int,
     orchestrator: str,
     collect_data: bool,
-    data_dir: str
+    data_dir: str,
+    agents: str,
+    routing: str
 ) -> None:
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.
@@ -64,7 +70,7 @@ def main(
     # Load configuration
     app_config = load_config(
         config, provider, verbose, debug, parallel, timeout,
-        orchestrator, collect_data, data_dir
+        orchestrator, collect_data, data_dir, agents, routing
     )
 
     # Setup logging based on verbosity
@@ -75,9 +81,16 @@ def main(
         agent_factory = AgentFactory()
         provider_factory = ProviderFactory()
 
-        # Create agents via factory
-        agents = agent_factory.create_default_agents()
-        logger.info(f"Created {len(agents)} agents")
+        # Create agents via factory (Week 11: Support extended/scaled agent modes)
+        if app_config.agent_mode == "scaled":
+            agents = agent_factory.create_scaled_agents()
+            logger.info(f"Created {len(agents)} agents (scaled mode: 12 agents, full 3-tier hierarchy)")
+        elif app_config.agent_mode == "extended":
+            agents = agent_factory.create_extended_agents()
+            logger.info(f"Created {len(agents)} agents (extended mode: 8 agents, 3-tier hierarchy)")
+        else:
+            agents = agent_factory.create_default_agents()
+            logger.info(f"Created {len(agents)} agents (default mode)")
 
         # Create LLM provider via factory
         llm_provider = provider_factory.create_provider(app_config.provider)
@@ -147,7 +160,9 @@ def load_config(
     timeout: int,
     orchestrator: str = "simple",
     collect_data: bool = False,
-    data_dir: str = "data/training"
+    data_dir: str = "data/training",
+    agent_mode: str = "default",
+    routing_mode: str = "individual"
 ) -> Config:
     """
     Load configuration from file and merge with CLI arguments.
@@ -164,6 +179,8 @@ def load_config(
         orchestrator: CLI orchestrator mode (Week 7)
         collect_data: CLI data collection flag (Week 9)
         data_dir: CLI data directory (Week 9)
+        agent_mode: CLI agent mode (Week 11)
+        routing_mode: CLI routing mode (Week 12)
 
     Returns:
         Merged configuration
@@ -179,7 +196,9 @@ def load_config(
             timeout=timeout,
             orchestrator=orchestrator,
             collect_data=collect_data,
-            data_dir=data_dir
+            data_dir=data_dir,
+            agent_mode=agent_mode,
+            routing_mode=routing_mode
         )
     else:
         # Use CLI args only
@@ -191,7 +210,9 @@ def load_config(
             timeout=timeout,
             orchestrator=orchestrator,
             collect_data=collect_data,
-            data_dir=data_dir
+            data_dir=data_dir,
+            agent_mode=agent_mode,
+            routing_mode=routing_mode
         )
 
 
