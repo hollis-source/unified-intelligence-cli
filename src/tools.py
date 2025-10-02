@@ -145,6 +145,53 @@ def write_file_content(file_path: str, content: str) -> str:
         raise FileWriteError(file_path, str(e))
 
 
+def _validate_directory_exists(path: Path, directory_name: str) -> None:
+    """
+    Validate that directory exists and is a directory.
+
+    Args:
+        path: Path object to validate
+        directory_name: Original directory name (for error message)
+
+    Raises:
+        DirectoryNotFoundError: If directory doesn't exist or isn't a directory
+    """
+    if not path.exists() or not path.is_dir():
+        logger.debug(f"Directory not found or not a directory: {directory_name}")
+        raise DirectoryNotFoundError(directory_name)
+
+
+def _format_file_entry(file: Path) -> str:
+    """
+    Format a single file entry for display.
+
+    Args:
+        file: Path object for the file
+
+    Returns:
+        Formatted string: "TYPE      SIZE filename"
+    """
+    file_type = "DIR" if file.is_dir() else "FILE"
+    size = file.stat().st_size if file.is_file() else "-"
+    return f"{file_type:5} {size:>10} {file.name}"
+
+
+def _format_files_as_list(files: List[Path], limit: int = 50) -> str:
+    """
+    Format list of files as formatted string.
+
+    Args:
+        files: List of Path objects
+        limit: Maximum number of files to include
+
+    Returns:
+        Newline-separated formatted file list
+    """
+    file_list = [_format_file_entry(f) for f in files[:limit]]
+    logger.debug(f"Returning {len(file_list)} file entries")
+    return "\n".join(file_list)
+
+
 def list_files(directory: str = ".", pattern: str = "*") -> str:
     """
     List files in a directory.
@@ -163,9 +210,7 @@ def list_files(directory: str = ".", pattern: str = "*") -> str:
     logger.debug(f"Pattern: {pattern}")
 
     path = Path(directory)
-    if not path.exists() or not path.is_dir():
-        logger.debug(f"Directory not found or not a directory: {directory}")
-        raise DirectoryNotFoundError(directory)
+    _validate_directory_exists(path, directory)
 
     files = sorted(path.glob(pattern))
     logger.debug(f"Found {len(files)} files matching pattern")
@@ -173,14 +218,7 @@ def list_files(directory: str = ".", pattern: str = "*") -> str:
     if not files:
         return f"No files matching '{pattern}' in {directory}"
 
-    file_list = []
-    for f in files[:50]:  # Limit to 50 files
-        file_type = "DIR" if f.is_dir() else "FILE"
-        size = f.stat().st_size if f.is_file() else "-"
-        file_list.append(f"{file_type:5} {size:>10} {f.name}")
-
-    logger.debug(f"Returning {len(file_list)} file entries")
-    return "\n".join(file_list)
+    return _format_files_as_list(files)
 
 
 # ============================================================================
