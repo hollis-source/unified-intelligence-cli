@@ -1,0 +1,4 @@
+# CI/CD Functor - Reusable Workflow
+# Defines a standard continuous integration pipeline
+
+functor ci_pipeline = deploy ∘ test ∘ build

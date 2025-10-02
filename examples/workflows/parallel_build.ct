@@ -1,0 +1,4 @@
+# Parallel Frontend and Backend Build
+# Both components built concurrently
+
+frontend × backend

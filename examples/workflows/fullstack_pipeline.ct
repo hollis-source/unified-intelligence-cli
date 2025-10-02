@@ -1,0 +1,7 @@
+# Full Stack Development Pipeline
+# 1. Plan the architecture
+# 2. Build UI and API in parallel
+# 3. Test both UI and API in parallel
+# 4. Integrate components
+
+integrate ∘ (test_ui × test_api) ∘ (build_ui × build_api) ∘ plan
