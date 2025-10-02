@@ -126,17 +126,28 @@ class CLITaskExecutor:
         Example:
             result = await executor.execute_task("build")
         """
-        # Get appropriate agent for this task
+        # Try to import and execute real task implementation
+        try:
+            # Try GPU integration tasks module first
+            from src.dsl.tasks import gpu_integration_tasks
+
+            # Check if task function exists in gpu_integration_tasks
+            if hasattr(gpu_integration_tasks, task_name):
+                task_func = getattr(gpu_integration_tasks, task_name)
+                result = await task_func(input_data)
+                return result
+
+        except (ImportError, AttributeError):
+            pass
+
+        # Fallback to mock result (for tasks without implementations)
         agent_name = self._get_agent_for_task(task_name)
 
-        # Create task description
         if input_data:
             description = f"Execute {task_name} with input: {input_data}"
         else:
             description = f"Execute {task_name}"
 
-        # For now, return mock result with metadata
-        # In production, would call task_coordinator.coordinate()
         result = {
             "task": task_name,
             "agent": agent_name,
