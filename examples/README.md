@@ -1,109 +1,73 @@
-# Examples
+# Category Theory DSL Examples
 
-Comprehensive examples for using Unified Intelligence CLI in various scenarios.
+This directory contains examples demonstrating the Category Theory DSL for task orchestration.
 
-## Directory Structure
+## Files
 
-```
-examples/
-├── README.md                           # This file
-├── deployment/                         # Production deployment examples
-│   ├── docker-deployment.md            # Docker, K8s, Swarm deployments
-│   ├── cicd-integration.md             # CI/CD pipeline integrations
-│   └── systemd-service.md              # Linux systemd service setup
-└── usage/                              # Usage examples
-    ├── basic-tasks.sh                  # Simple task examples
-    ├── advanced-orchestration.sh       # Complex multi-task workflows
-    └── integration-examples.py         # Python integration examples
-```
+- **dsl_example.py**: End-to-end demonstration of DSL parsing and execution
+- **run_dsl_example.sh**: Shell wrapper to run the example (handles PYTHONPATH)
 
-## Quick Links
-
-### Deployment Examples
-
-- **[Docker Deployment](deployment/docker-deployment.md)** - Docker, Kubernetes, and Swarm deployments
-- **[CI/CD Integration](deployment/cicd-integration.md)** - GitHub Actions, GitLab CI, Jenkins, CircleCI, Azure DevOps
-- **[Systemd Service](deployment/systemd-service.md)** - Run as a Linux system service
-
-### Usage Examples
-
-- **[Basic Tasks](usage/basic-tasks.sh)** - Simple single and multi-task examples
-- **[Advanced Orchestration](usage/advanced-orchestration.sh)** - Complex workflows and patterns
-- **[Python Integration](usage/integration-examples.py)** - Integrate UI-CLI into Python applications
-
-## Getting Started
-
-1. **Install UI-CLI:** See [INSTALL.md](../INSTALL.md)
-2. **Configure API Key:** Get your xAI API key from https://x.ai/
-3. **Try Basic Examples:** Start with `usage/basic-tasks.sh`
-4. **Explore Deployments:** Choose your deployment method from `deployment/`
-
-## Example Categories
-
-### By Complexity
-
-- **Beginner:** `usage/basic-tasks.sh`
-- **Intermediate:** `usage/advanced-orchestration.sh`, `deployment/docker-deployment.md`
-- **Advanced:** `deployment/cicd-integration.md`, `deployment/systemd-service.md`
-
-### By Use Case
-
-- **Development:** `usage/` directory
-- **Production:** `deployment/docker-deployment.md`, `deployment/systemd-service.md`
-- **CI/CD:** `deployment/cicd-integration.md`
-- **Integration:** `usage/integration-examples.py`
-
-## Running Examples
-
-### Shell Scripts
+## Running the Examples
 
 ```bash
-# Make executable
-chmod +x examples/usage/basic-tasks.sh
+# From project root
+./examples/run_dsl_example.sh
 
-# Set API key
-export XAI_API_KEY=your_key_here
-
-# Run
-./examples/usage/basic-tasks.sh
+# Or with Python directly
+PYTHONPATH=. venv/bin/python3 examples/dsl_example.py
 ```
 
-### Python Examples
+## What's Demonstrated
 
-```bash
-# Install dependencies
-pip install unified-intelligence-cli
+The example shows the complete DSL pipeline:
 
-# Run
-python examples/usage/integration-examples.py
+1. **Parsing**: DSL text → AST using Lark parser
+2. **Visitor Pattern**: AST traversal for execution
+3. **Category Theory Semantics**:
+   - **Composition (∘)**: Sequential task chaining
+   - **Product (×)**: Parallel execution
+   - **Functors**: Reusable workflow mappings
+
+## Example Programs
+
+### Simple Sequential Composition
 ```
-
-### Docker Examples
-
-```bash
-# Follow docker-deployment.md instructions
-cd examples/deployment
-cat docker-deployment.md
+test ∘ build
 ```
+Execute `build` first, then `test`.
 
-## Contributing
+### Parallel Execution
+```
+frontend × backend
+```
+Execute `frontend` and `backend` concurrently.
 
-To add new examples:
+### Complex Pipeline
+```
+(test_ui × test_api) ∘ (build_ui × build_api) ∘ plan
+```
+Three-stage pipeline:
+1. Plan
+2. Build UI and API in parallel
+3. Test UI and API in parallel
 
-1. Create example file in appropriate directory
-2. Add clear comments and documentation
-3. Test the example thoroughly
-4. Update this README with link to new example
-5. Submit PR with description
+### Functor Definition
+```
+functor ci_pipeline = deploy ∘ test ∘ build
+```
+Define reusable workflow: build → test → deploy.
 
-## Support
+## Architecture
 
-- **Documentation:** [Main README](../README.md)
-- **Installation:** [INSTALL.md](../INSTALL.md)
-- **Quickstart:** [QUICKSTART.md](../QUICKSTART.md)
-- **Issues:** https://github.com/yourusername/unified-intelligence-cli/issues
+- **Clean Architecture**: Adapter layer (parser) → Entity layer (AST)
+- **Visitor Pattern**: MockExecutor traverses AST
+- **Immutability**: All AST nodes are frozen dataclasses
+- **Type Safety**: Parser validates syntax, entities validate structure
 
----
+## Next Steps
 
-**Last Updated:** 2025-09-30
-**Version:** 1.0.0
+The mock executor demonstrates the visitor pattern. A real interpreter would:
+1. Map task names to actual agents (e.g., `build` → `python-specialist`)
+2. Execute tasks via the unified-intelligence-cli
+3. Handle parallel execution with asyncio
+4. Propagate results through compositions
