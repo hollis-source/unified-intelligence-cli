@@ -1,0 +1,37 @@
+// Category Theory DSL Grammar (Lark syntax)
+// Based on EBNF from CT_DSL_RESEARCH_SYNTHESIS.md
+//
+// Clean Architecture: Adapter layer (external Lark dependency)
+// SOLID: SRP - only defines grammar, no parsing logic
+
+?start: program
+
+program: statement (";" statement)*
+
+?statement: definition
+          | expression
+
+definition: "functor" IDENTIFIER "=" expression
+
+?expression: term
+           | expression COMPOSE expression    -> composition
+           | expression BIND expression       -> bind_expr
+           | expression PRODUCT expression    -> product_expr
+
+?term: IDENTIFIER                           -> identifier
+     | LITERAL                              -> literal
+     | "(" expression ")"
+
+COMPOSE: "∘" | "o"                          // Allow ASCII alternative
+BIND: ">>=" | ">>"                          // Monadic bind
+PRODUCT: "×" | "*"                          // Allow ASCII alternative
+
+IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
+LITERAL: /"[^"]*"/ | /'[^']*'/              // Double or single quoted strings
+
+// Whitespace and comments
+%import common.WS
+%ignore WS
+
+COMMENT: "#" /[^\n]*/
+%ignore COMMENT
