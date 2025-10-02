@@ -1,0 +1,23 @@
+# Kubernetes Multi-Agent Deployment Pipeline
+# Production-grade deployment with zero-downtime rollout
+#
+# Components:
+# - StatefulSet for agents requiring persistent state
+# - Deployment for stateless agents
+# - Service mesh (Istio) for inter-agent communication
+# - ConfigMaps for agent configurations
+# - Secrets for API keys and credentials
+# - Persistent volumes for model storage
+#
+# Flow:
+# 1. setup_namespace: Create k8s namespace for agents
+# 2. Parallel infrastructure: Deploy configs, secrets, PVs simultaneously
+# 3. deploy_service_mesh: Set up Istio for traffic management
+# 4. Parallel agent deployments: Deploy all 12 agent types concurrently
+# 5. configure_ingress: Set up external access via ingress controller
+# 6. enable_monitoring: Deploy Prometheus + Grafana for observability
+# 7. run_chaos_tests: Validate resilience (pod failures, network partitions)
+#
+# This demonstrates DSL handling complex parallel infrastructure deployment
+
+run_chaos_tests ∘ enable_monitoring ∘ configure_ingress ∘ (deploy_python_statefulset × deploy_frontend_deployment × deploy_backend_deployment × deploy_devops_deployment × deploy_tester_deployment × deploy_researcher_deployment × deploy_coordinator_deployment × deploy_reviewer_deployment × deploy_security_deployment × deploy_data_deployment × deploy_ml_statefulset × deploy_integration_deployment) ∘ deploy_service_mesh ∘ (create_configmaps × create_secrets × create_persistent_volumes) ∘ setup_namespace

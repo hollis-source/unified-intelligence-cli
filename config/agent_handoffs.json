@@ -1,0 +1,57 @@
+{
+  "researcher": {
+    "description": "Investigates topics, reads documentation, gathers information",
+    "handoffs": [
+      {
+        "target": "coder",
+        "triggers": ["implement", "code", "write", "create", "build"],
+        "description": "Hand off to coder when implementation is needed"
+      }
+    ]
+  },
+  "coder": {
+    "description": "Writes code, implements features, fixes bugs",
+    "handoffs": [
+      {
+        "target": "tester",
+        "triggers": ["test", "verify", "validate", "check"],
+        "description": "Hand off to tester for validation"
+      }
+    ]
+  },
+  "tester": {
+    "description": "Writes tests, validates code, checks edge cases",
+    "handoffs": [
+      {
+        "target": "reviewer",
+        "triggers": ["review", "assess", "critique", "evaluate"],
+        "description": "Hand off to reviewer for code quality assessment"
+      }
+    ]
+  },
+  "reviewer": {
+    "description": "Reviews code, checks SOLID principles, suggests improvements",
+    "handoffs": [
+      {
+        "target": "coder",
+        "triggers": ["fix", "refactor", "improve", "change"],
+        "description": "Hand off to coder for fixes/improvements"
+      }
+    ]
+  },
+  "coordinator": {
+    "description": "Plans tasks, breaks down features, coordinates agents",
+    "handoffs": [
+      {
+        "target": "researcher",
+        "triggers": ["research", "investigate", "explore", "learn"],
+        "description": "Hand off to researcher for investigation"
+      },
+      {
+        "target": "coder",
+        "triggers": ["implement", "code", "write"],
+        "description": "Hand off to coder for implementation"
+      }
+    ]
+  }
+}

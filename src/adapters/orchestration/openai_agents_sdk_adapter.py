@@ -20,12 +20,15 @@ from src.interfaces import IAgentCoordinator, ITextGenerator
 
 # OpenAI Agents SDK imports
 try:
-    from agents import Agent as SDKAgent, Runner
+    from agents import Agent as SDKAgent, Runner, OpenAIChatCompletionsModel
+    from openai import AsyncOpenAI
     AGENTS_SDK_AVAILABLE = True
 except ImportError:
     AGENTS_SDK_AVAILABLE = False
     SDKAgent = None
     Runner = None
+    AsyncOpenAI = None
+    OpenAIChatCompletionsModel = None
 
 
 logger = logging.getLogger(__name__)
@@ -56,7 +59,7 @@ class OpenAIAgentsSDKAdapter(IAgentCoordinator):
             agents: List of our Agent entities
             max_turns: Maximum SDK turns (default 10)
 
-        Note: Phase 1 uses SDK with default model. Phase 2 will integrate llm_provider.
+        Phase 2: Custom OpenAI client for llama-cpp-server integration.
         """
         if not AGENTS_SDK_AVAILABLE:
             raise ImportError(
@@ -68,14 +71,32 @@ class OpenAIAgentsSDKAdapter(IAgentCoordinator):
         self.agents = agents
         self.max_turns = max_turns
 
-        # Convert our agents to SDK agents
-        self.sdk_agents = self._convert_agents_to_sdk(agents)
+        # Phase 2: Create custom OpenAI client for llama-cpp-server
+        custom_client = AsyncOpenAI(
+            base_url="http://localhost:8080/v1",
+            api_key="not-needed"  # Local server doesn't require authentication
+        )
 
-        logger.info(f"OpenAIAgentsSDKAdapter initialized with {len(agents)} agents")
+        # Create chat completions model (uses /v1/chat/completions endpoint)
+        self.model = OpenAIChatCompletionsModel(
+            model="tongyi",  # Model name for llama-cpp-server
+            openai_client=custom_client
+        )
 
-    def _convert_agents_to_sdk(self, agents: List[Agent]) -> Dict[str, SDKAgent]:
+        # Convert our agents to SDK agents (two-pass for handoffs)
+        # Pass 1: Create agents without handoffs
+        self.sdk_agents = self._convert_agents_to_sdk_basic(agents)
+
+        # Pass 2: Add handoffs to agents (TEMPORARY: Disabled due to llama-cpp-server compatibility)
+        # TODO: Investigate llama-cpp-server tool call format compatibility
+        # self._add_handoffs_to_agents()
+
+        logger.info(f"OpenAIAgentsSDKAdapter initialized with chat completions model ({len(agents)} agents)")
+        logger.warning("Handoffs temporarily disabled due to llama-cpp-server compatibility issues")
+
+    def _convert_agents_to_sdk_basic(self, agents: List[Agent]) -> Dict[str, SDKAgent]:
         """
-        Convert our Agent entities to SDK Agent objects.
+        Convert our Agent entities to SDK Agent objects (Pass 1: without handoffs).
 
         Clean Code: Single responsibility - entity conversion.
 
@@ -91,18 +112,38 @@ class OpenAIAgentsSDKAdapter(IAgentCoordinator):
             # Convert capabilities to instructions
             instructions = self._capabilities_to_instructions(agent.capabilities)
 
-            # Create SDK agent
+            # Create SDK agent with chat completions model (no handoffs yet)
             sdk_agent = SDKAgent(
                 name=agent.role,
                 instructions=instructions,
-                # Phase 2: Add handoffs, tools
+                model=self.model,  # Use chat completions model
+                # Handoffs added in Pass 2
             )
 
             sdk_agents[agent.role] = sdk_agent
 
-            logger.debug(f"Converted agent: {agent.role}")
+            logger.debug(f"Converted agent (Pass 1): {agent.role}")
 
         return sdk_agents
+
+    def _add_handoffs_to_agents(self) -> None:
+        """
+        Add handoff objects to SDK agents (Pass 2).
+
+        Must be called after all agents are created to avoid circular dependencies.
+        """
+        handoff_objs = self._create_handoff_functions()
+
+        for agent_role, sdk_agent in self.sdk_agents.items():
+            # Get handoffs for this agent
+            handoffs = handoff_objs.get(agent_role, [])
+
+            if handoffs:
+                # Set handoffs attribute on agent (SDK dataclass field)
+                sdk_agent.handoffs = handoffs
+                logger.debug(f"Added {len(handoffs)} handoffs to agent: {agent_role}")
+            else:
+                logger.debug(f"No handoffs configured for agent: {agent_role}")
 
     def _capabilities_to_instructions(self, capabilities: List[str]) -> str:
         """
@@ -142,7 +183,56 @@ class OpenAIAgentsSDKAdapter(IAgentCoordinator):
             SDK Agent object
         """
         instructions = self._capabilities_to_instructions(agent.capabilities)
-        return SDKAgent(name=agent.role, instructions=instructions)
+        return SDKAgent(name=agent.role, instructions=instructions, model=self.model)
+
+    def _load_handoff_config(self) -> Dict[str, Any]:
+        """Load handoff configuration from JSON file."""
+        import json
+        from pathlib import Path
+
+        config_path = Path("config/agent_handoffs.json")
+        if not config_path.exists():
+            logger.warning("agent_handoffs.json not found, using empty config")
+            return {}
+
+        with open(config_path) as f:
+            return json.load(f)
+
+    def _create_handoff_functions(self) -> Dict[str, List[Any]]:
+        """
+        Create handoff functions for SDK agents.
+
+        Returns dict: {agent_role: [handoff_objects]}
+        """
+        from agents import handoff
+
+        config = self._load_handoff_config()
+        handoff_objs = {}
+
+        for agent_role, agent_config in config.items():
+            handoffs = []
+
+            for handoff_spec in agent_config.get("handoffs", []):
+                target_role = handoff_spec["target"]
+                description = handoff_spec["description"]
+
+                # Get target SDK agent
+                target_agent = self.sdk_agents.get(target_role)
+
+                if target_agent:
+                    # Create handoff using SDK's handoff function
+                    handoff_obj = handoff(
+                        agent=target_agent,
+                        tool_description_override=description
+                    )
+                    handoffs.append(handoff_obj)
+                    logger.debug(f"Created handoff: {agent_role} → {target_role}")
+                else:
+                    logger.warning(f"Target agent '{target_role}' not found for handoff from '{agent_role}'")
+
+            handoff_objs[agent_role] = handoffs
+
+        return handoff_objs
 
     async def coordinate(
         self,
@@ -188,11 +278,11 @@ class OpenAIAgentsSDKAdapter(IAgentCoordinator):
         context: Optional[ExecutionContext]
     ) -> ExecutionResult:
         """
-        Execute single task using SDK.
+        Execute single task using SDK (Phase 2: Proper SDK integration).
 
         Strategy:
         1. Select starting agent based on task description
-        2. Run SDK with selected agent
+        2. Run SDK with selected agent and custom client
         3. Convert SDK result to our ExecutionResult
 
         Args:
@@ -223,69 +313,38 @@ class OpenAIAgentsSDKAdapter(IAgentCoordinator):
                 f"SDK agent '{starting_agent.role}' not found"
             )
 
-        # Run SDK (Phase 1: Synchronous wrapper)
+        # Run SDK with custom client (Phase 2)
         try:
-            # Phase 1: Use Runner.run_sync with task description as input
-            # Note: This requires OPENAI_API_KEY or custom client (Phase 2)
+            logger.info(f"Executing task {task.task_id} with SDK agent '{starting_agent.role}'")
 
-            # For Phase 1, we'll catch the error and return mock result
-            # Phase 2 will integrate llm_provider properly
-
-            logger.warning(
-                "Phase 1: SDK execution not fully integrated. "
-                "Using fallback (Phase 2 will add llm_provider integration)"
+            # Run SDK asynchronously using global default client
+            result = await Runner.run(
+                starting_agent=sdk_agent,
+                input=task.description,
+                max_turns=self.max_turns
             )
 
-            # Fallback: Use our llm_provider directly
-            return await self._execute_with_llm_provider(task, starting_agent)
+            # Convert SDK result to our ExecutionResult
+            output = result.final_output if hasattr(result, 'final_output') else str(result)
 
-        except Exception as e:
-            logger.error(f"SDK execution failed: {e}")
-            return self._create_failure_result(task, str(e))
-
-    async def _execute_with_llm_provider(
-        self,
-        task: Task,
-        agent: Agent
-    ) -> ExecutionResult:
-        """
-        Fallback: Execute using our llm_provider directly.
-
-        Phase 1: Direct execution (no SDK benefits)
-        Phase 2: Integrate SDK properly with custom client
-
-        Args:
-            task: Task to execute
-            agent: Selected agent
-
-        Returns:
-            ExecutionResult
-        """
-        try:
-            # Build messages for LLM
-            system_prompt = self._capabilities_to_instructions(agent.capabilities)
-            messages = [
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": task.description}
-            ]
-
-            # Call LLM provider
-            output = self.llm_provider.generate(messages, config=None)
+            logger.info(f"Task {task.task_id} completed via SDK")
 
             return ExecutionResult(
                 status=ExecutionStatus.SUCCESS,
                 output=output,
                 errors=[],
                 metadata={
-                    "agent_role": agent.role,
+                    "agent_role": starting_agent.role,
                     "task_id": task.task_id,
-                    "orchestrator": "openai-agents-sdk-adapter",
-                    "phase": "1-fallback"
+                    "orchestrator": "openai-agents-sdk",
+                    "phase": "2-integrated"
                 }
             )
 
         except Exception as e:
+            logger.error(f"SDK execution failed for task {task.task_id}: {e}")
             return self._create_failure_result(task, str(e))
+
 
     def _select_starting_agent(
         self,

@@ -1,0 +1,21 @@
+# Qwen3-8B Advanced Post-Training Pipeline
+# Demonstrates parallel evaluation and multi-format quantization
+#
+# Flow:
+# 1. merge_lora: Merge LoRA adapters (10-15 min)
+# 2. convert_gguf: Convert to GGUF f16 (30-60 min)
+# 3. Parallel quantization: Create Q4_K_M, Q5_K_M, Q8_0 formats (15-30 min each, parallel)
+# 4. Parallel evaluation: Evaluate all 3 quantized models + merged model (4 in parallel)
+# 5. compare_models: Compare metrics across all formats
+# 6. select_best: Choose optimal model based on latency/quality trade-off
+#
+# This demonstrates:
+# - Sequential composition (∘)
+# - Parallel product (×)
+# - Complex nesting
+# - Result propagation through branches
+#
+# Category Theory:
+# select ∘ compare ∘ (eval_q4 × eval_q5 × eval_q8 × eval_merged) ∘ (quant_q4 × quant_q5 × quant_q8) ∘ convert ∘ merge
+
+select_best ∘ compare_models ∘ (evaluate_q4 × evaluate_q5 × evaluate_q8 × evaluate_merged) ∘ (quantize_q4 × quantize_q5 × quantize_q8) ∘ convert_gguf ∘ merge_lora

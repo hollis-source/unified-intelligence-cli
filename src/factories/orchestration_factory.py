@@ -39,6 +39,7 @@ class OrchestrationFactory:
     Supported modes:
     - "simple": TaskCoordinatorUseCase (current, default)
     - "openai-agents": OpenAIAgentsSDKAdapter (Week 7, Phase 1)
+    - "hybrid": HybridOrchestrator (Week 10, Phase 2 - intelligent routing)
     """
 
     @staticmethod
@@ -57,7 +58,7 @@ class OrchestrationFactory:
         DIP: Returns IAgentCoordinator interface.
 
         Args:
-            mode: Orchestration mode ("simple" or "openai-agents")
+            mode: Orchestration mode ("simple", "openai-agents", or "hybrid")
             llm_provider: LLM provider (Tongyi, Mock, etc.)
             task_planner: Task planning strategy
             agent_executor: Agent execution strategy
@@ -98,10 +99,19 @@ class OrchestrationFactory:
                 agents=agents
             )
 
+        elif mode == "hybrid":
+            return OrchestrationFactory._create_hybrid_orchestrator(
+                llm_provider=llm_provider,
+                task_planner=task_planner,
+                agent_executor=agent_executor,
+                agents=agents,
+                logger_instance=logger_instance
+            )
+
         else:
             raise ValueError(
                 f"Unsupported orchestration mode: '{mode}'. "
-                f"Supported modes: simple, openai-agents"
+                f"Supported modes: simple, openai-agents, hybrid"
             )
 
     @staticmethod
@@ -154,6 +164,51 @@ class OrchestrationFactory:
         )
 
     @staticmethod
+    def _create_hybrid_orchestrator(
+        llm_provider: ITextGenerator,
+        task_planner: ITaskPlanner,
+        agent_executor: IAgentExecutor,
+        agents: List[Agent],
+        logger_instance: Optional[logging.Logger]
+    ) -> IAgentCoordinator:
+        """
+        Create hybrid orchestrator with intelligent routing.
+
+        Week 10, Phase 2: Routes tasks between SDK and simple mode.
+
+        Args:
+            llm_provider: LLM provider
+            task_planner: Task planning strategy
+            agent_executor: Agent execution strategy
+            agents: Available agents
+            logger_instance: Optional logger
+
+        Returns:
+            HybridOrchestrator instance
+        """
+        logger.info("Creating hybrid orchestrator (intelligent routing)")
+
+        from src.adapters.orchestration.hybrid_orchestrator import HybridOrchestrator
+
+        # Check if SDK is available for hybrid mode
+        enable_sdk = OPENAI_AGENTS_AVAILABLE
+
+        if not enable_sdk:
+            logger.warning(
+                "SDK not available, hybrid mode will use simple mode only. "
+                "Install with: pip install openai-agents"
+            )
+
+        return HybridOrchestrator(
+            llm_provider=llm_provider,
+            task_planner=task_planner,
+            agent_executor=agent_executor,
+            agents=agents,
+            logger_instance=logger_instance,
+            enable_sdk=enable_sdk
+        )
+
+    @staticmethod
     def get_supported_modes() -> List[str]:
         """
         Get list of supported orchestration modes.
@@ -161,7 +216,7 @@ class OrchestrationFactory:
         Returns:
             List of mode names
         """
-        modes = ["simple"]
+        modes = ["simple", "hybrid"]  # hybrid always available
 
         if OPENAI_AGENTS_AVAILABLE:
             modes.append("openai-agents")
@@ -183,6 +238,8 @@ class OrchestrationFactory:
 
         if mode == "simple":
             return True
+        elif mode == "hybrid":
+            return True  # Always available (falls back to simple if SDK unavailable)
         elif mode == "openai-agents":
             return OPENAI_AGENTS_AVAILABLE
         else:

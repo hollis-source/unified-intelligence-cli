@@ -119,6 +119,7 @@ Return a structured plan with task order and assignments."""
         Parse LLM response into ExecutionPlan.
 
         Clean Code: Single parsing responsibility.
+        Week 11: Enhanced with tier-aware parallel grouping.
         """
         task_ids = [t.task_id or str(i) for i, t in enumerate(tasks)]
 
@@ -126,12 +127,15 @@ Return a structured plan with task order and assignments."""
             data = json.loads(llm_response)
             task_order = data.get('task_order', task_ids)
             assignments = data.get('task_assignments', self._assign_tasks_to_agents(tasks, agents))
-            parallel_groups = data.get('parallel_groups', self._compute_parallel_groups(tasks))
+            # Week 11: Pass assignments and agents for tier-aware grouping
+            parallel_groups = data.get('parallel_groups',
+                self._compute_parallel_groups(tasks, assignments, agents))
         except json.JSONDecodeError:
             # Fallback if JSON parsing fails
             task_order = task_ids
             assignments = self._assign_tasks_to_agents(tasks, agents)
-            parallel_groups = self._compute_parallel_groups(tasks)
+            # Week 11: Pass assignments and agents for tier-aware grouping
+            parallel_groups = self._compute_parallel_groups(tasks, assignments, agents)
 
         return ExecutionPlan(
             task_order=task_order,
@@ -158,11 +162,76 @@ Return a structured plan with task order and assignments."""
 
         return assignments
 
-    def _compute_parallel_groups(self, tasks: List[Task]) -> List[List[str]]:
+    def _compute_parallel_groups(
+        self,
+        tasks: List[Task],
+        task_assignments: Optional[dict[str, str]] = None,
+        agents: Optional[List[Agent]] = None
+    ) -> List[List[str]]:
         """
-        Compute parallel execution groups via topological sort.
+        Compute parallel execution groups via topological sort with tier awareness.
+
+        Week 11: Enhanced for hierarchical delegation.
+        - Tier 1 (planning) tasks execute first
+        - Tier 2 (design) tasks execute second
+        - Tier 3 (execution) tasks execute last, in parallel where possible
 
         Clean Code: Focused algorithm - single responsibility.
+        """
+        # Backward compatibility: If no tier info, use dependency-based grouping only
+        if not task_assignments or not agents:
+            return self._compute_parallel_groups_legacy(tasks)
+
+        # Build agent tier map
+        agent_tier_map = {a.role: a.tier for a in agents}
+
+        # Group tasks by tier
+        tier_groups = {1: [], 2: [], 3: []}
+        task_map = {t.task_id or str(i): t for i, t in enumerate(tasks)}
+
+        for task_id, task in task_map.items():
+            agent_role = task_assignments.get(task_id)
+            if agent_role:
+                tier = agent_tier_map.get(agent_role, 3)  # Default to Tier 3
+                tier_groups[tier].append(task_id)
+            else:
+                # No assignment, put in Tier 3 (execution fallback)
+                tier_groups[3].append(task_id)
+
+        # Compute parallel groups within each tier, respecting dependencies
+        all_groups = []
+        completed = set()
+
+        for tier in [1, 2, 3]:  # Process tiers in order
+            tier_task_ids = tier_groups[tier]
+            if not tier_task_ids:
+                continue
+
+            # Compute parallel groups for this tier
+            tier_task_map = {tid: task_map[tid] for tid in tier_task_ids}
+            tier_completed = set()
+
+            while len(tier_completed) < len(tier_task_ids):
+                level = self._find_ready_tasks_in_tier(
+                    tier_task_map, tier_completed, completed
+                )
+
+                if not level:
+                    # Break cycle - add remaining tasks in this tier
+                    level = [tid for tid in tier_task_ids if tid not in tier_completed]
+
+                if level:
+                    all_groups.append(level)
+                    tier_completed.update(level)
+                    completed.update(level)
+
+        return all_groups if all_groups else [[t.task_id or str(i) for i, t in enumerate(tasks)]]
+
+    def _compute_parallel_groups_legacy(self, tasks: List[Task]) -> List[List[str]]:
+        """
+        Legacy parallel group computation (dependency-based only).
+
+        Used for backward compatibility with 5-agent mode.
         """
         task_map = {t.task_id or str(i): t for i, t in enumerate(tasks)}
         completed = set()
@@ -179,6 +248,25 @@ Return a structured plan with task order and assignments."""
             completed.update(level)
 
         return levels
+
+    def _find_ready_tasks_in_tier(
+        self,
+        tier_task_map: dict,
+        tier_completed: Set[str],
+        all_completed: Set[str]
+    ) -> List[str]:
+        """
+        Find tasks in tier with satisfied dependencies (considering all completed tasks).
+
+        Week 11: Enhanced to consider cross-tier dependencies.
+        """
+        ready = []
+        for task_id, task in tier_task_map.items():
+            if task_id not in tier_completed:
+                # Check if all dependencies (from any tier) are completed
+                if all(dep in all_completed for dep in task.dependencies):
+                    ready.append(task_id)
+        return ready
 
     def _find_ready_tasks(
         self,

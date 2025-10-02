@@ -1,0 +1,20 @@
+# TUI Testing & QA Pipeline
+# Comprehensive testing for Textual-based UI
+#
+# Challenge: TUIs harder to test than web UIs (no browser automation)
+# Solution: Textual's built-in snapshot testing + manual QA
+#
+# Flow:
+# 1. create_snapshots: Generate reference screenshots for all screens
+# 2. Parallel testing:
+#    - run_unit_tests: Widget behavior, event handlers
+#    - run_snapshot_tests: Visual regression testing
+#    - run_interaction_tests: Keyboard navigation, mouse clicks
+#    - run_accessibility_tests: Screen reader compatibility
+# 3. manual_qa: Human testing on different terminals (iTerm, Windows Terminal, etc.)
+# 4. performance_profiling: Frame time analysis, memory leaks
+# 5. generate_report: Test coverage + performance metrics
+#
+# Ensures: Consistent behavior across terminal emulators
+
+generate_report ∘ performance_profiling ∘ manual_qa ∘ (run_unit_tests × run_snapshot_tests × run_interaction_tests × run_accessibility_tests) ∘ create_snapshots

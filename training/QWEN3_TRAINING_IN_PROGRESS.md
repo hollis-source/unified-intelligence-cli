@@ -9,9 +9,18 @@
 
 ## Current Status
 
-✅ **Model downloading**: Qwen/Qwen3-8B (5 files)
-- Correct model name: `Qwen/Qwen3-8B` (not `Qwen3-8B-Instruct`)
-- Qwen3 naming differs from Qwen2.5 (no `-Instruct` suffix)
+✅ **Training In Progress - First Step Complete!**
+
+**Progress**: 1/24 steps (4%)
+**Elapsed**: 35m 49s for first step
+**Remaining**: ~13h 44m (PyTorch estimate)
+**Expected completion**: Oct 2, 07:36 (tomorrow morning)
+
+```
+  4%|▍         | 1/24 [35:49<13:44:05, 2149.79s/it]
+```
+
+Model: Qwen/Qwen3-8B (downloaded, 5 files, 16GB)
 
 ⚙️ **Configuration** (Grok-optimized):
 - **Base model**: Qwen/Qwen3-8B (8B parameters, instruct-tuned)
@@ -29,18 +38,20 @@
 
 ---
 
-## Expected Timeline
+## Actual Timeline (Updated After First Step)
 
-| Phase | Duration | Estimated Completion |
-|-------|----------|---------------------|
-| Model download | 10-20 min | Now |
-| First epoch | 8-12 hours | +12 hours |
-| Second epoch | 8-12 hours | +24 hours |
-| Third epoch | 8-12 hours | +36 hours |
-| **Total training** | **12-24 hours** | **~Oct 2, 09:00-21:00** |
+| Phase | Duration | Status |
+|-------|----------|--------|
+| Model download | 10 min | ✅ Complete |
+| Setup & compilation | 15 min | ✅ Complete |
+| **First step** | **35m 49s** | ✅ **Complete** |
+| Remaining 23 steps | ~13h 44m | 🔄 In progress |
+| **Total training** | **~14.5 hours** | **Oct 2, 07:36** |
 
-**Per-step time** (Grok estimate): 15-20 minutes
-**Total steps**: ~45 (15 per epoch × 3)
+**Actual per-step time**: 35.8 minutes (2149.79s)
+- First step includes PyTorch Inductor compilation overhead
+- Later steps expected: 30-32 minutes (compilation done)
+**Total steps**: 24 (7 per epoch × 3 epochs + 3 eval steps)
 
 ---
 
@@ -106,13 +117,14 @@ ls training/models/qwen3-8b-instruct-lora/checkpoint-* 2>/dev/null | wc -l
 
 ### During Training
 
-1. **Model download** (~10-20 min): 5 files, ~16GB total
-2. **LoRA setup** (~2-3 min): Apply adapters, tokenize dataset
-3. **Training begins** (~step 0 takes 15-20 min, first step is slowest)
-4. **CPU usage** will be high (~2500-3500%, using 25-35 cores)
-5. **Memory usage** will stabilize (~40GB out of 110GB)
-6. **Log updates** after each step (~every 15-20 min)
-7. **Checkpoints saved** every 50 steps (likely only 1 at step 50)
+1. **Model download** (~10 min): ✅ Complete (5 files, 16GB)
+2. **LoRA setup** (~15 min): ✅ Complete (compilation, tokenization)
+3. **First step** (~35 min): ✅ Complete (includes PyTorch compilation)
+4. **Remaining steps** (~30-32 min each): 🔄 In progress
+5. **CPU usage**: ~2583% (26 cores active) - ✅ Healthy
+6. **Memory usage**: 69GB during computation - ✅ Stable
+7. **Log updates**: After each step (~every 30-35 min)
+8. **Checkpoints**: Saved at step 7, 14, 21 (every 7 steps = 1 epoch)
 
 ### Signs of Healthy Training
 
@@ -296,12 +308,18 @@ All configuration based on Grok API consultation (2025-10-01, 19.95s response ti
 
 ---
 
-**Status**: Training in progress 🔄
-**Check back**: In 6-12 hours for progress update
-**Estimated completion**: Oct 2, 09:00-21:00 (12-24 hours from start)
+**Status**: Training in progress 🔄 - Step 1/24 complete!
+**Next milestone**: Step 7 (first checkpoint) at ~21:45 tonight
+**Estimated completion**: **Oct 2, 07:36** (14.5 hours total)
+
+**When complete, run**:
+```bash
+python3 training/scripts/post_training_pipeline.py \
+    --lora training/models/qwen3-8b-instruct-lora/final_model
+```
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-10-01 (training start)
-**Next Review**: After first epoch completes (~12 hours)
+**Document Version**: 2.0
+**Last Updated**: 2025-10-01 17:55 (after first step completion)
+**Next Review**: Oct 2, 07:45 (after training completes)

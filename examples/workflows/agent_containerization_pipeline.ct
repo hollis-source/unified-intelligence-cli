@@ -1,0 +1,23 @@
+# Agent Containerization & Scaling Pipeline
+# Real-world example: Deploy multi-agent system to Kubernetes cluster
+#
+# Architecture:
+# - 12 specialized agents (python, frontend, backend, devops, etc.)
+# - Each agent runs in isolated container
+# - Horizontal auto-scaling based on task queue depth
+# - Service mesh for inter-agent communication
+#
+# Flow:
+# 1. build_base_image: Create base container with Python + dependencies
+# 2. Parallel agent builds: Build 12 agent-specific images concurrently
+# 3. test_containers: Run integration tests on all containers
+# 4. push_registry: Push validated images to container registry
+# 5. Parallel deployment: Deploy to dev and staging simultaneously
+# 6. validate_deployment: Health checks and smoke tests
+# 7. deploy_production: Final production rollout
+# 8. configure_autoscaling: Set up HPA (Horizontal Pod Autoscaler)
+#
+# Category Theory: Multi-level composition with parallel branches
+# Total estimated time: 15-25 minutes
+
+configure_autoscaling ∘ deploy_production ∘ validate_deployment ∘ (deploy_dev × deploy_staging) ∘ push_registry ∘ test_containers ∘ (build_python_agent × build_frontend_agent × build_backend_agent × build_devops_agent × build_tester_agent × build_researcher_agent × build_coordinator_agent × build_reviewer_agent × build_security_agent × build_data_agent × build_ml_agent × build_integration_agent) ∘ build_base_image

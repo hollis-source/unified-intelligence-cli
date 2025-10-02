@@ -15,6 +15,11 @@ class Agent:
     role: str  # e.g., "coordinator", "coder"
     capabilities: List[str]  # e.g., ["code_gen", "test"]
 
+    # Week 11: Hierarchical agent scaling metadata
+    tier: int = 3  # Default Tier 3 (execution), maintains backward compatibility
+    parent_agent: Optional[str] = None  # Role of parent agent (for hierarchy)
+    specialization: Optional[str] = None  # Domain specialization (e.g., "python", "frontend")
+
     def can_handle(self, task: Task) -> bool:
         """
         Check if agent can handle task (fuzzy matching).

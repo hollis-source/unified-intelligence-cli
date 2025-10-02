@@ -23,6 +23,7 @@ class ProviderFactory(IProviderFactory):
             "grok": lambda config: self._create_grok_provider(config),
             "tongyi": lambda config: self._create_tongyi_provider(config),
             "tongyi-local": lambda config: self._create_tongyi_local_provider(config),
+            "replicate": lambda config: self._create_replicate_provider(config),
         }
         self._providers: Dict[str, Any] = {}
 
@@ -58,6 +59,12 @@ class ProviderFactory(IProviderFactory):
         base_url = config.get("base_url", "http://localhost:8080") if config else "http://localhost:8080"
         timeout = config.get("timeout", 120) if config else 120
         return LocalTongyiAdapter(base_url=base_url, timeout=timeout)
+
+    def _create_replicate_provider(self, config: Optional[Dict[str, Any]]) -> ITextGenerator:
+        """Create Replicate GPU inference provider (Week 9: parallel data collection)."""
+        from src.adapters.llm.replicate_adapter import ReplicateAdapter
+        model = config.get("model", "meta/llama-2-70b-chat") if config else "meta/llama-2-70b-chat"
+        return ReplicateAdapter(model=model)
 
     def create_provider(
         self,
