@@ -129,7 +129,7 @@ class CLITaskExecutor:
         # Try to import and execute real task implementation
         try:
             # Try all task modules
-            from src.dsl.tasks import gpu_integration_tasks, git_operations_tasks
+            from src.dsl.tasks import gpu_integration_tasks, git_operations_tasks, refactoring_tasks
 
             # Check GPU integration tasks first
             if hasattr(gpu_integration_tasks, task_name):
@@ -140,6 +140,12 @@ class CLITaskExecutor:
             # Check git operations tasks
             if hasattr(git_operations_tasks, task_name):
                 task_func = getattr(git_operations_tasks, task_name)
+                result = await task_func(input_data)
+                return result
+
+            # Check refactoring tasks
+            if hasattr(refactoring_tasks, task_name):
+                task_func = getattr(refactoring_tasks, task_name)
                 result = await task_func(input_data)
                 return result
 

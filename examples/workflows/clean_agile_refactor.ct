@@ -1,0 +1,18 @@
+# Clean Agile Codebase Refactoring Analysis
+# Comprehensive code quality analysis following Clean Code and SOLID principles
+#
+# Flow:
+# 1. Parallel analysis: Run 5 independent code quality checks simultaneously
+#    - analyze_function_length: Find functions >20 lines
+#    - analyze_code_duplication: Detect duplicated code
+#    - analyze_naming_conventions: Find poor naming (single letters, abbreviations)
+#    - analyze_test_coverage: Check test coverage percentage
+#    - detect_solid_violations: Find SOLID principle violations
+# 2. generate_refactoring_plan: Aggregate analysis into prioritized plan
+# 3. prioritize_refactorings: Sort by impact and effort
+# 4. create_refactoring_report: Generate comprehensive markdown report
+#
+# Category Theory: Parallel analysis → Sequential planning → Report
+# Benefits: 5x faster analysis via parallel execution
+
+create_refactoring_report ∘ prioritize_refactorings ∘ generate_refactoring_plan ∘ (analyze_function_length × analyze_code_duplication × analyze_naming_conventions × analyze_test_coverage × detect_solid_violations)

@@ -8,5 +8,6 @@ Clean Architecture: Use Cases layer.
 
 from . import gpu_integration_tasks
 from . import git_operations_tasks
+from . import refactoring_tasks
 
-__all__ = ['gpu_integration_tasks', 'git_operations_tasks']
+__all__ = ['gpu_integration_tasks', 'git_operations_tasks', 'refactoring_tasks']

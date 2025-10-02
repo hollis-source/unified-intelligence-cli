@@ -1,0 +1,12 @@
+# Quick Refactoring Analysis (Fast Version)
+# Skip slow test coverage analysis for quick results
+#
+# Flow:
+# 1. Parallel analysis: Run 4 fast code quality checks
+# 2. Generate refactoring plan
+# 3. Prioritize and create report
+#
+# Category Theory: Parallel analysis → Sequential planning
+# Runtime: ~5-10 seconds
+
+create_refactoring_report ∘ prioritize_refactorings ∘ generate_refactoring_plan ∘ (analyze_function_length × analyze_code_duplication × analyze_naming_conventions × detect_solid_violations)
