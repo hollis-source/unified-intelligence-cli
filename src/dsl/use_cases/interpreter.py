@@ -64,25 +64,36 @@ class Interpreter:
             task_executor: Implementation of TaskExecutor interface
         """
         self.task_executor = task_executor
+        self._current_input = None  # Thread-local input data for visitor pattern
 
-    async def execute(self, ast_node) -> Any:
+    async def execute(self, ast_node, input_data: Any = None) -> Any:
         """
-        Execute AST node.
+        Execute AST node with optional input data.
 
         Args:
             ast_node: Root AST node to execute
+            input_data: Optional input data to pass to first task
 
         Returns:
             Execution result
 
         Example:
             result = await interpreter.execute(Literal("build"))
+            result = await interpreter.execute(ast, input_data={"key": "value"})
         """
-        return await ast_node.accept(self)
+        # Store input data for visitor methods to access
+        previous_input = self._current_input
+        self._current_input = input_data
+        try:
+            result = await ast_node.accept(self)
+            return result
+        finally:
+            # Restore previous input (for nested executions)
+            self._current_input = previous_input
 
     async def visit_literal(self, node: Literal) -> Any:
         """
-        Execute literal task.
+        Execute literal task with input data.
 
         Args:
             node: Literal node containing task name
@@ -90,14 +101,15 @@ class Interpreter:
         Returns:
             Task execution result
         """
-        return await self.task_executor.execute_task(node.value)
+        # Pass current input data to task executor
+        return await self.task_executor.execute_task(node.value, self._current_input)
 
     async def visit_composition(self, node: Composition) -> Any:
         """
-        Execute composition (f ∘ g) - sequential execution.
+        Execute composition (f ∘ g) - sequential execution with result propagation.
 
         Category Theory semantics: (f ∘ g)(x) = f(g(x))
-        Execute right first, pass result to left.
+        Execute right first with current input, pass result to left.
 
         Args:
             node: Composition node
@@ -105,20 +117,20 @@ class Interpreter:
         Returns:
             Final composition result
         """
-        # Execute right first (CT right-to-left)
-        right_result = await self.execute(node.right)
+        # Execute right first (CT right-to-left) with current input
+        right_result = await self.execute(node.right, self._current_input)
 
-        # Execute left with right's result as input
-        left_result = await self.execute(node.left)
+        # Execute left with right's result as input (propagation!)
+        left_result = await self.execute(node.left, right_result)
 
         # Return left result (final output of composition)
         return left_result
 
     async def visit_product(self, node: Product) -> Any:
         """
-        Execute product (f × g) - parallel execution.
+        Execute product (f × g) - parallel execution with input propagation.
 
-        Category Theory semantics: Both morphisms execute concurrently,
+        Category Theory semantics: Both morphisms execute concurrently with same input,
         results combined as tuple (implements categorical product).
 
         Args:
@@ -127,10 +139,11 @@ class Interpreter:
         Returns:
             Tuple of (left_result, right_result)
         """
-        # Execute both tasks concurrently using asyncio.gather
+        # Execute both tasks concurrently with current input
+        # Both receive the same input (product doesn't split input)
         left_result, right_result = await asyncio.gather(
-            self.execute(node.left),
-            self.execute(node.right)
+            self.execute(node.left, self._current_input),
+            self.execute(node.right, self._current_input)
         )
 
         # Return combined results (categorical product)
@@ -138,7 +151,7 @@ class Interpreter:
 
     async def visit_functor(self, node: Functor) -> Any:
         """
-        Execute functor - named workflow.
+        Execute functor - named workflow with input propagation.
 
         Args:
             node: Functor node containing name and expression
@@ -146,8 +159,8 @@ class Interpreter:
         Returns:
             Expression execution result
         """
-        # Execute the functor's expression
-        return await self.execute(node.expression)
+        # Execute the functor's expression with current input
+        return await self.execute(node.expression, self._current_input)
 
     async def visit_monad(self, node):
         """
@@ -164,5 +177,5 @@ class Interpreter:
         return node.value
 
     async def visit_mock(self, node):
-        """Visit mock node (for testing)."""
-        return await self.task_executor.execute_task(node.name)
+        """Visit mock node (for testing) with input propagation."""
+        return await self.task_executor.execute_task(node.name, self._current_input)
