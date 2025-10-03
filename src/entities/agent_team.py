@@ -313,3 +313,114 @@ class QualityAssuranceTeam(AgentTeam):
     def route_internally(self, task: Task) -> Agent:
         """Route to QA lead (single-agent team)."""
         return self.lead_agent or self.agents[0]
+
+
+@dataclass
+class CategoryTheoryTeam(AgentTeam):
+    """
+    Category Theory team: DSL composition validation, mathematical foundations.
+
+    Week 13: Specialized team for Category Theory expertise.
+
+    Team Structure:
+    - category-theory-expert (lead, Tier 2): Functors, monads, morphisms, composition
+    - dsl-architect (specialist, Tier 3): Practical DSL design and implementation
+
+    Workflow:
+    - Mathematical/theoretical tasks → Expert (functors, monads, composition laws)
+    - Implementation/parsing tasks → Architect (DSL design, AST, parsers)
+    - Default → Expert (lead)
+
+    Capabilities:
+    - Validate DSL composition correctness
+    - Review functor and monad laws
+    - Ensure category theory compliance
+    - Design composable DSL abstractions
+    """
+
+    def route_internally(self, task: Task) -> Agent:
+        """
+        Route Category Theory tasks to appropriate specialist.
+
+        Strategy:
+        - Theoretical keywords → Expert
+        - Implementation keywords → Architect
+        - Default → Expert (lead)
+        """
+        desc = task.description.lower()
+
+        # Mathematical/theoretical analysis → Expert
+        theory_keywords = [
+            'functor', 'monad', 'morphism', 'composition', 'category',
+            'algebraic', 'mathematical', 'proof', 'law', 'theory'
+        ]
+        if any(kw in desc for kw in theory_keywords):
+            return self.lead_agent
+
+        # Implementation/practical → Architect
+        impl_keywords = [
+            'parser', 'ast', 'interpreter', 'implement', 'design',
+            'syntax', 'grammar', 'dsl-design', 'pipeline'
+        ]
+        architect = self.get_agent('dsl-architect')
+        if architect and any(kw in desc for kw in impl_keywords):
+            return architect
+
+        # Default to lead (expert)
+        return self.lead_agent or self.agents[0]
+
+
+@dataclass
+class DSLTeam(AgentTeam):
+    """
+    DSL Implementation team: Deployment, task orchestration, workflow execution.
+
+    Week 13: Specialized team for DSL task implementation and deployment.
+
+    Team Structure:
+    - dsl-deployment-specialist (lead, Tier 2): Deployment strategy, orchestration
+    - dsl-task-engineer (specialist, Tier 3): Task implementation, workflow design
+
+    Workflow:
+    - Deployment/strategy tasks → Deployment Specialist
+    - Task writing/implementation → Task Engineer
+    - Workflow design → Task Engineer
+    - Default → Deployment Specialist (lead)
+
+    Capabilities:
+    - Deploy DSL workflows to production
+    - Implement concrete DSL tasks
+    - Design execution pipelines
+    - Integration with existing systems
+    """
+
+    def route_internally(self, task: Task) -> Agent:
+        """
+        Route DSL tasks to appropriate specialist.
+
+        Strategy:
+        - Deployment/orchestration → Specialist
+        - Task implementation → Engineer
+        - Default → Specialist (lead)
+        """
+        desc = task.description.lower()
+
+        # Task writing/implementation → Engineer
+        impl_keywords = [
+            'task', 'implement', 'write', 'create', 'workflow',
+            'ct-file', '.ct', 'dsl-task', 'pipeline-design'
+        ]
+        engineer = self.get_agent('dsl-task-engineer')
+        if engineer and any(kw in desc for kw in impl_keywords):
+            return engineer
+
+        # Deployment/orchestration → Specialist (lead)
+        deploy_keywords = [
+            'deploy', 'deployment', 'orchestration', 'execution',
+            'integration', 'production', 'strategy'
+        ]
+        if any(kw in desc for kw in deploy_keywords):
+            return self.lead_agent
+
+        # Default to lead (deployment specialist)
+        return self.lead_agent or self.agents[0]

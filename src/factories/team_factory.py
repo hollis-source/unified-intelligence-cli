@@ -16,7 +16,9 @@ from src.entities import (
     InfrastructureTeam,
     ResearchTeam,
     OrchestrationTeam,
-    QualityAssuranceTeam
+    QualityAssuranceTeam,
+    CategoryTheoryTeam,
+    DSLTeam
 )
 from src.factories.agent_factory import AgentFactory
 
@@ -49,9 +51,10 @@ class TeamFactory:
 
     def create_scaled_teams(self) -> List[AgentTeam]:
         """
-        Create 6 teams from 12-agent scaled system.
+        Create 9 teams from 16-agent scaled system.
 
-        Week 12: Primary team creation method.
+        Week 12: Primary team creation method (7 teams, 12 agents).
+        Week 13: Added Category Theory & DSL teams (9 teams, 16 agents).
 
         Team Structure:
         1. Orchestration Team (1 agent) - Planning
@@ -61,13 +64,15 @@ class TeamFactory:
         5. Testing Team (3 agents) - All testing
         6. Infrastructure Team (1 agent) - DevOps
         7. Research Team (2 agents) - Research & docs
+        8. Category Theory Team (2 agents) - DSL composition & mathematical foundations
+        9. DSL Team (2 agents) - DSL deployment & task engineering
 
-        Total: 12 agents across 7 teams (was 6, but split infra/research for clarity)
+        Total: 16 agents across 9 teams
 
         Returns:
-            List of 7 agent teams
+            List of 9 agent teams
         """
-        # Get all 12 agents
+        # Get all 16 agents (Week 13: includes Category Theory & DSL specialists)
         agents = self.agent_factory.create_scaled_agents()
         agent_map = {agent.role: agent for agent in agents}
 
@@ -170,6 +175,38 @@ class TeamFactory:
                 domain="research",
                 agents=research_agents,
                 lead_agent=research_lead,
+                tier=2
+            ))
+
+        # Team 8: Category Theory (Week 13: DSL & mathematical foundations)
+        ct_expert = agent_map.get("category-theory-expert")
+        dsl_architect = agent_map.get("dsl-architect")
+        if ct_expert:
+            ct_agents = [ct_expert]
+            if dsl_architect:
+                ct_agents.append(dsl_architect)
+
+            teams.append(CategoryTheoryTeam(
+                name="Category Theory",
+                domain="category-theory",
+                agents=ct_agents,
+                lead_agent=ct_expert,
+                tier=2
+            ))
+
+        # Team 9: DSL Implementation (Week 13: DSL deployment & task engineering)
+        dsl_specialist = agent_map.get("dsl-deployment-specialist")
+        dsl_engineer = agent_map.get("dsl-task-engineer")
+        if dsl_specialist:
+            dsl_agents = [dsl_specialist]
+            if dsl_engineer:
+                dsl_agents.append(dsl_engineer)
+
+            teams.append(DSLTeam(
+                name="DSL",
+                domain="dsl",
+                agents=dsl_agents,
+                lead_agent=dsl_specialist,
                 tier=2
             ))
 

@@ -270,17 +270,18 @@ class AgentFactory(IAgentFactory):
 
     def create_scaled_agents(self) -> List[Agent]:
         """
-        Create scaled agent team with full 3-tier hierarchy (12 agents for Phase 2).
+        Create scaled agent team with full 3-tier hierarchy (16 agents for Week 13).
 
-        Week 11 Phase 2: Agent scaling expansion.
+        Week 11 Phase 2: Agent scaling expansion (12 agents).
+        Week 13: Added Category Theory & DSL specialization (4 agents).
 
         Architecture:
             Tier 1 (2 agents): Orchestration & Quality Assurance
-            Tier 2 (5 agents): Domain Leads (Frontend, Backend, Testing, Research, DevOps)
-            Tier 3 (5 agents): Specialists (Python, JS/TS, Unit Test, Integration Test, Technical Writer)
+            Tier 2 (7 agents): Domain Leads (Frontend, Backend, Testing, Research, DevOps, Category Theory, DSL)
+            Tier 3 (7 agents): Specialists (Python, JS/TS, Unit Test, Integration Test, Technical Writer, DSL Architect, DSL Task Engineer)
 
         Returns:
-            List of 12 agents with complete tier metadata
+            List of 16 agents with complete tier metadata
         """
         return [
             # ===== TIER 1: Planning & Coordination (2 agents) =====
@@ -530,6 +531,91 @@ class AgentFactory(IAgentFactory):
                 tier=3,
                 parent_agent="research-lead",
                 specialization="documentation"
+            ),
+
+            # ===== TIER 2: Category Theory & DSL Domain Leads (2 agents) =====
+            # Week 13: Specialized teams for DSL and Category Theory expertise
+
+            Agent(
+                role="category-theory-expert",
+                capabilities=[
+                    # Category theory foundations
+                    "category", "category-theory", "category theory",
+                    "functor", "morphism", "natural transformation",
+                    # Algebraic structures
+                    "monad", "monoid", "algebra", "algebraic", "composition",
+                    # DSL theory
+                    "dsl", "domain-specific language", "composability",
+                    # Mathematical analysis
+                    "mathematical", "theory", "proof", "law", "validation",
+                    # Composition
+                    "compose", "composition", "pipeline", "∘", "morphism composition"
+                ],
+                tier=2,
+                parent_agent="master-orchestrator",
+                specialization="category-theory"
+            ),
+
+            Agent(
+                role="dsl-deployment-specialist",
+                capabilities=[
+                    # Deployment & orchestration
+                    "deploy", "deployment", "orchestration", "execute",
+                    # DSL execution
+                    "dsl", "workflow", "pipeline", "task execution",
+                    # Integration
+                    "integration", "production", "ci/cd",
+                    # Strategy
+                    "strategy", "planning", "coordination",
+                    # Workflow management
+                    "task management", "scheduling", "resource allocation"
+                ],
+                tier=2,
+                parent_agent="master-orchestrator",
+                specialization="dsl-deployment"
+            ),
+
+            # ===== TIER 3: Category Theory & DSL Specialists (2 agents) =====
+
+            Agent(
+                role="dsl-architect",
+                capabilities=[
+                    # DSL design
+                    "dsl", "dsl-design", "domain-specific language",
+                    "language design", "syntax", "grammar",
+                    # Parser & interpreter
+                    "parser", "ast", "abstract syntax tree",
+                    "interpreter", "lexer", "tokenizer",
+                    # Implementation
+                    "implement", "design", "architecture",
+                    # Language features
+                    "operator", "expression", "statement",
+                    # Practical DSL
+                    "pipeline-design", "workflow-design", ".ct", "ct-file"
+                ],
+                tier=3,
+                parent_agent="category-theory-expert",
+                specialization="dsl-architecture"
+            ),
+
+            Agent(
+                role="dsl-task-engineer",
+                capabilities=[
+                    # Task implementation
+                    "task", "task implementation", "write task",
+                    "create task", "implement task",
+                    # Workflow creation
+                    "workflow", "pipeline", ".ct file", "ct-file",
+                    # DSL coding
+                    "dsl-task", "workflow-design", "pipeline-design",
+                    # Concrete implementations
+                    "implement", "create", "write", "build",
+                    # Testing
+                    "test", "validate", "verify", "debug"
+                ],
+                tier=3,
+                parent_agent="dsl-deployment-specialist",
+                specialization="dsl-tasks"
             )
         ]
 

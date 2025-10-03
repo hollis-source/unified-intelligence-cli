@@ -27,8 +27,8 @@ if env_file.exists():
 @click.command()
 @click.option("--task", "-t", "task_descriptions", multiple=True, required=True,
               help="Task description (can be specified multiple times)")
-@click.option("--provider", type=click.Choice(["mock", "grok", "tongyi", "tongyi-local", "replicate"]), default="mock",
-              help="LLM provider to use (tongyi-local: Week 8 async local model, replicate: Week 9 GPU inference)")
+@click.option("--provider", type=click.Choice(["mock", "grok", "tongyi", "tongyi-local", "replicate", "qwen3_zerogpu", "auto"]), default="mock",
+              help="LLM provider to use (auto: Week 13 intelligent selection, qwen3_zerogpu: ZeroGPU inference, tongyi-local: async local model)")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.option("--debug", is_flag=True, help="Enable debug output (LLM calls, tool details)")
 @click.option("--parallel/--sequential", default=True,
@@ -44,9 +44,9 @@ if env_file.exists():
 @click.option("--data-dir", type=click.Path(), default="data/training",
               help="Directory to store collected training data (default: data/training)")
 @click.option("--agents", type=click.Choice(["default", "extended", "scaled"]), default="default",
-              help="Agent configuration: default (5 agents), extended (8 agents, Phase 1), scaled (12 agents, Phase 2)")
+              help="Agent configuration: default (5 agents), extended (8 agents), scaled (16 agents with Category Theory & DSL teams)")
 @click.option("--routing", type=click.Choice(["individual", "team"]), default="individual",
-              help="Routing mode: individual (agent-based, Week 11), team (team-based, Week 12, recommended for scaled)")
+              help="Routing mode: individual (agent-based), team (team-based, recommended for scaled)")
 def main(
     task_descriptions: tuple,
     provider: str,
@@ -82,12 +82,12 @@ def main(
         team_factory = TeamFactory(agent_factory)
         provider_factory = ProviderFactory()
 
-        # Create agents or teams based on routing mode (Week 12: Team-based routing)
+        # Create agents or teams based on routing mode (Week 12: Team-based routing, Week 13: Category Theory & DSL teams)
         if app_config.routing_mode == "team":
-            # Team-based routing (Week 12)
+            # Team-based routing (Week 12/13)
             if app_config.agent_mode == "scaled":
                 teams = team_factory.create_scaled_teams()
-                logger.info(f"Created {len(teams)} teams (scaled mode: 12 agents across 7 teams)")
+                logger.info(f"Created {len(teams)} teams (scaled mode: 16 agents across 9 teams including Category Theory & DSL)")
             elif app_config.agent_mode == "extended":
                 teams = team_factory.create_extended_teams()
                 logger.info(f"Created {len(teams)} teams (extended mode: 8 agents across teams)")
@@ -102,7 +102,7 @@ def main(
             teams = None
             if app_config.agent_mode == "scaled":
                 agents = agent_factory.create_scaled_agents()
-                logger.info(f"Created {len(agents)} agents (scaled mode: 12 agents, individual routing)")
+                logger.info(f"Created {len(agents)} agents (scaled mode: 16 agents including Category Theory & DSL, individual routing)")
             elif app_config.agent_mode == "extended":
                 agents = agent_factory.create_extended_agents()
                 logger.info(f"Created {len(agents)} agents (extended mode: 8 agents, individual routing)")

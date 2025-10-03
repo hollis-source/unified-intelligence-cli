@@ -10,7 +10,9 @@ from .agent_team import (
     InfrastructureTeam,
     ResearchTeam,
     OrchestrationTeam,
-    QualityAssuranceTeam
+    QualityAssuranceTeam,
+    CategoryTheoryTeam,
+    DSLTeam
 )
 
 __all__ = [
@@ -26,5 +28,7 @@ __all__ = [
     "InfrastructureTeam",
     "ResearchTeam",
     "OrchestrationTeam",
-    "QualityAssuranceTeam"
+    "QualityAssuranceTeam",
+    "CategoryTheoryTeam",
+    "DSLTeam"
 ]
