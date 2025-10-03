@@ -28,6 +28,15 @@ from src.dsl.types.type_checker import (
     check_composition,
     check_product,
 )
+from src.dsl.types.category_laws import (
+    make_identity,
+    verify_associativity,
+    verify_left_identity,
+    verify_right_identity,
+    project_left,
+    project_right,
+    verify_product_universal_property,
+)
 
 __all__ = [
     "Type",
@@ -40,4 +49,11 @@ __all__ = [
     "TypeEnvironment",
     "check_composition",
     "check_product",
+    "make_identity",
+    "verify_associativity",
+    "verify_left_identity",
+    "verify_right_identity",
+    "project_left",
+    "project_right",
+    "verify_product_universal_property",
 ]
