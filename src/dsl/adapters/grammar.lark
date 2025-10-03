@@ -19,8 +19,9 @@ _sep: ";" _NEWLINE* | _NEWLINE+
 // Type annotations: name :: Type -> Type (Haskell-style)
 type_annotation: IDENTIFIER TYPE_ANNOTATION type_expr
 
-// Functor definitions (optionally preceded by type annotation)
-definition: "functor" IDENTIFIER "=" expression
+// Functor definitions (functor keyword optional for concise syntax)
+// Supports both: "functor workflow = expr" and "workflow = expr"
+definition: ["functor"] IDENTIFIER "=" expression
 
 ?expression: term
            | expression COMPOSE expression    -> composition

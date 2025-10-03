@@ -88,9 +88,23 @@ class ASTTransformer(Transformer):
         return Composition(left=left, right=right)
 
     def definition(self, items):
-        """Transform functor definition to Functor entity."""
-        name = items[0].value if isinstance(items[0], Token) else items[0]
-        expression = self._ensure_ast_node(items[1])
+        """
+        Transform functor definition to Functor entity.
+
+        Supports both:
+        - functor workflow = expr  (explicit, 3 items)
+        - workflow = expr          (implicit, 2 items)
+        """
+        # Handle optional "functor" keyword
+        if len(items) == 3:
+            # Has "functor" keyword: ["functor", name, expr]
+            name = items[1].value if isinstance(items[1], Token) else items[1]
+            expression = self._ensure_ast_node(items[2])
+        else:
+            # No "functor" keyword: [name, expr]
+            name = items[0].value if isinstance(items[0], Token) else items[0]
+            expression = self._ensure_ast_node(items[1])
+
         return Functor(name=name, expression=expression)
 
     def program(self, items):
