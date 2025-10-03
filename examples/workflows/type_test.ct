@@ -1,0 +1,21 @@
+# Type Annotation Test Workflow
+# Story 1, Phase 2 - AST Integration Test
+#
+# Tests type annotation syntax parsing and type system integration
+
+# Type annotations (Haskell-style)
+fetch_commits :: () -> List[Commit]
+analyze_commit :: Commit -> Analysis
+aggregate :: List[Analysis] -> Report
+save_report :: Report -> FilePath
+
+# Composition with type checking
+# Expected types to unify:
+# fetch_commits:  () -> List[Commit]
+# analyze_commit: Commit -> Analysis  (needs to be mapped over List)
+# aggregate:      List[Analysis] -> Report
+# save_report:    Report -> FilePath
+#
+# Valid composition (when batch_analyze exists):
+# batch_analyze :: List[Commit] -> List[Analysis]
+# save_report ∘ aggregate ∘ batch_analyze ∘ fetch_commits

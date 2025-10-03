@@ -1,5 +1,6 @@
 // Category Theory DSL Grammar (Lark syntax)
 // Based on EBNF from CT_DSL_RESEARCH_SYNTHESIS.md
+// Extended with Hindley-Milner type annotations (Phase 2)
 //
 // Clean Architecture: Adapter layer (external Lark dependency)
 // SOLID: SRP - only defines grammar, no parsing logic
@@ -8,9 +9,14 @@
 
 program: statement (";" statement)*
 
-?statement: definition
+?statement: type_annotation
+          | definition
           | expression
 
+// Type annotations: name :: Type -> Type (Haskell-style)
+type_annotation: IDENTIFIER TYPE_ANNOTATION type_expr
+
+// Functor definitions (optionally preceded by type annotation)
 definition: "functor" IDENTIFIER "=" expression
 
 ?expression: term
@@ -22,6 +28,42 @@ definition: "functor" IDENTIFIER "=" expression
      | LITERAL                              -> literal
      | "(" expression ")"
 
+// Type expressions (Hindley-Milner type syntax)
+?type_expr: function_type
+          | atomic_type
+
+// Function types: A -> B -> C (right associative)
+function_type: atomic_type ARROW type_expr
+
+// Product types: A × B (for parallel composition)
+product_type: atomic_type TYPE_PRODUCT_OP atomic_type
+
+// Atomic types (highest precedence)
+?atomic_type: monomorphic_type
+            | type_variable
+            | type_constructor
+            | product_type
+            | "(" type_expr ")"
+
+// Monomorphic types: Int, String, Bool, etc.
+monomorphic_type: TYPE_NAME
+
+// Type variables: a, b, c (for polymorphism)
+type_variable: TYPE_VAR
+
+// Type constructors: List[T], Dict[K, V]
+type_constructor: TYPE_NAME "[" type_params "]"
+
+type_params: type_expr ("," type_expr)*
+
+// Terminals for type system
+TYPE_ANNOTATION: "::"
+ARROW: "->" | "→"
+TYPE_PRODUCT_OP: "×" | "*"
+TYPE_NAME: /[A-Z][a-zA-Z0-9_]*/         // Capitalized (Int, String, List)
+TYPE_VAR: /[a-z]/                        // Single lowercase letter (a, b, c)
+
+// Terminals for expressions
 COMPOSE: "∘" | "o"                          // Allow ASCII alternative
 BIND: ">>=" | ">>"                          // Monadic bind
 PRODUCT: "×" | "*"                          // Allow ASCII alternative

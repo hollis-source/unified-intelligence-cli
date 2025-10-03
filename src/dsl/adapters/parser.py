@@ -2,6 +2,8 @@
 
 Clean Architecture: Adapter layer (external Lark dependency).
 SOLID: SRP - only parses DSL text to AST, DIP - depends on entity abstractions.
+
+Story: Story 1, Phase 2 - Extended with type annotation parsing
 """
 
 import os
@@ -11,6 +13,14 @@ from src.dsl.entities.literal import Literal
 from src.dsl.entities.composition import Composition
 from src.dsl.entities.product import Product
 from src.dsl.entities.functor import Functor
+from src.dsl.entities.type_annotation import TypeAnnotation
+from src.dsl.types.type_system import (
+    Type,
+    TypeVariable,
+    MonomorphicType,
+    FunctionType,
+    ProductType,
+)
 
 
 class ASTTransformer(Transformer):
@@ -91,6 +101,52 @@ class ASTTransformer(Transformer):
         # Multiple statements: return list or last statement
         # For simplicity, return last statement (can be enhanced)
         return items[-1]
+
+    # Type annotation transformers (Phase 2)
+
+    def type_annotation(self, items):
+        """Transform type annotation: name :: Type"""
+        # Grammar: IDENTIFIER TYPE_ANNOTATION type_expr
+        # items[0] = IDENTIFIER, items[1] = "::", items[2] = type_expr
+        name = items[0].value if isinstance(items[0], Token) else items[0]
+        type_expr = items[2]  # Type object (skip :: token at items[1])
+        return TypeAnnotation(name=name, type_signature=type_expr)
+
+    def function_type(self, items):
+        """Transform function type: A -> B"""
+        # Grammar: atomic_type ARROW type_expr
+        # items[0] = input_type, items[1] = "->", items[2] = output_type
+        input_type = items[0]
+        output_type = items[2]  # Skip arrow token at items[1]
+        return FunctionType(input_type=input_type, output_type=output_type)
+
+    def product_type(self, items):
+        """Transform product type: A × B"""
+        # Grammar: atomic_type TYPE_PRODUCT_OP atomic_type
+        # items[0] = left, items[1] = "×", items[2] = right
+        left = items[0]
+        right = items[2]  # Skip product operator at items[1]
+        return ProductType(left=left, right=right)
+
+    def monomorphic_type(self, items):
+        """Transform monomorphic type: Int, String, etc."""
+        type_name = items[0].value
+        return MonomorphicType(name=type_name)
+
+    def type_variable(self, items):
+        """Transform type variable: a, b, c"""
+        var_name = items[0].value
+        return TypeVariable(name=var_name)
+
+    def type_constructor(self, items):
+        """Transform type constructor: List[T], Dict[K, V]"""
+        type_name = items[0].value  # E.g., "List", "Dict"
+        type_params = items[1]  # List of Type objects
+        return MonomorphicType(name=type_name, type_params=tuple(type_params))
+
+    def type_params(self, items):
+        """Transform type parameters list"""
+        return list(items)  # Items are already transformed Type objects
 
 
 class Parser:
