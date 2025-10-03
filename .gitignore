@@ -88,4 +88,4 @@ logs/
 # Temporary files
 *.tmp
 tmp/
-temp/
+temp/data/metrics/
