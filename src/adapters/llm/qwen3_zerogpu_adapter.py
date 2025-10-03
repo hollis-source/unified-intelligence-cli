@@ -237,7 +237,7 @@ class Qwen3InferenceAdapter(ITextGenerator):
 
         Implementation:
         - Converts messages to chat history format
-        - Calls /generate_response endpoint (optimized for inference)
+        - Calls /respond endpoint (production inference)
         - Returns only the assistant's response
         """
         # Extract system prompt and conversation history
@@ -264,20 +264,24 @@ class Qwen3InferenceAdapter(ITextGenerator):
         max_tokens = config.max_tokens if config and hasattr(config, 'max_tokens') else 512
 
         try:
-            # Call inference endpoint
-            job = self.client.submit(
-                user_message,
-                system_prompt,
-                temperature,
-                max_tokens,
-                history,
-                api_name="/generate_response"
+            # Call inference endpoint with correct API signature
+            # API: predict(message, chat_history, sys_prompt, temp, max_tok)
+            empty_msg, conversation = self.client.predict(
+                message=user_message,
+                chat_history=history,
+                sys_prompt=system_prompt,
+                temp=temperature,
+                max_tok=max_tokens,
+                api_name="/respond"
             )
 
-            # Get result with timeout
-            response, updated_history = job.result(timeout=self.timeout)
-
-            return response
+            # Extract response from conversation
+            if conversation and len(conversation) > 0:
+                last_turn = conversation[-1]
+                _, response = last_turn  # (user_msg, assistant_response)
+                return response
+            else:
+                return "Error: No response generated"
 
         except Exception as e:
             return f"Error: Qwen3 inference failed - {str(e)}"

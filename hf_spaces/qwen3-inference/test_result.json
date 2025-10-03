@@ -1,0 +1,10 @@
+{
+  "space_id": "hollis-source/qwen3-inference",
+  "test_timestamp": "2025-10-03 10:21:28",
+  "query": "What are the SOLID principles in software engineering? Explain each briefly.",
+  "latency_seconds": 43.46,
+  "response_length": 2570,
+  "status": "FIRST_CALL",
+  "quality": "PASS",
+  "response_preview": "<think>\nOkay, the user is asking about the SOLID principles in software engineering. Let me start by recalling what I know about them. SOLID is an acronym for five design principles intended to make s..."
+}
