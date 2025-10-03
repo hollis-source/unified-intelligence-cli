@@ -40,6 +40,10 @@ class Config:
     # Routing settings (Week 12: Team-based routing)
     routing_mode: str = "individual"  # Routing mode: "individual" (agent-based) or "team" (team-based)
 
+    # Metrics settings (Week 13: Monitoring & metrics)
+    collect_metrics: bool = False  # Enable metrics collection for monitoring
+    metrics_dir: str = "data/metrics"  # Directory to store metrics
+
     @classmethod
     def from_file(cls, file_path: str) -> "Config":
         """
@@ -77,7 +81,9 @@ class Config:
             data_dir=data.get("data_dir", "data/training"),
             agent_mode=data.get("agent_mode", "default"),
             custom_agents=data.get("custom_agents", []),
-            routing_mode=data.get("routing_mode", "individual")
+            routing_mode=data.get("routing_mode", "individual"),
+            collect_metrics=data.get("collect_metrics", False),
+            metrics_dir=data.get("metrics_dir", "data/metrics")
         )
 
     def merge_cli_args(
@@ -91,7 +97,9 @@ class Config:
         collect_data: Optional[bool] = None,
         data_dir: Optional[str] = None,
         agent_mode: Optional[str] = None,
-        routing_mode: Optional[str] = None
+        routing_mode: Optional[str] = None,
+        collect_metrics: Optional[bool] = None,
+        metrics_dir: Optional[str] = None
     ) -> "Config":
         """
         Merge CLI arguments with config file settings.
@@ -109,6 +117,8 @@ class Config:
             data_dir: CLI data directory (Week 9)
             agent_mode: CLI agent mode (Week 11)
             routing_mode: CLI routing mode (Week 12)
+            collect_metrics: CLI metrics collection flag (Week 13)
+            metrics_dir: CLI metrics directory (Week 13)
 
         Returns:
             New Config with merged values
@@ -125,7 +135,9 @@ class Config:
             data_dir=data_dir if data_dir is not None else self.data_dir,
             agent_mode=agent_mode if agent_mode is not None else self.agent_mode,
             custom_agents=self.custom_agents,
-            routing_mode=routing_mode if routing_mode is not None else self.routing_mode
+            routing_mode=routing_mode if routing_mode is not None else self.routing_mode,
+            collect_metrics=collect_metrics if collect_metrics is not None else self.collect_metrics,
+            metrics_dir=metrics_dir if metrics_dir is not None else self.metrics_dir
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -146,5 +158,7 @@ class Config:
             "data_dir": self.data_dir,
             "agent_mode": self.agent_mode,
             "custom_agents": self.custom_agents,
-            "routing_mode": self.routing_mode
+            "routing_mode": self.routing_mode,
+            "collect_metrics": self.collect_metrics,
+            "metrics_dir": self.metrics_dir
         }

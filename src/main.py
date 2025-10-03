@@ -76,7 +76,8 @@ def main(
     # Load configuration
     app_config = load_config(
         config, provider, verbose, debug, parallel, timeout,
-        orchestrator, collect_data, data_dir, agents, routing
+        orchestrator, collect_data, data_dir, agents, routing,
+        collect_metrics, metrics_dir
     )
 
     # Setup logging based on verbosity
@@ -132,8 +133,8 @@ def main(
         ]
         logger.info(f"Created {len(tasks)} tasks")
 
-        # Compose dependencies (Week 7: orchestrator mode, Week 9: data collection, Week 12: team routing)
-        coordinator = compose_dependencies(
+        # Compose dependencies (Week 7: orchestrator mode, Week 9: data collection, Week 12: team routing, Week 13: metrics)
+        coordinator, metrics_collector = compose_dependencies(
             llm_provider=llm_provider,
             agents=agents,
             logger=logger if app_config.verbose else None,
@@ -142,7 +143,9 @@ def main(
             data_dir=app_config.data_dir,
             provider_name=app_config.provider,
             routing_mode=app_config.routing_mode,
-            teams=teams
+            teams=teams,
+            collect_metrics=app_config.collect_metrics,
+            metrics_dir=app_config.metrics_dir
         )
 
         # Execute with timeout
@@ -155,6 +158,12 @@ def main(
                 app_config.timeout
             )
         )
+
+        # Save metrics if enabled (Week 13)
+        if metrics_collector:
+            metrics_collector.save()
+            if logger:
+                logger.info(f"Metrics saved to {metrics_collector.session_file}")
 
         # Display results (Clean Architecture: Use CLI adapter)
         formatter = ResultFormatter(verbose=app_config.verbose)
@@ -189,7 +198,9 @@ def load_config(
     collect_data: bool = False,
     data_dir: str = "data/training",
     agent_mode: str = "default",
-    routing_mode: str = "individual"
+    routing_mode: str = "individual",
+    collect_metrics: bool = False,
+    metrics_dir: str = "data/metrics"
 ) -> Config:
     """
     Load configuration from file and merge with CLI arguments.
@@ -225,7 +236,9 @@ def load_config(
             collect_data=collect_data,
             data_dir=data_dir,
             agent_mode=agent_mode,
-            routing_mode=routing_mode
+            routing_mode=routing_mode,
+            collect_metrics=collect_metrics,
+            metrics_dir=metrics_dir
         )
     else:
         # Use CLI args only
@@ -239,7 +252,9 @@ def load_config(
             collect_data=collect_data,
             data_dir=data_dir,
             agent_mode=agent_mode,
-            routing_mode=routing_mode
+            routing_mode=routing_mode,
+            collect_metrics=collect_metrics,
+            metrics_dir=metrics_dir
         )
 
 
