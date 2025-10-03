@@ -7,7 +7,10 @@
 
 ?start: program
 
-program: statement (";" statement)*
+program: _NEWLINE* statement (_sep statement)* _sep? _NEWLINE*
+       | _NEWLINE*
+
+_sep: ";" _NEWLINE* | _NEWLINE+
 
 ?statement: type_annotation
           | definition
@@ -42,8 +45,12 @@ product_type: atomic_type TYPE_PRODUCT_OP atomic_type
 ?atomic_type: monomorphic_type
             | type_variable
             | type_constructor
+            | unit_type
             | product_type
             | "(" type_expr ")"
+
+// Unit type: () (empty/void type)
+unit_type: "(" ")"
 
 // Monomorphic types: Int, String, Bool, etc.
 monomorphic_type: TYPE_NAME
@@ -72,8 +79,9 @@ IDENTIFIER: /[a-zA-Z_][a-zA-Z0-9_]*/
 LITERAL: /"[^"]*"/ | /'[^']*'/              // Double or single quoted strings
 
 // Whitespace and comments
-%import common.WS
-%ignore WS
+%import common.NEWLINE -> _NEWLINE
+%import common.WS_INLINE
+%ignore WS_INLINE
 
 COMMENT: "#" /[^\n]*/
 %ignore COMMENT

@@ -95,12 +95,13 @@ class ASTTransformer(Transformer):
 
     def program(self, items):
         """Transform program (list of statements)."""
-        # If single statement, return it directly
-        if len(items) == 1:
-            return items[0]
-        # Multiple statements: return list or last statement
-        # For simplicity, return last statement (can be enhanced)
-        return items[-1]
+        # Return list of all statements for programs with multiple statements
+        if len(items) == 0:
+            return None  # Empty program
+        elif len(items) == 1:
+            return items[0]  # Single statement - return directly
+        else:
+            return items  # Multiple statements - return as list
 
     # Type annotation transformers (Phase 2)
 
@@ -148,6 +149,10 @@ class ASTTransformer(Transformer):
         """Transform type parameters list"""
         return list(items)  # Items are already transformed Type objects
 
+    def unit_type(self, items):
+        """Transform unit type: ()"""
+        return MonomorphicType(name="Unit")
+
 
 class Parser:
     """
@@ -176,7 +181,8 @@ class Parser:
         self.lark_parser = Lark(
             grammar,
             start='start',
-            parser='lalr',  # Fast LALR parser
+            parser='earley',  # Earley parser handles ambiguous grammars
+            ambiguity='resolve',  # Automatically resolve ambiguities
         )
         self.transformer = ASTTransformer()
 
