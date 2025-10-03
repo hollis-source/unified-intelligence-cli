@@ -10,6 +10,7 @@ Architecture:
 - DIP: Returns IAgentCoordinator interface (abstraction)
 """
 
+import os
 import logging
 from typing import List, Optional
 
@@ -191,13 +192,21 @@ class OrchestrationFactory:
         from src.adapters.orchestration.hybrid_orchestrator import HybridOrchestrator
 
         # Check if SDK is available for hybrid mode
-        enable_sdk = OPENAI_AGENTS_AVAILABLE
+        # Allow runtime override via environment variable (for llama-cpp-server dependency issues)
+        disable_sdk_env = os.getenv("DISABLE_SDK_MODE", "").lower() in ("true", "1", "yes")
+        enable_sdk = OPENAI_AGENTS_AVAILABLE and not disable_sdk_env
 
         if not enable_sdk:
-            logger.warning(
-                "SDK not available, hybrid mode will use simple mode only. "
-                "Install with: pip install openai-agents"
-            )
+            if disable_sdk_env:
+                logger.info(
+                    "SDK mode explicitly disabled via DISABLE_SDK_MODE environment variable. "
+                    "Hybrid mode will use simple orchestrator only."
+                )
+            else:
+                logger.warning(
+                    "SDK not available, hybrid mode will use simple mode only. "
+                    "Install with: pip install openai-agents"
+                )
 
         return HybridOrchestrator(
             llm_provider=llm_provider,
