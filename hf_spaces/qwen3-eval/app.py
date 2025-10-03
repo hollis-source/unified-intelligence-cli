@@ -1,86 +1,94 @@
 """
-Qwen3-8B Q5_K_M Evaluation on ZeroGPU
+Qwen3-8B FP16 Evaluation on ZeroGPU
 
-Evaluates GGUF models using llama.cpp on HuggingFace ZeroGPU (H200).
+Evaluates Qwen3-8B (FP16) using Transformers on HuggingFace ZeroGPU (H200).
 Batched processing to work within 120s timeout.
+
+Pattern: Lazy model loading (first call) + caching to avoid startup timeout.
 """
 
 import spaces
 import gradio as gr
-import subprocess
 import json
 import time
-import os
-from pathlib import Path
 from typing import List, Dict, Any
-import huggingface_hub
+import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
-# Model and data paths
-MODEL_REPO = "unsloth/Qwen3-8B-GGUF"
-MODEL_FILE = "Qwen3-8B-Q5_K_M.gguf"
-MODEL_PATH = Path("models") / MODEL_FILE
-LLAMA_CLI = Path("llama.cpp/build/bin/llama-cli")
+# Model configuration
+MODEL_ID = "Qwen/Qwen3-8B"  # Qwen3 doesn't use -Instruct suffix
+
+# Global cache for model (loaded on first use)
+_model = None
+_tokenizer = None
 
 
-def download_model():
-    """Download GGUF model from HuggingFace (cached)."""
-    if MODEL_PATH.exists():
-        print(f"✓ Model already downloaded: {MODEL_PATH}")
-        return str(MODEL_PATH)
+def load_model_if_needed():
+    """Lazy-load model on first call to avoid startup timeout."""
+    global _model, _tokenizer
 
-    print(f"📥 Downloading {MODEL_FILE}...")
-    MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    if _model is not None:
+        return _model, _tokenizer
 
-    huggingface_hub.hf_hub_download(
-        repo_id=MODEL_REPO,
-        filename=MODEL_FILE,
-        local_dir=str(MODEL_PATH.parent),
-        local_dir_use_symlinks=False
+    print(f"🔧 Loading model (first call): {MODEL_ID}")
+    print(f"   Size: 8B parameters (Qwen3)")
+    print(f"   Precision: FP16 (torch.float16)")
+
+    _tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+
+    _model = AutoModelForCausalLM.from_pretrained(
+        MODEL_ID,
+        torch_dtype=torch.float16,
+        device_map="auto"
     )
 
-    print(f"✓ Downloaded to {MODEL_PATH}")
-    return str(MODEL_PATH)
-
-
-def setup_llama_cpp():
-    """Build llama.cpp with CUDA support (cached)."""
-    if LLAMA_CLI.exists():
-        print(f"✓ llama.cpp already built: {LLAMA_CLI}")
-        return str(LLAMA_CLI)
-
-    print("🔧 Building llama.cpp with CUDA...")
-
-    # Clone if needed
-    if not Path("llama.cpp").exists():
-        subprocess.run([
-            "git", "clone",
-            "https://github.com/ggerganov/llama.cpp",
-            "llama.cpp"
-        ], check=True)
-
-    # Build with CUDA
-    subprocess.run([
-        "cmake", "-B", "llama.cpp/build",
-        "-DGGML_CUDA=ON",
-        "llama.cpp"
-    ], check=True)
-
-    subprocess.run([
-        "cmake", "--build", "llama.cpp/build",
-        "--config", "Release"
-    ], check=True)
-
-    print(f"✓ Built llama.cpp: {LLAMA_CLI}")
-    return str(LLAMA_CLI)
+    print("✓ Model loaded")
+    return _model, _tokenizer
 
 
 def parse_test_examples(test_data_text: str) -> List[Dict[str, Any]]:
-    """Parse JSONL test data."""
+    """Parse JSONL test data (handles both single-line and formatted JSON)."""
     examples = []
-    for line in test_data_text.strip().split('\n'):
-        if line.strip():
-            examples.append(json.loads(line))
+
+    # Try standard JSONL parsing (one JSON per line)
+    try:
+        for line in test_data_text.strip().split('\n'):
+            if line.strip():
+                examples.append(json.loads(line))
+        return examples
+    except json.JSONDecodeError:
+        pass  # Fall through to alternative parsing
+
+    # Alternative: Parse as JSON array or handle multi-line JSON
+    try:
+        # Try parsing as JSON array
+        parsed = json.loads(test_data_text)
+        if isinstance(parsed, list):
+            return parsed
+        elif isinstance(parsed, dict):
+            return [parsed]
+    except json.JSONDecodeError:
+        pass
+
+    # Last resort: Use a more robust JSONL parser
+    # Split by }{ pattern and reconstruct
+    import re
+    json_objects = re.split(r'}\s*{', test_data_text.strip())
+
+    for i, obj_str in enumerate(json_objects):
+        # Add back braces except for first and last
+        if i > 0:
+            obj_str = '{' + obj_str
+        if i < len(json_objects) - 1:
+            obj_str = obj_str + '}'
+
+        try:
+            examples.append(json.loads(obj_str.strip()))
+        except json.JSONDecodeError as e:
+            print(f"Warning: Failed to parse JSON object {i}: {e}")
+            continue
+
     return examples
 
 
@@ -101,48 +109,6 @@ def extract_prompt_and_expected(example: Dict[str, Any]) -> tuple:
     return prompt, expected_response
 
 
-def run_inference(model_path: str, prompt: str, max_tokens: int = 512) -> tuple:
-    """Run inference using llama.cpp. Returns (generated_text, latency)."""
-    cmd = [
-        str(LLAMA_CLI),
-        "-m", model_path,
-        "-p", prompt,
-        "-n", str(max_tokens),
-        "--temp", "0.0",
-        "-ngl", "99",  # Offload all layers to GPU
-        "-t", "8",     # Use 8 threads
-        "--log-disable"
-    ]
-
-    start_time = time.time()
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=30,  # 30s per example
-            check=False
-        )
-        latency = time.time() - start_time
-
-        output = result.stdout
-
-        # Extract generated text
-        if "<|im_start|>assistant" in output:
-            generated = output.split("<|im_start|>assistant")[-1]
-            generated = generated.split("<|im_end|>")[0].strip()
-        else:
-            generated = output.strip()
-
-        return generated, latency
-
-    except subprocess.TimeoutExpired:
-        return "", time.time() - start_time
-    except Exception as e:
-        print(f"Inference error: {e}")
-        return "", 0.0
-
-
 def check_success(generated: str, expected: str) -> bool:
     """Check if generation is successful (length heuristic)."""
     if not generated:
@@ -160,7 +126,6 @@ def check_success(generated: str, expected: str) -> bool:
 
 @spaces.GPU(duration=120)
 def evaluate_batch(
-    model_path: str,
     examples: List[Dict[str, Any]],
     batch_start: int,
     batch_size: int
@@ -169,7 +134,11 @@ def evaluate_batch(
     Evaluate a batch of examples on GPU.
 
     ZeroGPU decorator allocates H200 GPU for 120 seconds.
+    Model is lazy-loaded on first call and cached.
     """
+    # Lazy-load model (cached after first call)
+    model, tokenizer = load_model_if_needed()
+
     batch_results = []
     batch_end = min(batch_start + batch_size, len(examples))
 
@@ -180,7 +149,35 @@ def evaluate_batch(
         prompt, expected = extract_prompt_and_expected(example)
 
         # Run inference
-        generated, latency = run_inference(model_path, prompt)
+        start_time = time.time()
+
+        try:
+            # Tokenize
+            inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+
+            # Generate
+            with torch.no_grad():
+                outputs = model.generate(
+                    **inputs,
+                    max_new_tokens=512,
+                    temperature=0.0,
+                    do_sample=False,
+                    pad_token_id=tokenizer.eos_token_id,
+                    eos_token_id=tokenizer.eos_token_id
+                )
+
+            # Decode
+            full_output = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            generated = full_output[len(tokenizer.decode(inputs['input_ids'][0], skip_special_tokens=True)):]
+            generated = generated.strip()
+
+            latency = time.time() - start_time
+
+        except Exception as e:
+            print(f"Inference error: {e}")
+            generated = ""
+            latency = time.time() - start_time
+
         success = check_success(generated, expected)
 
         result = {
@@ -211,20 +208,13 @@ def run_full_evaluation(test_data_text: str, batch_size: int = 5, progress=gr.Pr
 
     Each batch runs on ZeroGPU for up to 120s.
     """
-    # Setup (runs on CPU, cached)
-    progress(0, desc="Setting up llama.cpp...")
-    llama_cli = setup_llama_cpp()
-
-    progress(0.1, desc="Downloading model...")
-    model_path = download_model()
-
     # Parse test data
-    progress(0.2, desc="Parsing test data...")
+    progress(0.1, desc="Parsing test data...")
     examples = parse_test_examples(test_data_text)
     total_examples = len(examples)
 
     if total_examples == 0:
-        return {"error": "No examples found in test data"}
+        return "**Error:** No examples found in test data", "{}"
 
     print(f"\n📊 Evaluating {total_examples} examples in batches of {batch_size}")
 
@@ -234,12 +224,11 @@ def run_full_evaluation(test_data_text: str, batch_size: int = 5, progress=gr.Pr
 
     for batch_idx in range(num_batches):
         batch_start = batch_idx * batch_size
-        progress_pct = 0.2 + (batch_idx / num_batches) * 0.8
+        progress_pct = 0.1 + (batch_idx / num_batches) * 0.9
         progress(progress_pct, desc=f"Evaluating batch {batch_idx + 1}/{num_batches}...")
 
         # This call gets GPU allocation via @spaces.GPU decorator
         batch_result = evaluate_batch(
-            model_path,
             examples,
             batch_start,
             batch_size
@@ -281,7 +270,7 @@ def run_full_evaluation(test_data_text: str, batch_size: int = 5, progress=gr.Pr
 
     # Final results
     results = {
-        "model": "Qwen3-8B-Q5_K_M",
+        "model": "Qwen3-8B-FP16",
         "hardware": "ZeroGPU H200",
         "total_examples": total,
         "successful": successful,
@@ -299,7 +288,7 @@ def run_full_evaluation(test_data_text: str, batch_size: int = 5, progress=gr.Pr
     # Format output
     summary = f"""# Evaluation Results
 
-**Model**: Qwen3-8B-Q5_K_M (ZeroGPU H200)
+**Model**: Qwen3-8B-FP16 (ZeroGPU H200)
 
 ## Overall Metrics
 - **Success Rate**: {success_rate:.2f}% ({successful}/{total} examples)
@@ -316,14 +305,15 @@ def run_full_evaluation(test_data_text: str, batch_size: int = 5, progress=gr.Pr
 
 
 # Gradio Interface
-with gr.Blocks(title="Qwen3-8B Q5_K_M Evaluation") as demo:
+with gr.Blocks(title="Qwen3-8B FP16 Evaluation") as demo:
     gr.Markdown("""
-    # 🚀 Qwen3-8B Q5_K_M Evaluation on ZeroGPU
+    # 🚀 Qwen3-8B FP16 Evaluation on ZeroGPU
 
-    Evaluate GGUF models using llama.cpp on HuggingFace ZeroGPU (H200 GPU).
+    Evaluate Qwen3-8B (FP16) using Transformers on HuggingFace ZeroGPU (H200 GPU).
 
     **Features:**
     - Runs on **H200 GPU** (FREE with HF Pro)
+    - Native Transformers + ZeroGPU integration
     - Batched processing (5-10 examples per batch)
     - Real-time progress tracking
     - Detailed metrics and agent breakdown
@@ -335,7 +325,7 @@ with gr.Blocks(title="Qwen3-8B Q5_K_M Evaluation") as demo:
                 label="Test Data (JSONL)",
                 placeholder='Paste your test.jsonl content here...',
                 lines=10,
-                value=""  # Will be populated from file
+                value=""
             )
 
             batch_size = gr.Slider(
@@ -362,18 +352,24 @@ with gr.Blocks(title="Qwen3-8B Q5_K_M Evaluation") as demo:
     gr.Markdown("""
     ## How It Works
 
-    1. **Setup** (CPU): Downloads model and builds llama.cpp (cached after first run)
+    1. **Setup** (First Call): Model downloads on first batch (cached afterward)
     2. **Batch Processing** (GPU): Runs 5-10 examples per ZeroGPU call (120s limit)
     3. **Aggregation** (CPU): Combines results and computes metrics
 
     ## Tips
 
-    - **First run**: Takes ~2-3 min for setup (cached afterward)
-    - **Subsequent runs**: Much faster (model and llama.cpp cached)
+    - **First batch**: Takes ~3-5 min (model download within GPU context)
+    - **Subsequent batches**: Fast (~10-20s per batch)
     - **Batch size**: 5 = safer, 10 = faster but may timeout on slow examples
     - **Free with Pro**: Unlimited usage with HF Pro subscription
+
+    ## Comparison
+
+    - **FP16 (this)**: Best quality, GPU-accelerated, ~16GB VRAM (8B model)
+    - **Q5_K_M**: Good quality, 5.5GB (CPU only with llama.cpp)
+    - **Q4_K_M**: Fair quality, 4.5GB (CPU only, 48% success baseline)
     """)
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(show_error=True)
