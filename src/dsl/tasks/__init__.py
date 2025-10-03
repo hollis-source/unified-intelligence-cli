@@ -12,5 +12,14 @@ from . import refactoring_tasks
 from . import grok_analysis_tasks
 from . import system_analysis_tasks
 from . import hf_spaces_analysis_tasks
+from . import qwen3_deployment_tasks
 
-__all__ = ['gpu_integration_tasks', 'git_operations_tasks', 'refactoring_tasks', 'grok_analysis_tasks', 'system_analysis_tasks', 'hf_spaces_analysis_tasks']
+__all__ = [
+    'gpu_integration_tasks',
+    'git_operations_tasks',
+    'refactoring_tasks',
+    'grok_analysis_tasks',
+    'system_analysis_tasks',
+    'hf_spaces_analysis_tasks',
+    'qwen3_deployment_tasks'
+]
