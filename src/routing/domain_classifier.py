@@ -91,70 +91,244 @@ class DomainClassifier:
             r"examples", r"reference", r"manual"
         ],
         # Week 13: Specialized domains for Category Theory and DSL teams
-        "category-theory": [
-            r"\bfunctor\b", r"\bmonad\b", r"\bmonoid\b", r"\bmorphism\b",
-            r"category theory", r"category-theory", r"natural transformation",
-            r"composition", r"algebraic", r"\balgebra\b",
-            r"mathematical", r"\btheory\b", r"proof", r"\blaw\b",
-            r"compose", r"composability", r"∘", r"type preservation"
-        ],
+        # CRITICAL DISTINCTION (ultrathink analysis):
+        # - DSL = Implementation domain (parser, AST, interpreter, .ct files, workflow execution)
+        # - Category Theory = Mathematical foundation (formal verification, law proofs, type theory)
         "dsl": [
-            r"\.ct\b", r"ct-file", r"ct file", r"\.ct workflow",
-            r"dsl", r"domain-specific language", r"dsl-task",
-            r"dsl deployment", r"dsl-design", r"dsl composition",
-            r"workflow design", r"pipeline design", r"task engineering",
-            r"dsl architect", r"dsl engineer", r"composable workflow"
+            # EXPLICIT TEAM IDENTIFIERS (CRITICAL for routing, weight: 25)
+            r"^DSL Team", r"DSL Team -", r"DSLTeam",
+
+            # .ct file syntax and extensions (HIGHEST: DSL's primary artifact)
+            r"\.ct\b", r"\.ct workflow", r"\.ct file", r"ct-file", r"ct file",
+
+            # DSL implementation components (parser, AST, interpreter)
+            r"\bparser\b", r"parsing", r"\bparse\b", r"\blast\b",
+            r"abstract syntax tree", r"\binterpreter\b", r"interpret",
+            r"\blexer\b", r"\bgrammar\b", r"syntax tree", r"lark",
+
+            # DSL directory structure and modules
+            r"src/dsl/", r"dsl/entities", r"dsl/adapters", r"dsl/use_cases",
+            r"dsl/tasks", r"cli_task_executor", r"examples/workflows",
+
+            # Workflow and task engineering (implementation focus)
+            r"workflow design", r"workflow engineering", r"task mapping",
+            r"task executor", r"task engineering", r"pipeline design",
+            r"pipeline orchestration", r"composable workflow",
+            r"workflow orchestration", r"execution semantics",
+
+            # DSL operations and execution
+            r"execute workflow", r"run workflow", r"workflow execution",
+            r"task composition", r"visitor pattern", r"ast.*node",
+            r"operator.*guarantee", r"operator.*semantic",
+
+            # DSL deployment and integration
+            r"dsl deployment", r"dsl engineer", r"dsl architect",
+            r"dsl-design", r"cli integration",
+
+            # DSL distributed systems implementation (NOT CT theory)
+            r"distributed execution", r"horizontal scaling", r"zero-copy",
+            r"backpressure", r"flow control", r"fault tolerance.*pattern",
+            r"retry.*strateg", r"circuit breaker", r"bulkhead",
+            r"cloud-native deployment", r"distributed.*agent",
+
+            # Generic DSL terms
+            r"\bdsl\b", r"domain-specific language", r"dsl-task"
+        ],
+        "category-theory": [
+            # EXPLICIT TEAM IDENTIFIERS (CRITICAL for routing, weight: 25)
+            r"^Category Theory Team", r"Category Theory Team -", r"CategoryTheoryTeam",
+
+            # Formal verification and proofs (HIGHEST: CT's primary focus)
+            r"formal verification", r"formal proof", r"mathematical proof",
+            r"verify.*composition", r"prove.*law", r"type safety proof",
+            r"proof.*correct", r"verify.*correct",
+
+            # Law enforcement and checking (CT's core responsibility)
+            r"category.*law", r"functor.*law", r"monad.*law",
+            r"associativity.*law", r"identity.*law", r"composition.*law",
+            r"law enforcement", r"law.*check", r"verify.*law", r"enforce.*law",
+
+            # Mathematical theory and foundations
+            r"category theory", r"category-theory", r"categorical.*semantic",
+            r"mathematical.*foundation", r"mathematical.*rigor",
+            r"type.*theory", r"type.*preservation.*proof",
+
+            # Type-level guarantees and proofs
+            r"type-level guarantee", r"type preservation", r"type safety",
+            r"morphism preservation", r"structure.*preserv",
+
+            # Mathematical structures (shared with DSL, lower weight here)
+            r"natural transformation", r"product category", r"coproduct",
+            r"\bfunctor\b", r"\bmonad\b", r"\bmonoid\b", r"\bmorphism\b",
+
+            # Mathematical correctness validation
+            r"mathematical.*correct", r"categorical.*correct",
+            r"algebraic.*property", r"algebraic.*law",
+
+            # CT semantics (lower weight, often DSL context)
+            r"composition", r"compose", r"composability", r"∘",
+            r"algebraic", r"\balgebra\b", r"mathematical", r"\btheory\b", r"\blaw\b"
         ]
     }
 
     # Week 13: Keyword weights for specialized domains (Priority 1 fix)
     # Higher weight = more important for domain classification
     # Solves routing issue where generic keywords override specialized terms
+    #
+    # ULTRATHINK FIX (2025-10-03):
+    # - DSL = Implementation (parser, AST, interpreter, .ct files) → HIGH weights for implementation keywords
+    # - Category Theory = Mathematical foundation (proofs, verification, laws) → HIGH weights for verification keywords
+    # - Shared terms (functor, monad) get LOWER weight in CT, as DSL uses them in implementation context
     DOMAIN_KEYWORD_WEIGHTS: Dict[str, Dict[str, int]] = {
-        "category-theory": {
-            # Specialized mathematical terms (10x weight)
-            r"\bfunctor\b": 10,
-            r"\bmonad\b": 10,
-            r"\bmonoid\b": 10,
-            r"\bmorphism\b": 10,
-            "natural transformation": 10,
-            "category theory": 10,
-            "category-theory": 10,
-            # Mathematical context (8x weight)
-            r"\balgebra\b": 8,
-            "algebraic": 8,
-            r"proof": 8,
-            r"\blaw\b": 8,
-            "type preservation": 8,
-            # Composition (medium weight, shared with other domains)
-            "composition": 5,
-            "compose": 5,
-            "composability": 5,
-            r"∘": 5,
-            # Generic terms (lower weight)
-            "mathematical": 3,
-            r"\btheory\b": 3
-        },
         "dsl": {
-            # DSL-specific file syntax (10x weight)
-            r"\.ct\b": 10,
-            "ct-file": 10,
-            "ct file": 10,
-            r"\.ct workflow": 10,
-            # DSL specialization (10x weight)
+            # EXPLICIT TEAM IDENTIFIERS - CRITICAL for collaborative tasks (25x weight)
+            r"^DSL Team": 25,
+            r"DSL Team -": 25,
+            r"DSLTeam": 25,
+
+            # .ct file syntax - DSL's PRIMARY artifact (15x weight)
+            r"\.ct\b": 15,
+            r"\.ct workflow": 15,
+            r"\.ct file": 15,
+            "ct-file": 15,
+            "ct file": 15,
+
+            # DSL implementation core (parser, AST, interpreter) (12x weight)
+            r"\bparser\b": 12,
+            "parsing": 12,
+            r"\bparse\b": 12,
+            r"\blast\b": 12,
+            "abstract syntax tree": 12,
+            r"\binterpreter\b": 12,
+            "interpret": 12,
+            r"\blexer\b": 12,
+            r"\bgrammar\b": 12,
+            "syntax tree": 12,
+            "lark": 12,
+
+            # DSL directory paths (12x weight)
+            "src/dsl/": 12,
+            "dsl/entities": 12,
+            "dsl/adapters": 12,
+            "dsl/use_cases": 12,
+            "dsl/tasks": 12,
+            "cli_task_executor": 12,
+            "examples/workflows": 12,
+
+            # DSL engineering and deployment (10x weight)
             "dsl": 10,
             "domain-specific language": 10,
             "dsl-task": 10,
             "dsl deployment": 10,
-            "dsl-design": 10,
-            "dsl composition": 10,
-            "dsl architect": 10,
             "dsl engineer": 10,
+            "dsl architect": 10,
+            "dsl-design": 10,
+            "workflow engineering": 10,
+            "task engineering": 10,
+            "task mapping": 10,
+            "task executor": 10,
+
+            # DSL operations (8x weight)
+            "execute workflow": 8,
+            "run workflow": 8,
+            "workflow execution": 8,
+            "task composition": 8,
+            "visitor pattern": 8,
             "composable workflow": 8,
-            "task engineering": 8,
-            # Design concepts (medium weight, semi-generic)
+            "cli integration": 8,
+            r"operator.*guarantee": 10,
+            r"operator.*semantic": 10,
+
+            # DSL distributed systems - implementation focus (10-12x weight)
+            # These are DSL IMPLEMENTATION concerns, not CT mathematical theory
+            "distributed execution": 12,
+            "execution semantics": 12,
+            "horizontal scaling": 12,
+            "workflow orchestration": 10,
+            "zero-copy": 10,
+            "backpressure": 10,
+            "flow control": 10,
+            r"fault tolerance.*pattern": 10,
+            r"retry.*strateg": 10,
+            "circuit breaker": 10,
+            "bulkhead": 10,
+            "cloud-native deployment": 10,
+            r"distributed.*agent": 10,
+
+            # Semi-generic workflow terms (5x weight)
             "workflow design": 5,
-            "pipeline design": 5
+            "pipeline design": 5,
+            "pipeline orchestration": 5
+        },
+        "category-theory": {
+            # EXPLICIT TEAM IDENTIFIERS - CRITICAL for collaborative tasks (25x weight)
+            r"^Category Theory Team": 25,
+            r"Category Theory Team -": 25,
+            r"CategoryTheoryTeam": 25,
+
+            # Formal verification - CT's PRIMARY focus (15x weight)
+            "formal verification": 15,
+            "formal proof": 15,
+            "mathematical proof": 15,
+            r"verify.*composition": 15,
+            r"prove.*law": 15,
+            "type safety proof": 15,
+            r"proof.*correct": 15,
+            r"verify.*correct": 15,
+
+            # Law enforcement and checking (12x weight)
+            r"category.*law": 12,
+            r"functor.*law": 12,
+            r"monad.*law": 12,
+            r"associativity.*law": 12,
+            r"identity.*law": 12,
+            r"composition.*law": 12,
+            "law enforcement": 12,
+            r"law.*check": 12,
+            r"verify.*law": 12,
+            r"enforce.*law": 12,
+
+            # Mathematical theory and foundations (12x weight)
+            "category theory": 12,
+            "category-theory": 12,
+            r"categorical.*semantic": 12,
+            r"mathematical.*foundation": 12,
+            r"mathematical.*rigor": 12,
+            r"type.*theory": 12,
+            r"type.*preservation.*proof": 12,
+
+            # Type-level guarantees (10x weight)
+            "type-level guarantee": 10,
+            "type preservation": 10,
+            "type safety": 10,
+            "morphism preservation": 10,
+            r"structure.*preserv": 10,
+
+            # Mathematical structures - SHARED with DSL (8x weight, lowered from 10)
+            "natural transformation": 8,
+            "product category": 8,
+            "coproduct": 8,
+            r"\bfunctor\b": 8,
+            r"\bmonad\b": 8,
+            r"\bmonoid\b": 8,
+            r"\bmorphism\b": 8,
+
+            # Mathematical correctness (8x weight)
+            r"mathematical.*correct": 8,
+            r"categorical.*correct": 8,
+            r"algebraic.*property": 8,
+            r"algebraic.*law": 8,
+
+            # CT semantics - often in DSL context (3-5x weight, LOWERED)
+            "composition": 3,
+            "compose": 3,
+            "composability": 3,
+            r"∘": 3,
+            "algebraic": 5,
+            r"\balgebra\b": 5,
+            "mathematical": 3,
+            r"\btheory\b": 3,
+            r"\blaw\b": 3
         },
         # Generic terms with low weights to avoid overriding specialized domains
         "testing": {

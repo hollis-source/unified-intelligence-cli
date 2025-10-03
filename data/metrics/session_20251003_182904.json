@@ -1,0 +1,40 @@
+{
+  "session_id": "20251003_182904",
+  "timestamp": "2025-10-03T18:29:07.190751",
+  "routing_metrics": [
+    {
+      "timestamp": "2025-10-03T18:29:04.179238",
+      "task_description": "Category Theory Team - Collaborative Review: You generated research questions on formal verification",
+      "classified_domain": "category-theory",
+      "domain_score": 91.0,
+      "target_team": "Category Theory",
+      "target_agent": "category-theory-expert",
+      "expected_domain": null,
+      "expected_team": null,
+      "is_correct": null
+    },
+    {
+      "timestamp": "2025-10-03T18:29:04.181046",
+      "task_description": "DSL Team - Collaborative Review: You generated research questions on distributed execution semantics",
+      "classified_domain": "category-theory",
+      "domain_score": 91.0,
+      "target_team": "Category Theory",
+      "target_agent": "category-theory-expert",
+      "expected_domain": null,
+      "expected_team": null,
+      "is_correct": null
+    }
+  ],
+  "model_metrics": [],
+  "team_metrics": [],
+  "summary": {
+    "routing_accuracy": 0.0,
+    "total_routing_decisions": 2,
+    "correct_routing_decisions": 0,
+    "model_selection_breakdown": {},
+    "fallback_usage_rate": 0.0,
+    "team_utilization": {},
+    "total_model_selections": 0,
+    "total_team_snapshots": 0
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "session_id": "20251003_182445",
+  "timestamp": "2025-10-03T18:25:39.433797",
+  "routing_metrics": [
+    {
+      "timestamp": "2025-10-03T18:24:53.304984",
+      "task_description": "Category Theory Research Questions: Based on baseline analysis showing gaps in formal verification, ",
+      "classified_domain": "category-theory",
+      "domain_score": 177.0,
+      "target_team": "Category Theory",
+      "target_agent": "category-theory-expert",
+      "expected_domain": null,
+      "expected_team": null,
+      "is_correct": null
+    },
+    {
+      "timestamp": "2025-10-03T18:24:53.306654",
+      "task_description": "DSL Research Questions: Based on baseline analysis showing composition operator limitations, central",
+      "classified_domain": "dsl",
+      "domain_score": 135.0,
+      "target_team": "DSL",
+      "target_agent": "dsl-task-engineer",
+      "expected_domain": null,
+      "expected_team": null,
+      "is_correct": null
+    }
+  ],
+  "model_metrics": [],
+  "team_metrics": [],
+  "summary": {
+    "routing_accuracy": 0.0,
+    "total_routing_decisions": 2,
+    "correct_routing_decisions": 0,
+    "model_selection_breakdown": {},
+    "fallback_usage_rate": 0.0,
+    "team_utilization": {},
+    "total_model_selections": 0,
+    "total_team_snapshots": 0
+  }
+}
