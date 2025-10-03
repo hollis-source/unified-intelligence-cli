@@ -2,7 +2,7 @@
 
 import logging
 from typing import Optional, List
-from src.entities import Agent, AgentTeam
+from src.entities import Agent, AgentTeam, MetricsCollector
 from src.use_cases.task_planner import TaskPlannerUseCase
 from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 from src.adapters.agent.capability_selector import CapabilityBasedSelector
@@ -13,6 +13,8 @@ from src.factories.provider_factory import ProviderFactory
 from src.factories.agent_factory import AgentFactory
 from src.factories.orchestration_factory import OrchestrationFactory
 from src.utils.data_collector import DataCollector
+from src.routing.domain_classifier import DomainClassifier
+from src.routing.team_router import TeamRouter
 
 
 def compose_dependencies(
@@ -24,8 +26,10 @@ def compose_dependencies(
     data_dir: str = "data/training",
     provider_name: str = "unknown",
     routing_mode: str = "individual",
-    teams: Optional[List[AgentTeam]] = None
-) -> IAgentCoordinator:
+    teams: Optional[List[AgentTeam]] = None,
+    collect_metrics: bool = False,
+    metrics_dir: str = "data/metrics"
+) -> tuple[IAgentCoordinator, Optional[MetricsCollector]]:
     """
     Compose dependencies for the coordinator use case.
 
@@ -43,9 +47,11 @@ def compose_dependencies(
         provider_name: LLM provider name (Week 9)
         routing_mode: Routing mode ("individual" or "team") (Week 12)
         teams: Available agent teams (required if routing_mode is "team") (Week 12)
+        collect_metrics: Enable metrics collection for monitoring (Week 13)
+        metrics_dir: Directory to store metrics (Week 13)
 
     Returns:
-        Configured IAgentCoordinator (implementation depends on orchestrator_mode)
+        Tuple of (configured IAgentCoordinator, optional MetricsCollector)
     """
     # Week 9: Create data collector if enabled
     data_collector = None
@@ -53,6 +59,13 @@ def compose_dependencies(
         data_collector = DataCollector(data_dir=data_dir, enabled=True)
         if logger:
             logger.info(f"Data collection enabled: {data_dir}")
+
+    # Week 13: Create metrics collector if enabled
+    metrics_collector = None
+    if collect_metrics:
+        metrics_collector = MetricsCollector(storage_path=metrics_dir)
+        if logger:
+            logger.info(f"Metrics collection enabled: {metrics_dir}")
 
     # Create adapters
     agent_executor = LLMAgentExecutor(
@@ -62,9 +75,12 @@ def compose_dependencies(
         orchestrator=orchestrator_mode
     )
 
-    # Week 12: Create agent selector based on routing mode
+    # Week 12/13: Create agent selector based on routing mode (with metrics integration)
     if routing_mode == "team" and teams:
-        agent_selector = TeamBasedSelector(teams)
+        # Create domain classifier with metrics integration
+        domain_classifier = DomainClassifier(metrics_collector=metrics_collector)
+        team_router = TeamRouter(domain_classifier=domain_classifier)
+        agent_selector = TeamBasedSelector(teams, team_router=team_router)
         if logger:
             logger.info(f"Using team-based routing with {len(teams)} teams")
     else:
@@ -89,7 +105,7 @@ def compose_dependencies(
         logger_instance=logger
     )
 
-    return coordinator
+    return coordinator, metrics_collector
 
 
 def create_coordinator(

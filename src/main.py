@@ -47,6 +47,10 @@ if env_file.exists():
               help="Agent configuration: default (5 agents), extended (8 agents), scaled (16 agents with Category Theory & DSL teams)")
 @click.option("--routing", type=click.Choice(["individual", "team"]), default="individual",
               help="Routing mode: individual (agent-based), team (team-based, recommended for scaled)")
+@click.option("--collect-metrics", is_flag=True,
+              help="Enable metrics collection for monitoring (Week 13)")
+@click.option("--metrics-dir", type=click.Path(), default="data/metrics",
+              help="Directory to store metrics (default: data/metrics)")
 def main(
     task_descriptions: tuple,
     provider: str,
@@ -59,7 +63,9 @@ def main(
     collect_data: bool,
     data_dir: str,
     agents: str,
-    routing: str
+    routing: str,
+    collect_metrics: bool,
+    metrics_dir: str
 ) -> None:
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.

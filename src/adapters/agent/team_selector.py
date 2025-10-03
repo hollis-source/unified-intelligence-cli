@@ -30,15 +30,16 @@ class TeamBasedSelector(IAgentSelector):
     Clean Code: Adapter pattern - adapts TeamRouter to IAgentSelector interface.
     """
 
-    def __init__(self, teams: List[AgentTeam]):
+    def __init__(self, teams: List[AgentTeam], team_router: Optional[TeamRouter] = None):
         """
         Initialize team-based selector.
 
         Args:
             teams: Available agent teams
+            team_router: Optional team router (creates default if not provided, Week 13: allows metrics injection)
         """
         self.teams = teams
-        self.router = TeamRouter()
+        self.router = team_router or TeamRouter()
         logger.info(f"TeamBasedSelector initialized with {len(teams)} teams")
 
     def select_agent(self, task: Task, agents: List[Agent]) -> Optional[Agent]:
