@@ -176,15 +176,24 @@ class LLMAgentExecutor(IAgentExecutor):
         context: Optional[ExecutionContext]
     ) -> list:
         """
-        Build message list for LLM.
+        Build message list for LLM with ultrathink capability.
 
         SRP: Message construction logic.
+        Week 13: Added chain-of-thought prompting for deeper analysis.
         """
         messages = []
 
-        # System message based on agent role
+        # System message with ultrathink instructions
         system_prompt = f"""You are a {agent.role} agent with capabilities: {', '.join(agent.capabilities)}.
-Complete the given task using your expertise."""
+
+ULTRATHINK MODE: You MUST think step-by-step through problems before answering.
+- Use <think></think> tags to show your reasoning process
+- Break down complex problems into smaller steps
+- Analyze multiple approaches before selecting the best one
+- Verify your logic and check for errors
+- Be thorough and rigorous in your analysis
+
+Complete the given task using your expertise and deep analytical thinking."""
 
         messages.append({"role": "system", "content": system_prompt})
 
@@ -192,10 +201,21 @@ Complete the given task using your expertise."""
         if context and context.history:
             messages.extend(context.history[-5:])  # Last 5 messages for context
 
-        # Add task as user message
+        # Add task as user message with ultrathink trigger
+        task_prompt = f"""Task: {task.description}
+
+IMPORTANT: Think through this problem step-by-step using <think></think> tags before providing your final answer. Consider:
+1. What is being asked?
+2. What information do I need?
+3. What are the potential approaches?
+4. What are the constraints and requirements?
+5. What is the optimal solution?
+
+Think deeply, then provide your response."""
+
         messages.append({
             "role": "user",
-            "content": f"Task: {task.description}"
+            "content": task_prompt
         })
 
         return messages
