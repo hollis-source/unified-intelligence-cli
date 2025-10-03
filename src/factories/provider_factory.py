@@ -25,6 +25,7 @@ class ProviderFactory(IProviderFactory):
             "tongyi-local": lambda config: self._create_tongyi_local_provider(config),
             "replicate": lambda config: self._create_replicate_provider(config),
             "qwen3_zerogpu": lambda config: self._create_qwen3_provider(config),
+            "auto": lambda config: self._create_orchestrator(config),
         }
         self._providers: Dict[str, Any] = {}
 
@@ -80,6 +81,52 @@ class ProviderFactory(IProviderFactory):
         space_id = config.get("space_id", "hollis-source/qwen3-inference") if config else "hollis-source/qwen3-inference"
         timeout = config.get("timeout", 60) if config else 60
         return Qwen3InferenceAdapter(space_id=space_id, timeout=timeout)
+
+    def _create_orchestrator(self, config: Optional[Dict[str, Any]]) -> ITextGenerator:
+        """
+        Create intelligent multi-model orchestrator (Week 13: Smart model selection).
+
+        Orchestrator features:
+        - Automatic model selection based on criteria (speed, quality, cost, privacy)
+        - Graceful fallback on failures (Qwen3 → Tongyi → Grok)
+        - Statistics tracking for monitoring
+
+        Configuration:
+            criteria: "speed", "quality", "cost", "privacy", or "balanced" (default)
+            available_providers: List of provider names to use (default: all)
+            enable_fallback: Enable automatic fallback (default: True)
+            max_fallback_attempts: Maximum fallback attempts (default: 3)
+        """
+        from src.adapters.llm.model_orchestrator import ModelOrchestrator
+        from src.routing.model_selector import SelectionCriteria
+
+        # Parse criteria from config
+        criteria_str = config.get("criteria", "balanced") if config else "balanced"
+        criteria_map = {
+            "speed": SelectionCriteria.SPEED,
+            "quality": SelectionCriteria.QUALITY,
+            "cost": SelectionCriteria.COST,
+            "privacy": SelectionCriteria.PRIVACY,
+            "balanced": SelectionCriteria.BALANCED
+        }
+        criteria = criteria_map.get(criteria_str.lower(), SelectionCriteria.BALANCED)
+
+        # Get available providers (default: all production models)
+        available_providers = config.get("available_providers") if config else None
+        if available_providers is None:
+            available_providers = ["qwen3_zerogpu", "tongyi-local", "grok"]
+
+        # Get fallback settings
+        enable_fallback = config.get("enable_fallback", True) if config else True
+        max_fallback_attempts = config.get("max_fallback_attempts", 3) if config else 3
+
+        return ModelOrchestrator(
+            provider_factory=self,
+            criteria=criteria,
+            available_providers=available_providers,
+            enable_fallback=enable_fallback,
+            max_fallback_attempts=max_fallback_attempts
+        )
 
     def create_provider(
         self,
