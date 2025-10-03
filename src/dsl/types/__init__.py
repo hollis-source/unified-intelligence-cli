@@ -37,6 +37,13 @@ from src.dsl.types.category_laws import (
     project_right,
     verify_product_universal_property,
 )
+from src.dsl.types.error_reporter import (
+    ErrorHint,
+    format_type_error,
+    format_composition_error,
+    format_validation_summary,
+    ErrorAccumulator,
+)
 
 __all__ = [
     "Type",
@@ -56,4 +63,9 @@ __all__ = [
     "project_left",
     "project_right",
     "verify_product_universal_property",
+    "ErrorHint",
+    "format_type_error",
+    "format_composition_error",
+    "format_validation_summary",
+    "ErrorAccumulator",
 ]
