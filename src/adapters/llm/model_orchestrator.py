@@ -10,6 +10,7 @@ Week 13: Multi-model orchestration with smart selection and graceful fallback.
 
 from typing import List, Dict, Any, Optional
 import logging
+import threading
 
 from src.interfaces import ITextGenerator, LLMConfig, IProviderFactory
 from src.routing.model_selector import ModelSelector, SelectionCriteria
@@ -67,7 +68,8 @@ class ModelOrchestrator(ITextGenerator):
         # Cache for provider instances
         self._provider_cache: Dict[str, ITextGenerator] = {}
 
-        # Statistics tracking
+        # Statistics tracking (thread-safe)
+        self._stats_lock = threading.Lock()
         self.stats = {
             "total_requests": 0,
             "successful_requests": 0,
@@ -105,7 +107,8 @@ class ModelOrchestrator(ITextGenerator):
         Raises:
             RuntimeError: If all models in fallback chain fail
         """
-        self.stats["total_requests"] += 1
+        with self._stats_lock:
+            self.stats["total_requests"] += 1
 
         # Extract task description for intelligent selection
         task_description = self._extract_task_description(messages)
@@ -126,6 +129,13 @@ class ModelOrchestrator(ITextGenerator):
         else:
             fallback_chain = [primary_model]
 
+        # Validate fallback chain (edge case handling)
+        if not fallback_chain:
+            raise ValueError(
+                "Empty fallback chain - no models available for selection. "
+                f"Available providers: {self.available_providers}"
+            )
+
         logger.info(
             f"Selected model: {primary_model}, fallback chain: {fallback_chain}"
         )
@@ -136,24 +146,43 @@ class ModelOrchestrator(ITextGenerator):
             is_fallback = idx > 0
 
             if is_fallback:
-                self.stats["fallback_used"] += 1
+                with self._stats_lock:
+                    self.stats["fallback_used"] += 1
                 logger.warning(
                     f"Falling back to {provider_name} "
                     f"(attempt {idx + 1}/{len(fallback_chain)})"
                 )
 
             try:
-                # Get or create provider
-                provider = self._get_provider(provider_name)
+                # Get or create provider (may raise ValueError)
+                try:
+                    provider = self._get_provider(provider_name)
+                except (ValueError, KeyError) as creation_error:
+                    # Provider creation failed - log and try next
+                    last_error = creation_error
+                    logger.error(
+                        f"Provider creation failed for {provider_name}: {creation_error}"
+                    )
+
+                    if idx == len(fallback_chain) - 1:
+                        with self._stats_lock:
+                            self.stats["failed_requests"] += 1
+                        raise RuntimeError(
+                            f"All provider creation attempts failed. "
+                            f"Last error: {creation_error}"
+                        ) from last_error
+
+                    continue
 
                 # Generate response
                 logger.info(f"Generating with {provider_name}...")
                 response = provider.generate(messages, config)
 
                 # Success - update stats and return
-                self.stats["successful_requests"] += 1
-                self.stats["provider_usage"][provider_name] = \
-                    self.stats["provider_usage"].get(provider_name, 0) + 1
+                with self._stats_lock:
+                    self.stats["successful_requests"] += 1
+                    self.stats["provider_usage"][provider_name] = \
+                        self.stats["provider_usage"].get(provider_name, 0) + 1
 
                 logger.info(
                     f"Generation successful with {provider_name} "
@@ -162,27 +191,39 @@ class ModelOrchestrator(ITextGenerator):
 
                 return response
 
-            except Exception as e:
-                last_error = e
+            except Exception as gen_error:
+                # Generation failed - log and try next
+                last_error = gen_error
                 logger.error(
-                    f"Generation failed with {provider_name}: {e}",
+                    f"Generation failed with {provider_name}: {gen_error}",
                     exc_info=True
                 )
 
                 # If this is the last attempt, raise
                 if idx == len(fallback_chain) - 1:
-                    self.stats["failed_requests"] += 1
+                    with self._stats_lock:
+                        self.stats["failed_requests"] += 1
                     raise RuntimeError(
                         f"All models in fallback chain failed. "
-                        f"Last error from {provider_name}: {e}"
+                        f"Last error from {provider_name}: {gen_error}"
                     ) from last_error
 
                 # Otherwise continue to next model
                 continue
 
-        # Should never reach here, but just in case
-        self.stats["failed_requests"] += 1
-        raise RuntimeError("Fallback chain exhausted without result")
+        # Should never reach here (all providers failed without hitting last attempt check)
+        # Ensure last_error is preserved if available
+        with self._stats_lock:
+            self.stats["failed_requests"] += 1
+
+        if last_error:
+            raise RuntimeError(
+                f"Fallback chain exhausted. Last error: {last_error}"
+            ) from last_error
+        else:
+            raise RuntimeError(
+                "Fallback chain exhausted without result or error"
+            )
 
     def _get_provider(self, provider_name: str) -> ITextGenerator:
         """
@@ -226,25 +267,26 @@ class ModelOrchestrator(ITextGenerator):
 
     def get_stats(self) -> Dict[str, Any]:
         """
-        Get orchestrator statistics.
+        Get orchestrator statistics (thread-safe).
 
         Returns:
             Dict with usage statistics
         """
-        total = self.stats["total_requests"]
+        with self._stats_lock:
+            total = self.stats["total_requests"]
 
-        if total == 0:
+            if total == 0:
+                return {
+                    **self.stats,
+                    "success_rate": 0.0,
+                    "fallback_rate": 0.0
+                }
+
             return {
                 **self.stats,
-                "success_rate": 0.0,
-                "fallback_rate": 0.0
+                "success_rate": (self.stats["successful_requests"] / total) * 100,
+                "fallback_rate": (self.stats["fallback_used"] / total) * 100
             }
-
-        return {
-            **self.stats,
-            "success_rate": (self.stats["successful_requests"] / total) * 100,
-            "fallback_rate": (self.stats["fallback_used"] / total) * 100
-        }
 
     def set_criteria(self, criteria: SelectionCriteria) -> None:
         """
