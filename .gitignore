@@ -89,3 +89,4 @@ logs/
 *.tmp
 tmp/
 temp/data/metrics/
+data/metrics/session_*.json
