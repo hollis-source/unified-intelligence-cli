@@ -88,7 +88,88 @@ class DomainClassifier:
             r"api docs", r"api documentation", r"changelog",
             r"release notes", r"getting started", r"quickstart",
             r"examples", r"reference", r"manual"
+        ],
+        # Week 13: Specialized domains for Category Theory and DSL teams
+        "category-theory": [
+            r"\bfunctor\b", r"\bmonad\b", r"\bmonoid\b", r"\bmorphism\b",
+            r"category theory", r"category-theory", r"natural transformation",
+            r"composition", r"algebraic", r"\balgebra\b",
+            r"mathematical", r"\btheory\b", r"proof", r"\blaw\b",
+            r"compose", r"composability", r"∘", r"type preservation"
+        ],
+        "dsl": [
+            r"\.ct\b", r"ct-file", r"ct file", r"\.ct workflow",
+            r"dsl", r"domain-specific language", r"dsl-task",
+            r"dsl deployment", r"dsl-design", r"dsl composition",
+            r"workflow design", r"pipeline design", r"task engineering",
+            r"dsl architect", r"dsl engineer", r"composable workflow"
         ]
+    }
+
+    # Week 13: Keyword weights for specialized domains (Priority 1 fix)
+    # Higher weight = more important for domain classification
+    # Solves routing issue where generic keywords override specialized terms
+    DOMAIN_KEYWORD_WEIGHTS: Dict[str, Dict[str, int]] = {
+        "category-theory": {
+            # Specialized mathematical terms (10x weight)
+            r"\bfunctor\b": 10,
+            r"\bmonad\b": 10,
+            r"\bmonoid\b": 10,
+            r"\bmorphism\b": 10,
+            "natural transformation": 10,
+            "category theory": 10,
+            "category-theory": 10,
+            # Mathematical context (8x weight)
+            r"\balgebra\b": 8,
+            "algebraic": 8,
+            r"proof": 8,
+            r"\blaw\b": 8,
+            "type preservation": 8,
+            # Composition (medium weight, shared with other domains)
+            "composition": 5,
+            "compose": 5,
+            "composability": 5,
+            r"∘": 5,
+            # Generic terms (lower weight)
+            "mathematical": 3,
+            r"\btheory\b": 3
+        },
+        "dsl": {
+            # DSL-specific file syntax (10x weight)
+            r"\.ct\b": 10,
+            "ct-file": 10,
+            "ct file": 10,
+            r"\.ct workflow": 10,
+            # DSL specialization (10x weight)
+            "dsl": 10,
+            "domain-specific language": 10,
+            "dsl-task": 10,
+            "dsl deployment": 10,
+            "dsl-design": 10,
+            "dsl composition": 10,
+            "dsl architect": 10,
+            "dsl engineer": 10,
+            "composable workflow": 8,
+            "task engineering": 8,
+            # Design concepts (medium weight, semi-generic)
+            "workflow design": 5,
+            "pipeline design": 5
+        },
+        # Generic terms with low weights to avoid overriding specialized domains
+        "testing": {
+            "validate": 3,  # Generic term
+            "verify": 3,
+            "check": 3,
+            # Specialized testing terms keep default weight (1)
+        },
+        "devops": {
+            "deployment": 3,  # Generic term
+            "deploy": 3,
+            "workflow": 2,  # Very generic
+            "pipeline": 3,
+            "orchestration": 3,
+            # Specialized devops terms keep default weight (1)
+        }
     }
 
     def __init__(self):
@@ -103,53 +184,75 @@ class DomainClassifier:
 
     def classify(self, task: Task) -> str:
         """
-        Classify task into primary domain.
+        Classify task into primary domain using weighted keyword matching.
+
+        Week 13: Implements weighted scoring to prioritize specialized domains.
 
         Args:
             task: Task to classify
 
         Returns:
-            Domain string ("frontend", "backend", "testing", etc.)
+            Domain string ("frontend", "backend", "testing", "category-theory", "dsl", etc.)
             Returns "general" if no specific domain detected
 
         Strategy:
-            - Count pattern matches per domain
-            - Return domain with most matches
-            - Fallback to "general" for ambiguous tasks
+            - Calculate weighted score per domain (not simple count)
+            - Patterns with explicit weights use those weights
+            - Patterns without weights use default weight of 1
+            - Return domain with highest weighted score
+            - Specialized domains (category-theory, dsl) have high-weight keywords
+
+        Example:
+            "Validate functor composition" →
+            - testing: validate (weight 3) = 3
+            - category-theory: functor (weight 10) = 10
+            - Result: category-theory wins
         """
         description = task.description.lower()
 
-        # Count matches per domain
-        match_counts: Dict[str, int] = {domain: 0 for domain in self.DOMAIN_PATTERNS}
+        # Calculate weighted scores per domain
+        domain_scores: Dict[str, float] = {domain: 0.0 for domain in self.DOMAIN_PATTERNS}
 
         for domain, patterns in self._compiled_patterns.items():
+            domain_weights = self.DOMAIN_KEYWORD_WEIGHTS.get(domain, {})
+
             for pattern in patterns:
                 if pattern.search(description):
-                    match_counts[domain] += 1
+                    # Get weight for this pattern (default = 1.0)
+                    pattern_str = pattern.pattern
+                    weight = domain_weights.get(pattern_str, 1.0)
+                    domain_scores[domain] += weight
 
-        # Find domain with most matches
-        max_matches = max(match_counts.values())
+        # Find domain with highest score
+        max_score = max(domain_scores.values())
 
-        if max_matches == 0:
+        if max_score == 0:
             # No domain patterns matched
             logger.debug(f"Task '{task.description[:50]}...' classified as 'general' (no patterns)")
             return "general"
 
-        # Get domain(s) with max matches
-        top_domains = [domain for domain, count in match_counts.items() if count == max_matches]
+        # Get domain(s) with max score
+        top_domains = [domain for domain, score in domain_scores.items() if score == max_score]
 
         if len(top_domains) == 1:
             domain = top_domains[0]
-            logger.info(f"Task '{task.description[:50]}...' classified as '{domain}' ({max_matches} matches)")
+            logger.info(
+                f"Task '{task.description[:50]}...' classified as '{domain}' "
+                f"(weighted score: {max_score:.1f})"
+            )
             return domain
 
-        # Multiple domains tied - use priority order
-        priority_order = ["backend", "frontend", "testing", "devops", "security", "performance", "research", "documentation"]
+        # Multiple domains tied - use priority order (specialized domains first)
+        priority_order = [
+            "category-theory", "dsl",  # Specialized domains (highest priority)
+            "backend", "frontend", "testing", "devops",  # Core domains
+            "security", "performance", "research", "documentation"  # Support domains
+        ]
         for priority_domain in priority_order:
             if priority_domain in top_domains:
                 logger.info(
                     f"Task '{task.description[:50]}...' classified as '{priority_domain}' "
-                    f"(tie-breaker: {max_matches} matches across {len(top_domains)} domains)"
+                    f"(tie-breaker: weighted score {max_score:.1f} across {len(top_domains)} domains)"
                 )
                 return priority_domain
 

@@ -119,7 +119,10 @@ class TeamRouter:
             "documentation": "Research",  # Documentation → Research team
             "security": "Backend",  # Security → Backend team (for now)
             "performance": "Backend",  # Performance → Backend team (for now)
-            "general": "Orchestration"  # General → Orchestration team
+            "general": "Orchestration",  # General → Orchestration team
+            # Week 13: Specialized teams
+            "category-theory": "Category Theory",  # Category Theory → CT team
+            "dsl": "DSL"  # DSL → DSL team
         }
 
         target_team_name = domain_to_team.get(domain, "Orchestration")
