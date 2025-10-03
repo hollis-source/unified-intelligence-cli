@@ -1,0 +1,294 @@
+{
+  "evaluation_metrics": {
+    "success_rate": 48.38709677419355,
+    "avg_latency": 592.354583686398,
+    "min_latency": 568.6159474849701,
+    "max_latency": 752.9612646102905,
+    "total_examples": 31,
+    "successful_examples": 15,
+    "failed_examples": 16,
+    "agent_breakdown": {
+      "coder": {
+        "total": 18,
+        "success_rate": 44.44444444444444,
+        "avg_latency": 585.2464046345817
+      },
+      "tester": {
+        "total": 8,
+        "success_rate": 50.0,
+        "avg_latency": 592.7776841819286
+      },
+      "coordinator": {
+        "total": 3,
+        "success_rate": 66.66666666666666,
+        "avg_latency": 572.1110272407532
+      },
+      "researcher": {
+        "total": 2,
+        "success_rate": 50.0,
+        "avg_latency": 685.0011278390884
+      }
+    },
+    "detailed_results": [
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": true,
+        "latency": 578.1269166469574,
+        "generated_length": 2464,
+        "expected_length": 2137
+      },
+      {
+        "task_id": "task_1",
+        "agent": "tester",
+        "success": true,
+        "latency": 571.6543457508087,
+        "generated_length": 2557,
+        "expected_length": 2222
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coordinator",
+        "success": true,
+        "latency": 571.9877831935883,
+        "generated_length": 2756,
+        "expected_length": 2392
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": false,
+        "latency": 573.9336988925934,
+        "generated_length": 2684,
+        "expected_length": 1944
+      },
+      {
+        "task_id": "task_1",
+        "agent": "tester",
+        "success": true,
+        "latency": 573.4394400119781,
+        "generated_length": 2557,
+        "expected_length": 2238
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coordinator",
+        "success": true,
+        "latency": 574.2369599342346,
+        "generated_length": 2584,
+        "expected_length": 2048
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": true,
+        "latency": 580.5723824501038,
+        "generated_length": 2594,
+        "expected_length": 1498
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": false,
+        "latency": 577.7686212062836,
+        "generated_length": 2511,
+        "expected_length": 2500
+      },
+      {
+        "task_id": "task_1",
+        "agent": "researcher",
+        "success": true,
+        "latency": 752.9612646102905,
+        "generated_length": 2855,
+        "expected_length": 2054
+      },
+      {
+        "task_id": "task_1",
+        "agent": "tester",
+        "success": true,
+        "latency": 620.6546683311462,
+        "generated_length": 2526,
+        "expected_length": 2209
+      },
+      {
+        "task_id": "task_1",
+        "agent": "tester",
+        "success": false,
+        "latency": 618.9681355953217,
+        "generated_length": 2543,
+        "expected_length": 2562
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": true,
+        "latency": 622.1372871398926,
+        "generated_length": 2556,
+        "expected_length": 2026
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": false,
+        "latency": 614.4372282028198,
+        "generated_length": 2423,
+        "expected_length": 1701
+      },
+      {
+        "task_id": "task_1",
+        "agent": "tester",
+        "success": true,
+        "latency": 616.2981836795807,
+        "generated_length": 2345,
+        "expected_length": 2374
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": true,
+        "latency": 617.2941565513611,
+        "generated_length": 2493,
+        "expected_length": 2293
+      },
+      {
+        "task_id": "task_1",
+        "agent": "researcher",
+        "success": false,
+        "latency": 617.0409910678864,
+        "generated_length": 2510,
+        "expected_length": 1878
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": true,
+        "latency": 612.561044216156,
+        "generated_length": 2650,
+        "expected_length": 2370
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": true,
+        "latency": 586.9720494747162,
+        "generated_length": 2511,
+        "expected_length": 1814
+      },
+      {
+        "task_id": "task_1",
+        "agent": "tester",
+        "success": false,
+        "latency": 585.4601001739502,
+        "generated_length": 2393,
+        "expected_length": 1998
+      },
+      {
+        "task_id": "task_1",
+        "agent": "tester",
+        "success": false,
+        "latency": 584.7593050003052,
+        "generated_length": 2664,
+        "expected_length": 2460
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": false,
+        "latency": 584.6567962169647,
+        "generated_length": 2490,
+        "expected_length": 2440
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": false,
+        "latency": 587.5719871520996,
+        "generated_length": 2626,
+        "expected_length": 2230
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": false,
+        "latency": 573.5329763889313,
+        "generated_length": 2511,
+        "expected_length": 2263
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": true,
+        "latency": 571.2634024620056,
+        "generated_length": 2726,
+        "expected_length": 2075
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": false,
+        "latency": 571.2259845733643,
+        "generated_length": 2760,
+        "expected_length": 2455
+      },
+      {
+        "task_id": "task_1",
+        "agent": "tester",
+        "success": false,
+        "latency": 570.9872949123383,
+        "generated_length": 2543,
+        "expected_length": 2365
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": false,
+        "latency": 571.2021489143372,
+        "generated_length": 2728,
+        "expected_length": 2545
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": false,
+        "latency": 571.3008935451508,
+        "generated_length": 2575,
+        "expected_length": 1739
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": true,
+        "latency": 568.6159474849701,
+        "generated_length": 2772,
+        "expected_length": 1919
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coordinator",
+        "success": false,
+        "latency": 570.1083385944366,
+        "generated_length": 2888,
+        "expected_length": 2379
+      },
+      {
+        "task_id": "task_1",
+        "agent": "coder",
+        "success": false,
+        "latency": 571.2617619037628,
+        "generated_length": 2725,
+        "expected_length": 2334
+      }
+    ]
+  },
+  "baseline_comparison": {
+    "baseline_success_rate": 98.7,
+    "baseline_avg_latency": 20.1,
+    "success_delta": -50.31290322580645,
+    "latency_delta": 572.254583686398,
+    "latency_improvement_pct": -2847.037729783074,
+    "meets_success_target": false,
+    "meets_latency_target": false,
+    "overall_pass": false
+  },
+  "timestamp": "2025-10-02 20:27:31"
+}
