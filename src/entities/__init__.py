@@ -14,6 +14,12 @@ from .agent_team import (
     CategoryTheoryTeam,
     DSLTeam
 )
+from .metrics import (
+    MetricsCollector,
+    RoutingMetric,
+    ModelSelectionMetric,
+    TeamUtilizationMetric
+)
 
 __all__ = [
     "Agent",
@@ -30,5 +36,9 @@ __all__ = [
     "OrchestrationTeam",
     "QualityAssuranceTeam",
     "CategoryTheoryTeam",
-    "DSLTeam"
+    "DSLTeam",
+    "MetricsCollector",
+    "RoutingMetric",
+    "ModelSelectionMetric",
+    "TeamUtilizationMetric"
 ]

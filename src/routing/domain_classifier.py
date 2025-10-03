@@ -3,11 +3,12 @@ Domain Classifier - Classifies tasks by domain for hierarchical routing.
 
 Clean Architecture: Strategy pattern for domain detection.
 Week 11: Part of hierarchical agent scaling infrastructure.
+Week 13: Added metrics collection (Priority 3).
 """
 
 import re
 import logging
-from typing import Dict, List
+from typing import Dict, List, Optional
 from src.entities import Task
 
 
@@ -172,13 +173,24 @@ class DomainClassifier:
         }
     }
 
-    def __init__(self):
-        """Initialize domain classifier with compiled regex patterns."""
+    def __init__(self, metrics_collector: Optional['MetricsCollector'] = None):
+        """
+        Initialize domain classifier with compiled regex patterns.
+
+        Args:
+            metrics_collector: Optional metrics collector for tracking (Week 13)
+        """
         # Compile patterns for performance
         self._compiled_patterns: Dict[str, List[re.Pattern]] = {
             domain: [re.compile(pattern, re.IGNORECASE) for pattern in patterns]
             for domain, patterns in self.DOMAIN_PATTERNS.items()
         }
+
+        # Metrics collection (optional, injected via DIP)
+        self.metrics_collector = metrics_collector
+
+        # Track last classification for metrics
+        self.last_classification_score: float = 0.0
 
         logger.info(f"DomainClassifier initialized with {len(self.DOMAIN_PATTERNS)} domains")
 
@@ -225,6 +237,9 @@ class DomainClassifier:
 
         # Find domain with highest score
         max_score = max(domain_scores.values())
+
+        # Store for metrics access
+        self.last_classification_score = max_score
 
         if max_score == 0:
             # No domain patterns matched

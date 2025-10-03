@@ -2,6 +2,7 @@
 Team Router - Routes tasks to teams, teams route internally to agents.
 
 Week 12: Simplified two-phase routing architecture.
+Week 13: Added metrics collection (Priority 3).
 
 Clean Architecture: Strategy pattern for team-based routing.
 """
@@ -42,6 +43,10 @@ class TeamRouter:
             domain_classifier: Classifier for domain detection (optional, creates default)
         """
         self.domain_classifier = domain_classifier or DomainClassifier()
+
+        # Track last classification for metrics (Week 13)
+        self._last_classified_domain: str = ""
+
         logger.info("TeamRouter initialized (two-phase routing)")
 
     def route(self, task: Task, teams: List[AgentTeam]) -> Agent:
@@ -65,8 +70,9 @@ class TeamRouter:
             1. Classify task domain
             2. Find team matching domain
             3. Let team route internally to agent
+            4. Record metrics (Week 13)
         """
-        # Phase 1: Route to team
+        # Phase 1: Route to team (stores domain classification)
         team = self._select_team(task, teams)
         logger.debug(f"Task routed to team: {team.name}")
 
@@ -82,6 +88,17 @@ class TeamRouter:
         logger.info(
             f"Task '{task.description[:50]}...' → {team.name} → {agent.role}"
         )
+
+        # Phase 3: Record metrics (Week 13)
+        if self.domain_classifier.metrics_collector:
+            self.domain_classifier.metrics_collector.record_routing(
+                task_description=task.description,
+                classified_domain=self._last_classified_domain,
+                domain_score=self.domain_classifier.last_classification_score,
+                target_team=team.name,
+                target_agent=agent.role
+            )
+
         return agent
 
     def _select_team(self, task: Task, teams: List[AgentTeam]) -> AgentTeam:
@@ -107,6 +124,7 @@ class TeamRouter:
         """
         # Classify task domain
         domain = self.domain_classifier.classify(task)
+        self._last_classified_domain = domain  # Store for metrics (Week 13)
         logger.debug(f"Task classified as domain: {domain}")
 
         # Direct domain → team mapping
