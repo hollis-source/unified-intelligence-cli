@@ -8,7 +8,7 @@ Week 13: Multi-model orchestration with intelligent selection.
 """
 
 from typing import Dict, Any, Optional, List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 
@@ -19,6 +19,32 @@ class SelectionCriteria(Enum):
     COST = "cost"  # Prioritize low cost
     PRIVACY = "privacy"  # Prioritize offline/local
     BALANCED = "balanced"  # Balance all factors
+
+
+@dataclass
+class ScoringWeights:
+    """
+    Configurable weights for balanced scoring.
+
+    OCP Compliance: Allows customization without code modification.
+
+    Weights should sum to 1.0 for proper normalization.
+    Default: quality=0.4, speed=0.3, cost=0.3 (privacy excluded for online models).
+    """
+    quality_weight: float = 0.4
+    speed_weight: float = 0.3
+    cost_weight: float = 0.3
+    privacy_weight: float = 0.0  # Usually 0 for balanced, can be > 0 if important
+
+    def __post_init__(self):
+        """Validate weights."""
+        total = self.quality_weight + self.speed_weight + self.cost_weight + self.privacy_weight
+        if not (0.99 <= total <= 1.01):  # Allow small floating point errors
+            raise ValueError(
+                f"Weights must sum to 1.0 (got {total}). "
+                f"quality={self.quality_weight}, speed={self.speed_weight}, "
+                f"cost={self.cost_weight}, privacy={self.privacy_weight}"
+            )
 
 
 @dataclass
@@ -36,7 +62,11 @@ class ModelCapabilities:
     max_tokens: int
     supports_tools: bool = False
 
-    def get_score(self, criteria: SelectionCriteria) -> float:
+    def get_score(
+        self,
+        criteria: SelectionCriteria,
+        weights: Optional[ScoringWeights] = None
+    ) -> float:
         """
         Calculate selection score based on criteria.
 
@@ -44,6 +74,7 @@ class ModelCapabilities:
 
         Args:
             criteria: Selection criteria
+            weights: Optional custom weights for BALANCED scoring (OCP compliance)
 
         Returns:
             Score (0.0-100.0)
@@ -67,13 +98,21 @@ class ModelCapabilities:
             return 0 if self.requires_internet else 100
 
         elif criteria == SelectionCriteria.BALANCED:
-            # Weighted average of all factors
+            # Weighted average of all factors (configurable via weights parameter)
+            if weights is None:
+                weights = ScoringWeights()  # Use defaults
+
             speed_score = self.get_score(SelectionCriteria.SPEED)
             quality_score = self.get_score(SelectionCriteria.QUALITY)
             cost_score = self.get_score(SelectionCriteria.COST)
+            privacy_score = self.get_score(SelectionCriteria.PRIVACY)
 
-            # Weights: quality (40%), speed (30%), cost (30%)
-            return (quality_score * 0.4) + (speed_score * 0.3) + (cost_score * 0.3)
+            return (
+                (quality_score * weights.quality_weight) +
+                (speed_score * weights.speed_weight) +
+                (cost_score * weights.cost_weight) +
+                (privacy_score * weights.privacy_weight)
+            )
 
         return 0.0
 
@@ -84,11 +123,18 @@ class ModelSelector:
 
     Strategy Pattern: Different selection strategies based on criteria.
     SRP: Single responsibility - model selection logic only.
+    OCP: Configurable scoring weights for balanced criteria.
     """
 
-    def __init__(self):
-        """Initialize model selector with capabilities registry."""
+    def __init__(self, scoring_weights: Optional[ScoringWeights] = None):
+        """
+        Initialize model selector with capabilities registry.
+
+        Args:
+            scoring_weights: Optional custom weights for BALANCED scoring (OCP compliance)
+        """
         self.models = self._initialize_capabilities()
+        self.scoring_weights = scoring_weights  # None = use defaults
 
     def _initialize_capabilities(self) -> Dict[str, ModelCapabilities]:
         """
@@ -165,9 +211,9 @@ class ModelSelector:
         if task_description:
             criteria = self._analyze_task_requirements(task_description, criteria)
 
-        # Score each model
+        # Score each model (pass weights for BALANCED criteria)
         scores = {
-            name: caps.get_score(criteria)
+            name: caps.get_score(criteria, weights=self.scoring_weights)
             for name, caps in models.items()
         }
 

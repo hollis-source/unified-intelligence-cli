@@ -13,7 +13,7 @@ import logging
 import threading
 
 from src.interfaces import ITextGenerator, LLMConfig, IProviderFactory
-from src.routing.model_selector import ModelSelector, SelectionCriteria
+from src.routing.model_selector import ModelSelector, SelectionCriteria, ScoringWeights
 
 
 logger = logging.getLogger(__name__)
@@ -40,7 +40,8 @@ class ModelOrchestrator(ITextGenerator):
         criteria: SelectionCriteria = SelectionCriteria.BALANCED,
         available_providers: Optional[List[str]] = None,
         enable_fallback: bool = True,
-        max_fallback_attempts: int = 3
+        max_fallback_attempts: int = 3,
+        scoring_weights: Optional[ScoringWeights] = None
     ):
         """
         Initialize model orchestrator.
@@ -51,6 +52,7 @@ class ModelOrchestrator(ITextGenerator):
             available_providers: List of available provider names (None = all)
             enable_fallback: Enable automatic fallback on errors
             max_fallback_attempts: Maximum fallback attempts
+            scoring_weights: Optional custom weights for BALANCED scoring (OCP compliance)
         """
         self.provider_factory = provider_factory
         self.criteria = criteria
@@ -62,8 +64,8 @@ class ModelOrchestrator(ITextGenerator):
         self.enable_fallback = enable_fallback
         self.max_fallback_attempts = max_fallback_attempts
 
-        # Model selector for intelligent selection
-        self.selector = ModelSelector()
+        # Model selector for intelligent selection (with optional custom weights)
+        self.selector = ModelSelector(scoring_weights=scoring_weights)
 
         # Cache for provider instances
         self._provider_cache: Dict[str, ITextGenerator] = {}
