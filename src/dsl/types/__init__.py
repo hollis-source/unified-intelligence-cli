@@ -23,6 +23,11 @@ from src.dsl.types.type_system import (
     Substitution,
     TypeMismatchError,
 )
+from src.dsl.types.type_checker import (
+    TypeEnvironment,
+    check_composition,
+    check_product,
+)
 
 __all__ = [
     "Type",
@@ -32,4 +37,7 @@ __all__ = [
     "ProductType",
     "Substitution",
     "TypeMismatchError",
+    "TypeEnvironment",
+    "check_composition",
+    "check_product",
 ]
