@@ -202,11 +202,11 @@ Engage Category Theory and DSL teams to analyze current implementations, generat
 
 ---
 
-## Phase 3b: Agile Stories Creation 📋 BLOCKED
+## Phase 3b: Agile Stories Creation 📋 READY
 
-**Status**: Pending infrastructure fix (provider import errors blocking all LLM execution)
-**Blocker**: ModuleNotFoundError in all providers despite packages installed in venv
-**Alternative**: Can manually create stories from Phase 1 and Phase 2 research findings
+**Status**: Infrastructure fix complete - SDK mode disabled via environment variable
+**Fix**: `DISABLE_SDK_MODE=true` bypasses llama-cpp-server dependency (commit f898485)
+**Next Step**: Execute Phase 3a and Phase 3b with working simple orchestrator
 
 ### Approach
 Convert research questions into actionable agile stories:
@@ -320,18 +320,44 @@ Convert research questions into actionable agile stories:
 
 ---
 
+## Infrastructure Fix: SDK Mode Bypass ✅ COMPLETE
+
+**Problem**: OpenAIAgentsSDKAdapter hardcoded to `localhost:8080` (llama-cpp-server not running)
+**Solution**: `DISABLE_SDK_MODE` environment variable for runtime configuration
+**Commit**: f898485 (2025-10-03)
+
+### Implementation
+```python
+# src/factories/orchestration_factory.py
+disable_sdk_env = os.getenv("DISABLE_SDK_MODE", "").lower() in ("true", "1", "yes")
+enable_sdk = OPENAI_AGENTS_AVAILABLE and not disable_sdk_env
+```
+
+### Validation
+- ✅ SDK disabled when `DISABLE_SDK_MODE=true`
+- ✅ Tasks route to simple orchestrator (fallback)
+- ✅ Multi-model orchestration works (Grok + Qwen3)
+- ✅ End-to-end execution confirmed
+
+### Usage
+```bash
+DISABLE_SDK_MODE=true python3 -m src.main --orchestrator hybrid [...]
+```
+
+### Architecture Benefits
+- **DIP**: Runtime config vs. hardcoded decisions
+- **OCP**: Extended functionality without modifying core logic
+- **Backward compatibility**: Existing behavior preserved
+
+---
+
 ## Next Actions
 
-### Immediate (Routing Research Complete)
+### Immediate (Infrastructure Fixed)
 1. ✅ **Document routing fix** - DONE (this file)
 2. ✅ **Validate with test suite** - DONE (100% accuracy on 6 test cases)
 3. ✅ **Update workflow documentation** - DONE (Phase 2 re-run, Phase 3a validation)
-
-### Pending Infrastructure Fix
-4. 🔧 **Fix provider import issues** - Unblock LLM execution
-   - Investigate subprocess Python import path configuration
-   - Test with simple provider (tongyi-local) first
-   - Validate fix with Phase 3a re-run
+4. ✅ **Fix SDK infrastructure** - DONE (DISABLE_SDK_MODE env var, commit f898485)
 
 ### Future Work (Post-Infrastructure Fix)
 5. 🚀 **Complete Phase 3a** - Team collaboration analysis with both CT and DSL perspectives
