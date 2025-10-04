@@ -1,0 +1,182 @@
+# unified-intelligence-cli Priority Queue
+# Managed by: Claude Code sessions + Containerized priority worker
+# Format: YAML for human readability + git-based coordination
+
+metadata:
+  version: "1.0"
+  created: "2025-10-04T11:40:00Z"
+  last_updated: "2025-10-04T11:40:00Z"
+  total_priorities: 5
+  completed: 0
+  in_progress: 0
+
+# Priority statuses: open, claimed, in_progress, completed, failed
+# Workers: claude-code (interactive), container-worker-* (autonomous)
+
+priorities:
+  - id: "p2_testing_infrastructure"
+    title: "Implement P2: Testing Infrastructure"
+    description: |
+      Setup comprehensive testing infrastructure for DSL runtime and CLI:
+      - Configure pytest-cov for coverage tracking
+      - Create DSL workflow integration tests
+      - Build mock CLI adapter for testing
+      - Add integration tests for multi-agent orchestration
+      - Target: 90%+ test coverage
+    status: "open"
+    priority: "high"  # critical, high, medium, low
+    effort_hours: 6
+    complexity: "medium"
+
+    # Execution details
+    workflow: "workflows/p2_testing.ct"  # DSL workflow to execute (optional)
+    dependencies: []  # List of priority IDs that must complete first
+
+    # Assignment tracking
+    claimed_by: null
+    claimed_at: null
+    started_at: null
+    completed_at: null
+
+    # Results (filled by worker)
+    branch: null  # bot/priority-{id}
+    pr_url: null
+    success: null
+    error: null
+    artifacts: []
+
+    created_at: "2025-10-04T11:40:00Z"
+    created_by: "claude-code"
+
+  - id: "type_checking_integration"
+    title: "Integrate Hindley-Milner Type Checking with DSL Runtime"
+    description: |
+      Connect existing HM type system (Sprint 1 Phase 1) to DSL interpreter:
+      - Integrate type inference into interpreter
+      - Add runtime type validation for workflows
+      - Implement type error reporting
+      - Add type annotations to existing workflows
+      - Document type system usage
+    status: "open"
+    priority: "medium"
+    effort_hours: 8
+    complexity: "high"
+
+    workflow: "workflows/type_integration.ct"
+    dependencies: ["p2_testing_infrastructure"]  # Need tests first
+
+    claimed_by: null
+    claimed_at: null
+    started_at: null
+    completed_at: null
+
+    branch: null
+    pr_url: null
+    success: null
+    error: null
+    artifacts: []
+
+    created_at: "2025-10-04T11:40:00Z"
+    created_by: "claude-code"
+
+  - id: "syd2_phase4_ml"
+    title: "SYD2 Phase 4: ML-based Anomaly Detection"
+    description: |
+      Implement advanced pattern analysis using machine learning:
+      - Train ML model on SYD2 metrics (need 20+ tasks dataset)
+      - Implement anomaly detection for unusual patterns
+      - Add predictive issue detection
+      - Create alerting system for ML-detected issues
+      - Integrate with existing improvement orchestrator
+    status: "open"
+    priority: "medium"
+    effort_hours: 10
+    complexity: "high"
+
+    workflow: null  # Complex task, human-driven preferred
+    dependencies: []
+
+    # Reserved for human work (complex ML implementation)
+    claimed_by: "claude-code"
+    claimed_at: "2025-10-04T11:40:00Z"
+    started_at: null
+    completed_at: null
+
+    branch: null
+    pr_url: null
+    success: null
+    error: null
+    artifacts: []
+
+    created_at: "2025-10-04T11:40:00Z"
+    created_by: "claude-code"
+    notes: "Reserved for Claude Code - requires complex ML decisions"
+
+  - id: "documentation_updates"
+    title: "Update Documentation for DSL Workflows + Priority System"
+    description: |
+      Document new DSL workflow capabilities and priority worker system:
+      - Document category theory DSL syntax and semantics
+      - Add workflow examples (composition, broadcast, etc.)
+      - Document priority worker architecture
+      - Add container deployment guide
+      - Update README with dogfooding examples
+    status: "open"
+    priority: "low"
+    effort_hours: 3
+    complexity: "low"
+
+    workflow: "workflows/documentation_update.ct"
+    dependencies: []
+
+    claimed_by: null
+    claimed_at: null
+    started_at: null
+    completed_at: null
+
+    branch: null
+    pr_url: null
+    success: null
+    error: null
+    artifacts: []
+
+    created_at: "2025-10-04T11:40:00Z"
+    created_by: "claude-code"
+    notes: "Good first task for autonomous worker (low risk)"
+
+  - id: "metrics_dashboard"
+    title: "Create Metrics Dashboard for Priority Worker Performance"
+    description: |
+      Build dashboard to track priority worker effectiveness:
+      - Track throughput (priorities completed/week)
+      - Monitor API usage and cost per priority
+      - Quality metrics (PR review time, merge success rate)
+      - Git conflict frequency
+      - Worker utilization (Claude Code vs container hours)
+    status: "open"
+    priority: "low"
+    effort_hours: 4
+    complexity: "medium"
+
+    workflow: "workflows/metrics_dashboard.ct"
+    dependencies: ["documentation_updates"]  # Document first, dashboard second
+
+    claimed_by: null
+    claimed_at: null
+    started_at: null
+    completed_at: null
+
+    branch: null
+    pr_url: null
+    success: null
+    error: null
+    artifacts: []
+
+    created_at: "2025-10-04T11:40:00Z"
+    created_by: "claude-code"
+
+# Completed priorities (archive)
+completed_priorities: []
+
+# Failed priorities (for analysis)
+failed_priorities: []
