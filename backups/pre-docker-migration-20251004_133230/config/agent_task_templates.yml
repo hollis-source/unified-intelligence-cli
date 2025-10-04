@@ -1,0 +1,662 @@
+# Task Templates for SYD2 Autonomous Agent
+# 50+ templates organized by category: Research, Code Review, Testing, Architecture, Distributed Systems
+
+# ==========================
+# RESEARCH TASKS (10)
+# ==========================
+
+research_log_error_analysis:
+  category: research
+  sub_type: log_analysis
+  description: "Analyze recent error logs for patterns"
+  task_template: |
+    ULTRATHINK: Analyze error logs in {{log_dir}}.
+    Identify top {{error_count}} error patterns.
+    Provide root cause analysis and recommendations.
+  params:
+    log_dir: ["logs/", "data/logs/", "/var/log/"]
+    error_count: [3, 5, 10]
+  difficulty: easy
+
+research_performance_profiling:
+  category: research
+  sub_type: profiling
+  description: "Profile application performance"
+  task_template: |
+    ULTRATHINK: Profile {{module}} performance.
+    Identify bottlenecks, memory leaks, slow functions.
+    Recommend optimizations.
+  params:
+    module: ["src.main", "src.orchestrators", "src.routing"]
+  difficulty: medium
+
+research_data_exploration:
+  category: research
+  sub_type: data_analysis
+  description: "Explore dataset for insights"
+  task_template: |
+    ULTRATHINK: Explore data in {{data_path}}.
+    Calculate statistics, detect anomalies, visualize distributions.
+    Provide insights and recommendations.
+  params:
+    data_path: ["data/metrics/", "data/benchmarks/", "data/training/"]
+  difficulty: medium
+
+research_metric_extraction:
+  category: research
+  sub_type: metrics
+  description: "Extract metrics from execution logs"
+  task_template: |
+    Research: Extract metrics from {{session_file}}.
+    Calculate: routing accuracy, latency p50/p95/p99, failure rate, team utilization.
+    Output structured JSON.
+  params:
+    session_file: ["data/metrics/session_*.json"]
+  difficulty: easy
+
+research_trend_analysis:
+  category: research
+  sub_type: trends
+  description: "Analyze trends over time"
+  task_template: |
+    ULTRATHINK: Analyze trends in {{metric_type}} over last {{time_range}} days.
+    Detect increasing/decreasing trends, seasonality, anomalies.
+  params:
+    metric_type: ["latency", "failure_rate", "routing_accuracy"]
+    time_range: [7, 14, 30]
+  difficulty: medium
+
+research_anomaly_detection:
+  category: research
+  sub_type: anomalies
+  description: "Detect statistical anomalies"
+  task_template: |
+    Research: Detect anomalies in {{data_source}} using statistical methods.
+    Apply z-score, IQR, isolation forest algorithms.
+    Report outliers with context.
+  params:
+    data_source: ["latency metrics", "error rates", "resource usage"]
+  difficulty: hard
+
+research_report_generation:
+  category: research
+  sub_type: reporting
+  description: "Generate comprehensive report"
+  task_template: |
+    Research: Generate {{report_type}} report for {{time_period}}.
+    Include: executive summary, key metrics, visualizations, recommendations.
+  params:
+    report_type: ["performance", "reliability", "usage"]
+    time_period: ["last 24h", "last week", "last month"]
+  difficulty: medium
+
+research_comparative_analysis:
+  category: research
+  sub_type: comparison
+  description: "Compare two implementations"
+  task_template: |
+    ULTRATHINK: Compare {{implementation_a}} vs {{implementation_b}}.
+    Metrics: latency, throughput, accuracy, resource usage.
+    Recommend best approach.
+  params:
+    implementation_a: ["simple orchestrator", "team routing", "scaled agents"]
+    implementation_b: ["hybrid orchestrator", "flat routing", "minimal agents"]
+  difficulty: hard
+
+research_realtime_monitoring:
+  category: research
+  sub_type: monitoring
+  description: "Monitor system in real-time"
+  task_template: |
+    Research: Monitor {{component}} for {{duration}} minutes.
+    Track: CPU, memory, latency, error rate.
+    Alert on thresholds exceeded.
+  params:
+    component: ["orchestrator", "router", "agent pool"]
+    duration: [5, 10, 30]
+  difficulty: medium
+
+research_data_aggregation:
+  category: research
+  sub_type: aggregation
+  description: "Aggregate distributed data sources"
+  task_template: |
+    Research: Aggregate data from {{sources}}.
+    Deduplicate, normalize, merge records.
+    Output unified dataset.
+  params:
+    sources: ["local metrics + remote metrics", "multiple session files", "benchmark results"]
+  difficulty: easy
+
+# ==========================
+# CODE REVIEW TASKS (10)
+# ==========================
+
+code_review_linting:
+  category: code_review
+  sub_type: linting
+  description: "Lint codebase for style violations"
+  task_template: |
+    Code Review: Lint {{module_path}} using pylint.
+    Identify PEP 8 violations, code smells, complexity issues.
+    Provide refactoring recommendations.
+  params:
+    module_path: ["src/", "tests/", "scripts/"]
+  difficulty: easy
+
+code_review_static_analysis:
+  category: code_review
+  sub_type: type_checking
+  description: "Run static type analysis"
+  task_template: |
+    Code Review: Run mypy on {{module}}.
+    Identify type errors, missing annotations, incompatible types.
+    Suggest fixes.
+  params:
+    module: ["src.entities", "src.use_cases", "src.adapters"]
+  difficulty: medium
+
+code_review_formatting:
+  category: code_review
+  sub_type: formatting
+  description: "Check code formatting"
+  task_template: |
+    Code Review: Check formatting of {{file_pattern}} using black.
+    Identify inconsistencies, long lines, improper indentation.
+  params:
+    file_pattern: ["*.py", "src/**/*.py", "tests/**/*.py"]
+  difficulty: easy
+
+code_review_dependency_check:
+  category: code_review
+  sub_type: dependencies
+  description: "Audit dependencies for issues"
+  task_template: |
+    Code Review: Audit dependencies in pyproject.toml.
+    Check for: security vulnerabilities, outdated versions, unused packages.
+    Recommend updates.
+  params: {}
+  difficulty: medium
+
+code_review_commit_simulation:
+  category: code_review
+  sub_type: commit_review
+  description: "Review recent commits"
+  task_template: |
+    ULTRATHINK: Review last {{commit_count}} commits.
+    Analyze: code quality, test coverage, commit message quality, architecture impact.
+    Provide feedback.
+  params:
+    commit_count: [1, 3, 5, 10]
+  difficulty: medium
+
+code_review_complexity:
+  category: code_review
+  sub_type: complexity
+  description: "Calculate code complexity"
+  task_template: |
+    Code Review: Calculate cyclomatic complexity for {{module}}.
+    Identify functions >10 complexity.
+    Recommend refactoring.
+  params:
+    module: ["src.orchestrators", "src.routing", "src.adapters"]
+  difficulty: medium
+
+code_review_duplication:
+  category: code_review
+  sub_type: duplication
+  description: "Detect code duplication"
+  task_template: |
+    Code Review: Detect duplicated code in {{scope}}.
+    Identify blocks >{{min_lines}} lines duplicated.
+    Suggest DRY refactoring.
+  params:
+    scope: ["src/", "tests/"]
+    min_lines: [5, 10, 20]
+  difficulty: medium
+
+code_review_security_audit:
+  category: code_review
+  sub_type: security
+  description: "Security vulnerability scan"
+  task_template: |
+    ULTRATHINK: Security audit of {{component}}.
+    Check for: injection vulnerabilities, hardcoded secrets, insecure dependencies, improper auth.
+    Provide fixes.
+  params:
+    component: ["SSH integration", "API endpoints", "authentication"]
+  difficulty: hard
+
+code_review_performance:
+  category: code_review
+  sub_type: performance
+  description: "Performance code review"
+  task_template: |
+    ULTRATHINK: Review {{module}} for performance issues.
+    Identify: inefficient algorithms, unnecessary copies, blocking I/O, memory leaks.
+    Recommend optimizations.
+  params:
+    module: ["executor", "router", "agent_pool"]
+  difficulty: hard
+
+code_review_documentation:
+  category: code_review
+  sub_type: docs
+  description: "Check documentation quality"
+  task_template: |
+    Code Review: Review documentation for {{module}}.
+    Check: docstring completeness, type hints, examples, README accuracy.
+    Suggest improvements.
+  params:
+    module: ["src.entities", "src.use_cases", "src.adapters"]
+  difficulty: easy
+
+# ==========================
+# TESTING TASKS (10)
+# ==========================
+
+testing_unit_pytest:
+  category: testing
+  sub_type: unit
+  description: "Run unit tests"
+  task_template: |
+    Testing: Run unit tests in {{test_path}}.
+    Analyze failures, coverage gaps, slow tests.
+    Provide fix recommendations.
+  params:
+    test_path: ["tests/unit/", "tests/entities/", "tests/use_cases/"]
+  difficulty: easy
+
+testing_integration_api:
+  category: testing
+  sub_type: integration
+  description: "Test API integration"
+  task_template: |
+    Testing: Test {{api_endpoint}} integration.
+    Validate: request/response formats, error handling, auth, rate limiting.
+    Report issues.
+  params:
+    api_endpoint: ["Grok API", "OpenAI API", "Tongyi API"]
+  difficulty: medium
+
+testing_load_testing:
+  category: testing
+  sub_type: load
+  description: "Load test system"
+  task_template: |
+    ULTRATHINK: Load test {{component}} with {{concurrent_users}} concurrent users.
+    Measure: throughput, latency p50/p95/p99, error rate.
+    Identify bottlenecks.
+  params:
+    component: ["orchestrator", "router", "full system"]
+    concurrent_users: [10, 50, 100]
+  difficulty: hard
+
+testing_e2e_workflow:
+  category: testing
+  sub_type: e2e
+  description: "End-to-end workflow test"
+  task_template: |
+    Testing: Execute E2E workflow for {{workflow_type}}.
+    Validate: task routing, agent execution, result aggregation, metrics collection.
+    Report failures.
+  params:
+    workflow_type: ["simple task", "composed task", "parallel task"]
+  difficulty: medium
+
+testing_regression:
+  category: testing
+  sub_type: regression
+  description: "Regression test suite"
+  task_template: |
+    Testing: Run regression suite for {{feature}}.
+    Compare against baseline metrics.
+    Report regressions (>{{threshold}}% degradation).
+  params:
+    feature: ["routing accuracy", "latency", "throughput"]
+    threshold: [5, 10, 15]
+  difficulty: medium
+
+testing_stress:
+  category: testing
+  sub_type: stress
+  description: "Stress test under extreme load"
+  task_template: |
+    ULTRATHINK: Stress test {{component}} beyond normal capacity.
+    Gradually increase load until failure.
+    Identify: breaking point, graceful degradation, recovery time.
+  params:
+    component: ["agent pool", "task queue", "database"]
+  difficulty: hard
+
+testing_compatibility:
+  category: testing
+  sub_type: compatibility
+  description: "Test cross-platform compatibility"
+  task_template: |
+    Testing: Test {{feature}} on {{platform}}.
+    Validate: functionality, performance, dependencies.
+    Report platform-specific issues.
+  params:
+    feature: ["SSH connection", "CLI execution", "metrics collection"]
+    platform: ["Linux", "macOS", "Windows (WSL)"]
+  difficulty: medium
+
+testing_smoke:
+  category: testing
+  sub_type: smoke
+  description: "Quick smoke test"
+  task_template: |
+    Testing: Smoke test critical paths.
+    Execute: {{critical_workflow}}.
+    Validate basic functionality works.
+  params:
+    critical_workflow: ["simple task execution", "team routing", "metrics collection"]
+  difficulty: easy
+
+testing_performance_benchmark:
+  category: testing
+  sub_type: benchmark
+  description: "Performance benchmarking"
+  task_template: |
+    ULTRATHINK: Benchmark {{operation}} performance.
+    Measure: latency, throughput, resource usage.
+    Compare against baseline and target SLAs.
+  params:
+    operation: ["task routing", "agent execution", "metrics analysis"]
+  difficulty: medium
+
+testing_ab_testing:
+  category: testing
+  sub_type: ab_test
+  description: "A/B test two implementations"
+  task_template: |
+    Testing: A/B test {{variant_a}} vs {{variant_b}}.
+    Metrics: latency, accuracy, resource usage.
+    Statistical significance test (p < 0.05).
+  params:
+    variant_a: ["simple orchestrator", "team routing"]
+    variant_b: ["hybrid orchestrator", "flat routing"]
+  difficulty: hard
+
+# ==========================
+# ARCHITECTURE TASKS (10)
+# ==========================
+
+architecture_component_design:
+  category: architecture
+  sub_type: design
+  description: "Design new component"
+  task_template: |
+    ULTRATHINK: Design architecture for {{component}}.
+    Apply: Clean Architecture, SOLID principles, category theory composition.
+    Output: UML diagram, interface definitions, data flow.
+  params:
+    component: ["horizontal orchestrator", "CRDT state manager", "consensus protocol"]
+  difficulty: hard
+
+architecture_system_diagram:
+  category: architecture
+  sub_type: documentation
+  description: "Generate system architecture diagram"
+  task_template: |
+    Architecture: Generate diagram for {{system}}.
+    Include: components, data flow, interfaces, external dependencies.
+    Format: Mermaid or PlantUML.
+  params:
+    system: ["multi-agent orchestration", "metrics pipeline", "improvement loop"]
+  difficulty: medium
+
+architecture_refactoring_plan:
+  category: architecture
+  sub_type: refactoring
+  description: "Plan refactoring strategy"
+  task_template: |
+    ULTRATHINK: Plan refactoring for {{module}}.
+    Goals: {{refactoring_goal}}.
+    Output: step-by-step plan, risk analysis, rollback strategy.
+  params:
+    module: ["router", "executor", "agent_pool"]
+    refactoring_goal: ["reduce complexity", "improve testability", "add extensibility"]
+  difficulty: hard
+
+architecture_scalability_analysis:
+  category: architecture
+  sub_type: scalability
+  description: "Analyze scalability limits"
+  task_template: |
+    ULTRATHINK: Analyze scalability of {{component}}.
+    Identify: bottlenecks, resource limits, concurrency issues.
+    Recommend: horizontal/vertical scaling strategies.
+  params:
+    component: ["task queue", "agent pool", "metrics storage"]
+  difficulty: hard
+
+architecture_modularization:
+  category: architecture
+  sub_type: modularity
+  description: "Improve modular design"
+  task_template: |
+    Architecture: Refactor {{module}} for better modularity.
+    Apply: SRP, DIP, interface segregation.
+    Output: module boundaries, dependency graph, migration plan.
+  params:
+    module: ["orchestrators", "adapters", "routing"]
+  difficulty: medium
+
+architecture_api_design:
+  category: architecture
+  sub_type: api
+  description: "Design API interface"
+  task_template: |
+    ULTRATHINK: Design API for {{service}}.
+    Include: REST endpoints, request/response schemas, error handling, versioning.
+    Follow: OpenAPI spec, RESTful principles.
+  params:
+    service: ["task submission", "metrics query", "agent status"]
+  difficulty: medium
+
+architecture_database_schema:
+  category: architecture
+  sub_type: database
+  description: "Design database schema"
+  task_template: |
+    Architecture: Design schema for {{data_type}}.
+    Include: tables/collections, indexes, relationships, constraints.
+    Optimize for: {{optimization_goal}}.
+  params:
+    data_type: ["metrics", "tasks", "agent state"]
+    optimization_goal: ["read performance", "write throughput", "query flexibility"]
+  difficulty: medium
+
+architecture_microservices_plan:
+  category: architecture
+  sub_type: microservices
+  description: "Plan microservices decomposition"
+  task_template: |
+    ULTRATHINK: Decompose monolith into microservices.
+    Identify: service boundaries, communication patterns, data ownership.
+    Output: service map, API contracts, deployment strategy.
+  params: {}
+  difficulty: hard
+
+architecture_security_design:
+  category: architecture
+  sub_type: security
+  description: "Design security architecture"
+  task_template: |
+    ULTRATHINK: Design security architecture for {{feature}}.
+    Include: authentication, authorization, encryption, audit logging.
+    Threat model: {{threat_model}}.
+  params:
+    feature: ["SSH automation", "API access", "metrics collection"]
+    threat_model: ["insider threat", "network attack", "data breach"]
+  difficulty: hard
+
+architecture_deployment_plan:
+  category: architecture
+  sub_type: deployment
+  description: "Plan deployment architecture"
+  task_template: |
+    Architecture: Design deployment for {{environment}}.
+    Include: infrastructure (Docker/K8s), CI/CD, monitoring, rollback.
+    Target: {{deployment_target}}.
+  params:
+    environment: ["production", "staging", "development"]
+    deployment_target: ["syd2.jacobhollis.com", "cloud provider", "hybrid"]
+  difficulty: medium
+
+# ==========================
+# DISTRIBUTED SYSTEMS (12)
+# ==========================
+
+distributed_load_balancing:
+  category: distributed
+  sub_type: load_balancing
+  description: "Test load balancing strategy"
+  task_template: |
+    ULTRATHINK: Test load balancing for {{workload_type}}.
+    Algorithms: {{algorithm}}.
+    Measure: distribution fairness, latency variance, throughput.
+  params:
+    workload_type: ["uniform tasks", "heterogeneous tasks", "bursty tasks"]
+    algorithm: ["round-robin", "least-loaded", "consistent hashing"]
+  difficulty: hard
+
+distributed_failover:
+  category: distributed
+  sub_type: failover
+  description: "Test failover mechanism"
+  task_template: |
+    ULTRATHINK: Test failover when {{failure_scenario}}.
+    Validate: detection time, recovery time, data consistency.
+    Measure impact on availability.
+  params:
+    failure_scenario: ["agent crashes", "network partition", "server restart"]
+  difficulty: hard
+
+distributed_cluster_management:
+  category: distributed
+  sub_type: clustering
+  description: "Manage distributed cluster"
+  task_template: |
+    Distributed: Manage cluster with {{node_count}} nodes.
+    Operations: {{operation}}.
+    Validate: cluster state, task distribution, health monitoring.
+  params:
+    node_count: [3, 5, 10]
+    operation: ["add node", "remove node", "rebalance"]
+  difficulty: medium
+
+distributed_network_partition:
+  category: distributed
+  sub_type: partition
+  description: "Simulate network partition"
+  task_template: |
+    ULTRATHINK: Simulate network partition between {{partition_config}}.
+    Validate: split-brain prevention, consistency, recovery.
+    Measure: downtime, data loss.
+  params:
+    partition_config: ["2 nodes isolated", "50% network partition", "cascading failure"]
+  difficulty: hard
+
+distributed_consensus:
+  category: distributed
+  sub_type: consensus
+  description: "Test consensus algorithm"
+  task_template: |
+    ULTRATHINK: Test {{consensus_algorithm}} with {{node_count}} nodes.
+    Simulate: leader election, log replication, failure scenarios.
+    Validate: safety, liveness properties.
+  params:
+    consensus_algorithm: ["Raft", "Paxos", "gossip protocol"]
+    node_count: [3, 5, 7]
+  difficulty: hard
+
+distributed_replication:
+  category: distributed
+  sub_type: replication
+  description: "Test data replication"
+  task_template: |
+    Distributed: Test {{replication_strategy}} replication.
+    Measure: replication lag, consistency guarantees, conflict resolution.
+    Failure scenarios: {{failure}}.
+  params:
+    replication_strategy: ["synchronous", "asynchronous", "quorum-based"]
+    failure: ["network delay", "node crash", "split-brain"]
+  difficulty: hard
+
+distributed_message_queue:
+  category: distributed
+  sub_type: messaging
+  description: "Test message queue reliability"
+  task_template: |
+    Distributed: Test message queue under {{scenario}}.
+    Validate: ordering guarantees, exactly-once delivery, backpressure handling.
+    Measure: throughput, latency.
+  params:
+    scenario: ["high volume", "slow consumer", "producer failures"]
+  difficulty: medium
+
+distributed_kubernetes:
+  category: distributed
+  sub_type: orchestration
+  description: "Kubernetes deployment test"
+  task_template: |
+    ULTRATHINK: Deploy {{service}} to Kubernetes.
+    Include: pods, services, ingress, auto-scaling.
+    Test: rolling updates, health checks, resource limits.
+  params:
+    service: ["ui-cli orchestrator", "agent pool", "metrics collector"]
+  difficulty: hard
+
+distributed_monitoring:
+  category: distributed
+  sub_type: monitoring
+  description: "Setup distributed monitoring"
+  task_template: |
+    Distributed: Setup monitoring for {{component}}.
+    Metrics: {{metrics}}.
+    Tools: Prometheus, Grafana, alerting.
+  params:
+    component: ["cluster", "message queue", "database"]
+    metrics: ["latency, throughput, error rate", "resource usage", "availability"]
+  difficulty: medium
+
+distributed_fault_injection:
+  category: distributed
+  sub_type: chaos
+  description: "Chaos engineering - inject faults"
+  task_template: |
+    ULTRATHINK: Inject {{fault_type}} into {{component}}.
+    Observe: system behavior, error propagation, recovery.
+    Validate: resilience patterns, graceful degradation.
+  params:
+    fault_type: ["latency", "CPU spike", "memory leak", "network jitter"]
+    component: ["orchestrator", "agent", "database"]
+  difficulty: hard
+
+distributed_multi_region:
+  category: distributed
+  sub_type: geo_distribution
+  description: "Multi-region deployment"
+  task_template: |
+    ULTRATHINK: Deploy to {{region_count}} regions.
+    Handle: cross-region latency, data consistency, failover.
+    Measure: availability, latency by region.
+  params:
+    region_count: [2, 3, 5]
+  difficulty: hard
+
+distributed_service_discovery:
+  category: distributed
+  sub_type: discovery
+  description: "Test service discovery"
+  task_template: |
+    Distributed: Test service discovery for {{services}}.
+    Mechanisms: {{discovery_mechanism}}.
+    Validate: registration, health checks, DNS/load balancer updates.
+  params:
+    services: ["agents", "orchestrators", "databases"]
+    discovery_mechanism: ["Consul", "etcd", "DNS-based"]
+  difficulty: medium

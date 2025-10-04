@@ -1,0 +1,29 @@
+{
+  "session_id": "20251004_035845",
+  "timestamp": "2025-10-04T03:59:56.055206",
+  "routing_metrics": [
+    {
+      "timestamp": "2025-10-04T03:59:01.502974",
+      "task_description": "Python\u2192Go Hybrid Pilot Implementation Plan: Based on the migration research recommending PILOT (Hybr",
+      "classified_domain": "devops",
+      "domain_score": 17.0,
+      "target_team": "Infrastructure",
+      "target_agent": "devops-lead",
+      "expected_domain": null,
+      "expected_team": null,
+      "is_correct": null
+    }
+  ],
+  "model_metrics": [],
+  "team_metrics": [],
+  "summary": {
+    "routing_accuracy": 0.0,
+    "total_routing_decisions": 1,
+    "correct_routing_decisions": 0,
+    "model_selection_breakdown": {},
+    "fallback_usage_rate": 0.0,
+    "team_utilization": {},
+    "total_model_selections": 0,
+    "total_team_snapshots": 0
+  }
+}
