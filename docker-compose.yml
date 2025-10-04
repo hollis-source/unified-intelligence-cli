@@ -57,15 +57,18 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.priority-worker
-    image: priority-worker:latest
+    image: priority-worker:refactor
     environment:
-      # API keys
+      # API keys (XAI for Grok, OPENAI for fallback compatibility)
       - XAI_API_KEY=${XAI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-${XAI_API_KEY}}
       # Worker ID (unique per replica)
       - WORKER_ID=${HOSTNAME}
       # Redis connection
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_LOCK_TTL=3600
     volumes:
       # Mount git repo for branch operations (read-write)
       - .:/app:rw
