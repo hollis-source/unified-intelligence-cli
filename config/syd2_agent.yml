@@ -1,0 +1,50 @@
+server:
+  host: syd2.jacobhollis.com
+  user: root
+  ssh_key: ~/.ssh/id_ed25519
+  timeout: 30  # seconds
+
+execution:
+  tasks_per_hour: 10
+  duration_hours: 24
+  max_concurrent: 5
+  pause_between_tasks: 300  # 5 minutes
+
+metrics:
+  local_dir: data/syd2_metrics
+  remote_dir: /opt/unified-intelligence-cli/data/metrics
+  sync_interval: 600  # 10 minutes
+  retention_days: 30
+
+analysis:
+  thresholds:
+    failure_rate: 0.05  # 5%
+    latency_p95_factor: 1.5
+    routing_accuracy: 0.90  # 90%
+    anomaly_z_score: 3.0
+
+  trend_window: 10  # moving average window
+  min_samples: 20  # minimum samples for analysis
+
+improvement:
+  enabled: true
+  min_pattern_occurrences: 3  # Pattern must persist
+  max_prs_per_day: 1
+  require_human_approval: true
+
+logging:
+  level: INFO
+  format: json
+  file: logs/syd2_agent.log
+  rotate: daily
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+
+ui_cli:
+  executable: ui-cli
+  default_provider: auto
+  routing: team
+  agents: scaled
+  orchestrator: simple
+  timeout: 300  # 5 minutes
+  collect_metrics: true
