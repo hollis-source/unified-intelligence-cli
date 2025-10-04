@@ -79,6 +79,32 @@ class ASTTransformer(Transformer):
         right = self._ensure_ast_node(items[2]) if len(items) > 2 else self._ensure_ast_node(items[1])
         return Product(left=left, right=right)
 
+    def broadcast_expr(self, items):
+        """Transform broadcast expression to desugared form.
+
+        Desugaring rules:
+        - f ** g           → (f × g) ∘ duplicate
+        - f ** g ** h      → ((f × g) × h) ∘ duplicate  (left-associative chaining)
+        - prev_broadcast ** h → Extract product from prev, extend it
+
+        This provides syntactic sugar for parallel fan-out execution.
+        """
+        left = self._ensure_ast_node(items[0])
+        right = self._ensure_ast_node(items[2]) if len(items) > 2 else self._ensure_ast_node(items[1])
+
+        # Check if left is already a desugared broadcast: (Product) ∘ duplicate
+        # If so, extract the product and extend it instead of nesting
+        if isinstance(left, Composition):
+            # Check if it's a broadcast pattern: product ∘ duplicate
+            if isinstance(left.right, Duplicate) and isinstance(left.left, Product):
+                # Extract the product and extend it: (prev_product × right) ∘ duplicate
+                extended_product = Product(left=left.left, right=right)
+                return Composition(left=extended_product, right=Duplicate())
+
+        # Simple case: build product and compose with duplicate
+        product = Product(left=left, right=right)
+        return Composition(left=product, right=Duplicate())
+
     def duplicate_expr(self, items):
         """Transform duplicate expression to Duplicate entity."""
         # Duplicate is a nullary operator (no arguments)

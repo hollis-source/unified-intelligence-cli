@@ -47,20 +47,20 @@ display_report :: MarkdownReport -> ()
 
 # Mathematical derivation:
 #   get_code_diff :: () -> CodeDiff
-#   duplicate :: CodeDiff -> (CodeDiff × CodeDiff)
-#   (analyze_solid × analyze_security) :: (CodeDiff × CodeDiff) -> (SOLIDReport × SecurityReport)
+#   analyze_solid ** analyze_security :: CodeDiff -> (SOLIDReport × SecurityReport)  [broadcast]
 #   merge_compliance :: (SOLIDReport × SecurityReport) -> ComplianceReport
 #   format_compliance :: ComplianceReport -> MarkdownReport
 #   display_report :: MarkdownReport -> ()
 #
 # Complete composition:
 #   display_report ∘ format_compliance ∘ merge_compliance ∘
-#   (analyze_solid × analyze_security) ∘ duplicate ∘ get_code_diff
+#   (analyze_solid ** analyze_security) ∘ get_code_diff
 #     :: () -> ()
 #
+# Broadcast operator ** desugars to: (f × g) ∘ duplicate
 # Performance: ~0.6s (parallel) vs ~1.1s (sequential) = 1.8x speedup
 
-compliance_pipeline = display_report o format_compliance o merge_compliance o (analyze_solid * analyze_security) o duplicate o get_code_diff
+compliance_pipeline = display_report o format_compliance o merge_compliance o (analyze_solid ** analyze_security) o get_code_diff
 
 
 # ============================================================================
@@ -69,20 +69,20 @@ compliance_pipeline = display_report o format_compliance o merge_compliance o (a
 
 # Mathematical structure:
 #   get_code_diff :: () -> CodeDiff
-#   duplicate :: CodeDiff -> (CodeDiff × CodeDiff)
-#   (analyze_performance × analyze_coverage) :: (CodeDiff × CodeDiff) -> (PerformanceReport × CoverageReport)
+#   analyze_performance ** analyze_coverage :: CodeDiff -> (PerformanceReport × CoverageReport)  [broadcast]
 #   merge_quality :: (PerformanceReport × CoverageReport) -> QualityReport
 #   format_quality :: QualityReport -> MarkdownReport
 #   display_report :: MarkdownReport -> ()
 #
 # Complete composition:
 #   display_report ∘ format_quality ∘ merge_quality ∘
-#   (analyze_performance × analyze_coverage) ∘ duplicate ∘ get_code_diff
+#   (analyze_performance ** analyze_coverage) ∘ get_code_diff
 #     :: () -> ()
 #
+# Broadcast operator ** desugars to: (f × g) ∘ duplicate
 # Performance: ~0.6s (parallel) vs ~1.0s (sequential) = 1.7x speedup
 
-quality_pipeline = display_report o format_quality o merge_quality o (analyze_performance * analyze_coverage) o duplicate o get_code_diff
+quality_pipeline = display_report o format_quality o merge_quality o (analyze_performance ** analyze_coverage) o get_code_diff
 
 
 # ============================================================================

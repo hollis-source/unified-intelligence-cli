@@ -26,6 +26,7 @@ definition: ["functor"] IDENTIFIER "=" expression
 ?expression: term
            | expression COMPOSE expression    -> composition
            | expression BIND expression       -> bind_expr
+           | expression BROADCAST expression  -> broadcast_expr
            | expression PRODUCT expression    -> product_expr
 
 ?term: DUPLICATE                            -> duplicate_expr
@@ -75,6 +76,7 @@ TYPE_VAR: /[a-z]/                        // Single lowercase letter (a, b, c)
 // Terminals for expressions
 COMPOSE: "∘" | "o"                          // Allow ASCII alternative
 BIND: ">>=" | ">>"                          // Monadic bind
+BROADCAST: "**"                             // N-ary broadcast (syntactic sugar for product + duplicate)
 PRODUCT: "×" | "*"                          // Allow ASCII alternative
 DUPLICATE.2: "duplicate" | "Δ"              // Diagonal functor (higher priority than IDENTIFIER)
 
