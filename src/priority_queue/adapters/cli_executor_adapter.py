@@ -57,18 +57,59 @@ class CLITaskExecutorAdapter:
         Extracts workflow from task metadata and executes it.
         Returns dict with success status and output.
         """
+        import asyncio
+
         try:
-            # Extract workflow from task metadata
+            # Extract workflow command from task metadata
             workflow = task.metadata.get('workflow', 'echo "No workflow specified"')
 
-            # For now, just return success without executing
-            # Real implementation would execute DSL workflow
-            return {
-                'success': True,
-                'task_id': task.id,
-                'output': f"Workflow '{workflow}' would be executed here",
-                'workflow': workflow
-            }
+            # Determine if workflow is a DSL file or direct command
+            if workflow.endswith('.ct'):
+                # DSL workflow file - execute via dsl.cli_integration
+                command = f"python3 -m src.dsl.cli_integration {workflow}"
+            else:
+                # Direct command execution
+                command = workflow
+
+            # Execute workflow asynchronously
+            proc = await asyncio.create_subprocess_shell(
+                command,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                cwd=self.config.get('cwd'),
+            )
+
+            # Wait for completion with timeout
+            timeout = self.config.get('timeout', 300)
+            try:
+                stdout, stderr = await asyncio.wait_for(
+                    proc.communicate(),
+                    timeout=timeout
+                )
+
+                success = proc.returncode == 0
+                output = stdout.decode('utf-8', errors='replace')
+                error_output = stderr.decode('utf-8', errors='replace')
+
+                return {
+                    'success': success,
+                    'task_id': task.id,
+                    'output': output,
+                    'error': error_output if not success else None,
+                    'return_code': proc.returncode,
+                    'workflow': workflow
+                }
+
+            except asyncio.TimeoutError:
+                proc.kill()
+                await proc.wait()
+                return {
+                    'success': False,
+                    'task_id': task.id,
+                    'error': f"Workflow execution timed out after {timeout}s",
+                    'workflow': workflow
+                }
+
         except Exception as e:
             return {
                 'success': False,
