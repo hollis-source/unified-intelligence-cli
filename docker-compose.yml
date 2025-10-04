@@ -70,8 +70,6 @@ services:
       - REDIS_DB=0
       - REDIS_LOCK_TTL=3600
     volumes:
-      # Mount git repo for branch operations (read-write)
-      - .:/app:rw
       # Persistent logs and data
       - ./logs:/app/logs
       - ./data:/app/data

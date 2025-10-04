@@ -43,6 +43,13 @@ COPY workflows/ ./workflows/
 # Create directories for logs and data
 RUN mkdir -p /app/logs /app/data/metrics
 
+# Initialize git repository for branch management
+RUN git init && \
+    git config user.email "priority-worker@unified-intelligence-cli" && \
+    git config user.name "PriorityWorker" && \
+    git add -A && \
+    git commit -m "Initial container setup"
+
 # Set Python path for application code
 ENV PYTHONPATH=/app:$PYTHONPATH
 
