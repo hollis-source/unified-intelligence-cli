@@ -136,10 +136,17 @@ class CLITaskExecutor:
                 grok_analysis_tasks,
                 system_analysis_tasks,
                 hf_spaces_analysis_tasks,
-                code_review_tasks
+                code_review_tasks,
+                priorities_analysis_tasks
             )
 
-            # Check code review tasks first (new broadcast composition demo)
+            # Check priorities analysis tasks first (DSL runtime dogfooding)
+            if hasattr(priorities_analysis_tasks, task_name):
+                task_func = getattr(priorities_analysis_tasks, task_name)
+                result = await task_func(input_data)
+                return result
+
+            # Check code review tasks (broadcast composition demo)
             if hasattr(code_review_tasks, task_name):
                 task_func = getattr(code_review_tasks, task_name)
                 result = await task_func(input_data)

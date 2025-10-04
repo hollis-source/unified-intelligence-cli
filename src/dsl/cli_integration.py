@@ -65,16 +65,48 @@ async def execute_dsl_program(dsl_text: str, verbose: bool = False) -> Any:
         click.echo(f"Parse error: {e}", err=True)
         raise
 
-    # Create executor and interpreter
+    # Extract main functor or last AST node
+    # Parser returns list of nodes (type annotations + functors)
+    if isinstance(ast, list):
+        # Find last functor (main workflow) or use last node
+        functors = [node for node in ast if hasattr(node, 'name')]
+        if functors:
+            main_node = functors[-1]  # Last functor is main workflow
+            if verbose:
+                click.echo(f"Executing functor: {main_node.name}\n")
+        else:
+            main_node = ast[-1] if ast else None
+    else:
+        main_node = ast
+
+    if main_node is None:
+        click.echo("Error: No executable node found in DSL program", err=True)
+        raise ValueError("Empty DSL program")
+
+    # Build symbol table from functors
+    symbol_table = {}
+    if isinstance(ast, list):
+        for node in ast:
+            if hasattr(node, 'name') and hasattr(node, 'expression'):
+                # Store functor definition
+                symbol_table[node.name] = node.expression
+
+    # Create executor with symbol table support
     executor = CLITaskExecutor()
     interpreter = Interpreter(executor)
 
+    # Add symbol table to interpreter (if it supports it)
+    if hasattr(interpreter, 'set_symbol_table'):
+        interpreter.set_symbol_table(symbol_table)
+
     if verbose:
+        if symbol_table:
+            click.echo(f"Defined functors: {list(symbol_table.keys())}\n")
         click.echo("Executing DSL program...")
 
     # Execute
     try:
-        result = await interpreter.execute(ast)
+        result = await interpreter.execute(main_node)
         return result
     except Exception as e:
         click.echo(f"Execution error: {e}", err=True)

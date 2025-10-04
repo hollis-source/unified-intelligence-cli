@@ -66,6 +66,7 @@ class Interpreter:
         """
         self.task_executor = task_executor
         self._current_input = None  # Thread-local input data for visitor pattern
+        self._symbol_table = {}  # Functor definitions
 
     async def execute(self, ast_node, input_data: Any = None) -> Any:
         """
@@ -92,6 +93,15 @@ class Interpreter:
             # Restore previous input (for nested executions)
             self._current_input = previous_input
 
+    def set_symbol_table(self, symbol_table: dict) -> None:
+        """
+        Set symbol table for functor resolution.
+
+        Args:
+            symbol_table: Dictionary mapping functor names to expressions
+        """
+        self._symbol_table = symbol_table
+
     async def visit_literal(self, node: Literal) -> Any:
         """
         Execute literal task with input data.
@@ -102,6 +112,12 @@ class Interpreter:
         Returns:
             Task execution result
         """
+        # Check if literal is a functor reference
+        if node.value in self._symbol_table:
+            # Resolve functor and execute its expression
+            functor_expr = self._symbol_table[node.value]
+            return await self.execute(functor_expr, self._current_input)
+
         # Pass current input data to task executor
         return await self.task_executor.execute_task(node.value, self._current_input)
 
