@@ -150,15 +150,16 @@ class RedisAdapter:
         except redis.RedisError as e:
             raise ValueError(f"Failed to submit task {task_id}: {e}") from e
 
-    def poll_tasks(self, status: str = 'open', limit: int = 10) -> List[Dict[str, Any]]:
+    def poll_tasks(self, status: str = 'open', limit: int = 10, include_stale: bool = False) -> List[Dict[str, Any]]:
         """Poll tasks from queue with specific status.
 
         Args:
             status: Filter by task status (default: 'open')
             limit: Maximum tasks to return
+            include_stale: Include stale tasks (default: False, filters them out)
 
         Returns:
-            List of task dictionaries
+            List of task dictionaries with Phase 1 fields
         """
         try:
             # Get task IDs from queue (LRANGE for peeking without removal)
@@ -169,14 +170,26 @@ class RedisAdapter:
                 status_key = f"{self.STATUS_PREFIX}{task_id}"
                 task_data = self.client.hgetall(status_key)
 
-                if task_data and task_data.get('status') == status:
-                    tasks.append({
-                        'id': task_data['id'],
-                        'priority': int(task_data['priority']),
-                        'description': task_data['description'],
-                        'metadata': json.loads(task_data['metadata']),
-                        'status': task_data['status']
-                    })
+                if not task_data or task_data.get('status') != status:
+                    continue
+
+                # Phase 2: Filter out stale tasks unless explicitly requested
+                is_stale = task_data.get('is_stale', 'false') == 'true'
+                if is_stale and not include_stale:
+                    continue
+
+                tasks.append({
+                    'id': task_data['id'],
+                    'priority': int(task_data['priority']),
+                    'description': task_data.get('description', ''),
+                    'metadata': json.loads(task_data['metadata']),
+                    'status': task_data['status'],
+                    # Phase 1 fields
+                    'parent_priority_id': task_data.get('parent_priority_id', ''),
+                    'parent_context_hash': task_data.get('parent_context_hash', ''),
+                    'is_stale': is_stale,
+                    'spawned_by': task_data.get('spawned_by', 'user')
+                })
 
             return tasks
         except redis.RedisError as e:
@@ -322,11 +335,17 @@ class RedisAdapter:
             if not self.client.exists(priority_key):
                 return False
 
+            # Phase 2: Check if context changed (triggers staleness)
+            old_priority_data = self.client.hgetall(priority_key)
+            old_context_hash = old_priority_data.get('context_hash')
+            context_changed = old_context_hash and old_context_hash != priority.context_hash
+
             # Update priority (context_hash will be recomputed)
             self.client.hset(priority_key, mapping=priority.to_dict())
 
-            # TODO Phase 2: Mark children stale when context changes
-            # For now, just update the priority
+            # Phase 2: Mark children stale when context changes
+            if context_changed:
+                self.mark_children_stale(priority.id)
 
             return True
         except redis.RedisError as e:
@@ -382,3 +401,41 @@ class RedisAdapter:
             return list(self.client.smembers(children_key))
         except redis.RedisError as e:
             raise ValueError(f"Failed to get children for priority {priority_id}: {e}") from e
+
+    def mark_children_stale(self, priority_id: str) -> int:
+        """Mark all child tasks as stale when parent priority context changes.
+
+        Phase 2: Staleness detection on context change.
+
+        Args:
+            priority_id: Priority ID whose children should be marked stale
+
+        Returns:
+            Number of tasks marked stale
+        """
+        try:
+            # Get all child task IDs
+            children_key = f"{self.PRIORITY_CHILDREN_PREFIX}{priority_id}"
+            child_task_ids = self.client.smembers(children_key)
+
+            marked_count = 0
+            for task_id in child_task_ids:
+                status_key = f"{self.STATUS_PREFIX}{task_id}"
+
+                # Check if task exists and is not already completed/failed
+                task_data = self.client.hgetall(status_key)
+                if not task_data:
+                    continue
+
+                current_status = task_data.get('status', '')
+                if current_status in ['completed', 'failed', 'stale']:
+                    continue  # Don't mark completed/failed/already-stale tasks
+
+                # Mark as stale
+                self.client.hset(status_key, 'is_stale', 'true')
+                self.client.hset(status_key, 'status', 'stale')
+                marked_count += 1
+
+            return marked_count
+        except redis.RedisError as e:
+            raise ValueError(f"Failed to mark children stale for priority {priority_id}: {e}") from e
