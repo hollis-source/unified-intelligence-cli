@@ -288,7 +288,7 @@ def main():
 
         # Start metrics dashboard if configured
         dashboard = None
-        monitoring_config = pw_config.get('monitoring', {})
+        monitoring_config = config.get('monitoring', {})
         if monitoring_config:
             dashboard_config = {
                 'port': monitoring_config.get('dashboard_port', 8080),

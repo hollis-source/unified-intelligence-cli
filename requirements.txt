@@ -10,4 +10,5 @@ rich>=10.0.0  # Rich terminal output formatting
 pytest>=7.0.0  # Testing framework for integration tests
 redis>=5.0.0  # Redis client for PriorityWorker atomic locking
 PyYAML>=6.0.0  # YAML configuration parsing
-GitPython>=3.1.0  # Git operations for branch managementpsutil>=5.9.0  # Process monitoring for metrics dashboard
+GitPython>=3.1.0  # Git operations for branch management
+psutil>=5.9.0  # Process monitoring for metrics dashboard
