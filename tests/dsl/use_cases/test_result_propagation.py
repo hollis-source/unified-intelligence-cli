@@ -164,6 +164,11 @@ class TestResultPropagation:
         assert test_tasks == {"test_ui", "test_api"}
 
         # Test tasks should receive build results as input
+        # Product morphism f × g unpacks tuple input (a, b) to f(a) and g(b)
+        # So test_ui receives build_ui result, test_api receives build_api result (not tuples)
         for log in self.executor.execution_log[2:]:
             assert log["input"] is not None
-            assert isinstance(log["input"], tuple)
+            # Each test task receives its corresponding build result (a dict)
+            assert isinstance(log["input"], dict)
+            assert "output" in log["input"]
+            assert log["input"]["output"].startswith("result_of_build")
