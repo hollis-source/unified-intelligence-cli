@@ -22,8 +22,13 @@ import signal
 import time
 import yaml
 import argparse
+import sys
 from typing import Protocol, List, Dict, Any
 from pathlib import Path
+
+# Add src to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from src.priority_queue.adapters.metrics_dashboard import MetricsDashboard
 
 
 # Protocols for Dependency Injection (DIP: depend on abstractions)
@@ -281,13 +286,44 @@ def main():
 
         logger.info("PriorityWorker initialized successfully.")
 
-        # Run the orchestrator
-        if args.loop:
-            logger.info("Starting PriorityWorker in continuous loop mode...")
-            asyncio.run(worker.run())
-        else:
-            logger.info("Running PriorityWorker single cycle...")
-            asyncio.run(worker.run_once())
+        # Start metrics dashboard if configured
+        dashboard = None
+        monitoring_config = pw_config.get('monitoring', {})
+        if monitoring_config:
+            dashboard_config = {
+                'port': monitoring_config.get('dashboard_port', 8080),
+                'host': '0.0.0.0',  # Bind to all interfaces for Docker
+                'metrics_dir': 'data/metrics',
+                'pid_file': '/tmp/priority_worker_docker.pid'
+            }
+            dashboard = MetricsDashboard(dashboard_config)
+            logger.info(f"Starting metrics dashboard on port {dashboard_config['port']}...")
+
+        # Run the orchestrator with dashboard
+        async def run_with_dashboard():
+            """Run worker and dashboard concurrently."""
+            tasks = []
+
+            # Start dashboard
+            if dashboard:
+                await dashboard.start()
+                logger.info("Metrics dashboard started.")
+
+            # Run worker
+            try:
+                if args.loop:
+                    logger.info("Starting PriorityWorker in continuous loop mode...")
+                    await worker.run()
+                else:
+                    logger.info("Running PriorityWorker single cycle...")
+                    await worker.run_once()
+            finally:
+                # Stop dashboard on shutdown
+                if dashboard:
+                    await dashboard.stop()
+                    logger.info("Metrics dashboard stopped.")
+
+        asyncio.run(run_with_dashboard())
 
     except FileNotFoundError as e:
         logger.error(f"Configuration error: {e}")
