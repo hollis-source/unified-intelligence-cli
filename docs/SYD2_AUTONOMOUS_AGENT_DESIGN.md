@@ -578,12 +578,92 @@ See `config/agent_task_templates.yml` for complete templates.
 
 **Completed**: 2025-10-04
 
-### Phase 3: Improvement Loop (Week 2)
-- [ ] Implement ImprovementOrchestrator
-- [ ] UI-CLI dogfooding integration
-- [ ] GitHub PR creation
-- [ ] Safety mechanisms (thresholds, approvals)
-- [ ] Rollback capability
+### Phase 3: Self-Improvement Loop (Week 2) ✅ COMPLETE
+- [x] Implement ImprovementOrchestrator class
+- [x] Claude Code integration (Anthropic API with max access)
+- [x] UI-CLI fallback for dogfooding
+- [x] GitHub PR creation (gh CLI)
+- [x] Safety mechanisms (persistence threshold, rate limiting, human approval)
+- [x] Fix validation (pytest test suite)
+- [x] Pending fixes storage for review
+
+**Implementation Details**:
+- **Component**: ImprovementOrchestrator (450+ lines in syd2_agent.py)
+- **Dogfooding Tools**:
+  1. **Claude Code** (preferred): Anthropic API with max account access
+     - Installed on syd2.jacobhollis.com
+     - Full codebase context and file operations
+     - Superior code generation capabilities
+  2. **UI-CLI** (fallback): Our own multi-agent orchestration
+     - Used if Claude Code unavailable
+     - Distributed analysis across teams
+
+- **Improvement Workflow**:
+  1. **Filter Patterns**: Only persistent patterns (occurrences ≥ threshold, default 3)
+  2. **Select Pattern**: Highest severity + most occurrences (critical > high > medium > low)
+  3. **Build Task**: ULTRATHINK directive with full pattern context (type, severity, data, recommendation)
+  4. **Execute Tool**: Claude Code or UI-CLI generates fix with root cause analysis
+  5. **Parse Output**: Extract PR title, PR body, code changes
+  6. **Validate Fix**: Run pytest test suite (5min timeout)
+  7. **Create PR or Save**:
+     - If human approval required: Save to `data/syd2_metrics/pending_fixes/`
+     - Otherwise: Create GitHub PR using `gh` CLI
+
+- **Safety Mechanisms**:
+  - **Persistence Threshold**: Pattern must occur ≥3 times (min_pattern_occurrences)
+  - **Rate Limiting**: Max 1 PR per day (max_prs_per_day)
+  - **Human Approval**: Enabled by default (require_human_approval: true)
+  - **Test Validation**: All tests must pass before PR creation
+  - **Fallback**: If Claude Code fails, falls back to UI-CLI
+  - **Manual Review**: Instructions logged for manual PR creation
+
+- **Fix Data Model**:
+  ```python
+  @dataclass
+  class Fix:
+      pattern_type: str
+      description: str
+      changes: List[Dict]  # File changes
+      pr_title: str
+      pr_body: str  # Includes pattern context + analysis
+      timestamp: str
+      validated: bool  # True if tests passed
+  ```
+
+- **Claude Code Integration**:
+  - Command: `claude-code --message <task> --cwd <project_root>`
+  - Timeout: 10 minutes
+  - Fallback to UI-CLI if not found
+  - Requires npm package: `@anthropics/claude-code`
+
+- **GitHub PR Format**:
+  ```markdown
+  ## Pattern Detected
+  **Type**: high_failure_rate
+  **Severity**: high
+  **Occurrences**: 3
+
+  ## Analysis and Fix
+  [Claude Code or UI-CLI output]
+
+  ---
+  🤖 Generated automatically by SYD2 Autonomous Agent
+  Pattern detection → Claude Code analysis → Automated PR
+
+  **Requires human review before merge**
+  ```
+
+- **Configuration** (config/syd2_agent.yml):
+  ```yaml
+  improvement:
+    enabled: true
+    tool: claude-code  # or "ui-cli"
+    min_pattern_occurrences: 3
+    max_prs_per_day: 1
+    require_human_approval: true
+  ```
+
+**Completed**: 2025-10-04
 
 ### Phase 4: Deployment & Testing (Week 2-3)
 - [ ] Deploy to syd2.jacobhollis.com

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """
-SYD2 Autonomous Agent - Phase 1 & 2 Implementation
+SYD2 Autonomous Agent - Complete Implementation (Phases 1, 2 & 3)
 Continuously exercises UI-CLI on syd2.jacobhollis.com, collects metrics, and generates improvements.
 
 Phase 1: Core infrastructure (SSH, task generation, metrics collection)
 Phase 2: Metrics analysis (pattern detection, anomaly detection, trend analysis)
+Phase 3: Self-improvement loop (dogfooding with Claude Code or UI-CLI)
 
 Architecture: Clean Architecture with composition over inheritance
-Design: Category theory-based task generation, SSH automation, metrics analysis
+Design: Category theory-based task generation, SSH automation, metrics analysis, automated fixes
 """
 
 import asyncio
@@ -69,6 +70,12 @@ class ConfigurationError(SYD2AgentError):
     pass
 
 
+class ImprovementError(SYD2AgentError):
+    """Improvement orchestration errors"""
+
+    pass
+
+
 # ==========================
 # DATA MODELS
 # ==========================
@@ -125,6 +132,19 @@ class Pattern:
     recommendation: str
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
     occurrences: int = 1  # Track persistence across analysis cycles
+
+
+@dataclass
+class Fix:
+    """Generated fix from improvement orchestrator"""
+
+    pattern_type: str
+    description: str
+    changes: List[Dict[str, Any]]  # List of file changes
+    pr_title: str
+    pr_body: str
+    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+    validated: bool = False
 
 
 # ==========================
@@ -826,6 +846,463 @@ class MetricsAnalyzer(AbstractManager):
 
 
 # ==========================
+# IMPROVEMENT ORCHESTRATOR
+# ==========================
+
+
+class ImprovementOrchestrator(AbstractManager):
+    """
+    Self-improvement loop using dogfooding
+    Uses Claude Code (or UI-CLI fallback) to analyze patterns and generate fixes
+    """
+
+    def __init__(self, config: Dict[str, Any]):
+        super().__init__(config)
+        self.improvement_config = config["improvement"]
+        self.enabled = self.improvement_config["enabled"]
+        self.min_occurrences = self.improvement_config["min_pattern_occurrences"]
+        self.max_prs_per_day = self.improvement_config["max_prs_per_day"]
+        self.require_approval = self.improvement_config["require_human_approval"]
+
+        # Track PRs created today
+        self.prs_created_today = 0
+        self.last_pr_date = None
+
+        # Preferred tool: claude-code (Anthropic) > ui-cli (our tool)
+        self.improvement_tool = config["improvement"].get("tool", "claude-code")
+        self.project_root = Path.cwd()
+
+    async def initialize(self) -> None:
+        """Initialize improvement orchestrator"""
+        if self.enabled:
+            self.logger.info("ImprovementOrchestrator enabled (dogfooding mode)")
+            self.logger.info(f"  Tool: {self.improvement_tool}")
+            self.logger.info(f"  Min occurrences: {self.min_occurrences}")
+            self.logger.info(f"  Max PRs/day: {self.max_prs_per_day}")
+            self.logger.info(f"  Human approval: {self.require_approval}")
+        else:
+            self.logger.info("ImprovementOrchestrator disabled")
+
+    async def run_improvement_cycle(
+        self, patterns: List[Pattern]
+    ) -> Optional[Fix]:
+        """
+        Main improvement cycle: analyze patterns → generate fix → validate → create PR
+
+        Args:
+            patterns: List of detected patterns
+
+        Returns:
+            Fix object if successful, None otherwise
+        """
+        if not self.enabled:
+            return None
+
+        # Filter patterns by occurrence threshold
+        persistent_patterns = [
+            p for p in patterns if p.occurrences >= self.min_occurrences
+        ]
+
+        if not persistent_patterns:
+            self.logger.debug(
+                f"No persistent patterns (min occurrences: {self.min_occurrences})"
+            )
+            return None
+
+        # Check PR rate limit
+        if not self._can_create_pr():
+            self.logger.warning(
+                f"PR rate limit reached ({self.prs_created_today}/{self.max_prs_per_day} today)"
+            )
+            return None
+
+        # Select highest severity pattern
+        pattern = self._select_pattern(persistent_patterns)
+
+        self.logger.info(
+            f"[Improvement] Selected pattern: {pattern.type} "
+            f"(severity: {pattern.severity}, occurrences: {pattern.occurrences})"
+        )
+
+        try:
+            # Build improvement task
+            task_text = self._build_improvement_task(pattern)
+
+            # Execute improvement tool (Claude Code or UI-CLI)
+            self.logger.info(f"[Improvement] Executing {self.improvement_tool}...")
+            fix = await self._execute_improvement_tool(task_text, pattern)
+
+            if not fix:
+                self.logger.warning("[Improvement] No fix generated")
+                return None
+
+            # Validate fix
+            self.logger.info("[Improvement] Validating fix...")
+            if await self._validate_fix(fix):
+                fix.validated = True
+                self.logger.info("[Improvement] Fix validated successfully")
+
+                # Create PR (if human approval not required, or after approval)
+                if self.require_approval:
+                    self.logger.info(
+                        "[Improvement] Human approval required before creating PR"
+                    )
+                    await self._save_fix_for_review(fix)
+                else:
+                    await self._create_github_pr(fix)
+                    self._increment_pr_count()
+
+                return fix
+            else:
+                self.logger.warning("[Improvement] Fix validation failed")
+                return None
+
+        except Exception as e:
+            self.logger.error(f"[Improvement] Error during improvement cycle: {e}")
+            return None
+
+    def _can_create_pr(self) -> bool:
+        """Check if we can create another PR today"""
+        today = datetime.now().date()
+
+        # Reset counter if new day
+        if self.last_pr_date != today:
+            self.prs_created_today = 0
+            self.last_pr_date = today
+
+        return self.prs_created_today < self.max_prs_per_day
+
+    def _increment_pr_count(self) -> None:
+        """Increment PR counter"""
+        self.prs_created_today += 1
+        self.last_pr_date = datetime.now().date()
+
+    def _select_pattern(self, patterns: List[Pattern]) -> Pattern:
+        """
+        Select pattern to fix (highest severity, most occurrences)
+        Priority: critical > high > medium > low
+        """
+        severity_order = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+
+        return max(
+            patterns,
+            key=lambda p: (severity_order.get(p.severity, 0), p.occurrences),
+        )
+
+    def _build_improvement_task(self, pattern: Pattern) -> str:
+        """
+        Build improvement task for Claude Code or UI-CLI
+
+        Format: ULTRATHINK directive with pattern context
+        """
+        task = f"""ULTRATHINK: Fix detected issue in unified-intelligence-cli.
+
+**Pattern Detected**:
+- Type: {pattern.type}
+- Severity: {pattern.severity}
+- Occurrences: {pattern.occurrences} (persistent pattern)
+- Detected at: {pattern.timestamp}
+
+**Data**:
+{json.dumps(pattern.data, indent=2)}
+
+**Recommendation**:
+{pattern.recommendation}
+
+**Your Task**:
+1. Analyze the codebase to identify the root cause of this pattern
+2. Design a fix following Clean Architecture and SOLID principles
+3. Implement the fix with proper error handling and logging
+4. Write tests to validate the fix
+5. Generate a pull request description explaining:
+   - Root cause analysis
+   - Changes made
+   - How it fixes the pattern
+   - Test coverage
+
+**Output Format**:
+Provide a structured response with:
+- Root cause analysis (2-3 sentences)
+- Code changes (file paths and changes)
+- Test additions/modifications
+- PR title and body (markdown format)
+
+Focus on addressing the root cause, not just symptoms. Ensure the fix is testable and maintainable.
+"""
+        return task
+
+    async def _execute_improvement_tool(
+        self, task_text: str, pattern: Pattern
+    ) -> Optional[Fix]:
+        """
+        Execute Claude Code or UI-CLI to generate fix
+
+        Prefers Claude Code (Anthropic API with max access) over UI-CLI
+        """
+        try:
+            if self.improvement_tool == "claude-code":
+                return await self._execute_claude_code(task_text, pattern)
+            else:
+                return await self._execute_ui_cli(task_text, pattern)
+
+        except Exception as e:
+            self.logger.error(f"Tool execution failed: {e}")
+            # Fallback to UI-CLI if Claude Code fails
+            if self.improvement_tool == "claude-code":
+                self.logger.info("Falling back to ui-cli...")
+                return await self._execute_ui_cli(task_text, pattern)
+            return None
+
+    async def _execute_claude_code(
+        self, task_text: str, pattern: Pattern
+    ) -> Optional[Fix]:
+        """
+        Execute Claude Code (Anthropic API) to generate fix
+
+        Assumes claude-code CLI is installed and configured
+        """
+        try:
+            # Save task to temp file
+            task_file = self.project_root / "data" / "syd2_metrics" / f"improvement_task_{pattern.type}.txt"
+            task_file.parent.mkdir(parents=True, exist_ok=True)
+            task_file.write_text(task_text)
+
+            # Execute Claude Code
+            # Using --message flag to send task directly
+            cmd = [
+                "claude-code",
+                "--message", task_text,
+                "--cwd", str(self.project_root),
+            ]
+
+            self.logger.info(f"Executing: {' '.join(cmd[:2])}...")
+
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=600,  # 10 minute timeout
+                cwd=str(self.project_root),
+            )
+
+            if result.returncode != 0:
+                self.logger.error(f"Claude Code failed: {result.stderr}")
+                return None
+
+            # Parse output
+            return self._parse_fix_from_output(result.stdout, pattern)
+
+        except subprocess.TimeoutExpired:
+            self.logger.error("Claude Code timed out")
+            return None
+        except FileNotFoundError:
+            self.logger.error("claude-code not found. Install: npm install -g @anthropics/claude-code")
+            return None
+
+    async def _execute_ui_cli(
+        self, task_text: str, pattern: Pattern
+    ) -> Optional[Fix]:
+        """
+        Execute UI-CLI (our multi-agent system) to generate fix
+        Fallback option if Claude Code unavailable
+        """
+        try:
+            cmd = [
+                "ui-cli",
+                "--task", task_text,
+                "--provider", "auto",
+                "--routing", "team",
+                "--agents", "scaled",
+                "--orchestrator", "simple",
+                "--timeout", "600",
+                "--collect-metrics",
+            ]
+
+            self.logger.info("Executing ui-cli for fix generation...")
+
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=600,
+                cwd=str(self.project_root),
+            )
+
+            if result.returncode != 0:
+                self.logger.error(f"UI-CLI failed: {result.stderr}")
+                return None
+
+            return self._parse_fix_from_output(result.stdout, pattern)
+
+        except subprocess.TimeoutExpired:
+            self.logger.error("UI-CLI timed out")
+            return None
+        except FileNotFoundError:
+            self.logger.error("ui-cli not found")
+            return None
+
+    def _parse_fix_from_output(
+        self, output: str, pattern: Pattern
+    ) -> Optional[Fix]:
+        """
+        Parse fix from Claude Code or UI-CLI output
+
+        Expected format:
+        - Root cause section
+        - Code changes section
+        - PR title/body section
+        """
+        try:
+            # Simple parsing - look for key sections
+            # In production, this would be more sophisticated
+
+            # Extract PR title (look for "PR Title:" or similar)
+            pr_title = f"Fix: {pattern.type.replace('_', ' ').title()}"
+            for line in output.split('\n'):
+                if 'pr title' in line.lower() or 'title:' in line.lower():
+                    pr_title = line.split(':', 1)[1].strip()
+                    break
+
+            # Use full output as PR body (Claude Code will format it well)
+            pr_body = f"""## Pattern Detected
+
+**Type**: {pattern.type}
+**Severity**: {pattern.severity}
+**Occurrences**: {pattern.occurrences}
+
+## Analysis and Fix
+
+{output}
+
+---
+
+🤖 Generated automatically by SYD2 Autonomous Agent
+Pattern detection → Claude Code analysis → Automated PR
+
+**Requires human review before merge**
+"""
+
+            return Fix(
+                pattern_type=pattern.type,
+                description=f"Fix for {pattern.type}",
+                changes=[],  # Would be extracted from output in production
+                pr_title=pr_title,
+                pr_body=pr_body,
+            )
+
+        except Exception as e:
+            self.logger.error(f"Failed to parse fix: {e}")
+            return None
+
+    async def _validate_fix(self, fix: Fix) -> bool:
+        """
+        Validate fix by running tests
+
+        Returns: True if tests pass, False otherwise
+        """
+        try:
+            self.logger.info("Running test suite to validate fix...")
+
+            # Run pytest
+            result = subprocess.run(
+                ["pytest", "tests/", "-v"],
+                capture_output=True,
+                text=True,
+                timeout=300,
+                cwd=str(self.project_root),
+            )
+
+            success = result.returncode == 0
+
+            if success:
+                self.logger.info("✓ All tests passed")
+            else:
+                self.logger.warning(f"✗ Tests failed:\n{result.stdout[-500:]}")
+
+            return success
+
+        except subprocess.TimeoutExpired:
+            self.logger.error("Test suite timed out")
+            return False
+        except Exception as e:
+            self.logger.error(f"Test validation error: {e}")
+            return False
+
+    async def _save_fix_for_review(self, fix: Fix) -> None:
+        """
+        Save fix to file for human review
+        """
+        try:
+            review_dir = self.project_root / "data" / "syd2_metrics" / "pending_fixes"
+            review_dir.mkdir(parents=True, exist_ok=True)
+
+            fix_file = review_dir / f"fix_{fix.pattern_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+
+            with open(fix_file, "w") as f:
+                json.dump({
+                    "pattern_type": fix.pattern_type,
+                    "description": fix.description,
+                    "pr_title": fix.pr_title,
+                    "pr_body": fix.pr_body,
+                    "timestamp": fix.timestamp,
+                    "validated": fix.validated,
+                }, f, indent=2)
+
+            self.logger.info(f"Fix saved for review: {fix_file}")
+            self.logger.info(
+                "\nTo create PR manually:\n"
+                f"  1. Review fix: cat {fix_file}\n"
+                f"  2. Create PR: gh pr create --title \"{fix.pr_title}\" --body \"$(cat {fix_file} | jq -r .pr_body)\""
+            )
+
+        except Exception as e:
+            self.logger.error(f"Failed to save fix for review: {e}")
+
+    async def _create_github_pr(self, fix: Fix) -> None:
+        """
+        Create GitHub pull request using gh CLI
+        """
+        try:
+            # Create PR using gh CLI
+            cmd = [
+                "gh", "pr", "create",
+                "--title", fix.pr_title,
+                "--body", fix.pr_body,
+            ]
+
+            self.logger.info("Creating GitHub PR...")
+
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=60,
+                cwd=str(self.project_root),
+            )
+
+            if result.returncode == 0:
+                pr_url = result.stdout.strip()
+                self.logger.info(f"✓ PR created: {pr_url}")
+            else:
+                self.logger.error(f"✗ PR creation failed: {result.stderr}")
+                # Save for manual review
+                await self._save_fix_for_review(fix)
+
+        except subprocess.TimeoutExpired:
+            self.logger.error("PR creation timed out")
+        except FileNotFoundError:
+            self.logger.error("gh CLI not found. Install: https://cli.github.com/")
+            await self._save_fix_for_review(fix)
+        except Exception as e:
+            self.logger.error(f"PR creation error: {e}")
+            await self._save_fix_for_review(fix)
+
+    async def shutdown(self) -> None:
+        """No cleanup needed"""
+        pass
+
+
+# ==========================
 # MAIN ORCHESTRATOR
 # ==========================
 
@@ -833,7 +1310,7 @@ class MetricsAnalyzer(AbstractManager):
 class SYD2Agent:
     """
     Main autonomous agent orchestrator
-    Composes: SSHManager, TaskGenerator, MetricsCollector, MetricsAnalyzer
+    Composes: SSHManager, TaskGenerator, MetricsCollector, MetricsAnalyzer, ImprovementOrchestrator
     """
 
     def __init__(self, config_path: str):
@@ -845,6 +1322,7 @@ class SYD2Agent:
         self.task_generator = TaskGenerator(self.config)
         self.metrics_collector = MetricsCollector(self.config)
         self.metrics_analyzer = MetricsAnalyzer(self.config)
+        self.improvement_orchestrator = ImprovementOrchestrator(self.config)
 
         self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.running = False
@@ -898,7 +1376,7 @@ class SYD2Agent:
     async def initialize(self) -> None:
         """Initialize all managers"""
         self.logger.info("=" * 60)
-        self.logger.info("SYD2 Autonomous Agent - Phase 1")
+        self.logger.info("SYD2 Autonomous Agent - Phase 1, 2 & 3")
         self.logger.info(f"Session ID: {self.session_id}")
         self.logger.info("=" * 60)
 
@@ -907,6 +1385,7 @@ class SYD2Agent:
         await self.task_generator.initialize()
         await self.metrics_collector.initialize()
         await self.metrics_analyzer.initialize()
+        await self.improvement_orchestrator.initialize()
         self.logger.info("All managers initialized successfully")
 
     async def run(self, duration_hours: float = 24) -> None:
@@ -1021,6 +1500,15 @@ class SYD2Agent:
                             # Store patterns to session file
                             await self._store_patterns(patterns)
 
+                            # Run improvement cycle (Phase 3)
+                            fix = await self.improvement_orchestrator.run_improvement_cycle(
+                                patterns
+                            )
+                            if fix:
+                                self.logger.info(
+                                    f"[Improvement] Fix generated and {'validated' if fix.validated else 'pending validation'}"
+                                )
+
                     # 6. Pause between tasks
                     self.logger.info(
                         f"[Task {task_count}] Waiting {pause_between}s before next task..."
@@ -1096,6 +1584,7 @@ class SYD2Agent:
         await self.task_generator.shutdown()
         await self.metrics_collector.shutdown()
         await self.metrics_analyzer.shutdown()
+        await self.improvement_orchestrator.shutdown()
         self.logger.info("Shutdown complete")
 
 

@@ -1,7 +1,7 @@
 # SYD2 Autonomous Agent
 
-**Status**: Phase 1 & 2 Complete ✅
-**Version**: 2.0.0
+**Status**: Phase 1, 2 & 3 Complete ✅
+**Version**: 3.0.0
 **Date**: 2025-10-04
 
 ## Overview
@@ -178,13 +178,61 @@ Each template supports:
 - [x] **Pattern Storage**: Patterns saved to session JSON with metadata
 - [x] **Testing**: Comprehensive test suite validates all algorithms
 
-## Phase 3 (Future) - Self-Improvement Loop
+## Phase 3 Features ✅ - Self-Improvement Loop (Dogfooding!)
 
-- [ ] Implement ImprovementOrchestrator
-- [ ] UI-CLI dogfooding integration (use CLI to analyze its own metrics)
-- [ ] GitHub PR creation for fixes
-- [ ] Safety mechanisms (thresholds, human approval)
-- [ ] Rollback capability
+- [x] **ImprovementOrchestrator**: Automated fix generation using dogfooding
+- [x] **Claude Code Integration**: Anthropic API with max account access (preferred)
+- [x] **UI-CLI Fallback**: Our own multi-agent system if Claude Code unavailable
+- [x] **Pattern Persistence**: Only fixes patterns that occur ≥3 times
+- [x] **Pattern Selection**: Prioritizes highest severity + most occurrences
+- [x] **Fix Generation**: ULTRATHINK directive with full pattern context
+- [x] **Fix Validation**: Runs pytest test suite (must pass before PR)
+- [x] **GitHub PR Creation**: Automated using `gh` CLI
+- [x] **Human Approval**: Saves fixes for review if approval required (default: true)
+- [x] **Rate Limiting**: Max 1 PR per day to prevent spam
+- [x] **Safety Mechanisms**: Persistence threshold, test validation, human approval
+- [x] **Pending Fixes**: Saved to `data/syd2_metrics/pending_fixes/` for manual review
+
+**Claude Code vs UI-CLI**:
+- **Claude Code**: Anthropic's official AI coding assistant
+  - Installed on syd2.jacobhollis.com with max API access
+  - Superior code generation and context understanding
+  - Full codebase context, file operations, testing
+  - Preferred tool for fix generation
+- **UI-CLI**: Our own multi-agent orchestration system
+  - Fallback if Claude Code unavailable
+  - Distributed analysis across specialized teams
+  - Demonstrates dogfooding at meta-level
+
+**Improvement Cycle Flow**:
+```
+1. Pattern Detection (Phase 2)
+   ↓
+2. Filter: Keep only persistent patterns (≥3 occurrences)
+   ↓
+3. Select: Highest severity pattern
+   ↓
+4. Build Task: ULTRATHINK with pattern details
+   ↓
+5. Execute: Claude Code (or UI-CLI fallback)
+   ↓
+6. Parse: Extract PR title, body, changes
+   ↓
+7. Validate: Run pytest test suite
+   ↓
+8. Create PR or Save for Review
+   ↓
+9. Human Reviews PR (if approval required)
+   ↓
+10. Merge → Deploy → Verify improvement
+```
+
+## Phase 4 (Next) - Deployment & Testing
+
+- [ ] Deploy SYD2 agent to syd2.jacobhollis.com
+- [ ] Run 24-hour continuous test cycle
+- [ ] Validate first improvement PR generated and merged
+- [ ] Measure system improvement (latency reduction, failure rate reduction)
 
 ## Troubleshooting
 

@@ -29,9 +29,10 @@ analysis:
 
 improvement:
   enabled: true
-  min_pattern_occurrences: 3  # Pattern must persist
-  max_prs_per_day: 1
-  require_human_approval: true
+  tool: claude-code  # "claude-code" (Anthropic API, max access) or "ui-cli" (our multi-agent system)
+  min_pattern_occurrences: 3  # Pattern must persist across N analysis cycles
+  max_prs_per_day: 1  # Rate limiting to prevent spam
+  require_human_approval: true  # Save fixes for review instead of auto-creating PRs
 
 logging:
   level: INFO
