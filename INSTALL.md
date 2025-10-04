@@ -2,17 +2,47 @@
 
 ## Requirements
 - Python 3.10 or higher
-- pip (Python package installer)
 - Git
 - xAI API key for Grok (get from https://x.ai)
 
 ## Installation Steps
 
-### 1. Install the CLI
+### Method 1: pipx (Recommended - Automatic Isolated Environment)
+
+**Install pipx first (if not already installed):**
+```bash
+# On Debian/Ubuntu
+sudo apt update && sudo apt install -y pipx
+pipx ensurepath
+
+# On other systems
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+```
+
+**Then install unified-intelligence-cli:**
+```bash
+pipx install git+https://github.com/hollis-source/unified-intelligence-cli.git
+```
+
+That's it! pipx automatically creates an isolated environment and adds `ui-cli` to your PATH.
+
+### Method 2: Virtual Environment (Alternative)
+
+If you prefer manual control:
 
 ```bash
+# Create virtual environment
+python3 -m venv ~/ui-cli-env
+
+# Activate it
+source ~/ui-cli-env/bin/activate
+
+# Install
 pip install git+https://github.com/hollis-source/unified-intelligence-cli.git
 ```
+
+**Note**: You'll need to activate the venv (`source ~/ui-cli-env/bin/activate`) each time before using `ui-cli`.
 
 ### 2. Set Up API Key
 
@@ -73,27 +103,56 @@ ui-cli --task "Task 1 description" \
 
 ## Troubleshooting
 
+### Externally Managed Environment Error
+If you see this error:
+```
+error: externally-managed-environment
+```
+
+**Solution**: Use pipx (Method 1 above) instead of pip. pipx automatically handles isolated environments.
+
 ### Missing API Key Error
 If you see "XAI_API_KEY not found", make sure you created the `.env` file with your API key.
 
-### Import Errors
-If you see "ModuleNotFoundError", reinstall:
+### Command Not Found After pipx Install
+If `ui-cli` command is not found after pipx install:
 ```bash
-pip uninstall unified-intelligence-cli
-pip install git+https://github.com/hollis-source/unified-intelligence-cli.git
+# Ensure pipx path is added
+pipx ensurepath
+# Then restart your terminal or run:
+source ~/.bashrc  # or source ~/.zshrc if using zsh
 ```
 
-### Permission Errors
-If you get permission errors, use:
+### Import Errors
+If you see "ModuleNotFoundError":
+
+**With pipx:**
 ```bash
-pip install --user git+https://github.com/hollis-source/unified-intelligence-cli.git
+pipx uninstall unified-intelligence-cli
+pipx install git+https://github.com/hollis-source/unified-intelligence-cli.git
+```
+
+**With venv:**
+```bash
+source ~/ui-cli-env/bin/activate
+pip uninstall unified-intelligence-cli
+pip install git+https://github.com/hollis-source/unified-intelligence-cli.git
 ```
 
 ## Updating
 
 To get the latest version:
 
+**With pipx:**
 ```bash
+pipx upgrade unified-intelligence-cli
+# or to force reinstall from GitHub:
+pipx install --force git+https://github.com/hollis-source/unified-intelligence-cli.git
+```
+
+**With venv:**
+```bash
+source ~/ui-cli-env/bin/activate
 pip install --upgrade git+https://github.com/hollis-source/unified-intelligence-cli.git
 ```
 
