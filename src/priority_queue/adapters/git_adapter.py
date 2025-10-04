@@ -42,12 +42,25 @@ class GitAdapter:
         except Exception as e:
             raise ValueError(f"Failed to initialize Git repo at '{repo_path}': {e}") from e
 
-    def create_branch(self, branch_name: str) -> None:
-        """Create a new branch from current HEAD."""
+    def _create_branch_sync(self, branch_name: str) -> None:
+        """Create a new branch from current HEAD, or checkout if it exists (idempotent)."""
         try:
+            # Try to create the branch
             self.repo.git.checkout('HEAD', b=branch_name)
         except GitCommandError as e:
-            raise ValueError(f"Failed to create branch '{branch_name}': {e}") from e
+            # If branch already exists, just checkout to it
+            if 'already exists' in str(e):
+                try:
+                    self.repo.git.checkout(branch_name)
+                except GitCommandError as checkout_err:
+                    raise ValueError(f"Failed to checkout existing branch '{branch_name}': {checkout_err}") from checkout_err
+            else:
+                raise ValueError(f"Failed to create branch '{branch_name}': {e}") from e
+
+    async def create_branch(self, name: str) -> bool:
+        """Async wrapper for create_branch, matching use case VCInterface."""
+        self._create_branch_sync(name)
+        return True
 
     def commit_changes(self, message: str, files: list[str]) -> None:
         """Add files and commit atomically."""

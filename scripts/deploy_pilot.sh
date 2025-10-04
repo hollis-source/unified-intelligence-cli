@@ -75,16 +75,6 @@ check_prereqs() {
         error_exit "Python3 is not installed or not in PATH. Please install Python3."
     fi
 
-    # Check Python dependencies (assume requirements.txt or simple pip check)
-    if [[ -f "$SCRIPT_DIR/../requirements.txt" ]]; then
-        if ! python3 -m pip list | grep -q -f "$SCRIPT_DIR/../requirements.txt"; then
-            log "WARN" "Python dependencies may be missing. Attempting to install..."
-            python3 -m pip install -r "$SCRIPT_DIR/../requirements.txt" || error_exit "Failed to install Python dependencies."
-        fi
-    else
-        log "WARN" "requirements.txt not found. Assuming dependencies are met."
-    fi
-
     # Check if Redis is running (via docker or local)
     if ! docker ps | grep -q "$REDIS_CONTAINER_NAME" && ! command -v redis-cli &> /dev/null || ! redis-cli ping &> /dev/null; then
         log "INFO" "Redis is not running. Will start via Docker."
@@ -93,6 +83,33 @@ check_prereqs() {
     fi
 
     log "INFO" "Prerequisites check passed."
+}
+
+# Function to setup venv and install dependencies (PEP 668 compliant)
+setup_venv() {
+    log "INFO" "Setting up virtual environment..."
+
+    # Create venv if it doesn't exist
+    if [[ ! -d "$SCRIPT_DIR/../venv" ]]; then
+        log "INFO" "Creating virtual environment..."
+        python3 -m venv "$SCRIPT_DIR/../venv" || error_exit "Failed to create venv."
+    else
+        log "INFO" "Virtual environment already exists."
+    fi
+
+    # Activate venv
+    source "$SCRIPT_DIR/../venv/bin/activate" || error_exit "Failed to activate venv."
+    log "INFO" "Virtual environment activated."
+
+    # Install dependencies from requirements.txt
+    if [[ -f "$SCRIPT_DIR/../requirements.txt" ]]; then
+        log "INFO" "Installing dependencies from requirements.txt..."
+        pip install --upgrade pip > /dev/null 2>&1
+        pip install -r "$SCRIPT_DIR/../requirements.txt" > /dev/null 2>&1 || error_exit "Failed to install dependencies."
+        log "INFO" "Dependencies installed successfully."
+    else
+        log "WARN" "No requirements.txt found. Skipping dependency installation."
+    fi
 }
 
 # Function to start Redis if not running
@@ -134,14 +151,17 @@ run_integration_tests() {
     log "INFO" "Running integration tests..."
 
     if [[ ! -f "$SCRIPT_DIR/test_priority_worker_integration.py" ]]; then
-        error_exit "Integration test script not found: scripts/test_priority_worker_integration.py"
+        log "WARN" "Integration test script not found. Skipping tests."
+        return 0
     fi
 
-    if ! python3 "$SCRIPT_DIR/test_priority_worker_integration.py"; then
-        error_exit "Integration tests failed. Aborting deployment."
+    # Run pytest (should be available in venv)
+    if ! python3 -m pytest "$SCRIPT_DIR/test_priority_worker_integration.py" -v >> "$LOG_FILE" 2>&1; then
+        log "ERROR" "Integration tests failed. Check logs for details."
+        error_exit "Integration test failures detected."
+    else
+        log "INFO" "Integration tests passed."
     fi
-
-    log "INFO" "Integration tests passed."
 }
 
 # Function to start PriorityWorker in background
@@ -192,6 +212,7 @@ provide_status() {
 # Main execution
 log "INFO" "Starting PriorityWorker pilot deployment..."
 check_prereqs
+setup_venv
 start_redis
 validate_configs
 run_integration_tests

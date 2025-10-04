@@ -55,3 +55,11 @@ class RedisAdapter:
             return bool(self.client.delete(key))
         except redis.RedisError as e:
             raise ValueError(f"Failed to release lock for key '{key}': {e}") from e
+
+    async def lock(self, resource: str) -> bool:
+        """Async wrapper for acquire_lock, matching use case LockInterface."""
+        return self.acquire_lock(resource, ttl_seconds=300)  # 5 minute TTL
+
+    async def unlock(self, resource: str) -> None:
+        """Async wrapper for release_lock, matching use case LockInterface."""
+        self.release_lock(resource)

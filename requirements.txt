@@ -7,3 +7,7 @@ tenacity>=8.0.0  # Retry logic for LLM providers
 gradio-client>=1.0.0  # Qwen3 ZeroGPU Hugging Face Spaces integration
 lark>=1.0.0  # DSL parser for .ct composition files
 rich>=10.0.0  # Rich terminal output formatting
+pytest>=7.0.0  # Testing framework for integration tests
+redis>=5.0.0  # Redis client for PriorityWorker atomic locking
+PyYAML>=6.0.0  # YAML configuration parsing
+GitPython>=3.1.0  # Git operations for branch management

@@ -146,11 +146,11 @@ class PriorityWorker:
                         logging.info("Shutdown signal received, skipping remaining tasks.")
                         break
 
-                    if self.task_claimer.claim_task(task):
+                    if await self.task_claimer.claim_task(task):
                         logging.info(f"Claimed task {task.get('id')}.")
                         self.status_updater.update_status(task, 'in_progress')
 
-                        branch = self.branch_manager.manage_branches(task)
+                        branch = await self.branch_manager.manage_branches(task)
                         logging.info(f"Managed branches for task {task.get('id')}: {branch}")
 
                         result = await self.workflow_executor.execute_workflow(task, branch)
@@ -177,7 +177,46 @@ class PriorityWorker:
                 pass  # Normal if interrupted by shutdown
 
         logging.info("Run loop exited, performing shutdown.")
-        self.shutdown_handler.shutdown()
+        await self.shutdown_handler.shutdown()
+
+    async def run_once(self):
+        """
+        Execute a single cycle of the orchestration algorithm.
+
+        Used for pilot mode and testing. Executes one iteration without
+        the infinite loop or shutdown handling.
+        """
+        start_time = time.perf_counter()
+        logging.info("Starting single task polling cycle.")
+
+        try:
+            open_tasks = self.task_poller.poll_tasks()
+            logging.info(f"Polled {len(open_tasks)} open tasks.")
+
+            for task in open_tasks:
+                if await self.task_claimer.claim_task(task):
+                    logging.info(f"Claimed task {task.get('id')}.")
+                    self.status_updater.update_status(task, 'in_progress')
+
+                    branch = await self.branch_manager.manage_branches(task)
+                    logging.info(f"Managed branches for task {task.get('id')}: {branch}")
+
+                    result = await self.workflow_executor.execute_workflow(task, branch)
+                    success = result.get('success', False)
+                    status = 'completed' if success else 'failed'
+                    self.status_updater.update_status(task, status)
+                    logging.info(f"Task {task.get('id')} {status}.")
+
+                    self.metrics_tracker.track_metrics(task)
+                    logging.info(f"Tracked metrics for task {task.get('id')}.")
+                else:
+                    logging.warning(f"Failed to claim task {task.get('id')}.")
+
+        except Exception as e:
+            logging.error(f"Error in run_once: {e}", exc_info=True)
+
+        elapsed = time.perf_counter() - start_time
+        logging.info(f"Single cycle completed in {elapsed:.2f}s.")
 
 
 def load_config(config_path: str) -> Dict[str, Any]:
@@ -230,20 +269,25 @@ def main():
         #
         # These will be wired via PriorityWorkerFactory (Task 5)
 
-        logger.warning("Dependency injection not yet implemented. "
-                      "Run Task 5 (integrate_components) to generate factory.")
-        logger.info("PriorityWorker orchestrator structure ready for integration.")
-
         # Set up signal handling
         signal.signal(signal.SIGTERM, signal_handler)
         signal.signal(signal.SIGINT, signal_handler)
         logger.info("Signal handlers registered (SIGTERM, SIGINT).")
 
-        # TODO: Uncomment when factory is available
-        # from src.priority_queue.factory import PriorityWorkerFactory
-        # factory = PriorityWorkerFactory()
-        # worker = factory.create_from_config(config)
-        # asyncio.run(worker.run())
+        # Wire dependencies via factory
+        from src.priority_queue.factory import PriorityWorkerFactory
+        factory = PriorityWorkerFactory()
+        worker = factory.create_from_config(args.config)
+
+        logger.info("PriorityWorker initialized successfully.")
+
+        # Run the orchestrator
+        if args.loop:
+            logger.info("Starting PriorityWorker in continuous loop mode...")
+            asyncio.run(worker.run())
+        else:
+            logger.info("Running PriorityWorker single cycle...")
+            asyncio.run(worker.run_once())
 
     except FileNotFoundError as e:
         logger.error(f"Configuration error: {e}")

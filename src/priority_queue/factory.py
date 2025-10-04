@@ -76,7 +76,7 @@ class PriorityWorkerFactory:
         def __init__(self, use_case):
             self.use_case = use_case
 
-        def claim_task(self, task_dict):
+        async def claim_task(self, task_dict):
             """Claim task by converting dict to Task entity."""
             task = Task(
                 id=task_dict['id'],
@@ -84,8 +84,7 @@ class PriorityWorkerFactory:
                 status=task_dict.get('status', 'open'),
                 metadata={k: v for k, v in task_dict.items() if k not in ['id', 'priority', 'status']}
             )
-            import asyncio
-            return asyncio.get_event_loop().run_until_complete(self.use_case.execute(task))
+            return await self.use_case.execute(task)
 
     class StatusUpdaterAdapter:
         """Adapts UpdateStatusUseCase to StatusUpdater protocol."""
@@ -109,13 +108,10 @@ class PriorityWorkerFactory:
         def __init__(self, use_case):
             self.use_case = use_case
 
-        def manage_branches(self, task_dict):
+        async def manage_branches(self, task_dict):
             """Create branch for task."""
             branch_name = f"priority/{task_dict['id']}"
-            import asyncio
-            asyncio.get_event_loop().run_until_complete(
-                self.use_case.execute("create", branch_name)
-            )
+            await self.use_case.execute("create", branch_name)
             return branch_name
 
     class WorkflowExecutorAdapter:
@@ -156,10 +152,9 @@ class PriorityWorkerFactory:
         def __init__(self, use_case):
             self.use_case = use_case
 
-        def shutdown(self):
+        async def shutdown(self):
             """Perform graceful shutdown."""
-            import asyncio
-            asyncio.get_event_loop().run_until_complete(self.use_case.execute())
+            await self.use_case.execute()
 
     def create_from_config(self, config_path: str):
         """
