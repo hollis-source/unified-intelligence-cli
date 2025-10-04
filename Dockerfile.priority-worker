@@ -1,19 +1,20 @@
 # Dockerfile for PriorityWorker Autonomous Daemon
-# Multi-stage build for production deployment
+# Multi-stage build for production deployment with optimizations
 # Generated from ULTRATHINK design on 2025-10-04
+# Optimized with: .dockerignore, multi-stage build, minimal layers
 
 # Stage 1: Builder - Install dependencies
 FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
-# Install build dependencies
+# Install build dependencies (combined RUN for layer optimization)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install (system-wide, not --user)
+# Copy requirements and install (--no-cache-dir reduces image size)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -33,11 +34,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
-# Copy application code
+# Copy application code (README.md excluded by .dockerignore as non-essential)
 COPY src/ ./src/
 COPY scripts/ ./scripts/
 COPY config/ ./config/
-COPY README.md LICENSE ./
+COPY workflows/ ./workflows/
 
 # Create directories for logs and data
 RUN mkdir -p /app/logs /app/data/metrics
