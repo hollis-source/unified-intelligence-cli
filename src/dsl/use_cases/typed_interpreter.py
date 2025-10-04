@@ -180,9 +180,13 @@ class TypedInterpreter(Interpreter):
 
     async def visit_product(self, node: Product) -> Any:
         """
-        Execute product with runtime type validation.
+        Execute product with runtime type validation and tuple input unpacking.
 
-        Both sides execute in parallel with the same input.
+        Category Theory semantics: Product morphism (f × g) :: (A × C) → (B × D)
+        - Input: tuple (a, c) where a :: A, c :: C
+        - Left function f receives a
+        - Right function g receives c
+        - Output: tuple (b, d) where b :: B, d :: D
 
         Args:
             node: Product node
@@ -190,10 +194,20 @@ class TypedInterpreter(Interpreter):
         Returns:
             Tuple of (left_result, right_result)
         """
-        # Execute both sides in parallel
+        # Product morphism requires tuple input (A × C)
+        # Unpack tuple to pass correct inputs to each function
+        if isinstance(self._current_input, tuple) and len(self._current_input) == 2:
+            # Proper product semantics: unpack tuple input
+            left_input, right_input = self._current_input
+        else:
+            # Fallback: broadcast same input to both (for backward compatibility)
+            left_input = self._current_input
+            right_input = self._current_input
+
+        # Execute both sides in parallel with their respective inputs
         left_result, right_result = await asyncio.gather(
-            self.execute(node.left, self._current_input),
-            self.execute(node.right, self._current_input)
+            self.execute(node.left, left_input),
+            self.execute(node.right, right_input)
         )
 
         # For product, we don't validate compatibility (categorical product)

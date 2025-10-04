@@ -1,0 +1,191 @@
+# Parallel Code Analysis Workflow
+# Demonstrates broadcast composition using the diagonal functor (duplicate)
+#
+# Category Theory Foundation:
+#   duplicate :: a -> (a × a)                    (Diagonal functor)
+#   (f × g) :: (A × C) -> (B × D)                (Product morphism)
+#   (f × g) ∘ duplicate :: A -> (B × D)          (Broadcast composition)
+#
+# Use Case: Analyze codebase with multiple independent checkers in parallel
+# Benefits: Reduced latency, better resource utilization, composable analysis
+
+# ============================================================================
+# Type Annotations
+# ============================================================================
+
+# Data acquisition
+get_python_files :: () -> FileList
+get_modified_files :: () -> FileList
+
+# Individual analyzers (independent, can run in parallel)
+check_style :: FileList -> StyleReport
+check_security :: FileList -> SecurityReport
+check_complexity :: FileList -> ComplexityReport
+check_types :: FileList -> TypeReport
+
+# Report aggregation
+merge_reports :: (StyleReport × SecurityReport) -> QualityReport
+save_report :: QualityReport -> ()
+display_report :: QualityReport -> ()
+
+# ============================================================================
+# Example 1: Simple Broadcast (Two Parallel Analyzers)
+# ============================================================================
+
+# Mathematical derivation:
+#   check_style :: FileList -> StyleReport
+#   check_security :: FileList -> SecurityReport
+#   duplicate :: FileList -> (FileList × FileList)
+#
+#   (check_style × check_security) :: (FileList × FileList) -> (StyleReport × SecurityReport)
+#   (check_style × check_security) ∘ duplicate :: FileList -> (StyleReport × SecurityReport)
+#
+# Type flow:
+#   get_python_files :: () -> FileList
+#   duplicate :: FileList -> (FileList × FileList)
+#   (check_style × check_security) :: (FileList × FileList) -> (StyleReport × SecurityReport)
+#
+# Complete composition:
+#   (check_style × check_security) ∘ duplicate ∘ get_python_files
+#     :: () -> (StyleReport × SecurityReport)
+
+simple_parallel = (check_style * check_security) o duplicate o get_python_files
+
+
+# ============================================================================
+# Example 2: Broadcast with Aggregation
+# ============================================================================
+
+# Pattern: Fetch → Broadcast → Parallel Analysis → Merge → Save
+#
+# Mathematical structure:
+#   1. get_python_files :: () -> FileList
+#   2. duplicate :: FileList -> (FileList × FileList)
+#   3. (check_style * check_security) :: (FileList × FileList) -> (StyleReport × SecurityReport)
+#   4. merge_reports :: (StyleReport × SecurityReport) -> QualityReport
+#   5. save_report :: QualityReport -> ()
+#
+# Complete composition:
+#   save_report ∘ merge_reports ∘ (check_style * check_security) ∘ duplicate ∘ get_python_files
+#     :: () -> ()
+
+quality_pipeline = save_report o merge_reports o (check_style * check_security) o duplicate o get_python_files
+
+
+# ============================================================================
+# Example 3: Broadcast with Modified Files
+# ============================================================================
+
+# Use case: Only analyze recently modified files for faster feedback
+#
+# Type flow:
+#   get_modified_files :: () -> FileList
+#   duplicate :: FileList -> (FileList × FileList)
+#   (check_style * check_security) :: (FileList × FileList) -> (StyleReport × SecurityReport)
+
+filtered_parallel = (check_style * check_security) o duplicate o get_modified_files
+
+
+# ============================================================================
+# Example 4: Broadcast with Display Instead of Save
+# ============================================================================
+
+# Alternative output: display results instead of saving
+#
+# Complete composition:
+#   display_report ∘ merge_reports ∘ (check_style * check_security) ∘ duplicate ∘ get_python_files
+#     :: () -> ()
+
+display_pipeline = display_report o merge_reports o (check_style * check_security) o duplicate o get_python_files
+
+
+# ============================================================================
+# Example 5: Complexity and Type Analysis
+# ============================================================================
+
+# Different pair of analyzers demonstrating reusability
+#
+# Type flow:
+#   get_python_files :: () -> FileList
+#   duplicate :: FileList -> (FileList × FileList)
+#   (check_complexity * check_types) :: (FileList × FileList) -> (ComplexityReport × TypeReport)
+
+structure_analysis = (check_complexity * check_types) o duplicate o get_python_files
+
+
+# ============================================================================
+# Notes on Category Theory Semantics
+# ============================================================================
+
+# 1. Diagonal Functor (duplicate):
+#    - Mathematically: Δ : A → A × A
+#    - Semantics: Δ(x) = (x, x)
+#    - Purpose: Enable broadcast composition
+#    - Type-safe: Polymorphic type ensures correctness
+#
+# 2. Product Morphism (×):
+#    - Mathematically: (f × g) : (A × C) → (B × D)
+#    - Semantics: (f × g)(a, c) = (f(a), g(c))
+#    - Purpose: Parallel execution with tuple input/output
+#    - Runtime: asyncio.gather for concurrent execution
+#
+# 3. Broadcast Composition (× ∘ Δ):
+#    - Mathematically: (f × g) ∘ Δ : A → (B × D)
+#    - Semantics: ((f × g) ∘ Δ)(x) = (f(x), g(x))
+#    - Purpose: Fan-out single input to multiple parallel processors
+#    - Benefits: Reduced latency, better resource utilization
+#
+# 4. Type Safety Guarantees:
+#    - All compositions type-checked at validation time
+#    - Runtime execution preserves types (Functor laws)
+#    - Composition associativity guaranteed by category theory
+#    - No runtime type errors possible
+#
+# 5. Performance Characteristics:
+#    - Product operators execute concurrently (asyncio.gather)
+#    - Duplicate has O(1) cost (tuple creation)
+#    - No serialization overhead for in-process execution
+#    - Scales with number of available CPU cores
+#
+# 6. Limitations (Current Implementation):
+#    - N-way broadcasts require nested products: ((f * g) * h) o duplicate
+#    - Maximum of 2-way parallel split per duplicate operator
+#    - For more analyzers, compose multiple broadcasts
+#
+# 7. Future Extensions (Research):
+#    - Broadcast operator (**) as syntactic sugar: f ** g ** h
+#    - Coproducts (⊕) for alternative/fallback composition
+#    - Monad transformers for effect handling
+#    - Distributed execution across multiple nodes
+
+# ============================================================================
+# Usage Example (Python)
+# ============================================================================
+
+# from src.dsl.adapters.parser import Parser
+# from src.dsl.use_cases import WorkflowValidator, TypedInterpreter
+#
+# # Parse and validate workflow
+# parser = Parser()
+# validator = WorkflowValidator()
+#
+# with open('parallel_code_analysis.ct', 'r') as f:
+#     dsl_text = f.read()
+#
+# report = validator.validate_text(dsl_text)
+#
+# if report.success:
+#     # Execute with real task executor
+#     from src.dsl.adapters.cli_task_executor import CLITaskExecutor
+#     executor = CLITaskExecutor()
+#     interpreter = TypedInterpreter(
+#         task_executor=executor,
+#         type_env=report.type_environment,
+#         strict=True
+#     )
+#
+#     # Execute quality pipeline
+#     import asyncio
+#     result = asyncio.run(interpreter.execute(quality_pipeline))
+# else:
+#     print(report.summary())

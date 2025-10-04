@@ -9,6 +9,7 @@ from typing import Any, Protocol
 from src.dsl.entities.literal import Literal
 from src.dsl.entities.composition import Composition
 from src.dsl.entities.product import Product
+from src.dsl.entities.duplicate import Duplicate
 from src.dsl.entities.functor import Functor
 
 
@@ -128,10 +129,13 @@ class Interpreter:
 
     async def visit_product(self, node: Product) -> Any:
         """
-        Execute product (f × g) - parallel execution with input propagation.
+        Execute product (f × g) - parallel execution with tuple input unpacking.
 
-        Category Theory semantics: Both morphisms execute concurrently with same input,
-        results combined as tuple (implements categorical product).
+        Category Theory semantics: Product morphism (f × g) :: (A × C) → (B × D)
+        - Input: tuple (a, c) where a :: A, c :: C
+        - Left function f receives a
+        - Right function g receives c
+        - Output: tuple (b, d) where b :: B, d :: D
 
         Args:
             node: Product node
@@ -139,15 +143,40 @@ class Interpreter:
         Returns:
             Tuple of (left_result, right_result)
         """
-        # Execute both tasks concurrently with current input
-        # Both receive the same input (product doesn't split input)
+        # Product morphism requires tuple input (A × C)
+        # Unpack tuple to pass correct inputs to each function
+        if isinstance(self._current_input, tuple) and len(self._current_input) == 2:
+            # Proper product semantics: unpack tuple input
+            left_input, right_input = self._current_input
+        else:
+            # Fallback: broadcast same input to both (for backward compatibility)
+            left_input = self._current_input
+            right_input = self._current_input
+
+        # Execute both tasks concurrently with their respective inputs
         left_result, right_result = await asyncio.gather(
-            self.execute(node.left, self._current_input),
-            self.execute(node.right, self._current_input)
+            self.execute(node.left, left_input),
+            self.execute(node.right, right_input)
         )
 
         # Return combined results (categorical product)
         return (left_result, right_result)
+
+    async def visit_duplicate(self, node: Duplicate) -> Any:
+        """
+        Execute duplicate (diagonal functor Δ) - broadcasts input to product tuple.
+
+        Category Theory semantics: Δ(x) = (x, x)
+        Creates a product tuple from single input for broadcast composition.
+
+        Args:
+            node: Duplicate node
+
+        Returns:
+            Tuple (input, input)
+        """
+        # Duplicate current input into product tuple
+        return (self._current_input, self._current_input)
 
     async def visit_functor(self, node: Functor) -> Any:
         """

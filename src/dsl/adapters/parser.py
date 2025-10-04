@@ -12,6 +12,7 @@ from lark import Lark, Transformer, Token
 from src.dsl.entities.literal import Literal
 from src.dsl.entities.composition import Composition
 from src.dsl.entities.product import Product
+from src.dsl.entities.duplicate import Duplicate
 from src.dsl.entities.functor import Functor
 from src.dsl.entities.type_annotation import TypeAnnotation
 from src.dsl.types.type_system import (
@@ -77,6 +78,11 @@ class ASTTransformer(Transformer):
         left = self._ensure_ast_node(items[0])
         right = self._ensure_ast_node(items[2]) if len(items) > 2 else self._ensure_ast_node(items[1])
         return Product(left=left, right=right)
+
+    def duplicate_expr(self, items):
+        """Transform duplicate expression to Duplicate entity."""
+        # Duplicate is a nullary operator (no arguments)
+        return Duplicate()
 
     def bind_expr(self, items):
         """Transform bind expression (currently returns composition for simplicity)."""

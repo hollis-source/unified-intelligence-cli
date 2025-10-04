@@ -15,11 +15,14 @@ from src.dsl.entities.ast_node import ASTNode
 from src.dsl.entities.literal import Literal
 from src.dsl.entities.composition import Composition
 from src.dsl.entities.product import Product
+from src.dsl.entities.duplicate import Duplicate
 from src.dsl.entities.functor import Functor
 from src.dsl.entities.type_annotation import TypeAnnotation
 from src.dsl.types.type_system import (
     Type,
+    TypeVariable,
     FunctionType,
+    ProductType,
     TypeMismatchError,
 )
 from src.dsl.types.type_checker import (
@@ -164,6 +167,25 @@ class TypeInferenceVisitor:
         # Check product using type checker
         result_type = check_product(left_type, right_type)
         return result_type
+
+    def visit_duplicate(self, node: Duplicate) -> Optional[Type]:
+        """
+        Visit a duplicate node (diagonal functor Δ).
+
+        Returns the polymorphic type signature: a -> (a × a)
+        This enables broadcast semantics for parallel composition.
+
+        Args:
+            node: Duplicate AST node
+
+        Returns:
+            Polymorphic function type: a -> (a × a)
+        """
+        # Duplicate has polymorphic type: a -> (a × a)
+        # Use a fresh type variable for polymorphism
+        type_var = TypeVariable(name="a")
+        product_type = ProductType(left=type_var, right=type_var)
+        return FunctionType(input_type=type_var, output_type=product_type)
 
     def visit_functor(self, node: Functor) -> Optional[Type]:
         """
