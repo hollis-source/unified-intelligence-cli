@@ -261,7 +261,11 @@ class Qwen3InferenceAdapter(ITextGenerator):
 
         # Get config parameters
         temperature = config.temperature if config and hasattr(config, 'temperature') else 0.7
-        max_tokens = config.max_tokens if config and hasattr(config, 'max_tokens') else 512
+        max_tokens = config.max_tokens if config and hasattr(config, 'max_tokens') else 1024  # HF Space limit
+
+        # Enforce HF Space maximum (validation)
+        if max_tokens > 1024:
+            max_tokens = 1024  # Cap at server limit
 
         try:
             # Call inference endpoint with correct API signature

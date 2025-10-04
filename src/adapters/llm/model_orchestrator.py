@@ -115,12 +115,21 @@ class ModelOrchestrator(ITextGenerator):
         # Extract task description for intelligent selection
         task_description = self._extract_task_description(messages)
 
-        # Select optimal model
-        primary_model = self.selector.select_model(
-            criteria=self.criteria,
-            available_providers=self.available_providers,
-            task_description=task_description
-        )
+        # ULTRATHINK FIX: Route ultrathink tasks to Grok (8192 tokens) instead of Qwen3 (1024)
+        # Reasoning: ULTRATHINK tasks consume ~600 tokens for thinking, leaving insufficient
+        # tokens for detailed responses with Qwen3's 1024 limit. Grok's 8192 limit solves this.
+        is_ultrathink = task_description and "ultrathink" in task_description.lower()
+
+        if is_ultrathink and "grok" in self.available_providers:
+            logger.info("ULTRATHINK task detected - routing to Grok (8192 token limit)")
+            primary_model = "grok"
+        else:
+            # Select optimal model using normal criteria
+            primary_model = self.selector.select_model(
+                criteria=self.criteria,
+                available_providers=self.available_providers,
+                task_description=task_description
+            )
 
         # Get fallback chain
         if self.enable_fallback:

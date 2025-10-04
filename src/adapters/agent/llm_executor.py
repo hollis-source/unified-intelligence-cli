@@ -40,7 +40,7 @@ class LLMAgentExecutor(IAgentExecutor):
         self.llm_provider = llm_provider
         self.default_config = default_config or LLMConfig(
             temperature=0.7,
-            max_tokens=500
+            max_tokens=1024  # Qwen3 HF Space limit (was 500, too restrictive)
         )
         self.data_collector = data_collector
         self.provider_name = provider_name
