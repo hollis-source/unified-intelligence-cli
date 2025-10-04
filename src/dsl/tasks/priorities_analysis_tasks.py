@@ -28,6 +28,7 @@ async def analyze_current_state(input_data: Any = None) -> Dict[str, Any]:
         "--routing", "team",
         "--agents", "scaled",
         "--orchestrator", "simple",
+        "--verbose",  # Enable full output display
         "--timeout", "180",
         "--task",
         "ULTRATHINK: Analyze unified-intelligence-cli current state. "
@@ -57,7 +58,7 @@ async def assess_dsl_priorities(input_data: Any = None) -> Dict[str, Any]:
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
-        "--orchestrator", "simple",
+        "--orchestrator", "simple", "--verbose",
         "--timeout", "180",
         "--task",
         "ULTRATHINK: Assess DSL implementation priorities. "
@@ -87,7 +88,7 @@ async def assess_sprint_priorities(input_data: Any = None) -> Dict[str, Any]:
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
-        "--orchestrator", "simple",
+        "--orchestrator", "simple", "--verbose",
         "--timeout", "180",
         "--task",
         "ULTRATHINK: Evaluate Sprint 1 phases 2-5 priority order. "
@@ -117,7 +118,7 @@ async def evaluate_syd2_synergy(input_data: Any = None) -> Dict[str, Any]:
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
-        "--orchestrator", "simple",
+        "--orchestrator", "simple", "--verbose",
         "--timeout", "180",
         "--task",
         "ULTRATHINK: Analyze SYD2 agent synergy with priorities. "
@@ -159,7 +160,7 @@ async def synthesize_recommendation(input_data: Any = None) -> Dict[str, Any]:
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
-        "--orchestrator", "simple",
+        "--orchestrator", "simple", "--verbose",
         "--timeout", "300",
         "--task",
         f"ULTRATHINK: Synthesize final priority recommendation from analyses:\n\n"

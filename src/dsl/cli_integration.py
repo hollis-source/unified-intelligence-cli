@@ -131,6 +131,15 @@ def format_result(result: Any, verbose: bool = False) -> None:
     if verbose:
         click.echo("=" * 70)
 
+    # Save full output to file for long results
+    import json
+    result_str = json.dumps(result, indent=2, default=str)
+    if len(result_str) > 1000:
+        output_file = "/tmp/dsl_workflow_result.json"
+        with open(output_file, 'w') as f:
+            f.write(result_str)
+        click.echo(f"\n📄 Full output saved to: {output_file}")
+
 
 def _print_result(result: Any, indent: int = 0) -> None:
     """
@@ -153,7 +162,13 @@ def _print_result(result: Any, indent: int = 0) -> None:
                 click.echo(f"{prefix}{key}:")
                 _print_result(value, indent + 2)
             else:
-                click.echo(f"{prefix}{key}: {value}")
+                # Handle long strings (ULTRATHINK output can be 8000+ tokens)
+                if isinstance(value, str) and len(value) > 500:
+                    click.echo(f"{prefix}{key}: (length: {len(value)} chars)")
+                    click.echo(f"{prefix}  {value[:200]}...")
+                    click.echo(f"{prefix}  ...{value[-200:]}")
+                else:
+                    click.echo(f"{prefix}{key}: {value}")
     elif isinstance(result, list):
         for i, item in enumerate(result):
             click.echo(f"{prefix}[{i}]: {item}")

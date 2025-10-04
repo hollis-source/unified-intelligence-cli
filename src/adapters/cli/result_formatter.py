@@ -86,12 +86,12 @@ class ResultFormatter:
         if not output:
             return
 
-        # Truncate output unless verbose mode
-        max_length = None if self.verbose else 200
+        # Truncate output unless verbose mode (increased from 200 to 1000 for ULTRATHINK)
+        max_length = None if self.verbose else 1000
         display_output = output
 
         if max_length and len(output) > max_length:
-            display_output = output[:max_length] + "..."
+            display_output = output[:500] + f"\n... ({len(output)-1000} chars truncated) ...\n" + output[-500:]
 
         click.echo(f"Output: {display_output}")
 
