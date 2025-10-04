@@ -1,427 +1,103 @@
-# Installation Guide
-
-This guide provides detailed instructions for installing Unified Intelligence CLI using multiple methods.
-
-## Table of Contents
-
-- [Quick Start](#quick-start)
-- [Method 1: PyPI Installation (Recommended)](#method-1-pypi-installation-recommended)
-- [Method 2: Docker Installation](#method-2-docker-installation)
-- [Method 3: Development Installation](#method-3-development-installation)
-- [Configuration](#configuration)
-- [Verification](#verification)
-- [Troubleshooting](#troubleshooting)
-
-## Quick Start
-
-**For most users (PyPI):**
-```bash
-pip install unified-intelligence-cli
-ui-cli --help
-```
-
-**For Docker users:**
-```bash
-docker pull username/unified-intelligence-cli:latest
-docker run --rm -e XAI_API_KEY=your_key username/unified-intelligence-cli:latest --help
-```
+# Quick Installation Guide
 
 ## Requirements
-
-- **Python:** 3.10, 3.11, or 3.12
-- **OS:** Linux, macOS, Windows (WSL recommended)
-- **API Key:** xAI API key (get from https://x.ai/)
-
-## Method 1: PyPI Installation (Recommended)
-
-### Prerequisites
-
-Ensure Python 3.10+ is installed:
-```bash
-python --version  # Should show 3.10 or higher
-```
-
-### Installation
-
-**Option A: User Installation (Recommended)**
-```bash
-pip install --user unified-intelligence-cli
-```
-
-**Option B: Virtual Environment (Best Practice)**
-```bash
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# On Linux/macOS:
-source venv/bin/activate
-# On Windows:
-venv\Scripts\activate
-
-# Install package
-pip install unified-intelligence-cli
-```
-
-**Option C: System-Wide Installation**
-```bash
-pip install unified-intelligence-cli
-```
-
-### Verify Installation
-
-```bash
-# Check installation
-ui-cli --version
-
-# Run help
-ui-cli --help
-
-# Alternative command name
-unified-intelligence-cli --help
-```
-
-### Upgrade
-
-```bash
-pip install --upgrade unified-intelligence-cli
-```
-
-### Uninstall
-
-```bash
-pip uninstall unified-intelligence-cli
-```
-
-## Method 2: Docker Installation
-
-### Prerequisites
-
-- Docker 20.10+ installed ([Get Docker](https://docs.docker.com/get-docker/))
-- xAI API key
-
-### Pull Image
-
-```bash
-docker pull username/unified-intelligence-cli:latest
-```
-
-### Run Container
-
-**Basic Usage:**
-```bash
-docker run --rm \
-  -e XAI_API_KEY=your_api_key_here \
-  username/unified-intelligence-cli:latest \
-  --help
-```
-
-**With Environment File:**
-```bash
-# Create .env file
-cat > .env <<EOF
-XAI_API_KEY=your_api_key_here
-UI_CLI_PROVIDER=grok
-EOF
-
-# Run with env file
-docker run --rm \
-  --env-file .env \
-  username/unified-intelligence-cli:latest \
-  "Analyze the current state of AI"
-```
-
-**With Volume Mount (for file operations):**
-```bash
-docker run --rm \
-  -e XAI_API_KEY=your_api_key_here \
-  -v $(pwd)/workspace:/workspace \
-  -w /workspace \
-  username/unified-intelligence-cli:latest \
-  "Create a plan"
-```
-
-### Docker Compose (Development)
-
-Create `docker-compose.yml`:
-```yaml
-version: '3.8'
-
-services:
-  ui-cli:
-    image: username/unified-intelligence-cli:latest
-    environment:
-      - XAI_API_KEY=${XAI_API_KEY}
-    volumes:
-      - ./workspace:/workspace
-    working_dir: /workspace
-    command: ["--help"]
-```
-
-Run with:
-```bash
-docker-compose run --rm ui-cli "Your task here"
-```
-
-## Method 3: Development Installation
-
-### Prerequisites
-
+- Python 3.10 or higher
+- pip (Python package installer)
 - Git
-- Python 3.10+
-- Virtual environment tool (venv)
+- xAI API key for Grok (get from https://x.ai)
 
-### Clone Repository
+## Installation Steps
 
-```bash
-git clone https://github.com/yourusername/unified-intelligence-cli.git
-cd unified-intelligence-cli
-```
-
-### Set Up Environment
+### 1. Install the CLI
 
 ```bash
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# On Linux/macOS:
-source venv/bin/activate
-# On Windows:
-venv\Scripts\activate
-
-# Upgrade pip
-pip install --upgrade pip
+pip install git+https://github.com/hollis-source/unified-intelligence-cli.git
 ```
 
-### Install Dependencies
+### 2. Set Up API Key
 
-**Production dependencies:**
-```bash
-pip install -r requirements.txt
-```
-
-**Development dependencies (for testing):**
-```bash
-pip install -r requirements-dev.txt
-```
-
-**Install in editable mode:**
-```bash
-pip install -e .
-```
-
-### Verify Development Installation
+Create a `.env` file in your working directory:
 
 ```bash
-# Run tests
-pytest tests/ -v
-
-# Check coverage
-pytest tests/ --cov=src --cov-report=term
-
-# Run CLI
-ui-cli --help
-
-# Or run directly
-python -m src.main --help
+echo "XAI_API_KEY=your-xai-api-key-here" > .env
 ```
 
-## Configuration
+Replace `your-xai-api-key-here` with your actual xAI API key.
 
-### Environment Variables
+### 3. Verify Installation
 
-Create `.env` file in your working directory:
-
-```bash
-# Required: xAI API Key
-XAI_API_KEY=your_api_key_here
-
-# Optional: Provider selection (default: grok)
-UI_CLI_PROVIDER=grok
-
-# Optional: Model selection (default: grok-beta)
-UI_CLI_MODEL=grok-beta
-
-# Optional: Debug mode
-UI_CLI_DEBUG=false
-```
-
-### Get API Key
-
-1. Go to https://x.ai/
-2. Sign up or log in
-3. Navigate to API section
-4. Generate new API key
-5. Copy key to `.env` file
-
-**Security Note:** Never commit `.env` files to version control. The repository includes `.env` in `.gitignore`.
-
-## Verification
-
-### Test Basic Functionality
-
-**1. Help Command:**
 ```bash
 ui-cli --help
 ```
-Expected: Usage information and available options
 
-**2. Version Check:**
+You should see the help menu with all available options.
+
+## Basic Usage
+
+### Simple Task
+
 ```bash
-ui-cli --version
-```
-Expected: Version number (e.g., 1.0.0)
-
-**3. Simple Task:**
-```bash
-export XAI_API_KEY=your_key_here
-ui-cli "What is 2+2?"
-```
-Expected: AI response with calculation
-
-**4. Multi-Task:**
-```bash
-ui-cli "Task 1: Explain AI" "Task 2: List benefits"
-```
-Expected: Responses for both tasks
-
-### Test Advanced Features
-
-**Task Orchestration:**
-```bash
-ui-cli --provider grok "Analyze: What is clean architecture?" "Synthesize: Summarize findings"
+ui-cli --task "Analyze this code and suggest improvements" --provider auto --routing team --agents scaled
 ```
 
-**Parallel Execution:**
+### With Metrics Collection
+
 ```bash
-ui-cli --parallel "Research topic A" "Research topic B" "Research topic C"
+ui-cli --task "Research best practices for Python testing" \
+       --provider auto \
+       --routing team \
+       --agents scaled \
+       --collect-metrics \
+       --verbose
 ```
+
+### Multiple Tasks (Parallel Execution)
+
+```bash
+ui-cli --task "Task 1 description" \
+       --task "Task 2 description" \
+       --task "Task 3 description" \
+       --provider auto \
+       --routing team \
+       --agents scaled
+```
+
+## Common Options
+
+- `--provider auto` - Automatically select best LLM model (Grok, Qwen3, etc.)
+- `--routing team` - Use team-based routing (recommended for scaled agents)
+- `--agents scaled` - Use all 16 agents across 9 teams
+- `--collect-metrics` - Track performance metrics
+- `--verbose` or `-v` - Show detailed output
+- `--timeout 900` - Set timeout in seconds (default: 60)
 
 ## Troubleshooting
 
-### Issue: "command not found: ui-cli"
+### Missing API Key Error
+If you see "XAI_API_KEY not found", make sure you created the `.env` file with your API key.
 
-**Solution 1:** Add to PATH (user install)
+### Import Errors
+If you see "ModuleNotFoundError", reinstall:
 ```bash
-# Add to ~/.bashrc or ~/.zshrc
-export PATH="$HOME/.local/bin:$PATH"
-source ~/.bashrc
+pip uninstall unified-intelligence-cli
+pip install git+https://github.com/hollis-source/unified-intelligence-cli.git
 ```
 
-**Solution 2:** Use full path
+### Permission Errors
+If you get permission errors, use:
 ```bash
-python -m src.main --help
+pip install --user git+https://github.com/hollis-source/unified-intelligence-cli.git
 ```
 
-**Solution 3:** Reinstall with --force-reinstall
+## Updating
+
+To get the latest version:
+
 ```bash
-pip install --force-reinstall unified-intelligence-cli
+pip install --upgrade git+https://github.com/hollis-source/unified-intelligence-cli.git
 ```
-
-### Issue: "ModuleNotFoundError: No module named 'src'"
-
-**Cause:** Package not installed or wrong directory
-
-**Solution:**
-```bash
-# If in development:
-pip install -e .
-
-# If using PyPI:
-pip install unified-intelligence-cli
-```
-
-### Issue: API Key Not Recognized
-
-**Check 1:** Environment variable set
-```bash
-echo $XAI_API_KEY
-```
-
-**Check 2:** .env file exists
-```bash
-cat .env
-```
-
-**Check 3:** API key valid
-```bash
-curl https://api.x.ai/v1/models \
-  -H "Authorization: Bearer $XAI_API_KEY"
-```
-
-### Issue: Permission Denied (Linux/macOS)
-
-**Solution:** Use virtual environment or --user flag
-```bash
-pip install --user unified-intelligence-cli
-```
-
-### Issue: SSL Certificate Error
-
-**Solution:** Update certificates
-```bash
-# On Ubuntu/Debian
-sudo apt-get install ca-certificates
-
-# On macOS
-/Applications/Python\ 3.X/Install\ Certificates.command
-```
-
-### Issue: Tests Failing
-
-**Check 1:** All dependencies installed
-```bash
-pip install -r requirements-dev.txt
-```
-
-**Check 2:** API key set for integration tests
-```bash
-export XAI_API_KEY=your_key
-pytest tests/ -v
-```
-
-**Check 3:** Run only unit tests (no API)
-```bash
-pytest tests/ -m "not integration"
-```
-
-## Platform-Specific Notes
-
-### Windows
-
-- Use `venv\Scripts\activate` to activate virtual environment
-- Use `set XAI_API_KEY=your_key` instead of `export`
-- Windows Subsystem for Linux (WSL) recommended for best experience
-
-### macOS
-
-- May need to install Xcode Command Line Tools: `xcode-select --install`
-- Use Homebrew for Python: `brew install python@3.12`
-
-### Linux
-
-- Debian/Ubuntu: `sudo apt-get install python3-pip python3-venv`
-- RHEL/CentOS: `sudo yum install python3-pip`
-- Arch: `sudo pacman -S python-pip`
-
-## Next Steps
-
-After installation:
-
-1. **Configure API Key:** Set up `.env` file with your xAI API key
-2. **Read Quickstart:** See `QUICKSTART.md` for usage examples
-3. **Explore Examples:** Check `examples/` directory for sample tasks
-4. **Join Community:** Report issues at https://github.com/yourusername/unified-intelligence-cli/issues
 
 ## Support
 
-- **Documentation:** https://github.com/yourusername/unified-intelligence-cli
-- **Issues:** https://github.com/yourusername/unified-intelligence-cli/issues
-- **Security:** See SECURITY.md for reporting vulnerabilities
-
----
-
-**Last Updated:** 2025-09-30
-**Version:** 1.0.0
-**Tested On:** Python 3.10, 3.11, 3.12 | Linux, macOS, Windows (WSL)
+- Issues: https://github.com/hollis-source/unified-intelligence-cli/issues
+- Documentation: See README.md in the repository
