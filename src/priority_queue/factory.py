@@ -27,6 +27,12 @@ from src.priority_queue.adapters.redis_adapter import RedisAdapter
 from src.priority_queue.adapters.git_adapter import GitAdapter
 from src.priority_queue.adapters.cli_executor_adapter import CLITaskExecutorAdapter
 from src.priority_queue.adapters.logger_adapter import LoggerAdapter
+from src.priority_queue.adapters.priority_queue_adapter import PriorityQueueAdapter
+
+# Import PriorityWorker orchestrator
+import sys
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'scripts'))
+from priority_worker import PriorityWorker
 
 
 class PriorityWorkerFactory:
@@ -37,13 +43,123 @@ class PriorityWorkerFactory:
     1. Loading configuration from YAML
     2. Creating adapter instances with config
     3. Creating use case instances with adapters
-    4. Creating PriorityWorker with all dependencies
+    4. Creating protocol adapters to bridge use cases to PriorityWorker protocols
+    5. Creating PriorityWorker with all dependencies
 
     Example:
         factory = PriorityWorkerFactory()
         worker = factory.create_from_config('config/priority_worker.yaml')
         await worker.run()
     """
+
+    # Protocol adapter classes to bridge use cases to PriorityWorker protocol interfaces
+    class TaskPollerAdapter:
+        """Adapts PriorityQueueAdapter to TaskPoller protocol."""
+        def __init__(self, queue_adapter):
+            self.queue_adapter = queue_adapter
+
+        def poll_tasks(self):
+            """Poll tasks and convert Task entities to dicts."""
+            tasks = self.queue_adapter.poll_tasks()
+            return [
+                {
+                    'id': task.id,
+                    'priority': task.priority,
+                    'status': task.status,
+                    **task.metadata
+                }
+                for task in tasks
+            ]
+
+    class TaskClaimerAdapter:
+        """Adapts ClaimTaskUseCase to TaskClaimer protocol."""
+        def __init__(self, use_case):
+            self.use_case = use_case
+
+        def claim_task(self, task_dict):
+            """Claim task by converting dict to Task entity."""
+            task = Task(
+                id=task_dict['id'],
+                priority=task_dict.get('priority', 1),
+                status=task_dict.get('status', 'open'),
+                metadata={k: v for k, v in task_dict.items() if k not in ['id', 'priority', 'status']}
+            )
+            import asyncio
+            return asyncio.get_event_loop().run_until_complete(self.use_case.execute(task))
+
+    class StatusUpdaterAdapter:
+        """Adapts UpdateStatusUseCase to StatusUpdater protocol."""
+        def __init__(self, use_case):
+            self.use_case = use_case
+
+        def update_status(self, task_dict, status):
+            """Update status by converting dict to Task entity."""
+            task = Task(
+                id=task_dict['id'],
+                priority=task_dict.get('priority', 1),
+                status=task_dict.get('status', 'open'),
+                metadata={k: v for k, v in task_dict.items() if k not in ['id', 'priority', 'status']}
+            )
+            updated_task = self.use_case.execute(task, status)
+            # Update the original dict in place
+            task_dict['status'] = updated_task.status
+
+    class BranchManagerAdapter:
+        """Adapts ManageBranchesUseCase to BranchManager protocol."""
+        def __init__(self, use_case):
+            self.use_case = use_case
+
+        def manage_branches(self, task_dict):
+            """Create branch for task."""
+            branch_name = f"priority/{task_dict['id']}"
+            import asyncio
+            asyncio.get_event_loop().run_until_complete(
+                self.use_case.execute("create", branch_name)
+            )
+            return branch_name
+
+    class WorkflowExecutorAdapter:
+        """Adapts ExecuteWorkflowUseCase to WorkflowExecutor protocol."""
+        def __init__(self, use_case):
+            self.use_case = use_case
+
+        async def execute_workflow(self, task_dict, branch):
+            """Execute workflow for task."""
+            task = Task(
+                id=task_dict['id'],
+                priority=task_dict.get('priority', 1),
+                status=task_dict.get('status', 'in_progress'),
+                metadata={k: v for k, v in task_dict.items() if k not in ['id', 'priority', 'status']}
+            )
+            result = await self.use_case.execute(task)
+            return result
+
+    class MetricsTrackerAdapter:
+        """Adapts TrackMetricsUseCase to MetricsTracker protocol."""
+        def __init__(self, use_case, initial_metrics):
+            self.use_case = use_case
+            self.metrics = initial_metrics
+
+        def track_metrics(self, task_dict):
+            """Track metrics for task."""
+            task = Task(
+                id=task_dict['id'],
+                priority=task_dict.get('priority', 1),
+                status=task_dict.get('status', 'completed'),
+                metadata={k: v for k, v in task_dict.items() if k not in ['id', 'priority', 'status']}
+            )
+            # Use fixed duration for now (would be calculated in real implementation)
+            self.metrics = self.use_case.execute(self.metrics, task, success=True, duration=1.0)
+
+    class ShutdownHandlerAdapter:
+        """Adapts ShutdownUseCase to ShutdownHandler protocol."""
+        def __init__(self, use_case):
+            self.use_case = use_case
+
+        def shutdown(self):
+            """Perform graceful shutdown."""
+            import asyncio
+            asyncio.get_event_loop().run_until_complete(self.use_case.execute())
 
     def create_from_config(self, config_path: str):
         """
@@ -77,6 +193,7 @@ class PriorityWorkerFactory:
         git_config = pw_config.get('git', {})
         dsl_config = pw_config.get('dsl', {})
         logging_config = pw_config.get('logging', {})
+        queue_config = pw_config.get('priority_queue', {})
 
         # Create adapters (layer 3)
         redis_adapter = RedisAdapter({
@@ -97,6 +214,11 @@ class PriorityWorkerFactory:
         logger_adapter = LoggerAdapter({
             'level': logging_config.get('level', 'INFO'),
             'format': logging_config.get('format', '%(asctime)s - %(levelname)s - %(message)s')
+        })
+
+        # Create PriorityQueueAdapter for polling tasks
+        queue_adapter = PriorityQueueAdapter({
+            'queue_file': queue_config.get('queue_file', 'config/priorities.yaml')
         })
 
         # Create use cases (layer 2) - wire adapters via DI
@@ -133,27 +255,23 @@ class PriorityWorkerFactory:
             'logging': logging_config
         }
 
-        # Import and create PriorityWorker (layer 4) - avoiding circular imports
-        # Note: Actual wiring would pass use cases and adapters matching PriorityWorker's protocol expectations
-        # For now, return configuration for manual wiring in main()
-        return {
-            'use_cases': {
-                'claim_task': claim_task_uc,
-                'execute_workflow': execute_workflow_uc,
-                'manage_branches': manage_branches_uc,
-                'handle_errors': handle_errors_uc,
-                'update_status': update_status_uc,
-                'track_metrics': track_metrics_uc,
-                'shutdown': shutdown_uc
-            },
-            'adapters': {
-                'redis': redis_adapter,
-                'git': git_adapter,
-                'cli_executor': cli_executor_adapter,
-                'logger': logger_adapter
-            },
-            'config': worker_config
-        }
+        # Create protocol adapters that bridge use cases to PriorityWorker protocol interfaces
+        task_poller = self.TaskPollerAdapter(queue_adapter)
+        task_claimer = self.TaskClaimerAdapter(claim_task_uc)
+        status_updater = self.StatusUpdaterAdapter(update_status_uc)
+        branch_manager = self.BranchManagerAdapter(manage_branches_uc)
+        workflow_executor = self.WorkflowExecutorAdapter(execute_workflow_uc)
+        metrics_tracker = self.MetricsTrackerAdapter(track_metrics_uc, sample_metrics)
+        shutdown_handler = self.ShutdownHandlerAdapter(shutdown_uc)
 
-        # TODO: Once PriorityWorker is updated to accept these dependencies,
-        # return PriorityWorker(**wired_dependencies) instead of dict
+        # Create and return fully-wired PriorityWorker instance (layer 4)
+        return PriorityWorker(
+            task_poller=task_poller,
+            task_claimer=task_claimer,
+            status_updater=status_updater,
+            branch_manager=branch_manager,
+            workflow_executor=workflow_executor,
+            metrics_tracker=metrics_tracker,
+            shutdown_handler=shutdown_handler,
+            config=worker_config
+        )
