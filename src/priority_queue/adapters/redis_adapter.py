@@ -82,14 +82,24 @@ class RedisAdapter:
         """Compute SHA256 hash for deduplication."""
         return hashlib.sha256(task_description.encode()).hexdigest()
 
-    def submit_task(self, task_id: str, priority: int, description: str, metadata: Dict[str, Any]) -> bool:
-        """Submit task to priority queue with deduplication check.
+    def submit_task(
+        self,
+        task_id: str,
+        priority: int,
+        description: str,
+        metadata: Dict[str, Any],
+        parent_priority_id: Optional[str] = None,
+        spawned_by: str = "user"
+    ) -> bool:
+        """Submit task to priority queue with deduplication check and Phase 1 parent tracking.
 
         Args:
             task_id: Unique task identifier
             priority: Task priority (higher = more urgent)
             description: Task description for deduplication
             metadata: Additional task metadata
+            parent_priority_id: Optional parent priority ID for hierarchical tracking
+            spawned_by: Task source (user, ultrathink, analysis) - default: user
 
         Returns:
             True if submitted, False if duplicate detected
@@ -105,16 +115,33 @@ class RedisAdapter:
             # Store hash with task_id reference (TTL = 24h)
             self.client.setex(hash_key, 86400, task_id)
 
-            # Store task metadata
+            # Phase 1: Get parent context hash if parent provided
+            parent_context_hash = None
+            if parent_priority_id:
+                parent_priority = self.get_priority(parent_priority_id)
+                if parent_priority:
+                    parent_context_hash = parent_priority.context_hash
+                else:
+                    raise ValueError(f"Parent priority {parent_priority_id} not found")
+
+            # Store task metadata with Phase 1 fields
             task_data = {
                 'id': task_id,
                 'priority': priority,
                 'description': description,
                 'metadata': json.dumps(metadata),
-                'status': 'open'
+                'status': 'open',
+                'parent_priority_id': parent_priority_id or '',  # Empty string for None
+                'parent_context_hash': parent_context_hash or '',
+                'is_stale': 'false',  # Redis stores as string
+                'spawned_by': spawned_by
             }
             status_key = f"{self.STATUS_PREFIX}{task_id}"
             self.client.hset(status_key, mapping=task_data)
+
+            # Phase 1: Link task to parent priority
+            if parent_priority_id:
+                self.link_task_to_priority(task_id, parent_priority_id)
 
             # Add to priority queue (LPUSH for FIFO, priority handled externally)
             self.client.lpush(self.QUEUE_KEY, task_id)
