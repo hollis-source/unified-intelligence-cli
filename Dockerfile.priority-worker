@@ -1,0 +1,67 @@
+# Dockerfile for PriorityWorker Autonomous Daemon
+# Multi-stage build for production deployment
+# Generated from ULTRATHINK design on 2025-10-04
+
+# Stage 1: Builder - Install dependencies
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install
+COPY requirements.txt .
+RUN pip install --user --no-cache-dir -r requirements.txt
+
+# Stage 2: Runtime - Minimal production image
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install runtime dependencies (git for Git-based task claiming, curl for health checks)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    tini \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy installed packages from builder
+COPY --from=builder /root/.local /root/.local
+
+# Copy application code
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+COPY config/ ./config/
+COPY README.md LICENSE ./
+
+# Create directories for logs and data
+RUN mkdir -p /app/logs /app/data/metrics
+
+# Add local bin to PATH
+ENV PATH=/root/.local/bin:$PATH
+ENV PYTHONPATH=/app:$PYTHONPATH
+
+# Create non-root user for security
+RUN useradd -m -u 1000 workeruser && \
+    chown -R workeruser:workeruser /app && \
+    git config --global user.email "priority-worker@unified-intelligence-cli" && \
+    git config --global user.name "PriorityWorker"
+
+USER workeruser
+
+# Expose metrics dashboard port
+EXPOSE 8080
+
+# Health check via metrics dashboard
+HEALTHCHECK --interval=60s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# Use tini as init process (handle PID 1, zombie processes)
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+# Default: Run PriorityWorker in daemon mode
+CMD ["python3", "scripts/priority_worker.py", "--config", "config/priority_worker_production.yaml", "--loop"]
