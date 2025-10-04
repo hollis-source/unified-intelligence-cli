@@ -27,7 +27,7 @@ from src.priority_queue.adapters.redis_adapter import RedisAdapter
 from src.priority_queue.adapters.git_adapter import GitAdapter
 from src.priority_queue.adapters.cli_executor_adapter import CLITaskExecutorAdapter
 from src.priority_queue.adapters.logger_adapter import LoggerAdapter
-from src.priority_queue.adapters.priority_queue_adapter import PriorityQueueAdapter
+# Phase 1: Removed PriorityQueueAdapter - now using RedisAdapter for task polling
 
 # Import PriorityWorker orchestrator
 import sys
@@ -54,19 +54,22 @@ class PriorityWorkerFactory:
 
     # Protocol adapter classes to bridge use cases to PriorityWorker protocol interfaces
     class TaskPollerAdapter:
-        """Adapts PriorityQueueAdapter to TaskPoller protocol."""
-        def __init__(self, queue_adapter):
-            self.queue_adapter = queue_adapter
+        """Adapts RedisAdapter to TaskPoller protocol (Phase 1: Redis queue polling)."""
+        def __init__(self, redis_adapter):
+            self.redis_adapter = redis_adapter
 
         def poll_tasks(self):
-            """Poll tasks and convert Task entities to dicts."""
-            tasks = self.queue_adapter.poll_tasks()
+            """Poll tasks from Redis queue (replaces YAML-based polling)."""
+            # RedisAdapter.poll_tasks() returns dicts directly - no conversion needed
+            tasks = self.redis_adapter.poll_tasks(status='open', limit=50)
+            # Add metadata fields to top level for compatibility with PriorityWorker
             return [
                 {
-                    'id': task.id,
-                    'priority': task.priority,
-                    'status': task.status,
-                    **task.metadata
+                    'id': task['id'],
+                    'priority': task['priority'],
+                    'status': task['status'],
+                    'description': task.get('description', ''),
+                    **task.get('metadata', {})
                 }
                 for task in tasks
             ]
@@ -77,12 +80,21 @@ class PriorityWorkerFactory:
             self.use_case = use_case
 
         async def claim_task(self, task_dict):
-            """Claim task by converting dict to Task entity."""
+            """Claim task by converting dict to Task entity with Phase 1 fields."""
+            # Extract Phase 1 fields from dict
+            phase1_fields = ['description', 'parent_priority_id', 'parent_context_hash', 'is_stale', 'spawned_by']
+            metadata_keys = [k for k in task_dict.keys() if k not in ['id', 'priority', 'status'] + phase1_fields]
+
             task = Task(
                 id=task_dict['id'],
                 priority=task_dict.get('priority', 1),
                 status=task_dict.get('status', 'open'),
-                metadata={k: v for k, v in task_dict.items() if k not in ['id', 'priority', 'status']}
+                metadata={k: task_dict[k] for k in metadata_keys},
+                description=task_dict.get('description', ''),
+                parent_priority_id=task_dict.get('parent_priority_id'),
+                parent_context_hash=task_dict.get('parent_context_hash'),
+                is_stale=task_dict.get('is_stale', False),
+                spawned_by=task_dict.get('spawned_by', 'user')
             )
             return await self.use_case.execute(task)
 
@@ -92,12 +104,21 @@ class PriorityWorkerFactory:
             self.use_case = use_case
 
         def update_status(self, task_dict, status):
-            """Update status by converting dict to Task entity."""
+            """Update status by converting dict to Task entity with Phase 1 fields."""
+            # Extract Phase 1 fields from dict
+            phase1_fields = ['description', 'parent_priority_id', 'parent_context_hash', 'is_stale', 'spawned_by']
+            metadata_keys = [k for k in task_dict.keys() if k not in ['id', 'priority', 'status'] + phase1_fields]
+
             task = Task(
                 id=task_dict['id'],
                 priority=task_dict.get('priority', 1),
                 status=task_dict.get('status', 'open'),
-                metadata={k: v for k, v in task_dict.items() if k not in ['id', 'priority', 'status']}
+                metadata={k: task_dict[k] for k in metadata_keys},
+                description=task_dict.get('description', ''),
+                parent_priority_id=task_dict.get('parent_priority_id'),
+                parent_context_hash=task_dict.get('parent_context_hash'),
+                is_stale=task_dict.get('is_stale', False),
+                spawned_by=task_dict.get('spawned_by', 'user')
             )
             updated_task = self.use_case.execute(task, status)
             # Update the original dict in place
@@ -120,12 +141,21 @@ class PriorityWorkerFactory:
             self.use_case = use_case
 
         async def execute_workflow(self, task_dict, branch):
-            """Execute workflow for task."""
+            """Execute workflow for task with Phase 1 fields."""
+            # Extract Phase 1 fields from dict
+            phase1_fields = ['description', 'parent_priority_id', 'parent_context_hash', 'is_stale', 'spawned_by']
+            metadata_keys = [k for k in task_dict.keys() if k not in ['id', 'priority', 'status'] + phase1_fields]
+
             task = Task(
                 id=task_dict['id'],
                 priority=task_dict.get('priority', 1),
                 status=task_dict.get('status', 'in_progress'),
-                metadata={k: v for k, v in task_dict.items() if k not in ['id', 'priority', 'status']}
+                metadata={k: task_dict[k] for k in metadata_keys},
+                description=task_dict.get('description', ''),
+                parent_priority_id=task_dict.get('parent_priority_id'),
+                parent_context_hash=task_dict.get('parent_context_hash'),
+                is_stale=task_dict.get('is_stale', False),
+                spawned_by=task_dict.get('spawned_by', 'user')
             )
             result = await self.use_case.execute(task)
             return result
@@ -137,12 +167,21 @@ class PriorityWorkerFactory:
             self.metrics = initial_metrics
 
         def track_metrics(self, task_dict):
-            """Track metrics for task."""
+            """Track metrics for task with Phase 1 fields."""
+            # Extract Phase 1 fields from dict
+            phase1_fields = ['description', 'parent_priority_id', 'parent_context_hash', 'is_stale', 'spawned_by']
+            metadata_keys = [k for k in task_dict.keys() if k not in ['id', 'priority', 'status'] + phase1_fields]
+
             task = Task(
                 id=task_dict['id'],
                 priority=task_dict.get('priority', 1),
                 status=task_dict.get('status', 'completed'),
-                metadata={k: v for k, v in task_dict.items() if k not in ['id', 'priority', 'status']}
+                metadata={k: task_dict[k] for k in metadata_keys},
+                description=task_dict.get('description', ''),
+                parent_priority_id=task_dict.get('parent_priority_id'),
+                parent_context_hash=task_dict.get('parent_context_hash'),
+                is_stale=task_dict.get('is_stale', False),
+                spawned_by=task_dict.get('spawned_by', 'user')
             )
             # Use fixed duration for now (would be calculated in real implementation)
             self.metrics = self.use_case.execute(self.metrics, task, success=True, duration=1.0)
@@ -211,10 +250,8 @@ class PriorityWorkerFactory:
             'format': logging_config.get('format', '%(asctime)s - %(levelname)s - %(message)s')
         })
 
-        # Create PriorityQueueAdapter for polling tasks
-        queue_adapter = PriorityQueueAdapter({
-            'queue_file': queue_config.get('queue_file', 'config/priorities.yaml')
-        })
+        # Phase 1: Redis-based task polling (replaces PriorityQueueAdapter/YAML)
+        # Tasks are now submitted via RedisAdapter.submit_task() and polled from Redis queue
 
         # Create use cases (layer 2) - wire adapters via DI
         claim_task_uc = ClaimTaskUseCase(lock_interface=redis_adapter)
@@ -251,7 +288,7 @@ class PriorityWorkerFactory:
         }
 
         # Create protocol adapters that bridge use cases to PriorityWorker protocol interfaces
-        task_poller = self.TaskPollerAdapter(queue_adapter)
+        task_poller = self.TaskPollerAdapter(redis_adapter)  # Phase 1: Poll from Redis queue
         task_claimer = self.TaskClaimerAdapter(claim_task_uc)
         status_updater = self.StatusUpdaterAdapter(update_status_uc)
         branch_manager = self.BranchManagerAdapter(manage_branches_uc)
