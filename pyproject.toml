@@ -7,7 +7,7 @@ name = "unified-intelligence-cli"
 version = "1.0.0"
 description = "Production-ready multi-agent task orchestration framework with Clean Architecture"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
     {name = "Unified Intelligence CLI Team", email = "noreply@example.com"}
@@ -69,11 +69,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/username/unified-intelligence-cli"
-Documentation = "https://github.com/username/unified-intelligence-cli#readme"
-Repository = "https://github.com/username/unified-intelligence-cli"
-Issues = "https://github.com/username/unified-intelligence-cli/issues"
-Changelog = "https://github.com/username/unified-intelligence-cli/releases"
+Homepage = "https://github.com/hollis-source/unified-intelligence-cli"
+Documentation = "https://github.com/hollis-source/unified-intelligence-cli#readme"
+Repository = "https://github.com/hollis-source/unified-intelligence-cli"
+Issues = "https://github.com/hollis-source/unified-intelligence-cli/issues"
+Changelog = "https://github.com/hollis-source/unified-intelligence-cli/releases"
 
 [project.scripts]
 ui-cli = "src.main:main"

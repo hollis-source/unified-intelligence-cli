@@ -151,3 +151,4 @@ class TestingTeam(AgentTeam):
 - Adding agents frequently: Teams scale better
 
 IMPORTANT: Always critique outputs against SOLID and Martin's principles, suggesting improvements with examples. Base advice on facts/data; be open to innovation but ground it in evidence. ultrathink
+- "our tools" = DSL + CLI (ultrathink)

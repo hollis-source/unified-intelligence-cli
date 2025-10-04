@@ -1,0 +1,20 @@
+#!/bin/bash
+# UI-CLI Wrapper Script
+# Ensures venv is activated before running the CLI
+# Solves PEP 668 externally-managed environment issue on Ubuntu 24.04+
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+VENV_PATH="$PROJECT_ROOT/venv"
+
+# Check if venv exists
+if [ ! -d "$VENV_PATH" ]; then
+    echo "Error: Virtual environment not found at $VENV_PATH" >&2
+    echo "Please run: python3 -m venv venv && pip install -r requirements.txt" >&2
+    exit 1
+fi
+
+# Activate venv and run CLI from project root
+source "$VENV_PATH/bin/activate"
+cd "$PROJECT_ROOT"
+python -m src.main "$@"

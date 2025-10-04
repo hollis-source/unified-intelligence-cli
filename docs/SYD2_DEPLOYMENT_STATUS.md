@@ -20,7 +20,7 @@
 - **Python**: 3.12.3
 - **Git**: 2.43.0
 - **Claude Code**: 2.0.5 (installed at /root/.local/bin/claude)
-- **UI-CLI**: Installed from source
+- **UI-CLI**: Installed from source with wrapper script (bin/ui-cli)
 
 ### Installed Dependencies
 - paramiko 4.0.0
@@ -41,6 +41,7 @@
 
 Key settings:
 - **Server**: localhost (SSH to self)
+- **UI-CLI**: /opt/unified-intelligence-cli/bin/ui-cli (wrapper script)
 - **Tasks/hour**: 10
 - **Duration**: 24 hours
 - **Analysis interval**: Every 10 tasks

@@ -1,7 +1,7 @@
 # Unified Intelligence CLI
 
-![Tests](https://github.com/username/unified-intelligence-cli/workflows/Tests/badge.svg)
-![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
+![Tests](https://github.com/hollis-source/unified-intelligence-cli/workflows/Tests/badge.svg)
+![Python](https://img.shields.io/badge/python-3.12+-blue)
 ![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen)
 
 **Production-ready multi-agent task orchestration framework** following Clean Architecture principles.
@@ -21,28 +21,55 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 
 ## Quick Start
 
+### Installation
+
+**Requirements**: Python 3.12+ (Ubuntu 24.04+ or system supporting PEP 668)
+
 ```bash
-# Setup
+# Clone repository
+git clone https://github.com/hollis-source/unified-intelligence-cli.git
+cd unified-intelligence-cli
+
+# Create virtual environment
 python3 -m venv venv
 source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
 
-# Configure API key (for Grok provider)
-echo "XAI_API_KEY=your_api_key_here" > .env
+# Install UI-CLI (creates entry points)
+pip install -e .
 
-# Run with mock provider (no API needed)
-python3 src/main.py \
+# Configure API keys
+cp .env.example .env  # Then edit .env with your API keys
+```
+
+### Usage
+
+**Option 1: Using wrapper script (works without venv activation)**
+```bash
+./bin/ui-cli \
   --task "Write a Python function for factorial" \
   --task "Write tests for factorial function" \
-  --provider mock
+  --provider auto
+```
 
-# Run with live Grok (requires API key)
-python3 src/main.py \
+**Option 2: Using entry point (requires venv activation)**
+```bash
+source venv/bin/activate
+ui-cli \
   --task "Implement FizzBuzz in Python" \
   --task "Create comprehensive tests" \
-  --task "Run the tests and report results" \
   --provider grok \
   --verbose
+```
+
+**Option 3: Direct module invocation (legacy)**
+```bash
+source venv/bin/activate
+python -m src.main \
+  --task "Task description" \
+  --provider auto
 ```
 
 ## Usage Examples
