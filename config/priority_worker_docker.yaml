@@ -3,9 +3,9 @@
 # Generated on 2025-10-04 for Option C (Docker Multi-Worker)
 
 priority_worker:
-  # Production daemon configuration
+  # Testing daemon configuration (immediate processing)
   daemon:
-    cycle_hours: 24        # Main loop cycle duration (24 hours for SYD2-like operation)
+    cycle_hours: 0.001     # ~3 seconds between cycles for testing
     max_retries: 5         # Higher retries for production resilience
     base_delay: 2.0        # Conservative backoff for production
     health_check_interval: 300  # Health check every 5 minutes
