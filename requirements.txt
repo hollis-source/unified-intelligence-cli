@@ -1,5 +1,9 @@
-click==8.1.7  # CLI parsing (adapter)
-python-dotenv==1.0.0  # Environment variable loading
+click>=8.0.0  # CLI parsing (adapter)
+python-dotenv>=1.0.0  # Environment variable loading
 httpx>=0.27.0  # HTTP client for API calls
 openai>=1.0.0  # OpenAI API client (for xAI Grok compatibility)
 aiohttp>=3.9.0  # Async HTTP client for local llama.cpp server (Week 8)
+tenacity>=8.0.0  # Retry logic for LLM providers
+gradio-client>=1.0.0  # Qwen3 ZeroGPU Hugging Face Spaces integration
+lark>=1.0.0  # DSL parser for .ct composition files
+rich>=10.0.0  # Rich terminal output formatting
