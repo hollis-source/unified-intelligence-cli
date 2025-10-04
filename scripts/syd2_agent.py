@@ -1069,8 +1069,9 @@ Focus on addressing the root cause, not just symptoms. Ensure the fix is testabl
 
             # Execute Claude Code
             # Using --message flag to send task directly
+            claude_cmd = self.config["improvement"].get("claude_path", "claude")
             cmd = [
-                "claude-code",
+                claude_cmd,
                 "--message", task_text,
                 "--cwd", str(self.project_root),
             ]
@@ -1424,9 +1425,21 @@ class SYD2Agent:
 
                     # 2. Build UI-CLI command
                     ui_cli_config = self.config["ui_cli"]
+
+                    # Handle both global ui-cli and python script invocation
+                    executable = ui_cli_config['executable']
+                    script_path = ui_cli_config.get('script_path', '')
+
+                    if script_path:
+                        # Using python3 script.py
+                        cli_cmd = f"{executable} {script_path}"
+                    else:
+                        # Using global ui-cli command
+                        cli_cmd = executable
+
                     cmd = (
                         f"cd /opt/unified-intelligence-cli && "
-                        f"{ui_cli_config['executable']} "
+                        f"{cli_cmd} "
                         f"--task '{task.task_text}' "
                         f"--provider {ui_cli_config['default_provider']} "
                         f"--routing {ui_cli_config['routing']} "
