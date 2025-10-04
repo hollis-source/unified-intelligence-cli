@@ -99,12 +99,13 @@ class PriorityWorkerFactory:
             return await self.use_case.execute(task)
 
     class StatusUpdaterAdapter:
-        """Adapts UpdateStatusUseCase to StatusUpdater protocol."""
-        def __init__(self, use_case):
+        """Adapts UpdateStatusUseCase to StatusUpdater protocol with Redis persistence."""
+        def __init__(self, use_case, redis_adapter):
             self.use_case = use_case
+            self.redis_adapter = redis_adapter
 
         def update_status(self, task_dict, status):
-            """Update status by converting dict to Task entity with Phase 1 fields."""
+            """Update status by converting dict to Task entity with Phase 1 fields and persist to Redis."""
             # Extract Phase 1 fields from dict
             phase1_fields = ['description', 'parent_priority_id', 'parent_context_hash', 'is_stale', 'spawned_by']
             metadata_keys = [k for k in task_dict.keys() if k not in ['id', 'priority', 'status'] + phase1_fields]
@@ -123,6 +124,8 @@ class PriorityWorkerFactory:
             updated_task = self.use_case.execute(task, status)
             # Update the original dict in place
             task_dict['status'] = updated_task.status
+            # Persist status change to Redis
+            self.redis_adapter.update_status(task_dict['id'], status)
 
     class BranchManagerAdapter:
         """Adapts ManageBranchesUseCase to BranchManager protocol."""
@@ -290,7 +293,7 @@ class PriorityWorkerFactory:
         # Create protocol adapters that bridge use cases to PriorityWorker protocol interfaces
         task_poller = self.TaskPollerAdapter(redis_adapter)  # Phase 1: Poll from Redis queue
         task_claimer = self.TaskClaimerAdapter(claim_task_uc)
-        status_updater = self.StatusUpdaterAdapter(update_status_uc)
+        status_updater = self.StatusUpdaterAdapter(update_status_uc, redis_adapter)  # Phase 1: Redis persistence
         branch_manager = self.BranchManagerAdapter(manage_branches_uc)
         workflow_executor = self.WorkflowExecutorAdapter(execute_workflow_uc)
         metrics_tracker = self.MetricsTrackerAdapter(track_metrics_uc, sample_metrics)
