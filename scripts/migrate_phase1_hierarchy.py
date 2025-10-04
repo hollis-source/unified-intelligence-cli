@@ -11,6 +11,7 @@ Usage:
 """
 
 import sys
+import os
 from pathlib import Path
 
 # Add src to path
@@ -28,17 +29,20 @@ def main():
     print("=" * 70)
     print()
 
-    # Initialize Redis adapter
+    # Initialize Redis adapter (use env vars if in container, else localhost)
+    redis_host = os.environ.get('REDIS_HOST', 'localhost')
+    redis_port = int(os.environ.get('REDIS_PORT', '6379'))
+    redis_db = int(os.environ.get('REDIS_DB', '0'))
     redis_config = {
-        'host': 'localhost',
-        'port': 6379,
-        'db': 0,
+        'host': redis_host,
+        'port': redis_port,
+        'db': redis_db,
         'lock_ttl': 3600,  # 1 hour
         'worker_id': 'migration-script'
     }
 
     adapter = RedisAdapter(redis_config)
-    print("✅ Connected to Redis (localhost:6379)")
+    print(f"✅ Connected to Redis ({redis_host}:{redis_port})")
 
     # Step 1: Create default priority for existing tasks
     default_priority = Priority(
