@@ -129,9 +129,23 @@ class CLITaskExecutor:
         # Try to import and execute real task implementation
         try:
             # Try all task modules
-            from src.dsl.tasks import gpu_integration_tasks, git_operations_tasks, refactoring_tasks, grok_analysis_tasks, system_analysis_tasks, hf_spaces_analysis_tasks
+            from src.dsl.tasks import (
+                gpu_integration_tasks,
+                git_operations_tasks,
+                refactoring_tasks,
+                grok_analysis_tasks,
+                system_analysis_tasks,
+                hf_spaces_analysis_tasks,
+                code_review_tasks
+            )
 
-            # Check GPU integration tasks first
+            # Check code review tasks first (new broadcast composition demo)
+            if hasattr(code_review_tasks, task_name):
+                task_func = getattr(code_review_tasks, task_name)
+                result = await task_func(input_data)
+                return result
+
+            # Check GPU integration tasks
             if hasattr(gpu_integration_tasks, task_name):
                 task_func = getattr(gpu_integration_tasks, task_name)
                 result = await task_func(input_data)

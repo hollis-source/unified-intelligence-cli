@@ -13,6 +13,7 @@ from . import grok_analysis_tasks
 from . import system_analysis_tasks
 from . import hf_spaces_analysis_tasks
 from . import qwen3_deployment_tasks
+from . import code_review_tasks
 
 __all__ = [
     'gpu_integration_tasks',
@@ -21,5 +22,6 @@ __all__ = [
     'grok_analysis_tasks',
     'system_analysis_tasks',
     'hf_spaces_analysis_tasks',
-    'qwen3_deployment_tasks'
+    'qwen3_deployment_tasks',
+    'code_review_tasks'
 ]
