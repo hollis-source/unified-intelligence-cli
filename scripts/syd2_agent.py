@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-SYD2 Autonomous Agent - Phase 1 Implementation
+SYD2 Autonomous Agent - Phase 1 & 2 Implementation
 Continuously exercises UI-CLI on syd2.jacobhollis.com, collects metrics, and generates improvements.
+
+Phase 1: Core infrastructure (SSH, task generation, metrics collection)
+Phase 2: Metrics analysis (pattern detection, anomaly detection, trend analysis)
 
 Architecture: Clean Architecture with composition over inheritance
 Design: Category theory-based task generation, SSH automation, metrics analysis
@@ -21,6 +24,7 @@ from logging.handlers import RotatingFileHandler
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+import numpy as np
 import paramiko
 import yaml
 
@@ -109,6 +113,18 @@ class Metric:
     timestamp: str
     routing_info: Optional[Dict] = None
     error_type: Optional[str] = None
+
+
+@dataclass
+class Pattern:
+    """Detected pattern from metrics analysis"""
+
+    type: str  # 'high_failure_rate', 'high_latency', 'routing_errors', 'anomaly', 'trend'
+    severity: str  # 'low', 'medium', 'high', 'critical'
+    data: Dict[str, Any]
+    recommendation: str
+    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
+    occurrences: int = 1  # Track persistence across analysis cycles
 
 
 # ==========================
@@ -483,6 +499,333 @@ class MetricsCollector(AbstractManager):
 
 
 # ==========================
+# METRICS ANALYZER
+# ==========================
+
+
+class MetricsAnalyzer(AbstractManager):
+    """
+    Analyzes metrics to detect patterns and generate recommendations
+    Implements: failure detection, latency analysis, anomaly detection, trend analysis
+    """
+
+    def __init__(self, config: Dict[str, Any]):
+        super().__init__(config)
+        self.thresholds = config["analysis"]["thresholds"]
+        self.trend_window = config["analysis"]["trend_window"]
+        self.min_samples = config["analysis"].get("min_samples", 20)
+        self.detected_patterns: Dict[str, Pattern] = {}  # type -> pattern
+
+    async def initialize(self) -> None:
+        """Initialize analyzer"""
+        self.logger.info("MetricsAnalyzer initialized")
+
+    async def analyze(self, metrics: List[Metric]) -> List[Pattern]:
+        """
+        Run all detection algorithms on metrics
+        Returns: List of detected patterns
+        """
+        if len(metrics) < self.min_samples:
+            self.logger.debug(
+                f"Insufficient samples for analysis: {len(metrics)} < {self.min_samples}"
+            )
+            return []
+
+        patterns = []
+
+        # Run all detectors
+        try:
+            # 1. Failure rate detection
+            failure_pattern = self.detect_failures(metrics)
+            if failure_pattern:
+                patterns.append(failure_pattern)
+
+            # 2. Latency spike detection
+            latency_pattern = self.detect_slow_tasks(metrics)
+            if latency_pattern:
+                patterns.append(latency_pattern)
+
+            # 3. Routing error detection (if routing info available)
+            routing_metrics = [m for m in metrics if m.routing_info is not None]
+            if len(routing_metrics) >= self.min_samples:
+                routing_pattern = self.detect_routing_errors(routing_metrics)
+                if routing_pattern:
+                    patterns.append(routing_pattern)
+
+            # 4. Anomaly detection (statistical outliers)
+            anomalies = self.detect_anomalies(metrics)
+            if anomalies:
+                patterns.append(
+                    Pattern(
+                        type="anomalies",
+                        severity="medium",
+                        data={
+                            "count": len(anomalies),
+                            "task_ids": [a.task_id for a in anomalies[:5]],
+                        },
+                        recommendation=f"Investigate {len(anomalies)} anomalous tasks with extreme latency values",
+                    )
+                )
+
+            # 5. Trend detection
+            trend_pattern = self.detect_trends(metrics)
+            if trend_pattern:
+                patterns.append(trend_pattern)
+
+            # Update persistence tracking
+            for pattern in patterns:
+                key = pattern.type
+                if key in self.detected_patterns:
+                    # Pattern persists - increment occurrence count
+                    self.detected_patterns[key].occurrences += 1
+                    pattern.occurrences = self.detected_patterns[key].occurrences
+                else:
+                    # New pattern
+                    self.detected_patterns[key] = pattern
+
+            if patterns:
+                self.logger.info(f"Detected {len(patterns)} patterns")
+                for p in patterns:
+                    self.logger.warning(
+                        f"Pattern: {p.type} (severity: {p.severity}, "
+                        f"occurrences: {p.occurrences})"
+                    )
+
+        except Exception as e:
+            self.logger.error(f"Error during analysis: {e}")
+
+        return patterns
+
+    def detect_failures(self, metrics: List[Metric]) -> Optional[Pattern]:
+        """
+        Detect high failure rate (>threshold%)
+        Returns: Pattern if failure rate exceeds threshold
+        """
+        total = len(metrics)
+        failures = sum(1 for m in metrics if not m.success)
+        failure_rate = failures / total if total > 0 else 0
+
+        threshold = self.thresholds["failure_rate"]
+
+        if failure_rate > threshold:
+            # Group errors by type
+            error_types = {}
+            for m in metrics:
+                if not m.success and m.error_type:
+                    error_types[m.error_type] = error_types.get(m.error_type, 0) + 1
+
+            # Top 3 error types
+            top_errors = sorted(error_types.items(), key=lambda x: x[1], reverse=True)[
+                :3
+            ]
+
+            return Pattern(
+                type="high_failure_rate",
+                severity="high" if failure_rate > threshold * 2 else "medium",
+                data={
+                    "rate": round(failure_rate, 3),
+                    "count": failures,
+                    "total": total,
+                    "top_errors": top_errors,
+                },
+                recommendation=(
+                    f"Failure rate {failure_rate*100:.1f}% exceeds {threshold*100:.1f}% threshold. "
+                    f"Top errors: {', '.join(e[0] for e in top_errors[:3])}. "
+                    "Investigate error logs, improve error handling, add retries."
+                ),
+            )
+
+        return None
+
+    def detect_slow_tasks(self, metrics: List[Metric]) -> Optional[Pattern]:
+        """
+        Detect latency >95th percentile affecting >10% of tasks
+        Returns: Pattern if too many slow tasks
+        """
+        if len(metrics) < 10:
+            return None
+
+        latencies = [m.latency for m in metrics]
+        p95 = np.percentile(latencies, 95)
+        p50 = np.percentile(latencies, 50)
+
+        slow_tasks = [m for m in metrics if m.latency > p95]
+        slow_ratio = len(slow_tasks) / len(metrics)
+
+        # Trigger if >10% of tasks are slow
+        if slow_ratio > 0.10:
+            # Group slow tasks by category
+            slow_by_category = {}
+            for m in slow_tasks:
+                slow_by_category[m.category] = slow_by_category.get(m.category, 0) + 1
+
+            top_slow_categories = sorted(
+                slow_by_category.items(), key=lambda x: x[1], reverse=True
+            )[:3]
+
+            return Pattern(
+                type="high_latency",
+                severity="high" if slow_ratio > 0.20 else "medium",
+                data={
+                    "p50": round(p50, 2),
+                    "p95": round(p95, 2),
+                    "slow_count": len(slow_tasks),
+                    "slow_ratio": round(slow_ratio, 3),
+                    "top_slow_categories": top_slow_categories,
+                },
+                recommendation=(
+                    f"{slow_ratio*100:.1f}% of tasks exceed p95 latency ({p95:.2f}s). "
+                    f"P50: {p50:.2f}s. Slow categories: {', '.join(c[0] for c in top_slow_categories)}. "
+                    "Optimize LLM calls, implement caching, reduce task complexity."
+                ),
+            )
+
+        return None
+
+    def detect_routing_errors(self, metrics: List[Metric]) -> Optional[Pattern]:
+        """
+        Detect routing accuracy <threshold%
+        Returns: Pattern if routing accuracy is poor
+        """
+        total = len(metrics)
+        # Assume routing_info has 'is_correct' field
+        incorrect = sum(
+            1
+            for m in metrics
+            if m.routing_info and not m.routing_info.get("is_correct", True)
+        )
+
+        accuracy = 1 - (incorrect / total) if total > 0 else 1.0
+        threshold = self.thresholds["routing_accuracy"]
+
+        if accuracy < threshold:
+            # Group errors by expected vs actual team
+            routing_errors = {}
+            for m in metrics:
+                if m.routing_info and not m.routing_info.get("is_correct", True):
+                    expected = m.routing_info.get("expected_team", "unknown")
+                    actual = m.routing_info.get("actual_team", "unknown")
+                    key = f"{expected} → {actual}"
+                    routing_errors[key] = routing_errors.get(key, 0) + 1
+
+            top_errors = sorted(routing_errors.items(), key=lambda x: x[1], reverse=True)[
+                :3
+            ]
+
+            return Pattern(
+                type="routing_errors",
+                severity="high" if accuracy < threshold * 0.8 else "medium",
+                data={
+                    "accuracy": round(accuracy, 3),
+                    "errors": incorrect,
+                    "total": total,
+                    "top_misroutes": top_errors,
+                },
+                recommendation=(
+                    f"Routing accuracy {accuracy*100:.1f}% below {threshold*100:.1f}% threshold. "
+                    f"Top misroutes: {', '.join(e[0] for e in top_errors)}. "
+                    "Improve domain classifier, refine team routing logic, add training data."
+                ),
+            )
+
+        return None
+
+    def detect_anomalies(self, metrics: List[Metric]) -> List[Metric]:
+        """
+        Detect statistical outliers using z-score
+        Returns: List of anomalous metrics (z-score > threshold)
+        """
+        if len(metrics) < 10:
+            return []
+
+        latencies = np.array([m.latency for m in metrics])
+        mean = np.mean(latencies)
+        std = np.std(latencies)
+
+        if std == 0:
+            return []
+
+        anomalies = []
+        threshold = self.thresholds["anomaly_z_score"]
+
+        for m in metrics:
+            z_score = abs((m.latency - mean) / std)
+            if z_score > threshold:
+                anomalies.append(m)
+
+        return anomalies
+
+    def detect_trends(self, metrics: List[Metric]) -> Optional[Pattern]:
+        """
+        Detect trends using moving averages
+        Returns: Pattern if significant trend detected
+        """
+        if len(metrics) < self.trend_window * 2:
+            return None
+
+        latencies = [m.latency for m in metrics]
+
+        # Calculate moving average
+        moving_avg = []
+        for i in range(len(latencies) - self.trend_window + 1):
+            window_avg = sum(latencies[i : i + self.trend_window]) / self.trend_window
+            moving_avg.append(window_avg)
+
+        if len(moving_avg) < 10:
+            return None
+
+        # Compare recent vs historical average
+        recent_avg = sum(moving_avg[-5:]) / 5
+        historical_avg = sum(moving_avg[:5]) / 5
+
+        # Detect increasing trend (>20% increase)
+        if recent_avg > historical_avg * 1.2:
+            magnitude = (recent_avg - historical_avg) / historical_avg
+
+            return Pattern(
+                type="increasing_latency_trend",
+                severity="medium" if magnitude < 0.5 else "high",
+                data={
+                    "recent_avg": round(recent_avg, 2),
+                    "historical_avg": round(historical_avg, 2),
+                    "magnitude": round(magnitude, 3),
+                    "increase_percent": round(magnitude * 100, 1),
+                },
+                recommendation=(
+                    f"Latency trending upward: {magnitude*100:.1f}% increase "
+                    f"(recent avg: {recent_avg:.2f}s vs historical: {historical_avg:.2f}s). "
+                    "Monitor resource usage, check for memory leaks, review recent changes."
+                ),
+            )
+
+        # Detect decreasing trend (>20% decrease - positive!)
+        elif recent_avg < historical_avg * 0.8:
+            magnitude = (historical_avg - recent_avg) / historical_avg
+
+            return Pattern(
+                type="decreasing_latency_trend",
+                severity="low",  # This is good news!
+                data={
+                    "recent_avg": round(recent_avg, 2),
+                    "historical_avg": round(historical_avg, 2),
+                    "magnitude": round(magnitude, 3),
+                    "decrease_percent": round(magnitude * 100, 1),
+                },
+                recommendation=(
+                    f"Latency improving: {magnitude*100:.1f}% decrease "
+                    f"(recent avg: {recent_avg:.2f}s vs historical: {historical_avg:.2f}s). "
+                    "Positive trend! Consider what recent changes contributed to improvement."
+                ),
+            )
+
+        return None
+
+    async def shutdown(self) -> None:
+        """No cleanup needed"""
+        pass
+
+
+# ==========================
 # MAIN ORCHESTRATOR
 # ==========================
 
@@ -490,7 +833,7 @@ class MetricsCollector(AbstractManager):
 class SYD2Agent:
     """
     Main autonomous agent orchestrator
-    Composes: SSHManager, TaskGenerator, MetricsCollector
+    Composes: SSHManager, TaskGenerator, MetricsCollector, MetricsAnalyzer
     """
 
     def __init__(self, config_path: str):
@@ -501,9 +844,11 @@ class SYD2Agent:
         self.ssh_manager = SSHManager(self.config)
         self.task_generator = TaskGenerator(self.config)
         self.metrics_collector = MetricsCollector(self.config)
+        self.metrics_analyzer = MetricsAnalyzer(self.config)
 
         self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.running = False
+        self.analysis_interval = self.config["execution"].get("analysis_interval", 10)  # Analyze every N tasks
 
     def _load_config(self, config_path: str) -> Dict[str, Any]:
         """Load YAML configuration"""
@@ -561,6 +906,7 @@ class SYD2Agent:
         await self.ssh_manager.initialize()
         await self.task_generator.initialize()
         await self.metrics_collector.initialize()
+        await self.metrics_analyzer.initialize()
         self.logger.info("All managers initialized successfully")
 
     async def run(self, duration_hours: float = 24) -> None:
@@ -662,7 +1008,20 @@ class SYD2Agent:
                     metric = await self.metrics_collector.collect(task, result)
                     await self.metrics_collector.store(metric, self.session_id)
 
-                    # 5. Pause between tasks
+                    # 5. Periodic analysis (every N tasks)
+                    if task_count % self.analysis_interval == 0:
+                        self.logger.info(
+                            f"[Analysis] Running analysis on {len(self.metrics_collector.metrics)} metrics..."
+                        )
+                        patterns = await self.metrics_analyzer.analyze(
+                            self.metrics_collector.metrics
+                        )
+
+                        if patterns:
+                            # Store patterns to session file
+                            await self._store_patterns(patterns)
+
+                    # 6. Pause between tasks
                     self.logger.info(
                         f"[Task {task_count}] Waiting {pause_between}s before next task..."
                     )
@@ -687,12 +1046,56 @@ class SYD2Agent:
         finally:
             await self.shutdown()
 
+    async def _store_patterns(self, patterns: List[Pattern]) -> None:
+        """
+        Store detected patterns to session file
+        """
+        try:
+            session_file = (
+                self.metrics_collector.local_dir / f"session_{self.session_id}.json"
+            )
+
+            if not session_file.exists():
+                self.logger.warning(f"Session file not found: {session_file}")
+                return
+
+            # Load session data
+            with open(session_file, "r") as f:
+                session_data = json.load(f)
+
+            # Initialize patterns list if not exists
+            if "patterns" not in session_data:
+                session_data["patterns"] = []
+
+            # Add new patterns
+            for pattern in patterns:
+                session_data["patterns"].append({
+                    "type": pattern.type,
+                    "severity": pattern.severity,
+                    "data": pattern.data,
+                    "recommendation": pattern.recommendation,
+                    "timestamp": pattern.timestamp,
+                    "occurrences": pattern.occurrences,
+                })
+
+            session_data["last_analysis"] = datetime.now().isoformat()
+
+            # Write back
+            with open(session_file, "w") as f:
+                json.dump(session_data, f, indent=2)
+
+            self.logger.info(f"Stored {len(patterns)} patterns to {session_file.name}")
+
+        except Exception as e:
+            self.logger.error(f"Failed to store patterns: {e}")
+
     async def shutdown(self) -> None:
         """Cleanup all resources"""
         self.logger.info("Shutting down...")
         await self.ssh_manager.shutdown()
         await self.task_generator.shutdown()
         await self.metrics_collector.shutdown()
+        await self.metrics_analyzer.shutdown()
         self.logger.info("Shutdown complete")
 
 

@@ -9,6 +9,7 @@ execution:
   duration_hours: 24
   max_concurrent: 5
   pause_between_tasks: 300  # 5 minutes
+  analysis_interval: 10  # Run analysis every N tasks
 
 metrics:
   local_dir: data/syd2_metrics
