@@ -1,0 +1,59 @@
+# Priority Worker Production Configuration
+# Transition from pilot to continuous 24/7 operation
+# Generated on 2025-10-04 for production deployment
+
+priority_worker:
+  # Production daemon configuration
+  daemon:
+    cycle_hours: 24        # Main loop cycle duration (24 hours for SYD2-like operation)
+    max_retries: 5         # Higher retries for production resilience
+    base_delay: 2.0        # Conservative backoff for production
+    health_check_interval: 300  # Health check every 5 minutes
+
+  # Redis configuration (for atomic locking)
+  redis:
+    host: localhost
+    port: 6379
+    db: 0                  # Redis database number
+    lock_ttl: 600          # Lock TTL: 10 minutes (longer for production)
+    connection_timeout: 10 # Connection timeout in seconds
+
+  # Git configuration (for branch management)
+  git:
+    repo_path: /home/ui-cli_jake/unified-intelligence-cli
+    branch_prefix: production/priority  # Production branch prefix
+    auto_cleanup: true     # Cleanup completed branches
+    push_on_completion: false  # Don't auto-push (manual review first)
+
+  # DSL executor configuration (for workflow execution)
+  dsl:
+    cwd: /home/ui-cli_jake/unified-intelligence-cli
+    timeout: 600           # Longer timeout for complex workflows
+    executor_cmd: python3 -m src.dsl.cli_integration
+    max_concurrent: 1      # Sequential processing for production safety
+
+  # Logging configuration (enhanced for production)
+  logging:
+    level: INFO            # INFO level for production
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    file: logs/priority_worker_production.log
+    max_bytes: 10485760    # 10MB log rotation
+    backup_count: 5        # Keep 5 backup logs
+
+  # Priority queue configuration (task polling)
+  priority_queue:
+    queue_file: config/priorities_production.yaml  # Path to production priorities YAML file
+    poll_interval: 60      # Poll every minute for new tasks
+
+  # Monitoring configuration
+  monitoring:
+    metrics_file: data/metrics/priority_worker_production.json
+    dashboard_port: 8080   # Future: metrics dashboard
+    alert_on_failure: true # Alert on task failures
+
+  # Production safety features
+  safety:
+    require_confirmation: false  # Autonomous execution
+    dry_run: false         # Real execution
+    max_tasks_per_cycle: 50  # Limit tasks per cycle
+    emergency_stop_file: /tmp/priority_worker_stop  # Touch this file to stop

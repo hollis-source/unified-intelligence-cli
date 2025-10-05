@@ -1,0 +1,18 @@
+# HTN Decomposition Example: Software Development Pipeline
+#
+# This workflow demonstrates Hierarchical Task Network decomposition
+# with a 5-stage software development pipeline using composition.
+#
+# Execution order (right-to-left): analyze → design → implement → test → deploy
+# HTN will decompose this into a hierarchical task tree.
+
+# Define individual task functors
+functor analyze = research
+functor design = design_arch
+functor implement = code
+functor test = testing
+functor deploy = deployment
+
+# Compose into sequential pipeline (deploy ∘ test ∘ implement ∘ design ∘ analyze)
+# HTN compiler will create hierarchical decomposition with proper execution order
+functor pipeline = deploy o test o implement o design o analyze

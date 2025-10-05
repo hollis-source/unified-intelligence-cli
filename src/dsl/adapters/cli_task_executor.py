@@ -137,10 +137,31 @@ class CLITaskExecutor:
                 system_analysis_tasks,
                 hf_spaces_analysis_tasks,
                 code_review_tasks,
-                priorities_analysis_tasks
+                priorities_analysis_tasks,
+                next_task_tasks,
+                phase1_tasks,
+                implementation_tasks
             )
 
-            # Check priorities analysis tasks first (DSL runtime dogfooding)
+            # Check implementation tasks first (code generation)
+            if hasattr(implementation_tasks, task_name):
+                task_func = getattr(implementation_tasks, task_name)
+                result = await task_func(input_data)
+                return result
+
+            # Check Phase 1 design tasks (active development)
+            if hasattr(phase1_tasks, task_name):
+                task_func = getattr(phase1_tasks, task_name)
+                result = await task_func(input_data)
+                return result
+
+            # Check next task analysis (immediate priority determination)
+            if hasattr(next_task_tasks, task_name):
+                task_func = getattr(next_task_tasks, task_name)
+                result = await task_func(input_data)
+                return result
+
+            # Check priorities analysis tasks (DSL runtime dogfooding)
             if hasattr(priorities_analysis_tasks, task_name):
                 task_func = getattr(priorities_analysis_tasks, task_name)
                 result = await task_func(input_data)

@@ -1,0 +1,29 @@
+{
+  "session_id": "20251003_170236",
+  "timestamp": "2025-10-03T17:02:40.000103",
+  "routing_metrics": [
+    {
+      "timestamp": "2025-10-03T17:02:36.995176",
+      "task_description": "Create a .ct workflow for DSL deployment testing with composition operators",
+      "classified_domain": "dsl",
+      "domain_score": 40.0,
+      "target_team": "DSL",
+      "target_agent": "dsl-task-engineer",
+      "expected_domain": null,
+      "expected_team": null,
+      "is_correct": null
+    }
+  ],
+  "model_metrics": [],
+  "team_metrics": [],
+  "summary": {
+    "routing_accuracy": 0.0,
+    "total_routing_decisions": 1,
+    "correct_routing_decisions": 0,
+    "model_selection_breakdown": {},
+    "fallback_usage_rate": 0.0,
+    "team_utilization": {},
+    "total_model_selections": 0,
+    "total_team_snapshots": 0
+  }
+}

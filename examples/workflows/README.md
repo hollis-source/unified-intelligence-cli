@@ -11,16 +11,38 @@ This directory contains example Category Theory DSL programs that can be execute
 
 ## Running DSL Programs
 
-### Using the CLI integration module:
-```bash
-# From project root
-PYTHONPATH=. venv/bin/python -m src.dsl.cli_integration examples/workflows/simple_pipeline.ct
+### Unified CLI (Recommended - NEW)
 
-# With verbose output
-PYTHONPATH=. venv/bin/python -m src.dsl.cli_integration examples/workflows/fullstack_pipeline.ct --verbose
+Execute workflows through the main CLI with lifecycle phases:
+
+```bash
+# From project root (with venv activated)
+python -m src.main --workflow examples/workflows/simple_pipeline.ct
+
+# With verbose output showing lifecycle phases
+python -m src.main --workflow examples/workflows/fullstack_pipeline.ct --verbose
+
+# Output shows lifecycle progression:
+✓ PLAN: Parsed workflow from examples/workflows/simple_pipeline.ct
+✓ VERIFY: Passed 2 validation checks
+✓ DECOMPOSE: 3 executable tasks identified
+✓ EXECUTE: Workflow completed successfully
 ```
 
-### Using Python directly:
+**Lifecycle Phases**:
+- **PLAN**: Parse `.ct` file to AST, extract symbol table
+- **VERIFY**: Validate workflow structure (non-empty, executable nodes)
+- **DECOMPOSE**: Identify and count executable tasks
+- **EXECUTE**: Run workflow via interpreter
+- **COMPLETE**: Return results with timing
+
+### Legacy Method (Deprecated):
+```bash
+# Old way - still works but lacks lifecycle tracking
+PYTHONPATH=. venv/bin/python -m src.dsl.cli_integration examples/workflows/simple_pipeline.ct
+```
+
+### Using Python Directly (Advanced):
 ```python
 from src.dsl.adapters.parser import Parser
 from src.dsl.use_cases.interpreter import Interpreter

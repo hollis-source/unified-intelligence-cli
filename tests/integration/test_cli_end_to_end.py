@@ -84,7 +84,7 @@ class TestCLIEndToEnd:
         ]
 
         # Compose dependencies
-        coordinator = compose_dependencies(
+        coordinator, _ = compose_dependencies(
             llm_provider=mock_provider,
             agents=agents,
             logger=None
@@ -102,7 +102,7 @@ class TestCLIEndToEnd:
         agents = [Agent(role="coder", capabilities=["code", "write"])]
 
         # Compose
-        coordinator = compose_dependencies(mock_provider, agents, None)
+        coordinator, _ = compose_dependencies(mock_provider, agents, None)
 
         # Execute
         tasks = [Task(description="Write a function", priority=1)]
@@ -131,7 +131,7 @@ class TestFileOperationsIntegration:
 
         # Compose
         from src.composition import compose_dependencies
-        coordinator = compose_dependencies(mock_provider, agents, None)
+        coordinator, _ = compose_dependencies(mock_provider, agents, None)
 
         # Execute task
         task = Task(
@@ -161,7 +161,7 @@ class TestFileOperationsIntegration:
 
         # Compose
         from src.composition import compose_dependencies
-        coordinator = compose_dependencies(mock_provider, agents, None)
+        coordinator, _ = compose_dependencies(mock_provider, agents, None)
 
         # Execute multi-step workflow
         tasks = [
@@ -207,7 +207,7 @@ class TestComplexScenarios:
 
         # Compose
         from src.composition import compose_dependencies
-        coordinator = compose_dependencies(mock_provider, agents, None)
+        coordinator, _ = compose_dependencies(mock_provider, agents, None)
 
         # Create many tasks
         tasks = [
@@ -231,7 +231,7 @@ class TestComplexScenarios:
 
         # Compose
         from src.composition import compose_dependencies
-        coordinator = compose_dependencies(mock_provider, agents, None)
+        coordinator, _ = compose_dependencies(mock_provider, agents, None)
 
         # Create tasks with mixed priorities
         tasks = [
@@ -260,7 +260,7 @@ class TestComplexScenarios:
 
         # Compose
         from src.composition import compose_dependencies
-        coordinator = compose_dependencies(mock_provider, agents, None)
+        coordinator, _ = compose_dependencies(mock_provider, agents, None)
 
         # Create specialized tasks
         tasks = [

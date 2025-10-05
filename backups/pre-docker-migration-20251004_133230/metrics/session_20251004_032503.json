@@ -1,0 +1,29 @@
+{
+  "session_id": "20251004_032503",
+  "timestamp": "2025-10-04T03:26:25.879460",
+  "routing_metrics": [
+    {
+      "timestamp": "2025-10-04T03:25:14.959362",
+      "task_description": "Bazel Build Research: Investigate Bazel Build integration with 96-threaded parallel processing for o",
+      "classified_domain": "research",
+      "domain_score": 4.0,
+      "target_team": "Research",
+      "target_agent": "research-lead",
+      "expected_domain": null,
+      "expected_team": null,
+      "is_correct": null
+    }
+  ],
+  "model_metrics": [],
+  "team_metrics": [],
+  "summary": {
+    "routing_accuracy": 0.0,
+    "total_routing_decisions": 1,
+    "correct_routing_decisions": 0,
+    "model_selection_breakdown": {},
+    "fallback_usage_rate": 0.0,
+    "team_utilization": {},
+    "total_model_selections": 0,
+    "total_team_snapshots": 0
+  }
+}
