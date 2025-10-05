@@ -1,0 +1,21 @@
+# Fresh LLM Benchmark - Phase 3 Performance Validation
+# Tests Phase 3 in-process execution with FRESH LLM calls (no cache)
+# Each task has unique content to prevent cache hits
+
+# Task 1: Analyze quantum computing applications (unique prompt 1)
+functor task1 = ultrathink_analyze_quantum_computing_error_correction_algorithms_in_2025
+
+# Task 2: Evaluate blockchain consensus mechanisms (unique prompt 2)
+functor task2 = ultrathink_evaluate_proof_of_stake_vs_proof_of_work_energy_efficiency
+
+# Task 3: Research edge computing architectures (unique prompt 3)
+functor task3 = ultrathink_research_distributed_edge_computing_latency_optimization
+
+# Task 4: Assess neuromorphic chip designs (unique prompt 4)
+functor task4 = ultrathink_assess_neuromorphic_computing_memristor_integration
+
+# Task 5: Analyze synthetic biology workflows (unique prompt 5)
+functor task5 = ultrathink_analyze_crispr_gene_editing_automation_pipelines
+
+# Parallel execution: All 5 tasks run concurrently (broadcast pattern)
+functor main = (task1 * task2 * task3 * task4 * task5) o duplicate o gather_fresh_context
