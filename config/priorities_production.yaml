@@ -1,0 +1,136 @@
+# Production Priorities Queue for PriorityWorker
+# Real autonomous tasks for 24/7 continuous operation
+# Generated on 2025-10-04
+
+priorities:
+  # Critical priority tasks (priority: 4)
+  - id: "prod-001"
+    title: "Continuous Code Quality Monitoring"
+    priority: "critical"
+    status: "open"
+    effort_hours: 2
+    workflow: "code-quality-scan"
+    claimed_by: null
+    metadata:
+      description: "Run automated code quality checks on all Python modules"
+      expected_output: "Quality metrics report with actionable recommendations"
+      dependencies: []
+
+  - id: "prod-002"
+    title: "Security Vulnerability Scan"
+    priority: "critical"
+    status: "open"
+    effort_hours: 1.5
+    workflow: "security-scan"
+    claimed_by: null
+    metadata:
+      description: "Scan dependencies for known security vulnerabilities"
+      expected_output: "Security report with CVE details and remediation steps"
+      dependencies: []
+
+  # High priority tasks (priority: 3)
+  - id: "prod-003"
+    title: "Performance Profiling"
+    priority: "high"
+    status: "open"
+    effort_hours: 2
+    workflow: "performance-profile"
+    claimed_by: null
+    metadata:
+      description: "Profile multi-agent orchestration for bottlenecks"
+      expected_output: "Performance report with optimization recommendations"
+      dependencies: []
+
+  - id: "prod-004"
+    title: "Test Coverage Analysis"
+    priority: "high"
+    status: "open"
+    effort_hours: 1
+    workflow: "coverage-analysis"
+    claimed_by: null
+    metadata:
+      description: "Analyze test coverage and identify gaps"
+      expected_output: "Coverage report with untested code paths"
+      dependencies: []
+
+  - id: "prod-005"
+    title: "Documentation Audit"
+    priority: "high"
+    status: "open"
+    effort_hours: 1.5
+    workflow: "doc-audit"
+    claimed_by: null
+    metadata:
+      description: "Verify all modules have complete docstrings and examples"
+      expected_output: "Documentation completeness report"
+      dependencies: []
+
+  # Medium priority tasks (priority: 2)
+  - id: "prod-006"
+    title: "Dependency Update Check"
+    priority: "medium"
+    status: "open"
+    effort_hours: 1
+    workflow: "dependency-update-check"
+    claimed_by: null
+    metadata:
+      description: "Check for available updates to dependencies"
+      expected_output: "Update recommendations with compatibility notes"
+      dependencies: []
+
+  - id: "prod-007"
+    title: "Metrics Dashboard Update"
+    priority: "medium"
+    status: "open"
+    effort_hours: 2
+    workflow: "update-metrics-dashboard"
+    claimed_by: null
+    metadata:
+      description: "Update metrics dashboard with latest execution data"
+      expected_output: "Dashboard refreshed with current metrics"
+      dependencies: ["prod-003"]
+
+  - id: "prod-008"
+    title: "Integration Test Suite Expansion"
+    priority: "medium"
+    status: "open"
+    effort_hours: 3
+    workflow: "expand-integration-tests"
+    claimed_by: null
+    metadata:
+      description: "Add new integration tests for recent features"
+      expected_output: "New test cases added with 100% pass rate"
+      dependencies: ["prod-004"]
+
+  # Low priority tasks (priority: 1)
+  - id: "prod-009"
+    title: "Cleanup Stale Branches"
+    priority: "low"
+    status: "open"
+    effort_hours: 0.5
+    workflow: "cleanup-branches"
+    claimed_by: null
+    metadata:
+      description: "Remove merged and stale Git branches"
+      expected_output: "Branch cleanup summary"
+      dependencies: []
+
+  - id: "prod-010"
+    title: "Generate Weekly Report"
+    priority: "low"
+    status: "open"
+    effort_hours: 1
+    workflow: "weekly-report"
+    claimed_by: null
+    metadata:
+      description: "Compile weekly metrics and activity report"
+      expected_output: "Markdown report with key insights"
+      dependencies: ["prod-001", "prod-003", "prod-007"]
+
+# Production Notes:
+# - PriorityWorker runs in 24h cycles
+# - Tasks are claimed atomically via Redis + Git locking
+# - Status transitions: open → claimed → in_progress → completed/failed
+# - Failed tasks retry with exponential backoff (max 5 retries)
+# - Metrics tracked: throughput, latency, success rate
+# - Emergency stop: touch /tmp/priority_worker_stop

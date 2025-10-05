@@ -1,48 +1,66 @@
-# Python cache
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-
-# Virtual environment
-venv/
-env/
-ENV/
-
-# Testing
-tests/
-.pytest_cache/
-.coverage
-htmlcov/
-*.cover
-
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Git
-.git/
+# Exclude version control
+.git
 .gitignore
+.gitmodules
 
-# Documentation
-docs/
-*.md
-!README.md
-
-# Development files
+# Exclude virtual environments and dependencies
+venv
+.venv
+venv-automation
+env
 .env
-.env.example
-demo_*.py
-grok*.py
-strategy/
+__pycache__
+*.pyc
+*.pyo
+.Python
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# CI/CD
-.github/
+# Exclude training data and models (CRITICAL: 57GB!)
+training/
+*.pth
+*.pt
+*.ckpt
+*.safetensors
 
-# Build artifacts
+# Exclude logs, data, and temporary files (enhanced from current)
+logs/
+data/
+backups/
+# workflows/ - MUST INCLUDE: DSL .ct files are integral to architecture, not optional data
+/tmp/
+*.log
+*.pid
+*.tmp
+.cache
+.pytest_cache
+.coverage
+
+# Exclude build artifacts and caches
 dist/
 build/
-*.egg-info/
+target/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Exclude IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Exclude documentation and non-essential files
+README.md
+docs/
+examples/
+
+# Recursive exclusions for hidden dirs
+**/.git
+**/.venv
+**/node_modules
+**/.cache

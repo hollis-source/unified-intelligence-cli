@@ -18,18 +18,20 @@ class TestComposeDependencies:
         mock_provider = Mock(spec=ITextGenerator)
         mock_agents = [Agent(role="coder", capabilities=["code"])]
 
-        result = compose_dependencies(
+        coordinator, metrics_collector = compose_dependencies(
             llm_provider=mock_provider,
             agents=mock_agents,
             logger=None
         )
 
         # Should return coordinator that implements interface
-        assert result is not None
-        assert hasattr(result, 'coordinate')
+        assert coordinator is not None
+        assert hasattr(coordinator, 'coordinate')
         # Check it's the right type
         from src.use_cases.task_coordinator import TaskCoordinatorUseCase
-        assert isinstance(result, TaskCoordinatorUseCase)
+        assert isinstance(coordinator, TaskCoordinatorUseCase)
+        # Metrics collector should be None when collect_metrics=False (default)
+        assert metrics_collector is None
 
     def test_compose_dependencies_with_logger(self):
         """Test composition with logger provided."""
@@ -37,28 +39,28 @@ class TestComposeDependencies:
         mock_agents = [Agent(role="tester", capabilities=["test"])]
         mock_logger = logging.getLogger("test")
 
-        result = compose_dependencies(
+        coordinator, _ = compose_dependencies(
             llm_provider=mock_provider,
             agents=mock_agents,
             logger=mock_logger
         )
 
-        assert result is not None
+        assert coordinator is not None
         # Logger should be passed to internal components
-        assert hasattr(result, 'logger')
+        assert hasattr(coordinator, 'logger')
 
     def test_compose_dependencies_without_logger(self):
         """Test composition without logger (None)."""
         mock_provider = Mock(spec=ITextGenerator)
         mock_agents = [Agent(role="reviewer", capabilities=["review"])]
 
-        result = compose_dependencies(
+        coordinator, _ = compose_dependencies(
             llm_provider=mock_provider,
             agents=mock_agents,
             logger=None
         )
 
-        assert result is not None
+        assert coordinator is not None
         # Should work fine without logger
 
     def test_compose_dependencies_wires_correctly(self):
@@ -69,7 +71,7 @@ class TestComposeDependencies:
             Agent(role="tester", capabilities=["test"])
         ]
 
-        coordinator = compose_dependencies(
+        coordinator, _ = compose_dependencies(
             llm_provider=mock_provider,
             agents=mock_agents,
             logger=None
@@ -94,7 +96,7 @@ class TestComposeDependencies:
 
         mock_agents = [Agent(role="coordinator", capabilities=["coordinate"])]
 
-        coordinator = compose_dependencies(
+        coordinator, _ = compose_dependencies(
             llm_provider=mock_provider,
             agents=mock_agents,
             logger=None
@@ -111,21 +113,21 @@ class TestComposeDependencies:
         mock_agents = []
 
         # Should still create coordinator, even with no agents
-        result = compose_dependencies(
+        coordinator, _ = compose_dependencies(
             llm_provider=mock_provider,
             agents=mock_agents,
             logger=None
         )
 
-        assert result is not None
+        assert coordinator is not None
 
     def test_compose_dependencies_creates_unique_instances(self):
         """Test that each composition creates fresh instances."""
         mock_provider = Mock(spec=ITextGenerator)
         mock_agents = [Agent(role="researcher", capabilities=["research"])]
 
-        coord1 = compose_dependencies(mock_provider, mock_agents, None)
-        coord2 = compose_dependencies(mock_provider, mock_agents, None)
+        coord1, _ = compose_dependencies(mock_provider, mock_agents, None)
+        coord2, _ = compose_dependencies(mock_provider, mock_agents, None)
 
         # Should be different instances
         assert coord1 is not coord2

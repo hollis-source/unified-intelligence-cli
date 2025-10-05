@@ -34,10 +34,82 @@ services:
       retries: 3
       start_period: 5s
 
+  # Redis for PriorityWorker task coordination
+  redis:
+    image: redis:7-alpine
+    container_name: priority-worker-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ui-cli-network
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    command: redis-server --appendonly yes
+
+  # PriorityWorker daemon (supports multi-worker via deploy.replicas)
+  priority-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.priority-worker
+    image: priority-worker:refactor
+    environment:
+      # API keys (XAI for Grok, OPENAI for fallback compatibility)
+      - XAI_API_KEY=${XAI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-${XAI_API_KEY}}
+      # Worker ID (unique per replica)
+      - WORKER_ID=${HOSTNAME}
+      # Redis connection
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - REDIS_LOCK_TTL=3600
+    volumes:
+      # Persistent logs and data
+      - ./logs:/app/logs
+      - ./data:/app/data
+      # Config files (read-only)
+      - ./config:/app/config:ro
+    ports:
+      # Metrics dashboard (use range for multiple workers)
+      - "8080-8089:8080"
+    networks:
+      - ui-cli-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    # Resource limits (per worker)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      # Multi-worker scaling (set replicas for horizontal scaling)
+      # replicas: 1  # Uncomment and increase for multi-worker deployment
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    # Graceful shutdown (SIGTERM handling)
+    stop_grace_period: 60s
+
 networks:
   ui-cli-network:
     driver: bridge
 
 volumes:
   workspace:
+    driver: local
+  redis-data:
     driver: local

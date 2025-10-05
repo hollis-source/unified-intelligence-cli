@@ -1,0 +1,11 @@
+# Test Workflow for Phase 2 Staleness Detection
+# Simple echo workflow to verify DSL execution without side effects
+
+# Type annotation
+echo_hello :: () -> String
+
+# Simple task that just echoes a message
+functor test_workflow = echo_hello
+
+# Task implementation would echo:
+# "Hello from DSL workflow - Testing Phase 2 staleness detection"

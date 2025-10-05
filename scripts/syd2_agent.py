@@ -29,6 +29,19 @@ import numpy as np
 import paramiko
 import yaml
 
+# SYD2 Enhancement Prototype Integration
+try:
+    from syd2_enhancements_prototype import (
+        ErrorHandler,
+        PerformanceOptimizer,
+        DSLIntegrationHook,
+        create_enhancement_suite,
+    )
+    ENHANCEMENTS_AVAILABLE = True
+except ImportError:
+    ENHANCEMENTS_AVAILABLE = False
+    logging.warning("SYD2 enhancements prototype not available")
+
 # ==========================
 # CUSTOM EXCEPTIONS
 # ==========================
@@ -1108,24 +1121,39 @@ Focus on addressing the root cause, not just symptoms. Ensure the fix is testabl
         Fallback option if Claude Code unavailable
         """
         try:
-            cmd = [
-                "ui-cli",
-                "--task", task_text,
-                "--provider", "auto",
-                "--routing", "team",
-                "--agents", "scaled",
-                "--orchestrator", "simple",
-                "--timeout", "600",
-                "--collect-metrics",
-            ]
+            # Get ui-cli config
+            ui_cli_config = self.config.get("ui_cli", {})
+            executable = ui_cli_config.get('executable', 'ui-cli')
+            script_path = ui_cli_config.get('script_path', '')
 
-            self.logger.info("Executing ui-cli for fix generation...")
+            # Build command - handle both wrapper script and python script
+            if script_path:
+                # Using python3 script.py
+                cmd = [executable, script_path]
+            else:
+                # Using wrapper script or global command
+                cmd = [executable]
+
+            # Add ui-cli arguments from config
+            cmd.extend([
+                "--task", task_text,
+                "--provider", ui_cli_config.get('default_provider', 'auto'),
+                "--routing", ui_cli_config.get('routing', 'team'),
+                "--agents", ui_cli_config.get('agents', 'scaled'),
+                "--orchestrator", ui_cli_config.get('orchestrator', 'simple'),
+                "--timeout", str(ui_cli_config.get('timeout', 600)),
+            ])
+
+            if ui_cli_config.get('collect_metrics', True):
+                cmd.append("--collect-metrics")
+
+            self.logger.info(f"Executing ui-cli for fix generation: {' '.join(cmd[:3])}...")
 
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=600,
+                timeout=ui_cli_config.get('timeout', 600),
                 cwd=str(self.project_root),
             )
 
@@ -1138,8 +1166,8 @@ Focus on addressing the root cause, not just symptoms. Ensure the fix is testabl
         except subprocess.TimeoutExpired:
             self.logger.error("UI-CLI timed out")
             return None
-        except FileNotFoundError:
-            self.logger.error("ui-cli not found")
+        except FileNotFoundError as e:
+            self.logger.error(f"ui-cli not found at {executable}: {e}")
             return None
 
     def _parse_fix_from_output(
@@ -1325,6 +1353,24 @@ class SYD2Agent:
         self.metrics_analyzer = MetricsAnalyzer(self.config)
         self.improvement_orchestrator = ImprovementOrchestrator(self.config)
 
+        # Initialize enhancement suite (Prototype)
+        if ENHANCEMENTS_AVAILABLE:
+            enhancement_config = self.config.get("enhancements", {})
+            self.enhancements = create_enhancement_suite(
+                max_retries=enhancement_config.get("max_retries", 3),
+                max_concurrent=enhancement_config.get("max_concurrent", 10),
+                cache_ttl=enhancement_config.get("cache_ttl", 300),
+            )
+            self.error_handler = self.enhancements["error_handler"]
+            self.performance_optimizer = self.enhancements["performance_optimizer"]
+            self.dsl_hook = self.enhancements["dsl_hook"]
+            self.logger.info("SYD2 enhancements prototype enabled")
+        else:
+            self.enhancements = None
+            self.error_handler = None
+            self.performance_optimizer = None
+            self.dsl_hook = None
+
         self.session_id = datetime.now().strftime("%Y%m%d_%H%M%S")
         self.running = False
         self.analysis_interval = self.config["execution"].get("analysis_interval", 10)  # Analyze every N tasks
@@ -1449,14 +1495,22 @@ class SYD2Agent:
                         f"{'--collect-metrics' if ui_cli_config['collect_metrics'] else ''}"
                     )
 
-                    # 3. Execute via SSH
+                    # 3. Execute via SSH (with retry if enhancements enabled)
                     self.logger.info(f"[Task {task_count}] Executing via SSH...")
                     start_exec = datetime.now()
 
                     try:
-                        ssh_result = await self.ssh_manager.execute_command(
-                            cmd, timeout=ui_cli_config["timeout"]
-                        )
+                        # Use retry logic if enhancements available
+                        if self.error_handler:
+                            ssh_result = await self.error_handler.retry_with_backoff(
+                                self.ssh_manager.execute_command,
+                                cmd,
+                                timeout=ui_cli_config["timeout"]
+                            )
+                        else:
+                            ssh_result = await self.ssh_manager.execute_command(
+                                cmd, timeout=ui_cli_config["timeout"]
+                            )
 
                         success = ssh_result["exit_code"] == 0
                         error_msg = None if success else ssh_result["stderr"]
@@ -1485,6 +1539,11 @@ class SYD2Agent:
 
                     except (SSHTimeout, SSHConnectionError) as e:
                         self.logger.error(f"[Task {task_count}] SSH error: {e}")
+
+                        # Track error pattern if enhancements enabled
+                        if self.dsl_hook:
+                            await self.dsl_hook.on_task_error(task.task_id, e)
+
                         result = ExecutionResult(
                             task_id=task.task_id,
                             success=False,
@@ -1508,6 +1567,23 @@ class SYD2Agent:
                         patterns = await self.metrics_analyzer.analyze(
                             self.metrics_collector.metrics
                         )
+
+                        # Log enhancement statistics if available
+                        if self.dsl_hook:
+                            enhancement_stats = self.dsl_hook.get_enhancement_stats()
+                            self.logger.info(
+                                f"[Enhancements] Error patterns: {len(enhancement_stats.get('error_patterns', {}))}, "
+                                f"Performance: {enhancement_stats.get('performance_metrics', {}).get('success_rate', 0):.1%} success, "
+                                f"{enhancement_stats.get('performance_metrics', {}).get('avg_latency', 0):.3f}s avg latency"
+                            )
+
+                            # Check for critical error patterns
+                            for pattern_type, pattern_data in enhancement_stats.get('error_patterns', {}).items():
+                                if pattern_data.get('severity') == 'critical':
+                                    self.logger.error(
+                                        f"[Enhancements] CRITICAL error pattern detected: {pattern_type} "
+                                        f"(frequency: {pattern_data.get('frequency', 0)})"
+                                    )
 
                         if patterns:
                             # Store patterns to session file

@@ -1,0 +1,48 @@
+# Alerting Configuration for PriorityWorker
+# Generated from ULTRATHINK design on 2025-10-04
+
+# Alert channels (configure at least one)
+channels:
+  # Log-based alerting (always enabled as fallback)
+  - type: log
+    log_file: logs/priority_worker_alerts.log
+
+  # Email alerting (configure SMTP settings)
+  # - type: email
+  #   smtp_host: smtp.gmail.com
+  #   smtp_port: 587
+  #   smtp_user: your-email@gmail.com
+  #   smtp_password: your-app-password
+  #   from_address: alerting@yourdomain.com
+  #   to_addresses:
+  #     - admin@yourdomain.com
+  #     - oncall@yourdomain.com
+  #   use_tls: true
+
+  # Slack webhook (optional)
+  # - type: webhook
+  #   webhook_url: https://hooks.slack.com/services/YOUR/WEBHOOK/URL
+  #   webhook_type: slack
+  #   timeout: 5
+
+  # Discord webhook (optional)
+  # - type: webhook
+  #   webhook_url: https://discord.com/api/webhooks/YOUR/WEBHOOK/URL
+  #   webhook_type: discord
+  #   timeout: 5
+
+# Alert thresholds
+thresholds:
+  failure_rate_percent: 20    # Alert if >20% tasks fail
+  memory_mb: 500              # Alert if memory >500MB
+  cycle_timeout_seconds: 300  # Alert if cycle takes >5 minutes
+
+# Rate limiting (avoid alert spam)
+rate_limit_seconds: 300  # Min 5 minutes between duplicate alerts
+
+# File paths
+health_check_script: scripts/health_check.sh
+log_file: logs/priority_worker_production.log
+
+# Monitoring interval (for daemon mode)
+check_interval_seconds: 60  # Check every 1 minute

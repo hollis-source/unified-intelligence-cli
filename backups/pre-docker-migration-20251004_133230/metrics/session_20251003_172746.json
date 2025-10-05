@@ -1,0 +1,17 @@
+{
+  "session_id": "20251003_172746",
+  "timestamp": "2025-10-03T17:27:49.347895",
+  "routing_metrics": [],
+  "model_metrics": [],
+  "team_metrics": [],
+  "summary": {
+    "routing_accuracy": 0.0,
+    "total_routing_decisions": 0,
+    "correct_routing_decisions": 0,
+    "model_selection_breakdown": {},
+    "fallback_usage_rate": 0.0,
+    "team_utilization": {},
+    "total_model_selections": 0,
+    "total_team_snapshots": 0
+  }
+}

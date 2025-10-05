@@ -3,6 +3,7 @@ LLM-powered agent executor - Adapter layer implementation.
 
 Week 1: Enhanced with error_details propagation for better debugging.
 Week 9: Added passive data collection for model training pipeline.
+SYD2 Fix: Added LLM response caching to reduce latency for expensive ULTRATHINK tasks.
 """
 
 import time
@@ -10,6 +11,7 @@ from typing import Optional, Any
 from src.entities import Agent, Task, ExecutionResult, ExecutionStatus, ExecutionContext
 from src.interfaces import IAgentExecutor, ITextGenerator, LLMConfig
 from src.exceptions import ToolExecutionError
+from src.adapters.agent.llm_cache import LLMResponseCache, CacheConfig
 
 
 class LLMAgentExecutor(IAgentExecutor):
@@ -25,7 +27,9 @@ class LLMAgentExecutor(IAgentExecutor):
         default_config: Optional[LLMConfig] = None,
         data_collector: Optional[Any] = None,
         provider_name: str = "unknown",
-        orchestrator: str = "simple"
+        orchestrator: str = "simple",
+        cache_config: Optional[CacheConfig] = None,
+        enable_cache: bool = True
     ):
         """
         Initialize with LLM provider.
@@ -36,6 +40,8 @@ class LLMAgentExecutor(IAgentExecutor):
             data_collector: Optional DataCollector for training data (Week 9)
             provider_name: LLM provider name (mock, grok, tongyi) (Week 9)
             orchestrator: Orchestrator mode (simple, openai-agents) (Week 9)
+            cache_config: Optional cache configuration (SYD2 fix)
+            enable_cache: Enable response caching (SYD2 fix)
         """
         self.llm_provider = llm_provider
         self.default_config = default_config or LLMConfig(
@@ -45,6 +51,12 @@ class LLMAgentExecutor(IAgentExecutor):
         self.data_collector = data_collector
         self.provider_name = provider_name
         self.orchestrator = orchestrator
+
+        # SYD2 FIX: Initialize response cache for expensive ULTRATHINK tasks
+        if enable_cache:
+            self.cache = LLMResponseCache(cache_config)
+        else:
+            self.cache = None
 
     async def execute(
         self,
@@ -72,12 +84,37 @@ class LLMAgentExecutor(IAgentExecutor):
         # Build prompt based on agent role and task
         messages = self._build_messages(agent, task, context)
 
-        try:
-            # Generate response using LLM
-            response = self.llm_provider.generate(
+        # SYD2 FIX: Check cache before expensive LLM call
+        cache_hit = False
+        response = None
+
+        if self.cache:
+            # Extract task description for cache keying
+            task_desc = self._extract_task_description(task)
+            response = self.cache.get(
                 messages=messages,
-                config=self.default_config
+                task_description=task_desc,
+                model_name=self.provider_name
             )
+            cache_hit = response is not None
+
+        try:
+            if not cache_hit:
+                # Generate response using LLM (cache miss or disabled)
+                response = self.llm_provider.generate(
+                    messages=messages,
+                    config=self.default_config
+                )
+
+                # Store in cache for future requests
+                if self.cache:
+                    task_desc = self._extract_task_description(task)
+                    self.cache.set(
+                        messages=messages,
+                        response=response,
+                        task_description=task_desc,
+                        model_name=self.provider_name
+                    )
 
             # Calculate execution duration
             duration_ms = int((time.time() - start_time) * 1000)
@@ -111,7 +148,9 @@ class LLMAgentExecutor(IAgentExecutor):
                 errors=[],
                 metadata={
                     "agent_role": agent.role,
-                    "task_id": task.task_id
+                    "task_id": task.task_id,
+                    "cache_hit": cache_hit,  # SYD2 FIX: Track cache performance
+                    "duration_ms": duration_ms
                 }
             )
 
@@ -219,3 +258,41 @@ Think deeply, then provide your response."""
         })
 
         return messages
+
+    def _extract_task_description(self, task: Task) -> str:
+        """
+        Extract task description for cache keying.
+
+        SYD2 FIX: Improves cache hit rate by using semantic task description.
+        BUGFIX: Removed task_id to enable cache hits across similar tasks.
+
+        Args:
+            task: Task entity
+
+        Returns:
+            Task description string (semantic category, not unique ID)
+        """
+        desc = task.description.lower()
+
+        # Normalize ULTRATHINK tasks for better cache hit rate
+        if "ultrathink" in desc:
+            # Extract key components: category only (removed task_id)
+            # e.g., "ULTRATHINK: Plan refactoring for router" -> "ultrathink:refactoring"
+            # This enables cache hits for all refactoring tasks
+            if "refactoring" in desc or "refactor" in desc:
+                category = "refactoring"
+            elif "architecture" in desc:
+                category = "architecture"
+            elif "scalability" in desc:
+                category = "scalability"
+            elif "testing" in desc or "test" in desc:
+                category = "testing"
+            elif "performance" in desc:
+                category = "performance"
+            else:
+                category = "analysis"
+
+            # FIX: Removed task.task_id[:8] - was causing 0% hit rate
+            return f"ultrathink:{category}"
+
+        return desc[:100]  # Limit length for cache key

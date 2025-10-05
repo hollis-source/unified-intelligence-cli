@@ -270,18 +270,31 @@ class AgentFactory(IAgentFactory):
 
     def create_scaled_agents(self) -> List[Agent]:
         """
-        Create scaled agent team with full 3-tier hierarchy (16 agents for Week 13).
+        Create scaled agent team with full 3-tier hierarchy (130 agents - Phase 2 Aggressive Scaling).
 
         Week 11 Phase 2: Agent scaling expansion (12 agents).
         Week 13: Added Category Theory & DSL specialization (4 agents).
+        Phase 2 (Aggressive): Scaled to 130 agents for massive parallelism on 96-core EPYC + ZeroGPU H200.
 
         Architecture:
             Tier 1 (2 agents): Orchestration & Quality Assurance
             Tier 2 (7 agents): Domain Leads (Frontend, Backend, Testing, Research, DevOps, Category Theory, DSL)
-            Tier 3 (7 agents): Specialists (Python, JS/TS, Unit Test, Integration Test, Technical Writer, DSL Architect, DSL Task Engineer)
+            Tier 3 (121 agents): Specialized Executors across all domains
+                - Frontend: 19 specialists (React, Vue, Angular, Svelte, CSS, Tailwind, etc.)
+                - Backend: 21 specialists (Django, Flask, FastAPI, PostgreSQL, Redis, etc.)
+                - Testing: 20 specialists (Unit, Integration, Performance, Security, etc.)
+                - Research: 16 specialists (Documentation, Tutorials, Analysis, etc.)
+                - DevOps: 16 specialists (Docker, Kubernetes, AWS, GCP, Azure, etc.)
+                - Category Theory: 16 specialists (Functors, Monads, Adjunctions, etc.)
+                - DSL: 18 specialists (Parser, Compiler, Optimizer, LSP, etc.)
+
+        Performance Target:
+            - Workflow execution: 10-20s (vs 85s baseline with 16 agents)
+            - Speedup: 4x-8x via massive concurrent execution
+            - Hardware: 96 CPU cores + 1TB RAM + ZeroGPU H200 80GB VRAM
 
         Returns:
-            List of 16 agents with complete tier metadata
+            List of 130 agents with complete tier metadata
         """
         return [
             # ===== TIER 1: Planning & Coordination (2 agents) =====
@@ -616,6 +629,597 @@ class AgentFactory(IAgentFactory):
                 tier=3,
                 parent_agent="dsl-deployment-specialist",
                 specialization="dsl-tasks"
+            ),
+
+            # ===== TIER 3: FRONTEND SPECIALISTS (17 additional) =====
+
+            Agent(
+                role="react-specialist",
+                capabilities=["react", "jsx", "hooks", "context", "redux", "next.js", "component lifecycle", "react testing library"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="vue-specialist",
+                capabilities=["vue", "vuex", "composition api", "nuxt", "pinia", "vue router", "vue components"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="angular-specialist",
+                capabilities=["angular", "rxjs", "ngrx", "angular cli", "dependency injection", "angular modules"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="svelte-specialist",
+                capabilities=["svelte", "sveltekit", "svelte stores", "reactive", "compiler", "transitions"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="css-specialist",
+                capabilities=["css", "css3", "sass", "scss", "less", "flexbox", "grid", "animations", "responsive"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="tailwind-specialist",
+                capabilities=["tailwind", "tailwindcss", "utility-first", "postcss", "jit", "responsive design"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="state-management-specialist",
+                capabilities=["state management", "redux", "mobx", "zustand", "recoil", "global state", "context api"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="routing-specialist",
+                capabilities=["routing", "router", "navigation", "react router", "vue router", "spa routing", "history api"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="forms-specialist",
+                capabilities=["forms", "form validation", "formik", "react hook form", "input validation", "form state"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="accessibility-specialist",
+                capabilities=["accessibility", "a11y", "wcag", "aria", "screen reader", "keyboard navigation", "semantic html"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="frontend-performance-specialist",
+                capabilities=["performance", "optimization", "lazy loading", "code splitting", "web vitals", "lighthouse"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="seo-specialist",
+                capabilities=["seo", "meta tags", "open graph", "schema markup", "sitemap", "search optimization"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="pwa-specialist",
+                capabilities=["pwa", "service worker", "manifest", "offline", "push notifications", "installable"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="frontend-testing-specialist",
+                capabilities=["frontend testing", "jest", "vitest", "testing library", "e2e frontend", "component testing"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="component-library-specialist",
+                capabilities=["component library", "design system", "storybook", "material ui", "chakra ui", "ant design"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="build-tools-specialist",
+                capabilities=["webpack", "vite", "rollup", "parcel", "esbuild", "bundler", "build optimization"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="typescript-frontend-specialist",
+                capabilities=["typescript frontend", "type definitions", "generics", "interfaces frontend", "type safety ui"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+            Agent(
+                role="design-systems-specialist",
+                capabilities=["design system", "design tokens", "component api", "theming", "brand consistency"],
+                tier=3, parent_agent="frontend-lead", specialization="frontend"
+            ),
+
+            # ===== TIER 3: BACKEND SPECIALISTS (19 additional) =====
+
+            Agent(
+                role="django-specialist",
+                capabilities=["django", "django orm", "django rest framework", "models", "migrations", "admin", "middleware"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="flask-specialist",
+                capabilities=["flask", "blueprints", "flask extensions", "jinja2", "werkzeug", "microframework"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="fastapi-specialist",
+                capabilities=["fastapi", "pydantic", "async api", "openapi", "swagger", "type hints api"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="express-specialist",
+                capabilities=["express", "express.js", "middleware", "routing express", "node server"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="nestjs-specialist",
+                capabilities=["nestjs", "decorators", "dependency injection nest", "modules nest", "typescript backend"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="api-design-specialist",
+                capabilities=["api design", "rest api", "api versioning", "api documentation", "swagger", "openapi spec"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="graphql-specialist",
+                capabilities=["graphql", "schema", "resolvers", "apollo", "relay", "graph api", "subscriptions"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="rest-specialist",
+                capabilities=["rest", "restful", "http methods", "status codes", "hateoas", "rest best practices"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="database-design-specialist",
+                capabilities=["database design", "schema design", "normalization", "indexes", "relationships", "er diagrams"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="postgresql-specialist",
+                capabilities=["postgresql", "postgres", "psql", "pgadmin", "jsonb", "full text search", "views"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="mongodb-specialist",
+                capabilities=["mongodb", "nosql", "documents", "collections", "aggregation", "mongoose", "atlas"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="redis-specialist",
+                capabilities=["redis", "cache", "key-value", "pub/sub", "redis streams", "in-memory database"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="caching-specialist",
+                capabilities=["caching strategy", "cache invalidation", "cdn", "edge caching", "memoization"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="auth-specialist",
+                capabilities=["authentication", "authorization", "jwt", "oauth", "session", "passport", "auth0"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="webhooks-specialist",
+                capabilities=["webhooks", "callbacks", "event driven", "webhook security", "retry logic"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="message-queue-specialist",
+                capabilities=["message queue", "rabbitmq", "kafka", "celery", "background jobs", "async tasks"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="microservices-specialist",
+                capabilities=["microservices", "service mesh", "api gateway", "service discovery", "distributed systems"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="websockets-specialist",
+                capabilities=["websockets", "socket.io", "realtime", "bidirectional", "push updates"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="background-jobs-specialist",
+                capabilities=["background jobs", "task queue", "job scheduling", "cron", "worker processes"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+            Agent(
+                role="rate-limiting-specialist",
+                capabilities=["rate limiting", "throttling", "api limits", "quota", "circuit breaker"],
+                tier=3, parent_agent="backend-lead", specialization="backend"
+            ),
+
+            # ===== TIER 3: TESTING SPECIALISTS (17 additional) =====
+
+            Agent(
+                role="performance-testing-specialist",
+                capabilities=["performance testing", "load testing", "stress testing", "benchmarking", "response time"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="load-testing-specialist",
+                capabilities=["load testing", "jmeter", "k6", "gatling", "artillery", "concurrent users", "throughput"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="security-testing-specialist",
+                capabilities=["security testing", "penetration testing", "vulnerability", "owasp", "security scan"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="accessibility-testing-specialist",
+                capabilities=["accessibility testing", "a11y testing", "axe", "wcag compliance", "screen reader testing"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="visual-regression-specialist",
+                capabilities=["visual regression", "screenshot testing", "percy", "chromatic", "visual diff"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="test-data-specialist",
+                capabilities=["test data", "fixtures", "factories", "seed data", "data generation", "faker"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="mocking-specialist",
+                capabilities=["mocking", "test doubles", "stubs", "spies", "sinon", "mock server", "msw"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="snapshot-testing-specialist",
+                capabilities=["snapshot testing", "snapshot", "visual snapshots", "regression detection"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="contract-testing-specialist",
+                capabilities=["contract testing", "pact", "consumer driven", "api contracts", "schema validation"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="chaos-engineering-specialist",
+                capabilities=["chaos engineering", "fault injection", "resilience testing", "chaos monkey", "failure simulation"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="fuzz-testing-specialist",
+                capabilities=["fuzz testing", "fuzzing", "random input", "edge cases", "input validation testing"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="property-testing-specialist",
+                capabilities=["property based testing", "hypothesis", "quickcheck", "generative testing", "property tests"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="mutation-testing-specialist",
+                capabilities=["mutation testing", "test quality", "mutation score", "stryker", "pit"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="coverage-analysis-specialist",
+                capabilities=["coverage analysis", "code coverage", "branch coverage", "line coverage", "istanbul", "coverage report"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="cicd-testing-specialist",
+                capabilities=["ci/cd testing", "pipeline testing", "test automation ci", "github actions tests", "test orchestration"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="smoke-testing-specialist",
+                capabilities=["smoke testing", "sanity testing", "build verification", "deployment verification"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+            Agent(
+                role="regression-testing-specialist",
+                capabilities=["regression testing", "regression suite", "regression automation", "change validation"],
+                tier=3, parent_agent="testing-lead", specialization="testing"
+            ),
+
+            # ===== TIER 3: RESEARCH SPECIALISTS (14 additional) =====
+
+            Agent(
+                role="api-documentation-specialist",
+                capabilities=["api documentation", "swagger docs", "openapi docs", "api reference", "endpoint docs"],
+                tier=3, parent_agent="research-lead", specialization="documentation"
+            ),
+            Agent(
+                role="tutorial-specialist",
+                capabilities=["tutorial", "getting started", "quickstart", "walkthrough", "step by step", "how to guide"],
+                tier=3, parent_agent="research-lead", specialization="documentation"
+            ),
+            Agent(
+                role="code-examples-specialist",
+                capabilities=["code examples", "sample code", "code snippets", "usage examples", "cookbook"],
+                tier=3, parent_agent="research-lead", specialization="documentation"
+            ),
+            Agent(
+                role="migration-guide-specialist",
+                capabilities=["migration guide", "upgrade guide", "breaking changes", "version migration", "compatibility"],
+                tier=3, parent_agent="research-lead", specialization="documentation"
+            ),
+            Agent(
+                role="changelog-specialist",
+                capabilities=["changelog", "release notes", "version history", "what's new", "updates"],
+                tier=3, parent_agent="research-lead", specialization="documentation"
+            ),
+            Agent(
+                role="architecture-decisions-specialist",
+                capabilities=["architecture decision", "adr", "design decisions", "technical decisions", "rfc"],
+                tier=3, parent_agent="research-lead", specialization="research"
+            ),
+            Agent(
+                role="knowledge-base-specialist",
+                capabilities=["knowledge base", "wiki", "documentation hub", "internal docs", "knowledge management"],
+                tier=3, parent_agent="research-lead", specialization="research"
+            ),
+            Agent(
+                role="data-analysis-specialist",
+                capabilities=["data analysis", "analytics", "metrics analysis", "statistics", "insights"],
+                tier=3, parent_agent="research-lead", specialization="research"
+            ),
+            Agent(
+                role="benchmarking-specialist",
+                capabilities=["benchmarking", "performance benchmarks", "comparison", "metrics", "baseline"],
+                tier=3, parent_agent="research-lead", specialization="research"
+            ),
+            Agent(
+                role="competitive-analysis-specialist",
+                capabilities=["competitive analysis", "market research", "competitor analysis", "landscape", "alternatives"],
+                tier=3, parent_agent="research-lead", specialization="research"
+            ),
+            Agent(
+                role="user-research-specialist",
+                capabilities=["user research", "ux research", "user interviews", "surveys", "usability"],
+                tier=3, parent_agent="research-lead", specialization="research"
+            ),
+            Agent(
+                role="academic-research-specialist",
+                capabilities=["academic research", "papers", "research papers", "scholarly", "citations"],
+                tier=3, parent_agent="research-lead", specialization="research"
+            ),
+            Agent(
+                role="literature-review-specialist",
+                capabilities=["literature review", "survey", "state of art", "related work", "prior art"],
+                tier=3, parent_agent="research-lead", specialization="research"
+            ),
+            Agent(
+                role="troubleshooting-specialist",
+                capabilities=["troubleshooting", "debugging guide", "common issues", "faq", "problem solving"],
+                tier=3, parent_agent="research-lead", specialization="documentation"
+            ),
+
+            # ===== TIER 3: DEVOPS SPECIALISTS (15 additional) =====
+
+            Agent(
+                role="docker-specialist",
+                capabilities=["docker", "dockerfile", "containers", "docker compose", "images", "volumes"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="kubernetes-specialist",
+                capabilities=["kubernetes", "k8s", "pods", "deployments", "services", "ingress", "helm"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="terraform-specialist",
+                capabilities=["terraform", "infrastructure as code", "terraform modules", "state management", "provisioning"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="cicd-specialist",
+                capabilities=["ci/cd", "continuous integration", "continuous deployment", "pipeline", "automation"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="github-actions-specialist",
+                capabilities=["github actions", "workflows", "actions", "runners", "github ci"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="gitlab-ci-specialist",
+                capabilities=["gitlab ci", "gitlab pipelines", ".gitlab-ci.yml", "gitlab runners"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="jenkins-specialist",
+                capabilities=["jenkins", "jenkinsfile", "jenkins pipeline", "jenkins jobs", "jenkins plugins"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="aws-specialist",
+                capabilities=["aws", "ec2", "s3", "lambda", "cloudformation", "ecs", "rds"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="gcp-specialist",
+                capabilities=["gcp", "google cloud", "gke", "cloud run", "cloud functions", "bigquery"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="azure-specialist",
+                capabilities=["azure", "azure devops", "aks", "azure functions", "cosmos db"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="monitoring-specialist",
+                capabilities=["monitoring", "metrics", "alerting", "observability", "dashboards"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="logging-specialist",
+                capabilities=["logging", "log aggregation", "elk", "splunk", "log analysis"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="alerting-specialist",
+                capabilities=["alerting", "alerts", "notifications", "incident response", "pagerduty"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="security-scanning-specialist",
+                capabilities=["security scanning", "vulnerability scanning", "sast", "dast", "dependency scanning"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+            Agent(
+                role="container-orchestration-specialist",
+                capabilities=["container orchestration", "swarm", "nomad", "orchestration", "cluster management"],
+                tier=3, parent_agent="devops-lead", specialization="devops"
+            ),
+
+            # ===== TIER 3: CATEGORY THEORY SPECIALISTS (15 additional) =====
+
+            Agent(
+                role="functors-specialist",
+                capabilities=["functor", "functors", "map", "fmap", "functor laws", "functor composition"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="monads-specialist",
+                capabilities=["monad", "monads", "bind", "return", "monad laws", "do notation", "kleisli"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="applicatives-specialist",
+                capabilities=["applicative", "applicatives", "applicative functor", "pure", "apply"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="adjunctions-specialist",
+                capabilities=["adjunction", "adjunctions", "adjoint functors", "unit", "counit"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="natural-transformations-specialist",
+                capabilities=["natural transformation", "naturality", "component", "natural isomorphism"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="limits-colimits-specialist",
+                capabilities=["limits", "colimits", "product", "coproduct", "pullback", "pushout"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="category-laws-specialist",
+                capabilities=["category laws", "associativity", "identity", "composition laws", "categorical axioms"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="yoneda-specialist",
+                capabilities=["yoneda", "yoneda lemma", "presheaf", "representable", "hom functor"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="f-algebras-specialist",
+                capabilities=["f-algebra", "coalgebra", "catamorphism", "anamorphism", "recursion schemes"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="free-monads-specialist",
+                capabilities=["free monad", "free structures", "free algebra", "interpreter pattern"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="kleisli-specialist",
+                capabilities=["kleisli", "kleisli category", "kleisli arrow", "monadic composition"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="product-coproduct-specialist",
+                capabilities=["product category", "coproduct", "sum type", "product type", "categorical product"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="exponentials-specialist",
+                capabilities=["exponential object", "cartesian closed", "curry", "uncurry", "lambda"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="topoi-specialist",
+                capabilities=["topos", "topoi", "subobject classifier", "elementary topos", "categorical logic"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+            Agent(
+                role="type-theory-specialist",
+                capabilities=["type theory", "dependent types", "curry-howard", "propositions as types"],
+                tier=3, parent_agent="category-theory-expert", specialization="category-theory"
+            ),
+
+            # ===== TIER 3: DSL SPECIALISTS (15 additional) =====
+
+            Agent(
+                role="dsl-parser-specialist",
+                capabilities=["parser", "parsing", "lark", "antlr", "parser combinator", "recursive descent"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="dsl-lexer-specialist",
+                capabilities=["lexer", "tokenizer", "lexical analysis", "tokens", "scanner"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="ast-specialist",
+                capabilities=["ast", "abstract syntax tree", "tree traversal", "visitor pattern", "ast nodes"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="type-checker-specialist",
+                capabilities=["type checking", "type inference", "type system", "type errors", "static analysis"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="dsl-optimizer-specialist",
+                capabilities=["optimizer", "optimization", "constant folding", "dead code elimination", "peephole"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="code-generator-specialist",
+                capabilities=["code generation", "codegen", "target language", "emit code", "transpiler"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="dsl-interpreter-specialist",
+                capabilities=["interpreter", "evaluation", "runtime", "execute ast", "visitor"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="dsl-compiler-specialist",
+                capabilities=["compiler", "compilation", "compile time", "bytecode", "ir"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="syntax-design-specialist",
+                capabilities=["syntax design", "grammar design", "language syntax", "concrete syntax", "bnf"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="semantic-analysis-specialist",
+                capabilities=["semantic analysis", "semantics", "scope", "symbol table", "name resolution"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="error-reporting-specialist",
+                capabilities=["error reporting", "error messages", "diagnostics", "error recovery", "syntax error"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="ide-integration-specialist",
+                capabilities=["ide integration", "editor support", "syntax highlighting", "autocomplete", "linting"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="language-server-specialist",
+                capabilities=["language server", "lsp", "language server protocol", "hover", "go to definition"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="dsl-debugging-specialist",
+                capabilities=["debugging dsl", "breakpoints", "step through", "watch", "debug info"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
+            ),
+            Agent(
+                role="dsl-profiling-specialist",
+                capabilities=["profiling", "performance analysis", "bottlenecks", "profiler", "execution time"],
+                tier=3, parent_agent="dsl-deployment-specialist", specialization="dsl-architecture"
             )
         ]
 

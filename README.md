@@ -11,13 +11,18 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 ## Features
 
 ✅ **Multi-Task CLI**: Accept multiple tasks in a single command
+✅ **DSL Workflow Mode**: Execute category theory-based `.ct` workflow files with lifecycle phases
+✅ **HTN Decomposition**: Hierarchical Task Network compilation for recursive task breakdown
+✅ **Graph Validation**: DAG cycle detection and topological execution order (NEW - Sprint 3)
+✅ **Dynamic Executor Pool**: Capability-based task routing with no hardcoded mappings (NEW - Sprint 3)
 ✅ **Intelligent Agent Selection**: Fuzzy matching assigns tasks to best-fit agents
 ✅ **Multiple Orchestration Modes**: Simple (stable) or OpenAI Agents SDK (advanced features)
 ✅ **Tool Support**: Agents can execute shell commands, read/write files, run tests
 ✅ **LLM Providers**: Mock (testing), Grok, and Tongyi (production) with extensible architecture
 ✅ **Parallel Execution**: Concurrent task processing with dependency handling
+✅ **Lifecycle Phases**: Plan → Verify → Decompose → Execute → Complete state tracking
 ✅ **Clean Architecture**: Entities → Use Cases → Interfaces → Adapters
-✅ **85% Test Coverage**: 104 tests (73 unit + 31 integration)
+✅ **95% Test Coverage**: 670 tests (all passing, including 61 Sprint 3 tests)
 
 ## Quick Start
 
@@ -112,6 +117,143 @@ python3 src/main.py \
   --config config.example.json \
   --verbose  # CLI args override config file
 ```
+
+### DSL Workflow Mode (NEW)
+
+Execute category theory-based workflow files (`.ct` DSL) with lifecycle phases:
+
+```bash
+# Execute DSL workflow with lifecycle tracking
+python -m src.main \
+  --workflow examples/workflows/simple_pipeline.ct \
+  --verbose
+
+# Output shows lifecycle phases:
+✓ PLAN: Parsed workflow from examples/workflows/simple_pipeline.ct
+✓ VERIFY: Passed 2 validation checks
+✓ DECOMPOSE: 3 executable tasks identified
+✓ EXECUTE: Workflow completed successfully
+
+======================================================================
+✓ Workflow Completed Successfully
+======================================================================
+Phases: PLAN → VERIFY → DECOMPOSE → EXECUTE → COMPLETE
+```
+
+**DSL Syntax Example** (`simple_pipeline.ct`):
+```haskell
+# Define workflow functors
+functor build = python-specialist
+functor test = unit-test-engineer
+functor deploy = devops-lead
+
+# Compose into pipeline (deploy ∘ test ∘ build)
+functor main = deploy o test o build
+```
+
+**Benefits**:
+- 📊 **Lifecycle Phases**: Plan → Verify → Decompose → Execute → Complete
+- ✅ **Validation**: Workflows validated before execution
+- 📝 **Declarative**: Express complex workflows in category theory DSL
+- 🔄 **Composition**: Combine tasks using mathematical operators (`∘`, `×`)
+- 🎯 **Phase Tracking**: Detailed execution progress with timing
+
+For more DSL examples, see `examples/workflows/`.
+
+### HTN Decomposition (NEW - Sprint 2)
+
+Hierarchical Task Network compilation enables recursive task breakdown with composition semantics preserved:
+
+```bash
+# Execute HTN workflow
+python -m src.main \
+  --workflow examples/workflows/htn_pipeline.ct \
+  --verbose
+
+# Output shows HTN decomposition:
+✓ DECOMPOSE: HTN: 5 tasks, depth=5, nodes=9
+  HTN root: pipeline
+  Subtasks: ['deployment', 'composition']
+```
+
+**HTN Example** (`htn_pipeline.ct`):
+```haskell
+# 5-stage development pipeline
+functor analyze = research
+functor design = design_arch
+functor implement = code
+functor test = testing
+functor deploy = deployment
+
+# HTN compiles to hierarchical tree
+functor pipeline = deploy o test o implement o design o analyze
+```
+
+**How HTN Works**:
+1. **AST Compilation**: DSL entities → HTNNode tree via visitor pattern
+2. **Semantic Preservation**:
+   - Composition (∘): Right-to-left execution order maintained
+   - Product (×): Parallel execution semantics
+   - Functors: Named reusable workflows
+3. **Recursive Decomposition**: HTNNode.decompose() breaks complex tasks into subtasks
+4. **Enhanced Observability**: Track depth, node count, execution structure
+
+### Graph Validation & Executor Pool (NEW - Sprint 3)
+
+Dependency graph modeling with cycle detection and dynamic agent routing:
+
+```bash
+# Execute workflow with graph validation
+python -m src.main \
+  --workflow examples/workflows/ci_pipeline.ct \
+  --verbose
+
+# Output shows graph validation:
+✓ PLAN: Parsed workflow from examples/workflows/ci_pipeline.ct
+✓ VERIFY: Passed 2 validation checks
+✓ DECOMPOSE: HTN: 3 tasks, depth=3, nodes=5
+  HTN root: ci_pipeline
+  Graph: 5 nodes, 4 edges, DAG validated  # ← New graph validation
+✓ EXECUTE: Workflow completed successfully
+```
+
+**Graph Validation Features**:
+- **HTN→Graph Conversion**: Hierarchical tasks → Dependency graph (DAG)
+- **Cycle Detection**: Validates no circular dependencies before execution (fail-fast)
+- **Topological Execution**: Tasks execute in dependency-respecting order
+- **Parallel Optimization**: Identifies independent tasks for concurrent execution
+
+**Dynamic Executor Pool**:
+- **No Hardcoded Mappings**: Tasks routed to agents based on capabilities
+- **Automatic Registration**: Agents registered from AgentFactory (default/extended/scaled modes)
+- **Capability Matching**: Task descriptions matched against agent capabilities
+- **Extensible**: Add new agents without changing routing code (Open/Closed Principle)
+
+**Example - Cycle Detection**:
+```bash
+# This workflow would fail validation (circular dependency)
+functor a = task_a
+functor b = task_b o a
+functor main = a o b  # Creates cycle: a → b → a
+
+# Error output:
+✗ FAILED: Graph validation failed: Workflow contains circular dependencies (cycle detected)
+```
+
+**Benefits**:
+- ⚡ **Fail-Fast**: Invalid workflows caught at planning time, not runtime
+- 📊 **Execution Planning**: Graph analysis shows task dependencies and parallelization opportunities
+- 🔧 **Dynamic Routing**: Capability-based task→agent matching (no hardcoded mappings)
+- 🧩 **Extensibility**: Add agents/tasks without modifying routing code
+
+**HTN Benefits** (Sprint 2):
+- 🌳 **Hierarchical Structure**: Complex workflows decomposed into tree
+- 🔄 **Composition Semantics**: Mathematical operators preserved in HTN
+- 📊 **Enhanced Metrics**: Depth tracking, node counting, structure analysis
+- 🧩 **Modular Workflows**: Functor reuse across different contexts
+- ✅ **Backward Compatible**: Works with all existing DSL workflows
+
+See `src/dsl/adapters/htn_compiler.py` for implementation.
 
 ### Orchestration Modes (Week 7)
 
