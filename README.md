@@ -13,6 +13,8 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 ✅ **Multi-Task CLI**: Accept multiple tasks in a single command
 ✅ **DSL Workflow Mode**: Execute category theory-based `.ct` workflow files with lifecycle phases
 ✅ **HTN Decomposition**: Hierarchical Task Network compilation for recursive task breakdown
+✅ **Graph Validation**: DAG cycle detection and topological execution order (NEW - Sprint 3)
+✅ **Dynamic Executor Pool**: Capability-based task routing with no hardcoded mappings (NEW - Sprint 3)
 ✅ **Intelligent Agent Selection**: Fuzzy matching assigns tasks to best-fit agents
 ✅ **Multiple Orchestration Modes**: Simple (stable) or OpenAI Agents SDK (advanced features)
 ✅ **Tool Support**: Agents can execute shell commands, read/write files, run tests
@@ -20,7 +22,7 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 ✅ **Parallel Execution**: Concurrent task processing with dependency handling
 ✅ **Lifecycle Phases**: Plan → Verify → Decompose → Execute → Complete state tracking
 ✅ **Clean Architecture**: Entities → Use Cases → Interfaces → Adapters
-✅ **93% Test Coverage**: 609 tests (all passing, including 23 HTN tests)
+✅ **95% Test Coverage**: 670 tests (all passing, including 61 Sprint 3 tests)
 
 ## Quick Start
 
@@ -196,7 +198,55 @@ functor pipeline = deploy o test o implement o design o analyze
 3. **Recursive Decomposition**: HTNNode.decompose() breaks complex tasks into subtasks
 4. **Enhanced Observability**: Track depth, node count, execution structure
 
+### Graph Validation & Executor Pool (NEW - Sprint 3)
+
+Dependency graph modeling with cycle detection and dynamic agent routing:
+
+```bash
+# Execute workflow with graph validation
+python -m src.main \
+  --workflow examples/workflows/ci_pipeline.ct \
+  --verbose
+
+# Output shows graph validation:
+✓ PLAN: Parsed workflow from examples/workflows/ci_pipeline.ct
+✓ VERIFY: Passed 2 validation checks
+✓ DECOMPOSE: HTN: 3 tasks, depth=3, nodes=5
+  HTN root: ci_pipeline
+  Graph: 5 nodes, 4 edges, DAG validated  # ← New graph validation
+✓ EXECUTE: Workflow completed successfully
+```
+
+**Graph Validation Features**:
+- **HTN→Graph Conversion**: Hierarchical tasks → Dependency graph (DAG)
+- **Cycle Detection**: Validates no circular dependencies before execution (fail-fast)
+- **Topological Execution**: Tasks execute in dependency-respecting order
+- **Parallel Optimization**: Identifies independent tasks for concurrent execution
+
+**Dynamic Executor Pool**:
+- **No Hardcoded Mappings**: Tasks routed to agents based on capabilities
+- **Automatic Registration**: Agents registered from AgentFactory (default/extended/scaled modes)
+- **Capability Matching**: Task descriptions matched against agent capabilities
+- **Extensible**: Add new agents without changing routing code (Open/Closed Principle)
+
+**Example - Cycle Detection**:
+```bash
+# This workflow would fail validation (circular dependency)
+functor a = task_a
+functor b = task_b o a
+functor main = a o b  # Creates cycle: a → b → a
+
+# Error output:
+✗ FAILED: Graph validation failed: Workflow contains circular dependencies (cycle detected)
+```
+
 **Benefits**:
+- ⚡ **Fail-Fast**: Invalid workflows caught at planning time, not runtime
+- 📊 **Execution Planning**: Graph analysis shows task dependencies and parallelization opportunities
+- 🔧 **Dynamic Routing**: Capability-based task→agent matching (no hardcoded mappings)
+- 🧩 **Extensibility**: Add agents/tasks without modifying routing code
+
+**HTN Benefits** (Sprint 2):
 - 🌳 **Hierarchical Structure**: Complex workflows decomposed into tree
 - 🔄 **Composition Semantics**: Mathematical operators preserved in HTN
 - 📊 **Enhanced Metrics**: Depth tracking, node counting, structure analysis
