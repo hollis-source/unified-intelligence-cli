@@ -114,7 +114,7 @@ class TestDSLWorkflowCLIIntegration:
         # Should show detailed phase information
         assert 'Parsed workflow' in result.output
         assert 'validation checks' in result.output
-        assert 'executable tasks' in result.output
+        assert 'HTN:' in result.output  # Sprint 2: HTN metrics in DECOMPOSE phase
 
     def test_workflow_without_verbose_flag(self, runner):
         """Test workflow execution without verbose output."""
@@ -167,7 +167,7 @@ class TestDSLLifecycleIntegration:
 
         # Should show DECOMPOSE phase success
         assert '✓ DECOMPOSE' in result.output
-        assert 'executable tasks' in result.output
+        assert 'HTN:' in result.output  # Sprint 2: HTN decomposition metrics
 
     def test_execute_phase_runs_workflow(self, runner):
         """Test EXECUTE phase runs workflow successfully."""

@@ -221,18 +221,18 @@ def execute_workflow_mode(workflow_file: str, app_config: Config, logger) -> Non
 
     Clean Architecture: Orchestrates DSL use cases.
     """
-    from src.dsl.use_cases.lifecycle_executor import LifecycleWorkflowExecutor
+    from src.dsl.use_cases.htn_workflow_executor import HTNWorkflowExecutor
     from src.dsl.adapters.cli_task_executor import CLITaskExecutor
 
     if logger:
         logger.info(f"Executing workflow: {workflow_file}")
-        logger.info(f"Mode: Lifecycle-aware DSL execution")
+        logger.info(f"Mode: Lifecycle-aware DSL execution with HTN decomposition")
 
     # Create task executor (uses existing CLI infrastructure)
     task_executor = CLITaskExecutor()
 
-    # Create lifecycle executor
-    executor = LifecycleWorkflowExecutor(task_executor=task_executor)
+    # Create HTN workflow executor (Sprint 2: HTN decomposition enabled)
+    executor = HTNWorkflowExecutor(task_executor=task_executor)
 
     # Execute workflow with lifecycle phases
     result = asyncio.run(executor.execute_workflow(
