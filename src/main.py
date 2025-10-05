@@ -211,24 +211,14 @@ def main(
             raise click.Abort()
 
 
-def execute_workflow_mode(workflow_file: str, app_config: Config, logger) -> None:
-    """Execute DSL workflow file with lifecycle phases.
+async def _execute_workflow_async(workflow_file: str, app_config: Config, logger):
+    """Async wrapper for workflow execution with proper resource management.
 
-    Args:
-        workflow_file: Path to .ct workflow file
-        app_config: Application configuration
-        logger: Logger instance
-
-    Clean Architecture: Orchestrates DSL use cases.
-    Phase 3: Added in-process execution via DirectTaskExecutor.
+    Phase 3 Bugfix: Uses DirectTaskExecutor context manager for cleanup.
     """
     from src.dsl.use_cases.htn_workflow_executor import HTNWorkflowExecutor
     from src.dsl.adapters.cli_task_executor import CLITaskExecutor
-
-    if logger:
-        logger.info(f"Executing workflow: {workflow_file}")
-        logger.info(f"Mode: Lifecycle-aware DSL execution with HTN decomposition")
-        logger.info(f"Phase 3: In-process execution enabled (no subprocess overhead)")
+    from src.dsl.adapters.direct_task_executor import DirectTaskExecutor
 
     # Phase 3: Create factories for in-process execution
     agent_factory = AgentFactory()
@@ -245,27 +235,56 @@ def execute_workflow_mode(workflow_file: str, app_config: Config, logger) -> Non
         'verbose': app_config.verbose
     }
 
-    # Create task executor with in-process execution (Phase 3)
-    task_executor = CLITaskExecutor(
+    # Phase 3 Bugfix: Use context manager for proper cleanup
+    async with DirectTaskExecutor(
         llm_provider=llm_provider,
         agent_factory=agent_factory,
-        config=executor_config,
-        use_in_process=True  # Enable DirectTaskExecutor
-    )
+        config=executor_config
+    ) as direct_executor:
 
+        if logger:
+            logger.info(f"DirectTaskExecutor initialized with context manager (auto-cleanup)")
+
+        # Create task executor with in-process execution (Phase 3)
+        task_executor = CLITaskExecutor(
+            direct_executor=direct_executor,  # Pass managed instance
+            use_in_process=True
+        )
+
+        # Create HTN workflow executor
+        executor = HTNWorkflowExecutor(task_executor=task_executor)
+
+        # Execute workflow with lifecycle phases
+        result = await executor.execute_workflow(
+            workflow_file=workflow_file,
+            verbose=app_config.verbose
+        )
+
+        return result
+
+    # Context manager ensures cleanup after this block
+
+
+def execute_workflow_mode(workflow_file: str, app_config: Config, logger) -> None:
+    """Execute DSL workflow file with lifecycle phases.
+
+    Args:
+        workflow_file: Path to .ct workflow file
+        app_config: Application configuration
+        logger: Logger instance
+
+    Clean Architecture: Orchestrates DSL use cases.
+    Phase 3: Added in-process execution via DirectTaskExecutor.
+    Phase 3 Bugfix: Proper resource cleanup via context manager.
+    """
     if logger:
-        logger.info(f"Task executor: DirectTaskExecutor (in-process, no subprocess)")
-        logger.info(f"Agent mode: {app_config.agent_mode}")
-        logger.info(f"Provider: {app_config.provider}")
+        logger.info(f"Executing workflow: {workflow_file}")
+        logger.info(f"Mode: Lifecycle-aware DSL execution with HTN decomposition")
+        logger.info(f"Phase 3: In-process execution enabled (no subprocess overhead)")
+        logger.info(f"Phase 3 Bugfix: Resource cleanup enabled (context manager)")
 
-    # Create HTN workflow executor (Sprint 2: HTN decomposition enabled)
-    executor = HTNWorkflowExecutor(task_executor=task_executor)
-
-    # Execute workflow with lifecycle phases
-    result = asyncio.run(executor.execute_workflow(
-        workflow_file=workflow_file,
-        verbose=app_config.verbose
-    ))
+    # Execute workflow with async context manager for cleanup
+    result = asyncio.run(_execute_workflow_async(workflow_file, app_config, logger))
 
     # Display results
     if result.success:

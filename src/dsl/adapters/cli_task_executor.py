@@ -80,7 +80,8 @@ class CLITaskExecutor:
         llm_provider = None,
         agent_factory = None,
         config: Optional[Dict[str, Any]] = None,
-        use_in_process: bool = True
+        use_in_process: bool = True,
+        direct_executor = None
     ):
         """
         Initialize CLI task executor.
@@ -88,17 +89,22 @@ class CLITaskExecutor:
         Args:
             task_coordinator: Existing task coordinator (optional, for future integration)
             task_mapping: Custom task-to-agent mapping (optional, uses defaults)
-            llm_provider: LLM provider for in-process execution (Phase 3)
-            agent_factory: Agent factory for in-process execution (Phase 3)
-            config: Configuration dict for DirectTaskExecutor (Phase 3)
+            llm_provider: LLM provider for in-process execution (Phase 3, legacy)
+            agent_factory: Agent factory for in-process execution (Phase 3, legacy)
+            config: Configuration dict for DirectTaskExecutor (Phase 3, legacy)
             use_in_process: Use DirectTaskExecutor (True) or subprocess (False, legacy)
+            direct_executor: Pre-initialized DirectTaskExecutor (Phase 3 Bugfix, recommended)
         """
         self.task_coordinator = task_coordinator
         self.task_to_agent_map = task_mapping or self.DEFAULT_TASK_MAPPING.copy()
         self.use_in_process = use_in_process
 
-        # Phase 3: Initialize DirectTaskExecutor for in-process execution
-        if use_in_process and llm_provider and agent_factory:
+        # Phase 3 Bugfix: Use injected DirectTaskExecutor if provided (recommended)
+        if direct_executor:
+            self.direct_executor = direct_executor
+        # Phase 3 Legacy: Create DirectTaskExecutor internally if not provided
+        elif use_in_process and llm_provider and agent_factory:
+            from src.dsl.adapters.direct_task_executor import DirectTaskExecutor
             self.direct_executor = DirectTaskExecutor(
                 llm_provider=llm_provider,
                 agent_factory=agent_factory,
