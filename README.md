@@ -12,6 +12,7 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 
 ✅ **Multi-Task CLI**: Accept multiple tasks in a single command
 ✅ **DSL Workflow Mode**: Execute category theory-based `.ct` workflow files with lifecycle phases
+✅ **HTN Decomposition**: Hierarchical Task Network compilation for recursive task breakdown
 ✅ **Intelligent Agent Selection**: Fuzzy matching assigns tasks to best-fit agents
 ✅ **Multiple Orchestration Modes**: Simple (stable) or OpenAI Agents SDK (advanced features)
 ✅ **Tool Support**: Agents can execute shell commands, read/write files, run tests
@@ -19,7 +20,7 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 ✅ **Parallel Execution**: Concurrent task processing with dependency handling
 ✅ **Lifecycle Phases**: Plan → Verify → Decompose → Execute → Complete state tracking
 ✅ **Clean Architecture**: Entities → Use Cases → Interfaces → Adapters
-✅ **92% Test Coverage**: 151 tests (99 unit + 52 integration)
+✅ **93% Test Coverage**: 609 tests (all passing, including 23 HTN tests)
 
 ## Quick Start
 
@@ -156,6 +157,53 @@ functor main = deploy o test o build
 - 🎯 **Phase Tracking**: Detailed execution progress with timing
 
 For more DSL examples, see `examples/workflows/`.
+
+### HTN Decomposition (NEW - Sprint 2)
+
+Hierarchical Task Network compilation enables recursive task breakdown with composition semantics preserved:
+
+```bash
+# Execute HTN workflow
+python -m src.main \
+  --workflow examples/workflows/htn_pipeline.ct \
+  --verbose
+
+# Output shows HTN decomposition:
+✓ DECOMPOSE: HTN: 5 tasks, depth=5, nodes=9
+  HTN root: pipeline
+  Subtasks: ['deployment', 'composition']
+```
+
+**HTN Example** (`htn_pipeline.ct`):
+```haskell
+# 5-stage development pipeline
+functor analyze = research
+functor design = design_arch
+functor implement = code
+functor test = testing
+functor deploy = deployment
+
+# HTN compiles to hierarchical tree
+functor pipeline = deploy o test o implement o design o analyze
+```
+
+**How HTN Works**:
+1. **AST Compilation**: DSL entities → HTNNode tree via visitor pattern
+2. **Semantic Preservation**:
+   - Composition (∘): Right-to-left execution order maintained
+   - Product (×): Parallel execution semantics
+   - Functors: Named reusable workflows
+3. **Recursive Decomposition**: HTNNode.decompose() breaks complex tasks into subtasks
+4. **Enhanced Observability**: Track depth, node count, execution structure
+
+**Benefits**:
+- 🌳 **Hierarchical Structure**: Complex workflows decomposed into tree
+- 🔄 **Composition Semantics**: Mathematical operators preserved in HTN
+- 📊 **Enhanced Metrics**: Depth tracking, node counting, structure analysis
+- 🧩 **Modular Workflows**: Functor reuse across different contexts
+- ✅ **Backward Compatible**: Works with all existing DSL workflows
+
+See `src/dsl/adapters/htn_compiler.py` for implementation.
 
 ### Orchestration Modes (Week 7)
 

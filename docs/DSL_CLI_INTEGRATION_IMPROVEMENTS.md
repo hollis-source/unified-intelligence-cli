@@ -59,8 +59,52 @@
 - ✅ Backward compatibility maintained
 - ✅ Comprehensive test coverage
 
-### 🔄 Sprint 2: HTN Decomposition (PENDING)
-Status: Not started
+### ✅ Sprint 2: HTN Decomposition (COMPLETED)
+
+**Implementation Date**: October 5, 2025
+
+**Completed Tasks**:
+1. ✅ Implemented HTNCompiler with visitor pattern for AST→HTN conversion
+2. ✅ Implemented HTNWorkflowExecutor extending LifecycleWorkflowExecutor
+3. ✅ Created comprehensive test suite (23 tests, all passing)
+4. ✅ Created HTN example workflow (htn_pipeline.ct)
+
+**Deliverables**:
+- **HTNCompiler** (`src/dsl/adapters/htn_compiler.py`):
+  - Visitor pattern for compiling DSL entities to HTNNode trees
+  - Handles Literal, Composition, Product, Functor
+  - Preserves composition semantics (∘ = right-to-left, × = parallel)
+  - Recursive compilation for nested structures
+  - Metadata tracking (operator type, execution mode)
+
+- **HTNWorkflowExecutor** (`src/dsl/use_cases/htn_workflow_executor.py`):
+  - Extends LifecycleWorkflowExecutor (Open/Closed Principle)
+  - Enhances DECOMPOSE phase with HTN compilation
+  - Tracks HTN depth and node count in verbose mode
+  - Fully backward compatible with Sprint 1
+  - Liskov Substitution: Drop-in replacement for base executor
+
+- **Test Coverage**:
+  - HTNCompiler: 23 tests (literal, composition, product, functor, mixed)
+  - Total: 609 tests passing (586 Sprint 1 + 23 Sprint 2)
+  - No regressions, all backward compatible
+
+- **Example Workflow**: `examples/workflows/htn_pipeline.ct`
+  - 5-stage development pipeline (analyze → design → implement → test → deploy)
+  - Demonstrates HTN hierarchical decomposition
+  - Executes successfully through lifecycle phases
+
+**Git Commits**:
+- HTN core implementation: `4c28ba0`
+- Tests and example: `4d18ac3`
+- Documentation: (pending)
+
+**Benefits Achieved**:
+- ✅ Hierarchical task network decomposition
+- ✅ Composition semantics preserved in HTN structure
+- ✅ Enhanced observability (depth, node count)
+- ✅ Zero breaking changes to Sprint 1
+- ✅ Comprehensive test coverage (100% for new code)
 
 ### 🔄 Sprint 3: Graph Modeling + Executor Pool (PENDING)
 Status: Not started
