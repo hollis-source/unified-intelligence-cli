@@ -18,6 +18,7 @@ class TestLoadConfig:
             config_file=None,
             provider="mock",
             verbose=True,
+            debug=False,
             parallel=False,
             timeout=120
         )
@@ -36,6 +37,7 @@ class TestLoadConfig:
             config_file=str(config_file),
             provider="mock",  # CLI override
             verbose=True,     # CLI override
+            debug=False,
             parallel=True,
             timeout=90        # CLI override
         )
@@ -50,7 +52,7 @@ class TestSetupLogging:
 
     def test_setup_logging_returns_logger(self):
         """Test that setup_logging returns a logger."""
-        logger = setup_logging(verbose=True)
+        logger = setup_logging(verbose=True, debug=False)
 
         assert logger is not None
         assert logger.name == "src.main"
@@ -81,8 +83,8 @@ class TestMainCLI:
         result = runner.invoke(main, ['--provider', 'mock'])
 
         assert result.exit_code != 0
-        # Should show error about missing required option
-        assert 'Missing option' in result.output or 'required' in result.output.lower()
+        # Should show error about missing workflow or task
+        assert 'Must provide either --workflow or --task' in result.output or 'required' in result.output.lower()
 
     def test_main_invalid_provider(self):
         """Test error with invalid provider choice."""
