@@ -11,13 +11,15 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 ## Features
 
 ✅ **Multi-Task CLI**: Accept multiple tasks in a single command
+✅ **DSL Workflow Mode**: Execute category theory-based `.ct` workflow files with lifecycle phases
 ✅ **Intelligent Agent Selection**: Fuzzy matching assigns tasks to best-fit agents
 ✅ **Multiple Orchestration Modes**: Simple (stable) or OpenAI Agents SDK (advanced features)
 ✅ **Tool Support**: Agents can execute shell commands, read/write files, run tests
 ✅ **LLM Providers**: Mock (testing), Grok, and Tongyi (production) with extensible architecture
 ✅ **Parallel Execution**: Concurrent task processing with dependency handling
+✅ **Lifecycle Phases**: Plan → Verify → Decompose → Execute → Complete state tracking
 ✅ **Clean Architecture**: Entities → Use Cases → Interfaces → Adapters
-✅ **85% Test Coverage**: 104 tests (73 unit + 31 integration)
+✅ **92% Test Coverage**: 151 tests (99 unit + 52 integration)
 
 ## Quick Start
 
@@ -112,6 +114,48 @@ python3 src/main.py \
   --config config.example.json \
   --verbose  # CLI args override config file
 ```
+
+### DSL Workflow Mode (NEW)
+
+Execute category theory-based workflow files (`.ct` DSL) with lifecycle phases:
+
+```bash
+# Execute DSL workflow with lifecycle tracking
+python -m src.main \
+  --workflow examples/workflows/simple_pipeline.ct \
+  --verbose
+
+# Output shows lifecycle phases:
+✓ PLAN: Parsed workflow from examples/workflows/simple_pipeline.ct
+✓ VERIFY: Passed 2 validation checks
+✓ DECOMPOSE: 3 executable tasks identified
+✓ EXECUTE: Workflow completed successfully
+
+======================================================================
+✓ Workflow Completed Successfully
+======================================================================
+Phases: PLAN → VERIFY → DECOMPOSE → EXECUTE → COMPLETE
+```
+
+**DSL Syntax Example** (`simple_pipeline.ct`):
+```haskell
+# Define workflow functors
+functor build = python-specialist
+functor test = unit-test-engineer
+functor deploy = devops-lead
+
+# Compose into pipeline (deploy ∘ test ∘ build)
+functor main = deploy o test o build
+```
+
+**Benefits**:
+- 📊 **Lifecycle Phases**: Plan → Verify → Decompose → Execute → Complete
+- ✅ **Validation**: Workflows validated before execution
+- 📝 **Declarative**: Express complex workflows in category theory DSL
+- 🔄 **Composition**: Combine tasks using mathematical operators (`∘`, `×`)
+- 🎯 **Phase Tracking**: Detailed execution progress with timing
+
+For more DSL examples, see `examples/workflows/`.
 
 ### Orchestration Modes (Week 7)
 

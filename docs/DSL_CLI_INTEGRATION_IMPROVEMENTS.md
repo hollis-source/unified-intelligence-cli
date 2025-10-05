@@ -1,5 +1,75 @@
 # DSL-CLI Integration Improvements
 
+## Implementation Status
+
+### ✅ Sprint 1: Unified Entry Point + Lifecycle (COMPLETED)
+
+**Implementation Date**: October 5, 2025
+
+**Completed Tasks**:
+1. ✅ Updated `src/main.py` with unified `--workflow` option
+2. ✅ Implemented `LifecycleWorkflowExecutor` with Plan→Verify→Decompose→Execute phases
+3. ✅ Added validation phase with workflow structure checks
+4. ✅ Created comprehensive integration tests (21 tests, all passing)
+
+**Deliverables**:
+- **Unified CLI Interface**: Single entry point supporting both workflow and direct modes
+  ```bash
+  # Workflow mode
+  python -m src.main --workflow examples/workflows/simple_pipeline.ct --verbose
+
+  # Direct mode (backward compatible)
+  python -m src.main --task "analyze code" --provider mock
+  ```
+
+- **Lifecycle-Aware Execution**: All workflows execute through lifecycle phases:
+  - **PLAN**: Parse DSL file to AST, extract symbol table
+  - **VERIFY**: Validate workflow structure (non-empty, executable nodes, functor definitions)
+  - **DECOMPOSE**: Identify and count executable tasks
+  - **EXECUTE**: Run workflow via interpreter with result tracking
+  - **COMPLETE**: Return execution results with timing and phase information
+
+- **Validation System**: `ValidationResult` dataclass with:
+  - Boolean validity flag
+  - List of validation issues
+  - List of passed checks
+
+- **Result Reporting**: `WorkflowExecutionResult` dataclass with:
+  - Success/failure status
+  - Execution results
+  - Lifecycle state tracking
+  - Execution time
+  - Completed phases list
+  - Error information
+
+**Test Coverage**:
+- Unit tests: `tests/dsl/use_cases/test_lifecycle_executor.py` (26 tests)
+- Integration tests: `tests/integration/test_dsl_workflow_integration.py` (21 tests)
+- Total: **47 tests, all passing**
+
+**Git Commits**:
+- Lifecycle executor implementation: `2a3f8cd`
+- Unified CLI entry point: `f06f216`
+- Integration tests: `7fc76b5`
+
+**Benefits Achieved**:
+- ✅ Single entry point for all execution modes
+- ✅ Consistent configuration across DSL and direct modes
+- ✅ Lifecycle phase tracking with verbose output
+- ✅ Backward compatibility maintained
+- ✅ Comprehensive test coverage
+
+### 🔄 Sprint 2: HTN Decomposition (PENDING)
+Status: Not started
+
+### 🔄 Sprint 3: Graph Modeling + Executor Pool (PENDING)
+Status: Not started
+
+### 🔄 Sprint 4: Morphism Transformations (PENDING)
+Status: Optional enhancement
+
+---
+
 ## Current State Analysis
 
 ### Architecture Overview
@@ -557,16 +627,20 @@ class MorphismWorkflowExecutor:
 
 ## Recommended Implementation Order
 
-### Sprint 1: Unified Entry Point + Lifecycle (5-7 days)
+### ✅ Sprint 1: Unified Entry Point + Lifecycle (COMPLETED)
 **Goal**: Merge DSL and CLI execution with lifecycle phases
 
-Tasks:
-1. Update `src/main.py` to accept `--workflow` option
-2. Implement `LifecycleWorkflowExecutor`
-3. Add validation phase with basic checks
-4. Update DSL integration tests
+**Status**: ✅ Completed on October 5, 2025
 
-**Deliverable**: Single entry point supporting both modes with Plan→Verify→Decompose→Execute
+Tasks:
+1. ✅ Update `src/main.py` to accept `--workflow` option
+2. ✅ Implement `LifecycleWorkflowExecutor`
+3. ✅ Add validation phase with basic checks
+4. ✅ Update DSL integration tests (21 new integration tests + 26 unit tests)
+
+**Deliverable**: ✅ Single entry point supporting both modes with Plan→Verify→Decompose→Execute
+
+**Implementation**: See Implementation Status section at top of document for full details.
 
 ### Sprint 2: HTN Decomposition (3-5 days)
 **Goal**: Enable hierarchical task decomposition
