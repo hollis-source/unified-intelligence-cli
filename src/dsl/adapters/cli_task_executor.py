@@ -2,10 +2,13 @@
 
 Clean Architecture: Adapter layer (external system integration).
 SOLID: SRP - only executes tasks via CLI, DIP - implements TaskExecutor interface.
+
+Phase 3 Optimization: Replaced subprocess calls with in-process DirectTaskExecutor.
 """
 
 import asyncio
 from typing import Any, Dict, Optional, TYPE_CHECKING
+from src.dsl.adapters.direct_task_executor import DirectTaskExecutor
 
 if TYPE_CHECKING:
     from src.use_cases.task_coordinator import TaskCoordinatorUseCase
@@ -73,7 +76,11 @@ class CLITaskExecutor:
     def __init__(
         self,
         task_coordinator = None,
-        task_mapping: Optional[Dict[str, str]] = None
+        task_mapping: Optional[Dict[str, str]] = None,
+        llm_provider = None,
+        agent_factory = None,
+        config: Optional[Dict[str, Any]] = None,
+        use_in_process: bool = True
     ):
         """
         Initialize CLI task executor.
@@ -81,9 +88,24 @@ class CLITaskExecutor:
         Args:
             task_coordinator: Existing task coordinator (optional, for future integration)
             task_mapping: Custom task-to-agent mapping (optional, uses defaults)
+            llm_provider: LLM provider for in-process execution (Phase 3)
+            agent_factory: Agent factory for in-process execution (Phase 3)
+            config: Configuration dict for DirectTaskExecutor (Phase 3)
+            use_in_process: Use DirectTaskExecutor (True) or subprocess (False, legacy)
         """
         self.task_coordinator = task_coordinator
         self.task_to_agent_map = task_mapping or self.DEFAULT_TASK_MAPPING.copy()
+        self.use_in_process = use_in_process
+
+        # Phase 3: Initialize DirectTaskExecutor for in-process execution
+        if use_in_process and llm_provider and agent_factory:
+            self.direct_executor = DirectTaskExecutor(
+                llm_provider=llm_provider,
+                agent_factory=agent_factory,
+                config=config or {}
+            )
+        else:
+            self.direct_executor = None
 
     def _get_agent_for_task(self, task_name: str) -> str:
         """
@@ -222,6 +244,9 @@ class CLITaskExecutor:
     ) -> Dict[str, Any]:
         """Execute unknown task via CLI with auto-generated ULTRATHINK prompt.
 
+        Phase 3 Optimization: Uses DirectTaskExecutor for in-process execution
+        instead of subprocess when available, eliminating 1-2s overhead per task.
+
         Converts task identifier to human-readable prompt:
         - ultrathink_refactor_code_quality_in_src_adapters →
           "ULTRATHINK: Refactor code quality in src adapters"
@@ -233,7 +258,30 @@ class CLITaskExecutor:
         Returns:
             CLI execution result as dict with status, output, etc.
         """
-        # Convert identifier to human-readable prompt
+        # Phase 3: Use DirectTaskExecutor for in-process execution (no subprocess)
+        if self.direct_executor:
+            try:
+                result = await self.direct_executor.execute_task(
+                    task_identifier=task_identifier,
+                    input_data=input_data
+                )
+
+                # Convert DirectTaskExecutor result to CLI format
+                return {
+                    "task": task_identifier,
+                    "status": "success" if result.get('status') == 'SUCCESS' else "failed",
+                    "output": result.get('output', ''),
+                    "raw_output": result.get('output', ''),
+                    "auto_generated": True,
+                    "prompt": self._identifier_to_prompt(task_identifier),
+                    "execution_mode": "in-process",
+                    "metadata": result.get('metadata', {})
+                }
+
+            except Exception as e:
+                raise ValueError(f"In-process execution failed for {task_identifier}: {str(e)}")
+
+        # Legacy: Fall back to subprocess execution if DirectTaskExecutor not available
         prompt = self._identifier_to_prompt(task_identifier)
 
         # Build CLI command
@@ -266,7 +314,8 @@ class CLITaskExecutor:
                     "output": output,
                     "raw_output": output,
                     "auto_generated": True,
-                    "prompt": prompt
+                    "prompt": prompt,
+                    "execution_mode": "subprocess"
                 }
             else:
                 error = stderr.decode('utf-8')

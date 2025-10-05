@@ -220,6 +220,7 @@ def execute_workflow_mode(workflow_file: str, app_config: Config, logger) -> Non
         logger: Logger instance
 
     Clean Architecture: Orchestrates DSL use cases.
+    Phase 3: Added in-process execution via DirectTaskExecutor.
     """
     from src.dsl.use_cases.htn_workflow_executor import HTNWorkflowExecutor
     from src.dsl.adapters.cli_task_executor import CLITaskExecutor
@@ -227,9 +228,35 @@ def execute_workflow_mode(workflow_file: str, app_config: Config, logger) -> Non
     if logger:
         logger.info(f"Executing workflow: {workflow_file}")
         logger.info(f"Mode: Lifecycle-aware DSL execution with HTN decomposition")
+        logger.info(f"Phase 3: In-process execution enabled (no subprocess overhead)")
 
-    # Create task executor (uses existing CLI infrastructure)
-    task_executor = CLITaskExecutor()
+    # Phase 3: Create factories for in-process execution
+    agent_factory = AgentFactory()
+    provider_factory = ProviderFactory()
+
+    # Create LLM provider
+    llm_provider = provider_factory.create_provider(app_config.provider)
+
+    # Phase 3: Build config dict for DirectTaskExecutor
+    executor_config = {
+        'provider': app_config.provider,
+        'agent_mode': app_config.agent_mode,
+        'routing_mode': app_config.routing_mode,
+        'verbose': app_config.verbose
+    }
+
+    # Create task executor with in-process execution (Phase 3)
+    task_executor = CLITaskExecutor(
+        llm_provider=llm_provider,
+        agent_factory=agent_factory,
+        config=executor_config,
+        use_in_process=True  # Enable DirectTaskExecutor
+    )
+
+    if logger:
+        logger.info(f"Task executor: DirectTaskExecutor (in-process, no subprocess)")
+        logger.info(f"Agent mode: {app_config.agent_mode}")
+        logger.info(f"Provider: {app_config.provider}")
 
     # Create HTN workflow executor (Sprint 2: HTN decomposition enabled)
     executor = HTNWorkflowExecutor(task_executor=task_executor)
