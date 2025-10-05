@@ -1,0 +1,6 @@
+# Test Auto-Conversion of Unknown Task Identifiers
+# Simple 1-task workflow to verify ULTRATHINK prompt generation
+
+# Execute one unknown task (no Python implementation)
+# This will be auto-converted to ULTRATHINK prompt
+functor main = ultrathink_analyze_code_quality_in_src_dsl_directory

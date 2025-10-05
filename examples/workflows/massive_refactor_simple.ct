@@ -1,0 +1,19 @@
+# Massive Parallel Refactoring - 10 Concurrent Tasks (Simplified)
+# Demonstrates 130-agent parallelism without duplicate operator
+
+# Code Quality Tasks (5 tasks)
+functor task1 = ultrathink_refactor_code_quality_in_src_adapters_directory_focusing_on_clean_code_principles
+functor task2 = ultrathink_refactor_code_quality_in_src_entities_directory_eliminate_duplication
+functor task3 = ultrathink_refactor_code_quality_in_src_use_cases_directory_simplify_complex_functions
+functor task4 = ultrathink_refactor_code_quality_in_src_factories_directory_apply_factory_pattern
+functor task5 = ultrathink_refactor_code_quality_in_src_routing_directory_improve_routing_logic
+
+# Architecture Tasks (5 tasks)
+functor task6 = ultrathink_verify_clean_architecture_compliance_in_adapters_ensure_dependency_inversion
+functor task7 = ultrathink_verify_entities_are_pure_business_objects_with_no_infrastructure_dependencies
+functor task8 = ultrathink_verify_use_cases_orchestrate_entities_correctly
+functor task9 = ultrathink_verify_interfaces_define_proper_abstractions
+functor task10 = ultrathink_verify_dsl_architecture_separates_parsing_compilation_and_execution
+
+# Parallel execution via product (all 10 tasks run concurrently)
+functor main = task1 * task2 * task3 * task4 * task5 * task6 * task7 * task8 * task9 * task10

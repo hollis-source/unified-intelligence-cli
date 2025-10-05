@@ -212,26 +212,98 @@ class CLITaskExecutor:
         except (ImportError, AttributeError):
             pass
 
-        # Fallback to mock result (for tasks without implementations)
-        agent_name = self._get_agent_for_task(task_name)
+        # Fallback: Auto-convert unknown task to ULTRATHINK prompt and execute via CLI
+        return await self._execute_via_cli_fallback(task_name, input_data)
 
-        if input_data:
-            description = f"Execute {task_name} with input: {input_data}"
-        else:
-            description = f"Execute {task_name}"
+    async def _execute_via_cli_fallback(
+        self,
+        task_identifier: str,
+        input_data: Optional[Any] = None
+    ) -> Dict[str, Any]:
+        """Execute unknown task via CLI with auto-generated ULTRATHINK prompt.
 
-        result = {
-            "task": task_name,
-            "agent": agent_name,
-            "description": description,
-            "status": "success",
-            "output": f"Completed {task_name} via {agent_name}"
-        }
+        Converts task identifier to human-readable prompt:
+        - ultrathink_refactor_code_quality_in_src_adapters →
+          "ULTRATHINK: Refactor code quality in src adapters"
 
-        # Simulate async execution
-        await asyncio.sleep(0.01)
+        Args:
+            task_identifier: Task identifier (usually snake_case or underscored)
+            input_data: Optional input data/state
 
-        return result
+        Returns:
+            CLI execution result as dict with status, output, etc.
+        """
+        # Convert identifier to human-readable prompt
+        prompt = self._identifier_to_prompt(task_identifier)
+
+        # Build CLI command
+        cmd = [
+            "./bin/ui-cli",
+            "--provider", "auto",
+            "--routing", "team",
+            "--agents", "scaled",
+            "--orchestrator", "simple",
+            "--verbose",
+            "--timeout", "180",
+            "--task", prompt
+        ]
+
+        # Execute via CLI subprocess
+        try:
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+
+            stdout, stderr = await process.communicate()
+
+            if process.returncode == 0:
+                output = stdout.decode('utf-8')
+                return {
+                    "task": task_identifier,
+                    "status": "success",
+                    "output": output,
+                    "raw_output": output,
+                    "auto_generated": True,
+                    "prompt": prompt
+                }
+            else:
+                error = stderr.decode('utf-8')
+                raise ValueError(f"CLI execution failed for {task_identifier}: {error}")
+
+        except Exception as e:
+            raise ValueError(f"Failed to execute {task_identifier} via CLI: {str(e)}")
+
+    def _identifier_to_prompt(self, identifier: str) -> str:
+        """Convert task identifier to ULTRATHINK prompt.
+
+        Examples:
+            ultrathink_refactor_code_quality_in_src_adapters →
+                ULTRATHINK: Refactor code quality in src adapters
+
+            evaluate_technical_debt →
+                ULTRATHINK: Evaluate technical debt
+
+        Args:
+            identifier: Task identifier (snake_case or underscored)
+
+        Returns:
+            Human-readable ULTRATHINK prompt
+        """
+        # Strip 'ultrathink_' prefix if present
+        text = identifier
+        if text.startswith('ultrathink_'):
+            text = text[11:]  # len('ultrathink_') = 11
+
+        # Replace underscores with spaces
+        text = text.replace('_', ' ')
+
+        # Capitalize first letter of each sentence
+        text = text.capitalize()
+
+        # Prepend ULTRATHINK directive
+        return f"ULTRATHINK: {text}"
 
     def add_task_mapping(self, task_name: str, agent_name: str) -> None:
         """

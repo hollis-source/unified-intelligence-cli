@@ -12,6 +12,7 @@ from src.dsl.entities.literal import Literal
 from src.dsl.entities.composition import Composition
 from src.dsl.entities.product import Product
 from src.dsl.entities.functor import Functor
+from src.dsl.entities.duplicate import Duplicate
 from src.dsl.entities.ast_node import ASTNode
 from src.entities.htn.htn_node import HTNNode
 
@@ -23,6 +24,7 @@ class HTNCompiler:
     a hierarchical task network that preserves composition semantics:
     - Sequential composition (∘): right-to-left execution order
     - Parallel product (×): concurrent execution
+    - Duplicate/Broadcast (Δ): input duplication for parallel fanout
     - Functors: reusable workflow mappings
 
     Example:
@@ -39,7 +41,7 @@ class HTNCompiler:
         calls the appropriate visit_* method.
 
         Args:
-            ast_node: AST node to compile (Literal, Composition, Product, or Functor)
+            ast_node: AST node to compile (Literal, Composition, Product, Duplicate, or Functor)
 
         Returns:
             HTNNode: Root of compiled HTN tree
@@ -137,4 +139,35 @@ class HTNCompiler:
             description=f"Functor: {node.name}",
             subtasks=[expr_htn],
             metadata={"type": "functor"}
+        )
+
+    def visit_duplicate(self, node: Duplicate) -> HTNNode:
+        """Compile Duplicate to HTNNode with broadcast semantics.
+
+        The duplicate operator (diagonal functor Δ) broadcasts a single input
+        to multiple parallel tasks. In HTN terms, it's a primitive operation
+        that signals input duplication for subsequent parallel execution.
+
+        Mathematical definition: Δ : A → A × A (duplicate(x) = (x, x))
+
+        Usage pattern:
+            (task1 * task2 * task3) ∘ duplicate ∘ input
+            → Broadcasts input to task1, task2, task3 concurrently
+
+        Args:
+            node: Duplicate node representing diagonal functor
+
+        Returns:
+            HTNNode: Primitive task node for broadcast operation
+
+        Example:
+            >>> duplicate_node = Duplicate()
+            >>> htn = compiler.compile(duplicate_node)
+            >>> assert htn.task_id == "duplicate"
+            >>> assert htn.metadata["operator"] == "Δ"
+        """
+        return HTNNode(
+            task_id="duplicate",
+            description="Broadcast input (diagonal functor Δ)",
+            metadata={"operator": "Δ", "execution": "broadcast"}
         )
