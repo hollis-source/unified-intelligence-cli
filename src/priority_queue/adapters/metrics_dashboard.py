@@ -39,6 +39,7 @@ class MetricsDashboard:
         self.host = config.get('host', 'localhost')
         self.metrics_dir = Path(config.get('metrics_dir', 'data/metrics'))
         self.pid_file = Path(config.get('pid_file', '/tmp/priority_worker_production.pid'))
+        self.redis_adapter = config.get('redis_adapter')  # Phase 2
         self.start_time = time.time()
         self.app = web.Application()
         self.runner: Optional[web.AppRunner] = None
@@ -48,6 +49,7 @@ class MetricsDashboard:
         self.app.router.add_get('/metrics', self.handle_metrics)
         self.app.router.add_get('/status', self.handle_status)
         self.app.router.add_get('/metrics/prometheus', self.handle_prometheus)
+        self.app.router.add_get('/metrics/staleness', self.handle_staleness)
         self.app.router.add_get('/', self.handle_root)
 
     async def start(self):

@@ -96,7 +96,7 @@ ui-cli --task "Task 1 description" \
 
 - `--provider auto` - Automatically select best LLM model (Grok, Qwen3, etc.)
 - `--routing team` - Use team-based routing (recommended for scaled agents)
-- `--agents scaled` - Use all 16 agents across 9 teams
+- `--agents scaled` - Use all 130 agents across 7 specialized domains (Phase 2: 8x parallelism)
 - `--collect-metrics` - Track performance metrics
 - `--verbose` or `-v` - Show detailed output
 - `--timeout 900` - Set timeout in seconds (default: 60)

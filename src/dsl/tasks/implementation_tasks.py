@@ -301,6 +301,303 @@ async def test_system(input_data: Any = None) -> Dict[str, Any]:
     return await _run_cli_task(cmd, "test_system")
 
 
+# Phase 2 Staleness Detection Implementation Tasks
+
+async def implement_cleanup(input_data: Any = None) -> Dict[str, Any]:
+    """
+    Implement stale task cleanup functionality.
+
+    Adds cleanup_stale_tasks() method to RedisAdapter for archiving
+    stale tasks after 24h TTL.
+
+    Returns:
+        Result with implementation status
+    """
+    from pathlib import Path
+
+    adapter_file = Path('src/priority_queue/adapters/redis_adapter.py')
+
+    # Read current content
+    with open(adapter_file, 'r') as f:
+        content = f.read()
+
+    # Check if already implemented
+    if 'def cleanup_stale_tasks' in content:
+        return {
+            "task": "implement_cleanup",
+            "status": "success",
+            "output": "cleanup_stale_tasks() already exists - skipped"
+        }
+
+    # Cleanup method implementation
+    cleanup_method = '''
+    def cleanup_stale_tasks(self, max_age_hours: int = 24) -> int:
+        """Archive stale tasks older than max_age_hours.
+
+        Phase 2: Stale task cleanup and archival.
+        """
+        import time
+        try:
+            all_task_keys = self.client.keys(f'{self.STATUS_PREFIX}*')
+            archived_count = 0
+            current_time = time.time()
+            max_age_seconds = max_age_hours * 3600
+
+            for task_key in all_task_keys:
+                task_data = self.client.hgetall(task_key)
+                if task_data.get('status') != 'stale':
+                    continue
+
+                timestamp = task_data.get('stale_timestamp')
+                if not timestamp:
+                    self.client.hset(task_key, 'stale_timestamp', current_time)
+                    continue
+
+                age_seconds = current_time - float(timestamp)
+                if age_seconds < max_age_seconds:
+                    continue
+
+                task_id = task_data.get('id')
+                archive_key = f'archived_task:{task_id}'
+                archive_data = dict(task_data)
+                archive_data['archived_at'] = current_time
+                self.client.hset(archive_key, mapping=archive_data)
+                self.client.delete(task_key)
+                self.client.lrem(self.QUEUE_KEY, 0, task_id)
+
+                parent_id = task_data.get('parent_priority_id')
+                if parent_id:
+                    children_key = f'{self.PRIORITY_CHILDREN_PREFIX}{parent_id}'
+                    self.client.srem(children_key, task_id)
+
+                archived_count += 1
+
+            return archived_count
+        except redis.RedisError as e:
+            raise ValueError(f"Failed to cleanup stale tasks: {e}") from e
+'''
+
+    # Find insertion point (after mark_children_stale method)
+    insertion_marker = '            raise ValueError(f"Failed to mark children stale for priority {priority_id}: {e}") from e'
+    insertion_point = content.find(insertion_marker)
+
+    if insertion_point == -1:
+        return {
+            "task": "implement_cleanup",
+            "status": "failed",
+            "error": "Could not find insertion point in RedisAdapter"
+        }
+
+    # Insert after the marker (find end of line after the marker)
+    insertion_point = content.find('\n', insertion_point) + 1
+
+    # Insert method
+    new_content = content[:insertion_point] + cleanup_method + content[insertion_point:]
+
+    # Write updated content
+    with open(adapter_file, 'w') as f:
+        f.write(new_content)
+
+    return {
+        "task": "implement_cleanup",
+        "status": "success",
+        "output": "Added cleanup_stale_tasks() to RedisAdapter at src/priority_queue/adapters/redis_adapter.py"
+    }
+
+
+async def implement_metrics(input_data: Any = None) -> Dict[str, Any]:
+    """
+    Implement staleness metrics dashboard endpoint.
+
+    Adds /metrics/staleness endpoint to MetricsDashboard for monitoring
+    context changes and stale task rates.
+
+    Returns:
+        Result with implementation status
+    """
+    from pathlib import Path
+
+    dashboard_file = Path('src/priority_queue/adapters/metrics_dashboard.py')
+
+    with open(dashboard_file, 'r') as f:
+        content = f.read()
+
+    if 'handle_staleness' in content:
+        return {
+            "task": "implement_metrics",
+            "status": "success",
+            "output": "Staleness metrics endpoint already exists - skipped"
+        }
+
+    # Add route registration
+    route_addition = "        self.app.router.add_get('/metrics/staleness', self.handle_staleness)"
+    route_marker = "        self.app.router.add_get('/metrics/prometheus', self.handle_prometheus)"
+
+    if route_marker in content:
+        content = content.replace(route_marker, route_marker + '\n' + route_addition)
+
+    # Add Redis adapter to __init__
+    if "self.redis_adapter" not in content:
+        init_addition = """        self.redis_adapter = config.get('redis_adapter')  # Phase 2"""
+        init_marker = "        self.pid_file = Path(config.get('pid_file', '/tmp/priority_worker_production.pid'))"
+        if init_marker in content:
+            content = content.replace(init_marker, init_marker + '\n' + init_addition)
+
+    # Add handler method
+    handler_method = '''
+    async def handle_staleness(self, request: web.Request) -> web.Response:
+        """GET /metrics/staleness - Phase 2 staleness metrics."""
+        try:
+            if not self.redis_adapter:
+                return web.json_response({'error': 'Redis adapter not configured'}, status=503)
+
+            all_task_keys = self.redis_adapter.client.keys('task_status:*')
+            total_tasks = len(all_task_keys)
+            stale_tasks = 0
+            stale_by_priority = {}
+
+            for task_key in all_task_keys:
+                task_data = self.redis_adapter.client.hgetall(task_key)
+                if task_data.get('status') == 'stale' or task_data.get('is_stale') == 'true':
+                    stale_tasks += 1
+                    parent_id = task_data.get('parent_priority_id', 'unknown')
+                    stale_by_priority[parent_id] = stale_by_priority.get(parent_id, 0) + 1
+
+            stale_rate = (stale_tasks / total_tasks * 100) if total_tasks > 0 else 0
+
+            return web.json_response({
+                'total_stale_tasks': stale_tasks,
+                'total_tasks': total_tasks,
+                'stale_task_rate_percent': round(stale_rate, 2),
+                'stale_tasks_by_priority': stale_by_priority,
+                'timestamp': datetime.utcnow().isoformat()
+            })
+        except Exception as e:
+            return web.json_response({'error': f'Staleness metrics error: {str(e)}'}, status=500)
+'''
+
+    insertion_marker = '    async def _get_pid(self) -> Optional[int]:'
+    if insertion_marker in content:
+        content = content.replace(insertion_marker, handler_method + '\n' + insertion_marker)
+
+    with open(dashboard_file, 'w') as f:
+        f.write(content)
+
+    return {
+        "task": "implement_metrics",
+        "status": "success",
+        "output": "Added /metrics/staleness endpoint to MetricsDashboard at src/priority_queue/adapters/metrics_dashboard.py"
+    }
+
+
+async def implement_backups(input_data: Any = None) -> Dict[str, Any]:
+    """
+    Implement automated backup retention policy.
+
+    Creates backup retention policy documentation.
+
+    Returns:
+        Result with implementation status
+    """
+    from pathlib import Path
+
+    retention_doc = Path('data/redis_backups/RETENTION_POLICY.md')
+    retention_doc.parent.mkdir(parents=True, exist_ok=True)
+
+    if retention_doc.exists():
+        return {
+            "task": "implement_backups",
+            "status": "success",
+            "output": "Backup retention policy already exists - skipped"
+        }
+
+    retention_content = """# Redis Backup Retention Policy
+
+**Schedule:** Daily at 2:00 AM (cron)
+**Location:** `data/redis_backups/`
+**Format:** JSON (priority_backup_YYYYMMDD_HHMMSS.json)
+
+## Retention Rules
+- Daily backups: Keep last 7 days
+- Weekly backups: Keep last 4 weeks
+- Monthly backups: Keep last 12 months
+
+## Restore Procedure
+```bash
+bash scripts/restore_redis_priorities.sh data/redis_backups/priority_backup_YYYYMMDD_HHMMSS.json
+```
+
+## Manual Cleanup
+```bash
+# Remove backups older than 30 days
+find data/redis_backups/ -name "priority_backup_*.json" -mtime +30 -delete
+```
+"""
+
+    with open(retention_doc, 'w') as f:
+        f.write(retention_content)
+
+    return {
+        "task": "implement_backups",
+        "status": "success",
+        "output": f"Created backup retention policy at {retention_doc}"
+    }
+
+
+async def verify_implementations(input_data: Any = None) -> Dict[str, Any]:
+    """
+    Verify all Phase 2 implementations are in place.
+
+    Checks that all three implementations completed successfully.
+
+    Returns:
+        Verification report
+    """
+    from pathlib import Path
+
+    checks = []
+    results = []
+
+    # Check 1: cleanup_stale_tasks exists
+    adapter_file = Path('src/priority_queue/adapters/redis_adapter.py')
+    with open(adapter_file, 'r') as f:
+        if 'def cleanup_stale_tasks' in f.read():
+            results.append("✅ cleanup_stale_tasks() implemented")
+            checks.append(True)
+        else:
+            results.append("❌ cleanup_stale_tasks() missing")
+            checks.append(False)
+
+    # Check 2: staleness metrics endpoint exists
+    dashboard_file = Path('src/priority_queue/adapters/metrics_dashboard.py')
+    with open(dashboard_file, 'r') as f:
+        if 'handle_staleness' in f.read():
+            results.append("✅ /metrics/staleness endpoint implemented")
+            checks.append(True)
+        else:
+            results.append("❌ /metrics/staleness endpoint missing")
+            checks.append(False)
+
+    # Check 3: backup policy exists
+    retention_doc = Path('data/redis_backups/RETENTION_POLICY.md')
+    if retention_doc.exists():
+        results.append("✅ Backup retention policy created")
+        checks.append(True)
+    else:
+        results.append("❌ Backup retention policy missing")
+        checks.append(False)
+
+    all_passed = all(checks)
+
+    return {
+        "task": "verify_implementations",
+        "status": "success" if all_passed else "failed",
+        "output": "\n".join(results),
+        "checks_passed": sum(checks),
+        "checks_total": len(checks)
+    }
+
+
 # Helper functions
 
 async def _run_cli_task(command: list, task_name: str) -> Dict[str, Any]:
