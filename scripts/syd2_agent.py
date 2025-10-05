@@ -1121,24 +1121,39 @@ Focus on addressing the root cause, not just symptoms. Ensure the fix is testabl
         Fallback option if Claude Code unavailable
         """
         try:
-            cmd = [
-                "ui-cli",
-                "--task", task_text,
-                "--provider", "auto",
-                "--routing", "team",
-                "--agents", "scaled",
-                "--orchestrator", "simple",
-                "--timeout", "600",
-                "--collect-metrics",
-            ]
+            # Get ui-cli config
+            ui_cli_config = self.config.get("ui_cli", {})
+            executable = ui_cli_config.get('executable', 'ui-cli')
+            script_path = ui_cli_config.get('script_path', '')
 
-            self.logger.info("Executing ui-cli for fix generation...")
+            # Build command - handle both wrapper script and python script
+            if script_path:
+                # Using python3 script.py
+                cmd = [executable, script_path]
+            else:
+                # Using wrapper script or global command
+                cmd = [executable]
+
+            # Add ui-cli arguments from config
+            cmd.extend([
+                "--task", task_text,
+                "--provider", ui_cli_config.get('default_provider', 'auto'),
+                "--routing", ui_cli_config.get('routing', 'team'),
+                "--agents", ui_cli_config.get('agents', 'scaled'),
+                "--orchestrator", ui_cli_config.get('orchestrator', 'simple'),
+                "--timeout", str(ui_cli_config.get('timeout', 600)),
+            ])
+
+            if ui_cli_config.get('collect_metrics', True):
+                cmd.append("--collect-metrics")
+
+            self.logger.info(f"Executing ui-cli for fix generation: {' '.join(cmd[:3])}...")
 
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=600,
+                timeout=ui_cli_config.get('timeout', 600),
                 cwd=str(self.project_root),
             )
 
@@ -1151,8 +1166,8 @@ Focus on addressing the root cause, not just symptoms. Ensure the fix is testabl
         except subprocess.TimeoutExpired:
             self.logger.error("UI-CLI timed out")
             return None
-        except FileNotFoundError:
-            self.logger.error("ui-cli not found")
+        except FileNotFoundError as e:
+            self.logger.error(f"ui-cli not found at {executable}: {e}")
             return None
 
     def _parse_fix_from_output(
