@@ -19,6 +19,7 @@ from src.dsl.use_cases.lifecycle_executor import (
 )
 from src.dsl.adapters.htn_compiler import HTNCompiler
 from src.dsl.use_cases.interpreter import Interpreter
+from src.dsl.use_cases.graph_workflow_executor import GraphWorkflowExecutor
 from src.entities.lifecycle import Lifecycle
 
 
@@ -47,6 +48,7 @@ class HTNWorkflowExecutor(LifecycleWorkflowExecutor):
         """
         super().__init__(task_executor, parser)
         self.htn_compiler = HTNCompiler()
+        self.graph_executor = GraphWorkflowExecutor(self.task_executor)
 
     async def execute_workflow(
         self,
@@ -123,11 +125,30 @@ class HTNWorkflowExecutor(LifecycleWorkflowExecutor):
             if verbose:
                 self._print_phase("VERIFY", f"Passed {len(validation.checks)} validation checks")
 
-            # PHASE 3: DECOMPOSE - HTN ENHANCED ✨
+            # PHASE 3: DECOMPOSE - HTN + Graph ENHANCED ✨
             main_node = self._get_main_node(ast)
 
             # Compile AST to HTNNode tree
             htn_root = self.htn_compiler.compile(main_node)
+
+            # Convert HTN to dependency graph for validation (Sprint 3)
+            graph = self.graph_executor.htn_to_graph(htn_root)
+
+            # Validate graph is a DAG (no cycles)
+            graph_issues = self.graph_executor.validate_dag(graph)
+            if graph_issues:
+                lifecycle.fail(error="Graph validation failed", issues=graph_issues)
+                phases_completed.append("DECOMPOSE")
+                execution_time = time.time() - start_time
+
+                return WorkflowExecutionResult(
+                    success=False,
+                    result=None,
+                    lifecycle=lifecycle,
+                    execution_time=execution_time,
+                    phases_completed=phases_completed,
+                    error=f"Graph validation failed: {', '.join(graph_issues)}"
+                )
 
             # Use HTN decomposition (recursive breakdown)
             htn_decomposed = htn_root.decompose(state={})
@@ -140,6 +161,7 @@ class HTNWorkflowExecutor(LifecycleWorkflowExecutor):
                 "main_node": main_node,
                 "htn_root": htn_root,
                 "htn_decomposed": htn_decomposed,
+                "graph": graph,  # NEW: Include graph for execution planning
                 "task_count": task_count,
                 "htn_depth": htn_depth
             })
@@ -151,6 +173,7 @@ class HTNWorkflowExecutor(LifecycleWorkflowExecutor):
                 self._print_detail(f"HTN root: {htn_root.task_id}")
                 if htn_root.is_compound():
                     self._print_detail(f"Subtasks: {[t.task_id for t in htn_root.subtasks]}")
+                self._print_detail(f"Graph: {len(graph.nodes)} nodes, {graph.edge_count()} edges, DAG validated")
 
             # PHASE 4: EXECUTE - Run workflow (unchanged from parent)
             lifecycle.execute(execution_data={"status": "running", "htn": True})
