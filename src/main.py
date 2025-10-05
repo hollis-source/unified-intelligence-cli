@@ -25,8 +25,10 @@ if env_file.exists():
 
 
 @click.command()
-@click.option("--task", "-t", "task_descriptions", multiple=True, required=True,
-              help="Task description (can be specified multiple times)")
+@click.option("--workflow", "-w", type=click.Path(exists=True),
+              help="Execute .ct workflow file (DSL mode)")
+@click.option("--task", "-t", "task_descriptions", multiple=True,
+              help="Task description (can be specified multiple times, direct mode)")
 @click.option("--provider", type=click.Choice(["mock", "grok", "tongyi", "tongyi-local", "replicate", "qwen3_zerogpu", "auto"]), default="mock",
               help="LLM provider to use (auto: Week 13 intelligent selection, qwen3_zerogpu: ZeroGPU inference, tongyi-local: async local model)")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
@@ -52,6 +54,7 @@ if env_file.exists():
 @click.option("--metrics-dir", type=click.Path(), default="data/metrics",
               help="Directory to store metrics (default: data/metrics)")
 def main(
+    workflow: str,
     task_descriptions: tuple,
     provider: str,
     verbose: bool,
@@ -70,9 +73,24 @@ def main(
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.
 
+    Supports two execution modes:
+    1. Workflow mode (--workflow): Execute .ct DSL workflow files with lifecycle
+    2. Direct mode (--task): Direct multi-agent task execution
+
     Clean Architecture: Main only handles CLI concerns.
     Composition logic is delegated to compose_dependencies.
     """
+    # Validate: Must provide either workflow or task (but not both)
+    if not workflow and not task_descriptions:
+        click.echo("Error: Must provide either --workflow or --task", err=True)
+        click.echo("\nExamples:")
+        click.echo("  Workflow mode: python -m src.main --workflow examples/workflows/ci_pipeline.ct")
+        click.echo("  Direct mode:   python -m src.main --task 'analyze code'")
+        raise click.Abort()
+
+    if workflow and task_descriptions:
+        click.echo("Warning: Both --workflow and --task provided. Using workflow mode.", err=True)
+
     # Load configuration
     app_config = load_config(
         config, provider, verbose, debug, parallel, timeout,
@@ -84,6 +102,12 @@ def main(
     logger = setup_logging(app_config.verbose, app_config.debug)
 
     try:
+        # WORKFLOW MODE: Execute DSL workflow with lifecycle
+        if workflow:
+            execute_workflow_mode(workflow, app_config, logger)
+            return
+
+        # DIRECT MODE: Standard multi-agent task execution
         # Create factory instances (DIP: depend on abstractions)
         agent_factory = AgentFactory()
         team_factory = TeamFactory(agent_factory)
@@ -185,6 +209,85 @@ def main(
         else:
             formatter.format_error(str(e))
             raise click.Abort()
+
+
+def execute_workflow_mode(workflow_file: str, app_config: Config, logger) -> None:
+    """Execute DSL workflow file with lifecycle phases.
+
+    Args:
+        workflow_file: Path to .ct workflow file
+        app_config: Application configuration
+        logger: Logger instance
+
+    Clean Architecture: Orchestrates DSL use cases.
+    """
+    from src.dsl.use_cases.lifecycle_executor import LifecycleWorkflowExecutor
+    from src.dsl.adapters.cli_task_executor import CLITaskExecutor
+
+    if logger:
+        logger.info(f"Executing workflow: {workflow_file}")
+        logger.info(f"Mode: Lifecycle-aware DSL execution")
+
+    # Create task executor (uses existing CLI infrastructure)
+    task_executor = CLITaskExecutor()
+
+    # Create lifecycle executor
+    executor = LifecycleWorkflowExecutor(task_executor=task_executor)
+
+    # Execute workflow with lifecycle phases
+    result = asyncio.run(executor.execute_workflow(
+        workflow_file=workflow_file,
+        verbose=app_config.verbose
+    ))
+
+    # Display results
+    if result.success:
+        click.echo(f"\n{'='*70}")
+        click.echo(click.style("✓ Workflow Completed Successfully", fg="green", bold=True))
+        click.echo(f"{'='*70}")
+        click.echo(f"Execution time: {result.execution_time:.2f}s")
+        click.echo(f"Phases: {' → '.join(result.phases_completed)}")
+        click.echo(f"\nResult:")
+        _print_workflow_result(result.result, indent=2)
+        click.echo(f"{'='*70}")
+    else:
+        click.echo(f"\n{'='*70}")
+        click.echo(click.style("✗ Workflow Failed", fg="red", bold=True))
+        click.echo(f"{'='*70}")
+        click.echo(f"Error: {result.error}")
+        click.echo(f"Execution time: {result.execution_time:.2f}s")
+        click.echo(f"Phases completed: {' → '.join(result.phases_completed)}")
+        click.echo(f"Failed at: {result.lifecycle.get_state().name}")
+        click.echo(f"{'='*70}")
+        raise click.Abort()
+
+
+def _print_workflow_result(result, indent: int = 0):
+    """Print workflow result recursively.
+
+    Args:
+        result: Result to print
+        indent: Indentation level
+    """
+    prefix = " " * indent
+
+    if isinstance(result, tuple):
+        click.echo(f"{prefix}Parallel Results:")
+        for i, item in enumerate(result):
+            click.echo(f"{prefix}  [{i}]:")
+            _print_workflow_result(item, indent + 4)
+    elif isinstance(result, dict):
+        for key, value in result.items():
+            if isinstance(value, (dict, list, tuple)):
+                click.echo(f"{prefix}{key}:")
+                _print_workflow_result(value, indent + 2)
+            else:
+                click.echo(f"{prefix}{key}: {value}")
+    elif isinstance(result, list):
+        for i, item in enumerate(result):
+            click.echo(f"{prefix}[{i}]: {item}")
+    else:
+        click.echo(f"{prefix}{result}")
 
 
 def load_config(
