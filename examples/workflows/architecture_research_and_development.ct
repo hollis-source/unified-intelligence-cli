@@ -1,0 +1,30 @@
+# Architecture R&D Workflow
+# Research and development workflow for UNIFIED_ARCHITECTURE_BASELINE.md
+#
+# This workflow takes the architectural baseline document and produces
+# a comprehensive, actionable implementation roadmap through systematic
+# research question generation and solution development.
+#
+# Process:
+# 1. Read and analyze UNIFIED_ARCHITECTURE_BASELINE.md
+# 2. Generate research questions for abstract layers (HTN, Category Theory, Graph Theory)
+# 3. Develop actionable steps to address each research question
+# 4. Aggregate all actionable steps across research domains
+# 5. Synthesize into comprehensive sequential roadmap
+#
+# Teams involved:
+# - Research team: Question formulation and analysis
+# - Category Theory team: Formalism-specific questions
+# - Backend team: Implementation concerns
+# - Architecture team: Integration planning
+
+# Type annotations for research pipeline
+read_baseline :: () -> BaselineDocument
+generate_research_questions :: BaselineDocument -> ResearchQuestions
+develop_actionable_steps :: ResearchQuestions -> ActionableSteps
+aggregate_steps :: ActionableSteps -> AggregatedSteps
+synthesize_roadmap :: AggregatedSteps -> ImplementationRoadmap
+
+# Sequential R&D pipeline
+# Category Theory: (f ∘ g ∘ h ∘ i ∘ j)(x)
+functor research_and_development = synthesize_roadmap o aggregate_steps o develop_actionable_steps o generate_research_questions o read_baseline
