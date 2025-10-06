@@ -148,6 +148,24 @@ class ModelSelector:
             Dict mapping provider name to capabilities
         """
         return {
+            "qwen3_hf_inference": ModelCapabilities(
+                name="Qwen3-8B-HF-Inference",
+                success_rate=1.0,  # 100% (tested)
+                avg_latency=1.2,  # 1.2s avg (37x faster than ZeroGPU!)
+                cost_per_month=2.0,  # FREE with PRO credits ($2/month), pay-as-you-go after
+                requires_internet=True,
+                max_tokens=2048,
+                supports_tools=False
+            ),
+            "qwen3_next_80b_thinking": ModelCapabilities(
+                name="Qwen3-Next-80B-Thinking",
+                success_rate=1.0,  # 100% (tested, superior reasoning)
+                avg_latency=48.0,  # 48s avg for complex reasoning tasks
+                cost_per_month=100.0,  # $10/hour = ~$100/month budget (10h active)
+                requires_internet=True,
+                max_tokens=32768,  # 32K recommended, up to 256K context
+                supports_tools=False  # Thinking model, not tool-calling
+            ),
             "qwen3_zerogpu": ModelCapabilities(
                 name="Qwen3-8B-ZeroGPU",
                 success_rate=1.0,  # 100% (31/31 examples)

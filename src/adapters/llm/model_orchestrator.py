@@ -57,9 +57,10 @@ class ModelOrchestrator(ITextGenerator):
         self.provider_factory = provider_factory
         self.criteria = criteria
         self.available_providers = available_providers or [
-            "qwen3_zerogpu",
-            "tongyi-local",
-            "grok"
+            "qwen3_hf_inference",  # Priority 1: 1.2s latency (37x faster than ZeroGPU)
+            "qwen3_zerogpu",       # Priority 2: 45s latency (FREE fallback)
+            "tongyi-local",        # Priority 3: Local inference (when available)
+            "grok"                 # Priority 4: High-quality fallback
         ]
         self.enable_fallback = enable_fallback
         self.max_fallback_attempts = max_fallback_attempts

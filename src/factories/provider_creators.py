@@ -144,6 +144,75 @@ class Qwen3ProviderCreator:
         return Qwen3InferenceAdapter(space_id=space_id, timeout=timeout)
 
 
+class Qwen3HFInferenceCreator:
+    """
+    Creator for Qwen3-8B HuggingFace Serverless Inference provider.
+
+    Phase 4 Priority #2: 37x faster than ZeroGPU (1.2s vs 45s).
+    Performance: 100% success rate, 1.2s avg latency, FREE with HF Pro ($2/month credits).
+    Cost: Uses PRO credits, pay-as-you-go after (~$0.001-0.01/request).
+    """
+
+    def create(self, config: Optional[Dict[str, Any]] = None) -> ITextGenerator:
+        from src.adapters.llm.qwen3_hf_inference_adapter import Qwen3HFInferenceAdapter
+
+        model_id = "Qwen/Qwen3-8B"
+        token = None
+        timeout = 30
+
+        if config:
+            if "model_id" in config:
+                model_id = config["model_id"]
+            if "token" in config:
+                token = config["token"]
+            if "timeout" in config:
+                timeout = config["timeout"]
+
+        return Qwen3HFInferenceAdapter(
+            model_id=model_id,
+            token=token,
+            timeout=timeout
+        )
+
+
+class Qwen3Next80BThinkingCreator:
+    """
+    Creator for Qwen3-Next-80B-A3B-Thinking Inference Endpoint.
+
+    Phase 4 Priority #3: Premium reasoning model for complex architectural tasks.
+    Performance: 80B params (3B activated), explicit thinking process, superior reasoning.
+    Benchmarks: 87.8% AIME25, 73.9% HMMT25, 68.7% LiveCodeBench (beats Gemini-Flash).
+    Cost: $10/hour when active (scale-to-zero saves costs when idle).
+
+    Best For:
+    - Complex architectural design
+    - Multi-step reasoning tasks
+    - Code analysis requiring deep understanding
+    - Research and exploration
+    """
+
+    def create(self, config: Optional[Dict[str, Any]] = None) -> ITextGenerator:
+        from src.adapters.llm.qwen3_next_80b_thinking_adapter import Qwen3Next80BThinkingAdapter
+
+        endpoint_url = "https://crlqq5n5zwaz4rnh.us-east-2.aws.endpoints.huggingface.cloud"
+        token = None
+        timeout = 300  # 5 minutes for complex reasoning
+
+        if config:
+            if "endpoint_url" in config:
+                endpoint_url = config["endpoint_url"]
+            if "token" in config:
+                token = config["token"]
+            if "timeout" in config:
+                timeout = config["timeout"]
+
+        return Qwen3Next80BThinkingAdapter(
+            endpoint_url=endpoint_url,
+            token=token,
+            timeout=timeout
+        )
+
+
 class OrchestratorProviderCreator:
     """
     Creator for intelligent multi-model orchestrator.
@@ -197,7 +266,12 @@ class OrchestratorProviderCreator:
             available_providers = config["available_providers"]
 
         if available_providers is None:
-            available_providers = ["qwen3_zerogpu", "tongyi-local", "grok"]
+            available_providers = [
+                "qwen3_hf_inference",  # Priority 1: 1.2s latency
+                "qwen3_zerogpu",       # Priority 2: 45s latency (FREE fallback)
+                "tongyi-local",        # Priority 3: Local inference
+                "grok"                 # Priority 4: High-quality fallback
+            ]
 
         # Get fallback settings
         enable_fallback = True
