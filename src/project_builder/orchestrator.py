@@ -6,13 +6,15 @@ Meta-Operational Lifecycle: Plan → Verify → Decompose → Execute.
 
 import time
 import asyncio
-from typing import List
+from typing import List, Optional
 
 from src.interfaces import (
     IProjectOrchestrator,
     IGoalDecomposer,
     IHTNDSLTranslator,
     IStateManager,
+    IExecutionCoordinator,
+    IFeedbackHandler,
     ProjectResult,
     ExecutionResult,
     TaskStatus
@@ -24,22 +26,29 @@ class ProjectOrchestrator(IProjectOrchestrator):
     """Orchestrator for project execution lifecycle.
 
     Coordinates goal decomposition, HTN-DSL translation, state management,
-    and task execution following Clean Architecture principles.
+    task execution, and feedback loops following Clean Architecture principles.
 
     Phase 1: Basic sequential execution with HTN and DSL
-    Phase 2: Will add full execution coordinator and feedback loops
+    Phase 2: Integrated execution coordinator and feedback loops
+    Phase 3: Production-ready with full agent teams integration
 
     Attributes:
         goal_decomposer: Converts goals to HTN graphs
         htn_dsl_translator: Converts HTN to DSL workflows
         state_manager: Manages project state
+        execution_coordinator: Routes tasks to agents (optional)
+        feedback_handler: Handles failures and replanning (optional)
+        max_retries: Maximum retry attempts on failure
     """
 
     def __init__(
         self,
         goal_decomposer: IGoalDecomposer,
         htn_dsl_translator: IHTNDSLTranslator,
-        state_manager: IStateManager
+        state_manager: IStateManager,
+        execution_coordinator: Optional[IExecutionCoordinator] = None,
+        feedback_handler: Optional[IFeedbackHandler] = None,
+        max_retries: int = 3
     ):
         """Initialize orchestrator with required components.
 
@@ -47,10 +56,16 @@ class ProjectOrchestrator(IProjectOrchestrator):
             goal_decomposer: Goal decomposition component
             htn_dsl_translator: HTN to DSL translator
             state_manager: State management component
+            execution_coordinator: Execution coordinator (optional, uses mock if None)
+            feedback_handler: Feedback loop handler (optional)
+            max_retries: Maximum retry attempts on failure
         """
         self.goal_decomposer = goal_decomposer
         self.htn_dsl_translator = htn_dsl_translator
         self.state_manager = state_manager
+        self.execution_coordinator = execution_coordinator
+        self.feedback_handler = feedback_handler
+        self.max_retries = max_retries
 
     async def execute_project(self, goal: str, project_id: str) -> ProjectResult:
         """Execute a project from natural language goal to completion.
@@ -95,9 +110,9 @@ class ProjectOrchestrator(IProjectOrchestrator):
             dsl_workflow = self.htn_dsl_translator.translate(htn_graph)
             print(f"[DECOMPOSE] Generated DSL: {dsl_workflow}")
 
-            # PHASE 4: EXECUTE - Execute tasks sequentially
+            # PHASE 4: EXECUTE - Execute tasks with feedback loop
             print("[EXECUTE] Executing tasks")
-            task_results = await self._execute_tasks(htn_graph, state)
+            task_results = await self._execute_with_feedback(dsl_workflow, state)
 
             # Finalize artifacts
             artifacts = self.state_manager.finalize_artifacts()
@@ -105,9 +120,11 @@ class ProjectOrchestrator(IProjectOrchestrator):
             # Calculate total time and cost
             execution_time = time.time() - start_time
 
-            # Phase 1: Placeholder cost calculation
-            # Phase 2: Will track actual model usage costs
-            estimated_cost = len(task_results) * 0.001  # $0.001 per task placeholder
+            # Calculate actual cost from task results
+            estimated_cost = sum(
+                result.metadata.get("cost", 0.001)
+                for result in task_results
+            )
 
             # Check if all tasks succeeded
             success = all(result.success for result in task_results)
@@ -143,37 +160,131 @@ class ProjectOrchestrator(IProjectOrchestrator):
         Returns:
             Final project result with artifacts
         """
-        # Load existing state
-        state = self.state_manager.load_state(project_id)
+        start_time = time.time()
 
-        # Continue execution from current state
-        # Phase 1: Simple implementation
-        # Phase 2: Will add sophisticated resumption logic
+        try:
+            # Load existing state
+            state = self.state_manager.load_state(project_id)
 
-        task_results = await self._execute_tasks(state.htn_graph, state)
+            print(f"[RESUME] Loaded project state (version {state.version})")
 
-        artifacts = self.state_manager.finalize_artifacts()
-        success = all(result.success for result in task_results)
+            # Re-translate HTN to DSL (in case of changes)
+            dsl_workflow = self.htn_dsl_translator.translate(state.htn_graph)
 
-        return ProjectResult(
-            project_id=project_id,
-            success=success,
-            artifacts=artifacts,
-            execution_time=0.0,  # Not tracked for resume
-            cost=0.0,
-            task_results=task_results,
-            error="" if success else "Some tasks failed"
-        )
+            # Continue execution from current state
+            task_results = await self._execute_with_feedback(dsl_workflow, state)
 
-    async def _execute_tasks(
+            # Finalize artifacts
+            artifacts = self.state_manager.finalize_artifacts()
+
+            # Calculate metrics
+            execution_time = time.time() - start_time
+            estimated_cost = sum(
+                result.metadata.get("cost", 0.001)
+                for result in task_results
+            )
+            success = all(result.success for result in task_results)
+
+            return ProjectResult(
+                project_id=project_id,
+                success=success,
+                artifacts=artifacts,
+                execution_time=execution_time,
+                cost=estimated_cost,
+                task_results=task_results,
+                error="" if success else "Some tasks failed"
+            )
+
+        except Exception as e:
+            execution_time = time.time() - start_time
+            return ProjectResult(
+                project_id=project_id,
+                success=False,
+                artifacts={},
+                execution_time=execution_time,
+                cost=0.0,
+                task_results=[],
+                error=f"Resume failed: {e}"
+            )
+
+    async def _execute_with_feedback(
+        self,
+        dsl_workflow,
+        state
+    ) -> List[ExecutionResult]:
+        """Execute DSL workflow with feedback loop for retry on failure.
+
+        Phase 2: Integrated execution coordinator and feedback handler
+        Phase 3: Production-ready with full agent teams
+
+        Args:
+            dsl_workflow: DSL workflow to execute
+            state: Current project state
+
+        Returns:
+            List of execution results for all tasks
+        """
+        all_results: List[ExecutionResult] = []
+        retry_count = 0
+
+        while retry_count <= self.max_retries:
+            # Execute workflow
+            if self.execution_coordinator:
+                # Phase 2+: Use ExecutionCoordinator
+                results = await self.execution_coordinator.execute_workflows(
+                    dsl_workflow,
+                    state
+                )
+            else:
+                # Phase 1: Fallback to mock execution
+                results = await self._execute_tasks_mock(state.htn_graph, state)
+
+            # Update state based on results
+            for result in results:
+                if result.success:
+                    self.state_manager.apply_effects(result.effects)
+                    self.state_manager.mark_task_status(result.task_id, TaskStatus.COMPLETED)
+                else:
+                    self.state_manager.mark_task_status(result.task_id, TaskStatus.FAILED)
+
+            all_results.extend(results)
+
+            # Check for failures
+            failed_tasks = [r for r in results if not r.success]
+
+            if not failed_tasks:
+                # All tasks succeeded
+                break
+
+            if not self.feedback_handler or retry_count >= self.max_retries:
+                # No feedback handler or max retries reached
+                print(f"[FEEDBACK] Max retries ({self.max_retries}) reached, giving up")
+                break
+
+            # Replan using feedback handler
+            print(f"[FEEDBACK] {len(failed_tasks)} tasks failed, replanning (attempt {retry_count + 1}/{self.max_retries})")
+
+            try:
+                new_state = self.feedback_handler.replan(
+                    self.state_manager.get_current_state(),
+                    failed_tasks
+                )
+                # Update state manager with new state
+                self.state_manager.current_state = new_state
+                print(f"[FEEDBACK] Replanning successful, retrying failed tasks")
+                retry_count += 1
+            except Exception as e:
+                print(f"[FEEDBACK] Replanning failed: {e}")
+                break
+
+        return all_results
+
+    async def _execute_tasks_mock(
         self,
         htn_graph,
         state
     ) -> List[ExecutionResult]:
-        """Execute all tasks in HTN graph sequentially.
-
-        Phase 1: Simple sequential execution with mock results
-        Phase 2: Will integrate with execution coordinator and agent teams
+        """Execute all tasks with mock implementation (Phase 1 fallback).
 
         Args:
             htn_graph: HTN task graph to execute
@@ -193,8 +304,7 @@ class ProjectOrchestrator(IProjectOrchestrator):
             # Mark task as in progress
             self.state_manager.mark_task_status(task.task_id, TaskStatus.IN_PROGRESS)
 
-            # Phase 1: Mock execution
-            # Phase 2: Will call execution coordinator with agent teams
+            # Mock execution
             await asyncio.sleep(0.1)  # Simulate work
 
             # Create execution result
@@ -203,15 +313,8 @@ class ProjectOrchestrator(IProjectOrchestrator):
                 success=True,
                 effects=task.effects,
                 error="",
-                metadata={"mock": True, "description": task.description}
+                metadata={"mock": True, "description": task.description, "cost": 0.001}
             )
-
-            # Apply effects to state
-            if result.success:
-                self.state_manager.apply_effects(result.effects)
-                self.state_manager.mark_task_status(task.task_id, TaskStatus.COMPLETED)
-            else:
-                self.state_manager.mark_task_status(task.task_id, TaskStatus.FAILED)
 
             results.append(result)
 
