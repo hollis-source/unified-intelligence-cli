@@ -237,8 +237,12 @@ Complete the given task using your expertise and deep analytical thinking."""
         messages.append({"role": "system", "content": system_prompt})
 
         # Add context history if available
-        if context and context.history:
-            messages.extend(context.history[-5:])  # Last 5 messages for context
+        # Handle both ExecutionContext objects and dict contexts
+        if context:
+            if hasattr(context, 'history') and context.history:
+                messages.extend(context.history[-5:])  # Last 5 messages for context
+            elif isinstance(context, dict) and 'history' in context and context['history']:
+                messages.extend(context['history'][-5:])  # Last 5 messages for context
 
         # Add task as user message with ultrathink trigger
         task_prompt = f"""Task: {task.description}
