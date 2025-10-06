@@ -12,9 +12,10 @@ from src.interfaces import (
     IExecutionCoordinator,
     ProjectState,
     ExecutionResult,
-    TaskStatus
+    TaskStatus,
+    ITextGenerator
 )
-from src.entities import Task, Agent, AgentTeam
+from src.entities import Task, Agent, AgentTeam, ExecutionContext
 from src.entities.htn.htn_node import HTNNode
 from src.routing.team_router import TeamRouter
 from src.routing.adaptive_selector import AdaptiveModelSelector
@@ -23,6 +24,7 @@ from src.dsl.entities.ast_node import ASTNode
 from src.dsl.entities.literal import Literal
 from src.dsl.entities.composition import Composition
 from src.dsl.entities.product import Product
+from src.adapters.agent.llm_executor import LLMAgentExecutor
 
 
 logger = logging.getLogger(__name__)
@@ -49,7 +51,8 @@ class ExecutionCoordinator(IExecutionCoordinator):
         self,
         team_router: TeamRouter,
         model_selector: AdaptiveModelSelector,
-        teams: List[AgentTeam]
+        teams: List[AgentTeam],
+        llm_provider: Optional[ITextGenerator] = None
     ):
         """Initialize execution coordinator.
 
@@ -57,10 +60,24 @@ class ExecutionCoordinator(IExecutionCoordinator):
             team_router: Team routing component
             model_selector: Adaptive model selection component
             teams: Available agent teams
+            llm_provider: LLM provider for real execution (if None, uses mock)
         """
         self.team_router = team_router
         self.model_selector = model_selector
         self.teams = teams
+
+        # Initialize LLM executor for real execution
+        if llm_provider:
+            self.llm_executor = LLMAgentExecutor(
+                llm_provider=llm_provider,
+                provider_name="project-builder",
+                orchestrator="coordinator",
+                enable_cache=True
+            )
+            logger.info("ExecutionCoordinator initialized with real LLM execution")
+        else:
+            self.llm_executor = None
+            logger.info("ExecutionCoordinator initialized with mock execution")
 
     async def execute_workflows(
         self,
@@ -331,8 +348,7 @@ class ExecutionCoordinator(IExecutionCoordinator):
     ) -> ExecutionResult:
         """Execute a single task with specified agent and model.
 
-        Phase 2: Mock execution with timing simulation
-        Phase 3: Will integrate with actual agent execution
+        Phase 3: Real execution with LLMAgentExecutor
 
         Args:
             task: Task to execute
@@ -358,20 +374,71 @@ class ExecutionCoordinator(IExecutionCoordinator):
                 }
             )
 
-        # Simulate execution
-        # Phase 3: Will call agent.execute(task, model_id)
-        await asyncio.sleep(0.1)  # Simulate work
+        # Real execution with LLM
+        if self.llm_executor:
+            try:
+                # Build execution context from project state
+                context = ExecutionContext(
+                    session_id=state.project_id,
+                    history=[],
+                    llm_state=state.world_state,
+                    user_data={
+                        "htn_node": htn_node.task_id,
+                        "model_id": model_id,
+                        "preconditions": htn_node.preconditions,
+                        "effects": htn_node.effects
+                    }
+                )
 
-        # Phase 2: Mock success
-        return ExecutionResult(
-            task_id=task.metadata.get("task_id", "unknown"),
-            success=True,
-            effects=htn_node.effects,
-            error="",
-            metadata={
-                "agent": agent.role,
-                "model": model_id,
-                "task_type": task.task_type,
-                "description": task.description
-            }
-        )
+                # Execute task with real LLM
+                logger.info(f"Executing task {task.description} with agent {agent.role} using model {model_id}")
+                result = await self.llm_executor.execute(agent, task, context)
+
+                # Map ExecutionResult to coordinator's expected format
+                # Preserve HTN effects from the node
+                return ExecutionResult(
+                    task_id=task.metadata.get("task_id", "unknown"),
+                    success=result.status.value == "success",
+                    effects=htn_node.effects,  # Use HTN effects for state updates
+                    error=result.errors[0] if result.errors else "",
+                    metadata={
+                        "agent": agent.role,
+                        "model": model_id,
+                        "task_type": task.task_type,
+                        "description": task.description,
+                        "llm_output": result.output,
+                        "real_execution": True
+                    }
+                )
+
+            except Exception as e:
+                logger.error(f"Real execution failed for task {task.description}: {e}")
+                return ExecutionResult(
+                    task_id=task.metadata.get("task_id", "unknown"),
+                    success=False,
+                    effects={},
+                    error=f"Execution failed: {str(e)}",
+                    metadata={
+                        "agent": agent.role,
+                        "model": model_id,
+                        "task_type": task.task_type,
+                        "real_execution": True,
+                        "error_type": type(e).__name__
+                    }
+                )
+        else:
+            # Fallback to mock execution if no LLM executor
+            await asyncio.sleep(0.1)  # Simulate work
+            return ExecutionResult(
+                task_id=task.metadata.get("task_id", "unknown"),
+                success=True,
+                effects=htn_node.effects,
+                error="",
+                metadata={
+                    "agent": agent.role,
+                    "model": model_id,
+                    "task_type": task.task_type,
+                    "description": task.description,
+                    "real_execution": False
+                }
+            )

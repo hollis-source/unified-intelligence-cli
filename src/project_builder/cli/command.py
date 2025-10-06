@@ -17,6 +17,10 @@ from src.project_builder import (
     GoalDecomposer,
     HTNDSLTranslator
 )
+from src.project_builder.execution.coordinator import ExecutionCoordinator
+from src.routing.team_router import TeamRouter
+from src.routing.adaptive_selector import AdaptiveModelSelector
+from src.factories.team_factory import TeamFactory
 from src.adapters.llm.qwen3_next_80b_thinking_adapter import Qwen3Next80BThinkingAdapter
 
 
@@ -178,14 +182,29 @@ async def _execute_project(
         # HTN-DSL translator with parallel support
         htn_dsl_translator = HTNDSLTranslator(enable_parallel=parallel)
 
-        # Project orchestrator
+        # Create execution coordinator with real LLM execution
+        click.echo("[INIT] Initializing real LLM execution...")
+        team_factory = TeamFactory()
+        teams = team_factory.create_all_teams()
+        team_router = TeamRouter()
+        model_selector = AdaptiveModelSelector()
+
+        execution_coordinator = ExecutionCoordinator(
+            team_router=team_router,
+            model_selector=model_selector,
+            teams=teams,
+            llm_provider=thinking_model  # Enable real execution
+        )
+
+        # Project orchestrator with real execution
         orchestrator = ProjectOrchestrator(
             goal_decomposer=goal_decomposer,
             htn_dsl_translator=htn_dsl_translator,
-            state_manager=state_manager
+            state_manager=state_manager,
+            execution_coordinator=execution_coordinator  # Pass real coordinator
         )
 
-        click.echo("[INIT] Components initialized\n")
+        click.echo("[INIT] Components initialized (real execution enabled)\n")
 
         # Execute project
         result = await orchestrator.execute_project(
