@@ -6,10 +6,13 @@ Qwen3-Next-80B-A3B-Thinking model for strategic decomposition.
 
 import json
 import re
-from typing import Dict, Any
+import logging
+from typing import Dict, Any, Optional
 
 from src.interfaces import IGoalDecomposer, ITextGenerator, LLMConfig
 from src.entities.htn.htn_node import HTNNode
+
+logger = logging.getLogger(__name__)
 
 
 class GoalDecomposer(IGoalDecomposer):
@@ -30,15 +33,44 @@ class GoalDecomposer(IGoalDecomposer):
             thinking_model: Text generator implementing strategic reasoning
         """
         self.thinking_model = thinking_model
+        self.max_retries = 3
+
+    def _repair_json(self, json_str: str) -> str:
+        """Attempt to repair common JSON syntax errors.
+
+        Args:
+            json_str: Potentially malformed JSON string
+
+        Returns:
+            Repaired JSON string
+        """
+        # Remove trailing commas before closing braces/brackets
+        json_str = re.sub(r',\s*([}\]])', r'\1', json_str)
+
+        # Add missing commas between objects/arrays
+        json_str = re.sub(r'"\s*\n\s*"', r'",\n"', json_str)
+        json_str = re.sub(r'}\s*\n\s*{', r'},\n{', json_str)
+        json_str = re.sub(r']\s*\n\s*\[', r'],\n[', json_str)
+
+        # Remove comments (JSON doesn't support comments)
+        json_str = re.sub(r'//.*?\n', '\n', json_str)
+        json_str = re.sub(r'/\*.*?\*/', '', json_str, flags=re.DOTALL)
+
+        # Fix unescaped quotes (basic attempt)
+        # This is tricky and might need refinement
+
+        return json_str
 
     async def decompose_goal(self, goal: str) -> HTNNode:
-        """Decompose natural language goal into HTN task graph.
+        """Decompose natural language goal into HTN task graph with retry logic.
 
         Uses thinking model to:
         1. Identify core components and dependencies
         2. Determine critical path tasks
         3. Create hierarchical task structure
         4. Define preconditions and effects
+
+        Retries with stricter prompts if JSON parsing fails.
 
         Args:
             goal: Natural language project goal
@@ -50,47 +82,80 @@ class GoalDecomposer(IGoalDecomposer):
             goal: "Create a REST API with user authentication"
             returns: HTNNode with design, implementation, and testing subtasks
         """
-        # Generate HTN structure using thinking model
-        prompt = self._build_decomposition_prompt(goal)
-
-        config = LLMConfig(
-            temperature=0.4,  # Lower for structured output
-            max_tokens=8192   # Sufficient for HTN structure
-        )
-
-        # Note: thinking_model.generate is synchronous (not async)
-        # Run in executor to avoid blocking
         import asyncio
-        loop = asyncio.get_event_loop()
-        response = await loop.run_in_executor(
-            None,
-            lambda: self.thinking_model.generate(
-                messages=[{"role": "user", "content": prompt}],
-                config=config
-            )
-        )
 
-        # Parse response into HTN structure
-        htn_graph = self._parse_htn_from_response(response)
+        last_error = None
 
-        # Ensure root task has no preconditions (safety measure)
-        htn_graph.preconditions = {}
+        for attempt in range(self.max_retries):
+            try:
+                # Generate HTN structure using thinking model
+                # Use stricter prompt on retries
+                strict_mode = attempt > 0
+                prompt = self._build_decomposition_prompt(goal, strict_mode=strict_mode)
 
-        # Validate HTN structure
-        self._validate_htn(htn_graph)
+                config = LLMConfig(
+                    temperature=0.3 if strict_mode else 0.4,  # Lower for retries
+                    max_tokens=8192
+                )
 
-        return htn_graph
+                logger.info(f"Decomposing goal (attempt {attempt + 1}/{self.max_retries}): {goal[:50]}...")
 
-    def _build_decomposition_prompt(self, goal: str) -> str:
+                # Note: thinking_model.generate is synchronous (not async)
+                # Run in executor to avoid blocking
+                loop = asyncio.get_event_loop()
+                response = await loop.run_in_executor(
+                    None,
+                    lambda: self.thinking_model.generate(
+                        messages=[{"role": "user", "content": prompt}],
+                        config=config
+                    )
+                )
+
+                # Parse response into HTN structure (with repair)
+                htn_graph = self._parse_htn_from_response(response, attempt=attempt)
+
+                # Ensure root task has no preconditions (safety measure)
+                htn_graph.preconditions = {}
+
+                # Validate HTN structure
+                self._validate_htn(htn_graph)
+
+                logger.info(f"Successfully decomposed goal into HTN (depth {htn_graph.get_depth()})")
+                return htn_graph
+
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Attempt {attempt + 1} failed: {e}")
+
+                if attempt < self.max_retries - 1:
+                    logger.info("Retrying with stricter prompt...")
+                    continue
+                else:
+                    logger.error(f"All {self.max_retries} attempts failed")
+                    raise ValueError(f"Failed to decompose goal after {self.max_retries} attempts: {last_error}")
+
+    def _build_decomposition_prompt(self, goal: str, strict_mode: bool = False) -> str:
         """Build prompt for HTN decomposition.
 
         Args:
             goal: Natural language project goal
+            strict_mode: If True, use stricter JSON formatting instructions
 
         Returns:
             Structured prompt for thinking model
         """
+        strict_warning = ""
+        if strict_mode:
+            strict_warning = """
+**CRITICAL**: Previous attempt had JSON syntax errors. Follow JSON syntax EXACTLY:
+- Use double quotes for all strings
+- No trailing commas
+- Escape all special characters
+- Validate JSON structure before responding
+"""
+
         return f"""You are an expert project planner. Decompose the following project goal into a Hierarchical Task Network (HTN).
+{strict_warning}
 
 Project Goal: {goal}
 
@@ -131,13 +196,14 @@ Guidelines:
 
 Output ONLY the JSON structure, no additional text."""
 
-    def _parse_htn_from_response(self, response: str) -> HTNNode:
-        """Parse HTN structure from model response.
+    def _parse_htn_from_response(self, response: str, attempt: int = 0) -> HTNNode:
+        """Parse HTN structure from model response with JSON repair.
 
         Extracts JSON from response and recursively builds HTNNode structure.
 
         Args:
             response: Raw response from thinking model
+            attempt: Current attempt number (for logging)
 
         Returns:
             HTNNode root of task graph
@@ -158,10 +224,24 @@ Output ONLY the JSON structure, no additional text."""
             else:
                 raise ValueError(f"Could not extract JSON from response: {response[:200]}")
 
+        # Try parsing, then try with repair if it fails
         try:
             htn_dict = json.loads(json_str)
         except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in response: {e}")
+            logger.warning(f"JSON parse failed (attempt {attempt + 1}): {e}")
+            logger.debug(f"Malformed JSON (first 500 chars): {json_str[:500]}")
+
+            # Attempt repair
+            logger.info("Attempting JSON repair...")
+            repaired_json = self._repair_json(json_str)
+
+            try:
+                htn_dict = json.loads(repaired_json)
+                logger.info("JSON repair successful")
+            except json.JSONDecodeError as e2:
+                logger.error(f"JSON repair failed: {e2}")
+                logger.debug(f"Repaired JSON (first 500 chars): {repaired_json[:500]}")
+                raise ValueError(f"Invalid JSON in response (repair failed): {e2}")
 
         # Recursively build HTNNode from dictionary
         return self._dict_to_htn(htn_dict)
