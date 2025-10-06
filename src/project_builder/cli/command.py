@@ -20,6 +20,7 @@ from src.project_builder import (
 from src.project_builder.execution.coordinator import ExecutionCoordinator
 from src.routing.team_router import TeamRouter
 from src.routing.adaptive_selector import AdaptiveModelSelector
+from src.routing.summary_repository import ModelSummaryRepository
 from src.factories.team_factory import TeamFactory
 from src.adapters.llm.qwen3_next_80b_thinking_adapter import Qwen3Next80BThinkingAdapter
 
@@ -185,9 +186,12 @@ async def _execute_project(
         # Create execution coordinator with real LLM execution
         click.echo("[INIT] Initializing real LLM execution...")
         team_factory = TeamFactory()
-        teams = team_factory.create_all_teams()
+        teams = team_factory.create_scaled_teams()  # Use scaled teams (9 teams)
         team_router = TeamRouter()
-        model_selector = AdaptiveModelSelector()
+
+        # Create model selector with summary repository
+        summary_repo = ModelSummaryRepository()
+        model_selector = AdaptiveModelSelector(summary_repo=summary_repo)
 
         execution_coordinator = ExecutionCoordinator(
             team_router=team_router,
