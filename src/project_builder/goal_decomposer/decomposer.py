@@ -58,13 +58,23 @@ class GoalDecomposer(IGoalDecomposer):
             max_tokens=8192   # Sufficient for HTN structure
         )
 
-        response = await self.thinking_model.generate(
-            messages=[{"role": "user", "content": prompt}],
-            config=config
+        # Note: thinking_model.generate is synchronous (not async)
+        # Run in executor to avoid blocking
+        import asyncio
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: self.thinking_model.generate(
+                messages=[{"role": "user", "content": prompt}],
+                config=config
+            )
         )
 
         # Parse response into HTN structure
         htn_graph = self._parse_htn_from_response(response)
+
+        # Ensure root task has no preconditions (safety measure)
+        htn_graph.preconditions = {}
 
         # Validate HTN structure
         self._validate_htn(htn_graph)
@@ -114,8 +124,9 @@ Guidelines:
 - Use snake_case for task_id (e.g., "design_api_schema")
 - Keep hierarchy depth to 2-3 levels maximum
 - Primitive tasks (leaves) have empty subtasks array
-- Preconditions reference keys that must exist in world state
-- Effects define what state changes the task produces
+- **IMPORTANT**: The root project task MUST have empty preconditions {{}}
+- Subtask preconditions reference keys that must exist in world state
+- Effects define what state changes the task produces (e.g., {{"artifact_code": "generated_code.py"}})
 - For "{goal}", create 3-5 main tasks
 
 Output ONLY the JSON structure, no additional text."""

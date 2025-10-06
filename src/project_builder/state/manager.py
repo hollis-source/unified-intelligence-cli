@@ -117,10 +117,10 @@ class ProjectStateManager(IStateManager):
         self.state_repo.save(new_state)
 
     def validate_current_state(self) -> bool:
-        """Validate that current state satisfies all pending task preconditions.
+        """Validate that current state is viable for execution.
 
-        Checks all PENDING tasks to ensure their preconditions are satisfied
-        by the current world state.
+        Phase 1: Checks that at least one pending task has satisfied preconditions.
+        Phase 2: Will add more sophisticated validation (circular dependencies, etc.)
 
         Returns:
             True if state is valid for execution
@@ -138,7 +138,12 @@ class ProjectStateManager(IStateManager):
             if status == TaskStatus.PENDING
         ]
 
-        # Check preconditions for each pending task
+        # If no pending tasks, state is valid (all done or failed)
+        if not pending_tasks:
+            return True
+
+        # Check if at least ONE task can proceed (preconditions satisfied)
+        # This ensures we're not in a deadlock state
         for task_id in pending_tasks:
             task_node = self._find_task_in_graph(
                 self.current_state.htn_graph,
@@ -147,13 +152,15 @@ class ProjectStateManager(IStateManager):
 
             if task_node is None:
                 # Task not found in graph (shouldn't happen)
-                return False
+                continue
 
-            # Check if preconditions are satisfied
-            if not task_node.check_preconditions(self.current_state.world_state):
-                return False
+            # Check if this task's preconditions are satisfied
+            if task_node.check_preconditions(self.current_state.world_state):
+                # At least one task can proceed
+                return True
 
-        return True
+        # No tasks can proceed - potential deadlock
+        return False
 
     def has_pending_tasks(self) -> bool:
         """Check if there are any pending tasks.
