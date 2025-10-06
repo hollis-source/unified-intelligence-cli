@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+"""
+UI-CLI Build Command - Wrapper script for project builder.
+
+Makes the build-project command easily accessible.
+"""
+
+import sys
+from src.project_builder.cli import build_project_command
+
+if __name__ == "__main__":
+    build_project_command()
