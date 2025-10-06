@@ -244,17 +244,8 @@ Complete the given task using your expertise and deep analytical thinking."""
             elif isinstance(context, dict) and 'history' in context and context['history']:
                 messages.extend(context['history'][-5:])  # Last 5 messages for context
 
-        # Add task as user message with ultrathink trigger
-        task_prompt = f"""Task: {task.description}
-
-IMPORTANT: Think through this problem step-by-step using <think></think> tags before providing your final answer. Consider:
-1. What is being asked?
-2. What information do I need?
-3. What are the potential approaches?
-4. What are the constraints and requirements?
-5. What is the optimal solution?
-
-Think deeply, then provide your response."""
+        # Add task as user message with task-type-specific instructions
+        task_prompt = self._build_task_prompt(task, context)
 
         messages.append({
             "role": "user",
@@ -262,6 +253,123 @@ Think deeply, then provide your response."""
         })
 
         return messages
+
+    def _build_task_prompt(self, task: Task, context: Optional[ExecutionContext]) -> str:
+        """
+        Build task-type-specific prompt that instructs LLM to generate artifacts.
+
+        Args:
+            task: Task to execute
+            context: Optional execution context
+
+        Returns:
+            Formatted prompt string
+        """
+        task_type = task.task_type if hasattr(task, 'task_type') else 'general'
+
+        # Get context data if available
+        world_state = {}
+        if context:
+            if hasattr(context, 'llm_state'):
+                world_state = context.llm_state or {}
+            elif isinstance(context, dict) and 'llm_state' in context:
+                world_state = context['llm_state'] or {}
+
+        # Build task-type-specific instructions
+        if task_type in ['implementation', 'coding']:
+            prompt = f"""Task: {task.description}
+
+You are generating actual code. DO NOT explain how to write code - WRITE THE ACTUAL CODE.
+
+Context:
+{self._format_world_state(world_state)}
+
+INSTRUCTIONS:
+1. Generate the complete, working code for this task
+2. Use proper syntax and best practices
+3. Include necessary imports and error handling
+4. Return ONLY the code wrapped in ```python or appropriate language tags
+5. Do not include explanations unless they are code comments
+
+Generate the code now:"""
+
+        elif task_type == 'design':
+            prompt = f"""Task: {task.description}
+
+You are creating a design specification. DO NOT explain design principles - CREATE THE ACTUAL DESIGN.
+
+Context:
+{self._format_world_state(world_state)}
+
+INSTRUCTIONS:
+1. Create the complete design specification (API schema, architecture diagram, data model, etc.)
+2. Use proper notation (JSON schema, UML, etc.)
+3. Be specific and implementable
+4. Return the design artifact in structured format
+
+Generate the design specification now:"""
+
+        elif task_type == 'testing':
+            prompt = f"""Task: {task.description}
+
+You are writing actual test code. DO NOT explain testing strategies - WRITE THE ACTUAL TESTS.
+
+Context:
+{self._format_world_state(world_state)}
+
+INSTRUCTIONS:
+1. Generate complete, runnable test code
+2. Include test cases with assertions
+3. Use appropriate testing framework (pytest, unittest, etc.)
+4. Return ONLY the test code wrapped in ```python tags
+
+Generate the test code now:"""
+
+        elif task_type == 'documentation':
+            prompt = f"""Task: {task.description}
+
+You are writing actual documentation. DO NOT explain documentation principles - WRITE THE ACTUAL DOCS.
+
+Context:
+{self._format_world_state(world_state)}
+
+INSTRUCTIONS:
+1. Generate complete, user-ready documentation
+2. Use proper markdown formatting
+3. Include examples where appropriate
+4. Be clear and concise
+
+Generate the documentation now:"""
+
+        else:
+            # General tasks - still directive but less specific
+            prompt = f"""Task: {task.description}
+
+Context:
+{self._format_world_state(world_state)}
+
+INSTRUCTIONS:
+Generate the specific artifact or output required for this task. Be concrete and actionable.
+If code is needed, provide actual code. If a document is needed, provide the actual document.
+DO NOT provide explanations of how to do the task - DO THE TASK.
+
+Complete the task now:"""
+
+        return prompt
+
+    def _format_world_state(self, world_state: dict) -> str:
+        """Format world state for inclusion in prompt."""
+        if not world_state:
+            return "No previous context available."
+
+        formatted = []
+        for key, value in world_state.items():
+            if isinstance(value, str) and len(value) > 200:
+                formatted.append(f"- {key}: {value[:200]}... (truncated)")
+            else:
+                formatted.append(f"- {key}: {value}")
+
+        return "\n".join(formatted) if formatted else "No previous context available."
 
     def _extract_task_description(self, task: Task) -> str:
         """

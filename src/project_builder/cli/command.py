@@ -22,7 +22,7 @@ from src.routing.team_router import TeamRouter
 from src.routing.adaptive_selector import AdaptiveModelSelector
 from src.routing.summary_repository import ModelSummaryRepository
 from src.factories.team_factory import TeamFactory
-from src.adapters.llm.qwen3_next_80b_thinking_adapter import Qwen3Next80BThinkingAdapter
+from src.factories.provider_factory import ProviderFactory
 
 
 logger = logging.getLogger(__name__)
@@ -31,6 +31,8 @@ logger = logging.getLogger(__name__)
 @click.command(name="build-project")
 @click.argument("goal", required=False, default="")
 @click.option("--project-id", help="Custom project ID (default: auto-generated)")
+@click.option("--model", default="grok",
+              help="LLM model to use (grok, qwen3_next_80b_thinking, qwen3_hf_inference, qwen3_zerogpu, replicate, tongyi, auto)")
 @click.option("--parallel/--sequential", default=True,
               help="Enable/disable parallel task execution (default: parallel)")
 @click.option("--state-db", default="data/project_builder_state.db",
@@ -44,6 +46,7 @@ logger = logging.getLogger(__name__)
 def build_project_command(
     goal: str,
     project_id: str,
+    model: str,
     parallel: bool,
     state_db: str,
     output_dir: str,
@@ -111,6 +114,7 @@ def build_project_command(
         result = asyncio.run(_execute_project(
             goal=goal,
             project_id=project_id,
+            model=model,
             parallel=parallel,
             state_db=state_db,
             output_path=output_path,
@@ -134,6 +138,7 @@ def build_project_command(
 async def _execute_project(
     goal: str,
     project_id: str,
+    model: str,
     parallel: bool,
     state_db: str,
     output_path: Path,
@@ -144,6 +149,7 @@ async def _execute_project(
     Args:
         goal: Natural language project goal
         project_id: Unique project identifier
+        model: LLM model to use
         parallel: Enable parallel execution
         state_db: Path to state database
         output_path: Output directory path
@@ -176,9 +182,13 @@ async def _execute_project(
 
     else:
         # New project execution
-        # Goal decomposer with thinking model
-        thinking_model = Qwen3Next80BThinkingAdapter(timeout=600)
-        goal_decomposer = GoalDecomposer(thinking_model)
+        # Create LLM provider using factory
+        click.echo(f"[INIT] Creating LLM provider: {model}...")
+        provider_factory = ProviderFactory()
+        llm_provider = provider_factory.create_provider(model, {"timeout": 600})
+
+        # Goal decomposer with selected model
+        goal_decomposer = GoalDecomposer(llm_provider)
 
         # HTN-DSL translator with parallel support
         htn_dsl_translator = HTNDSLTranslator(enable_parallel=parallel)
@@ -197,7 +207,7 @@ async def _execute_project(
             team_router=team_router,
             model_selector=model_selector,
             teams=teams,
-            llm_provider=thinking_model  # Enable real execution
+            llm_provider=llm_provider  # Enable real execution
         )
 
         # Project orchestrator with real execution
@@ -208,7 +218,7 @@ async def _execute_project(
             execution_coordinator=execution_coordinator  # Pass real coordinator
         )
 
-        click.echo("[INIT] Components initialized (real execution enabled)\n")
+        click.echo(f"[INIT] Components initialized (real execution enabled with {model})\n")
 
         # Execute project
         result = await orchestrator.execute_project(

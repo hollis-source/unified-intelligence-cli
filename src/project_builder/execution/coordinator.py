@@ -121,6 +121,12 @@ class ExecutionCoordinator(IExecutionCoordinator):
             result = await self._execute_task(task, agent, model_id, htn_node, state)
             results.append(result)
 
+            # Apply effects immediately if task succeeded
+            # This allows subsequent tasks to see the updated state
+            if result.success and result.effects:
+                state.world_state.update(result.effects)
+                logger.debug(f"  Applied effects: {list(result.effects.keys())}")
+
             logger.info(f"  Task {'✓ succeeded' if result.success else '✗ failed'}")
 
         return results
@@ -160,6 +166,7 @@ class ExecutionCoordinator(IExecutionCoordinator):
             task = Task(
                 description=htn_node.description,
                 task_type=self._infer_task_type(htn_node),
+                task_id=task_id,
                 metadata={"task_id": task_id}
             )
 
@@ -394,12 +401,23 @@ class ExecutionCoordinator(IExecutionCoordinator):
                 logger.info(f"Executing task {task.description} with agent {agent.role} using model {model_id}")
                 result = await self.llm_executor.execute(agent, task, context)
 
+                # Log LLM output for visibility
+                logger.info(f"LLM Output: {result.output[:500]}..." if len(str(result.output)) > 500 else f"LLM Output: {result.output}")
+
                 # Map ExecutionResult to coordinator's expected format
-                # Preserve HTN effects from the node
+                # Enhance HTN effects with actual LLM output
+                enhanced_effects = dict(htn_node.effects)  # Copy HTN effects
+
+                # Store the actual artifact in world state
+                # Use a meaningful key based on the task
+                artifact_key = self._get_artifact_key(task, htn_node)
+                if artifact_key:
+                    enhanced_effects[artifact_key] = result.output
+
                 return ExecutionResult(
                     task_id=task.metadata.get("task_id", "unknown"),
                     success=result.status.value == "success",
-                    effects=htn_node.effects,  # Use HTN effects for state updates
+                    effects=enhanced_effects,  # Enhanced effects with actual content
                     error=result.errors[0] if result.errors else "",
                     metadata={
                         "agent": agent.role,
@@ -407,7 +425,8 @@ class ExecutionCoordinator(IExecutionCoordinator):
                         "task_type": task.task_type,
                         "description": task.description,
                         "llm_output": result.output,
-                        "real_execution": True
+                        "real_execution": True,
+                        "artifact_key": artifact_key
                     }
                 )
 
@@ -442,3 +461,33 @@ class ExecutionCoordinator(IExecutionCoordinator):
                     "real_execution": False
                 }
             )
+
+    def _get_artifact_key(self, task: Task, htn_node: HTNNode) -> str:
+        """Determine the artifact key for storing LLM output in world state.
+
+        Args:
+            task: Task being executed
+            htn_node: HTN node with task metadata
+
+        Returns:
+            Key string for storing artifact (e.g., "generated_code", "api_design")
+        """
+        desc = task.description.lower()
+        task_id = htn_node.task_id
+
+        # Infer artifact type from task description
+        if any(keyword in desc for keyword in ['generate code', 'write code', 'implement', 'code for']):
+            return f"{task_id}_code"
+        elif any(keyword in desc for keyword in ['write function', 'create function', 'function that']):
+            return f"{task_id}_function"
+        elif any(keyword in desc for keyword in ['design', 'schema', 'api', 'architecture']):
+            return f"{task_id}_design"
+        elif any(keyword in desc for keyword in ['write test', 'test code', 'test for']):
+            return f"{task_id}_test"
+        elif any(keyword in desc for keyword in ['document', 'readme', 'docs']):
+            return f"{task_id}_docs"
+        elif any(keyword in desc for keyword in ['save', 'write file', 'create file']):
+            return f"{task_id}_file"
+        else:
+            # Generic artifact key
+            return f"{task_id}_output"

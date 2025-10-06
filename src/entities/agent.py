@@ -1,7 +1,7 @@
 # src/entities/agent.py - Pure, no deps
 import difflib
 from dataclasses import dataclass, field
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 @dataclass
 class Task:
@@ -9,6 +9,8 @@ class Task:
     priority: int = 1
     task_id: Optional[str] = None
     dependencies: List[str] = field(default_factory=list)
+    task_type: str = "general"  # For adaptive model selection (design, implementation, testing, etc.)
+    metadata: Dict[str, Any] = field(default_factory=dict)  # Additional task context
 
 @dataclass
 class Agent:
