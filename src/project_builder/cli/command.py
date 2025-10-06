@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 @click.command(name="build-project")
-@click.argument("goal", required=True)
+@click.argument("goal", required=False, default="")
 @click.option("--project-id", help="Custom project ID (default: auto-generated)")
 @click.option("--parallel/--sequential", default=True,
               help="Enable/disable parallel task execution (default: parallel)")
@@ -70,12 +70,18 @@ def build_project_command(
     else:
         logging.basicConfig(level=logging.INFO)
 
-    # Generate project ID if not provided
-    if not project_id:
-        if resume:
+    # Validate arguments
+    if resume:
+        if not project_id:
             click.echo("Error: --project-id required when using --resume", err=True)
             raise click.Abort()
+    else:
+        if not goal:
+            click.echo("Error: GOAL required when not using --resume", err=True)
+            raise click.Abort()
 
+    # Generate project ID if not provided
+    if not project_id:
         project_id = f"project-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
     # Create output directory
