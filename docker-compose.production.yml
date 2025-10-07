@@ -1,29 +1,32 @@
 # Production Docker Compose for Project Builder
-# Sprint 1: Production Deployment
-# Includes: PostgreSQL, Prometheus, Grafana, Project Builder
+# Sprint 1: Production Deployment (SurrealDB Migration)
+# Includes: SurrealDB, Prometheus, Grafana, Project Builder
 
 version: '3.8'
 
 services:
-  # PostgreSQL - Production database for state management
-  postgres:
-    image: postgres:16-alpine
+  # SurrealDB - Multi-model database (Graph + Document + Vector + Relational)
+  surrealdb:
+    image: surrealdb/surrealdb:latest
     container_name: project-builder-db
+    command:
+      - start
+      - --log=info
+      - --user=root
+      - --pass=${PB_DB_PASSWORD:-changeme}
+      - file:/data/database.db
     environment:
-      POSTGRES_DB: project_builder
-      POSTGRES_USER: pb_user
-      POSTGRES_PASSWORD: ${PB_DB_PASSWORD:-changeme}
-      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+      - SURREAL_LOG=info
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - surrealdb-data:/data
+      - ./scripts/init-surreal.surql:/init/init.surql:ro
     ports:
-      - "5432:5432"
+      - "8001:8000"  # SurrealDB HTTP/WebSocket API
     networks:
       - pb-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pb_user -d project_builder"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -44,11 +47,13 @@ services:
     image: project-builder:latest
     container_name: project-builder
     environment:
-      # Database connection
-      - PB_DB_HOST=postgres
-      - PB_DB_PORT=5432
-      - PB_DB_NAME=project_builder
-      - PB_DB_USER=pb_user
+      # SurrealDB connection
+      - PB_DB_TYPE=surrealdb
+      - PB_DB_HOST=surrealdb
+      - PB_DB_PORT=8000
+      - PB_DB_NAMESPACE=project_builder
+      - PB_DB_DATABASE=production
+      - PB_DB_USER=root
       - PB_DB_PASSWORD=${PB_DB_PASSWORD:-changeme}
       # LLM Provider API keys
       - XAI_API_KEY=${XAI_API_KEY}
@@ -72,7 +77,7 @@ services:
     networks:
       - pb-network
     depends_on:
-      postgres:
+      surrealdb:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -172,7 +177,7 @@ networks:
         - subnet: 172.28.0.0/16
 
 volumes:
-  postgres-data:
+  surrealdb-data:
     driver: local
   project-artifacts:
     driver: local
