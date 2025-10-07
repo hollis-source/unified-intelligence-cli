@@ -4,7 +4,7 @@ Integrates HTN, DSL, Adaptive Learning, and Multi-Agent Teams for autonomous
 project execution from natural language goals.
 
 Phase 1 Components:
-- StateManager: SQLite-based state persistence
+- StateManager: Multi-database state persistence (SQLite, SurrealDB)
 - GoalDecomposer: Natural language to HTN translation
 - HTNDSLTranslator: HTN to DSL workflow conversion (with parallel support)
 - ProjectOrchestrator: Meta-operational lifecycle coordinator
@@ -19,7 +19,13 @@ Phase 3 Components:
 """
 
 from .orchestrator import ProjectOrchestrator
-from .state import ProjectStateManager, SQLiteStateRepository
+from .state import (
+    ProjectStateManager,
+    SQLiteStateRepository,
+    SurrealDBStateRepository,
+    create_state_repository,
+    get_db_info
+)
 from .goal_decomposer import GoalDecomposer
 from .htn_dsl import HTNDSLTranslator
 from .execution import ExecutionCoordinator
@@ -29,6 +35,9 @@ __all__ = [
     "ProjectOrchestrator",
     "ProjectStateManager",
     "SQLiteStateRepository",
+    "SurrealDBStateRepository",
+    "create_state_repository",
+    "get_db_info",
     "GoalDecomposer",
     "HTNDSLTranslator",
     "ExecutionCoordinator",

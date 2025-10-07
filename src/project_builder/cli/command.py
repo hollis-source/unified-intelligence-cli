@@ -13,7 +13,8 @@ from pathlib import Path
 from src.project_builder import (
     ProjectOrchestrator,
     ProjectStateManager,
-    SQLiteStateRepository,
+    create_state_repository,
+    get_db_info,
     GoalDecomposer,
     HTNDSLTranslator
 )
@@ -168,9 +169,17 @@ async def _execute_project(
     # Initialize components
     click.echo("[INIT] Initializing components...")
 
-    # State management
-    state_repo = SQLiteStateRepository(db_path=state_db)
+    # State management with environment-based repository selection
+    # Uses PB_DB_TYPE env var ("sqlite" or "surrealdb")
+    state_repo = create_state_repository(state_db_path=state_db)
     state_manager = ProjectStateManager(state_repo)
+
+    # Display database info
+    db_info = get_db_info()
+    if db_info['type'] == 'surrealdb':
+        click.echo(f"[DB] Using SurrealDB: {db_info['host']}:{db_info['port']}/{db_info['namespace']}/{db_info['database']}")
+    else:
+        click.echo(f"[DB] Using SQLite: {db_info['path']}")
 
     if resume:
         # Load existing project
