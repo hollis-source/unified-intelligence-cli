@@ -9,6 +9,7 @@ services:
   surrealdb:
     image: surrealdb/surrealdb:latest
     container_name: project-builder-db
+    user: "0:0"  # Run as root to avoid volume permission issues
     command:
       - start
       - --log=info
@@ -26,7 +27,7 @@ services:
       - pb-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/localhost/8000' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
