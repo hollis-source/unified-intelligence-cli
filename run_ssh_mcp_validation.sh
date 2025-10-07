@@ -12,8 +12,11 @@ echo "Target: Dad's codebase at syd2:/opt/grokmonster/cna-dad-release-v1.0"
 echo "Goal: Fix bare except blocks in db_status.py"
 echo ""
 
-# Activate venv and run Project Builder with SSH integration
-source venv/bin/activate && python -m src.project_builder.cli.command \
+# Activate venv (Python loads .env via dotenv)
+source venv/bin/activate
+
+# Run Project Builder with SSH integration
+python -m src.project_builder.cli.command \
   "Read the file /opt/grokmonster/cna-dad-release-v1.0/src/services/db_status.py from the remote server and fix all bare except blocks by adding specific exception types and logging. Generate an improved version of the file." \
   --project-id ssh-mcp-validation-1 \
   --model qwen3_hf_inference \

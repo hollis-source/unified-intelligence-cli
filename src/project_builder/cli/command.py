@@ -9,6 +9,10 @@ import asyncio
 import logging
 from datetime import datetime
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables from .env file (override any existing)
+load_dotenv(override=True)
 
 from src.project_builder import (
     ProjectOrchestrator,
