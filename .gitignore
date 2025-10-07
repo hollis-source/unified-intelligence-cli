@@ -90,3 +90,4 @@ logs/
 tmp/
 temp/data/metrics/
 data/metrics/session_*.json
+.env.production

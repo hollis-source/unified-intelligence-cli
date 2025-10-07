@@ -34,7 +34,11 @@ COPY --from=builder /root/.local /root/.local
 # Copy application code
 COPY src/ ./src/
 COPY scripts/ ./scripts/
+COPY scripts/wait-for.sh ./wait-for.sh
 COPY LICENSE ./
+
+# Make wait-for script executable
+RUN chmod +x ./wait-for.sh
 
 # Create directories for Project Builder artifacts and database
 RUN mkdir -p /app/projects /app/data /app/logs

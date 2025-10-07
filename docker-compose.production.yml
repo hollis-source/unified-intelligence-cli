@@ -37,6 +37,40 @@ services:
           cpus: '0.25'
           memory: 128M
 
+  # Redis - LLM Cache
+  redis:
+    image: redis:7-alpine
+    container_name: project-builder-redis
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - "256mb"
+      - --maxmemory-policy
+      - allkeys-lru
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - pb-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
   # Project Builder - Main application service
   project-builder:
     build:
@@ -53,10 +87,17 @@ services:
       - PB_DB_DATABASE=production
       - PB_DB_USER=root
       - PB_DB_PASSWORD=${PB_DB_PASSWORD:-changeme}
+      - SURREALDB_URL=http://surrealdb:8001
+      # Redis connection
+      - REDIS_URL=redis://redis:6379/0
+      - LLM_CACHE_ENABLED=true
       # LLM Provider API keys
       - XAI_API_KEY=${XAI_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN}
+      # SSH/FileStore
+      - PB_SSH_KEY_PATH=/home/pbuser/.ssh/id_ed25519
+      - PB_SSH_KNOWN_HOSTS=/home/pbuser/.ssh/known_hosts
       # Application configuration
       - PB_ENV=production
       - PB_LOG_LEVEL=${PB_LOG_LEVEL:-INFO}
@@ -70,13 +111,18 @@ services:
       - project-logs:/app/logs
       # Read-only config
       - ./config:/app/config:ro
+      # SSH keys (read-only bind mount - see docs for setup)
+      # - /srv/pb/.ssh:/home/pbuser/.ssh:ro
     ports:
       - "8000:8000"  # Health check + Prometheus metrics
     networks:
       - pb-network
     depends_on:
       surrealdb:
-        condition: service_healthy
+        condition: service_started  # Changed: SurrealDB has no healthcheck (distroless)
+      redis:
+        condition: service_healthy  # Redis has proper healthcheck
+    command: ["sh", "-c", "./wait-for.sh http://surrealdb:8001/health && python -m src.project_builder.cli.command --help"]
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
@@ -176,6 +222,8 @@ networks:
 
 volumes:
   surrealdb-data:
+    driver: local
+  redis-data:
     driver: local
   project-artifacts:
     driver: local
