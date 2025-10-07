@@ -8,6 +8,9 @@ import asyncio
 import logging
 from typing import List, Optional, Dict, Any
 
+import re
+from src.core.entities.file_ref import FileRef
+
 from src.interfaces import (
     IExecutionCoordinator,
     ProjectState,
@@ -26,6 +29,7 @@ from src.dsl.entities.composition import Composition
 from src.dsl.entities.product import Product
 from src.adapters.agent.llm_executor import LLMAgentExecutor
 from src.adapters.mcp.ssh_mcp_client import IRemoteFileSystem
+from src.project_builder.execution.resource_resolver import ResourceResolver
 
 
 logger = logging.getLogger(__name__)
@@ -55,7 +59,8 @@ class ExecutionCoordinator(IExecutionCoordinator):
         teams: List[AgentTeam],
         llm_provider: Optional[ITextGenerator] = None,
         prompt_mode: str = "manual",
-        remote_fs: Optional[IRemoteFileSystem] = None
+        remote_fs: Optional[IRemoteFileSystem] = None,
+        resource_resolver: Optional[ResourceResolver] = None
     ):
         """Initialize execution coordinator.
 
@@ -71,6 +76,7 @@ class ExecutionCoordinator(IExecutionCoordinator):
         self.model_selector = model_selector
         self.teams = teams
         self.remote_fs = remote_fs
+        self.resource_resolver = resource_resolver
 
         # Log remote filesystem availability
         if remote_fs:
@@ -185,9 +191,48 @@ class ExecutionCoordinator(IExecutionCoordinator):
                 metadata={"task_id": task_id}
             )
 
+
+            # Extract FileRef resources from the task description
+            inputs, outputs = self._extract_file_refs(
+                htn_node.description,
+                getattr(self.remote_fs, 'host', None)
+            )
+            task.resource_inputs = inputs
+            task.resource_outputs = outputs
+
             tasks.append((task, htn_node))
 
         return tasks
+    def _extract_file_refs(self, description: str, remote_host: Optional[str]) -> tuple[list[FileRef], list[FileRef]]:
+        """Extract FileRef inputs/outputs from a task description.
+
+        Finds absolute file paths in the description and converts them to FileRef
+        instances. If a remote_host is provided, paths are treated as ssh:// URIs;
+        otherwise as file:// URIs.
+        """
+        if not description:
+            return ([], [])
+
+        paths = re.findall(r'(/[-\w/\.]+)', description)  # matches absolute paths
+
+        refs: list[FileRef] = []
+        seen: set[str] = set()
+        for p in paths:
+            if p in seen:
+                continue
+            seen.add(p)
+            uri = f"ssh://{remote_host}{p}" if remote_host else f"file://{p}"
+            try:
+                ref = FileRef.parse(uri)
+                refs.append(ref)
+            except Exception:
+                # Skip invalid refs silently; debug-level log for visibility
+                logger.debug(f"Skipping invalid file ref from path: {p}")
+                continue
+
+        # Without explicit intent classification, use the same set for inputs/outputs
+        return (refs, refs.copy())
+
 
     def _get_execution_order(self, workflow: ASTNode) -> List[str]:
         """Get task execution order from DSL workflow.
@@ -408,6 +453,8 @@ class ExecutionCoordinator(IExecutionCoordinator):
                 }
             )
 
+        if self.resource_resolver: await self.resource_resolver.ensure_inputs(task, state.world_state)
+
         # Real execution with LLM
         if self.llm_executor:
             try:
@@ -451,6 +498,9 @@ class ExecutionCoordinator(IExecutionCoordinator):
                         # Replace filename placeholder with actual LLM-generated content
                         enhanced_effects[key] = result.output
                         logger.debug(f"  Stored artifact in {key}")
+
+                if self.resource_resolver and result.status.value == "success":
+                    await self.resource_resolver.persist_outputs(task, state.world_state)
 
                 return ExecutionResult(
                     task_id=task.metadata.get("task_id", "unknown"),

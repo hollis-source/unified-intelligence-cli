@@ -29,6 +29,9 @@ from src.routing.summary_repository import ModelSummaryRepository
 from src.factories.team_factory import TeamFactory
 from src.factories.provider_factory import ProviderFactory
 from src.adapters.mcp.paramiko_ssh_adapter import create_paramiko_ssh_adapter
+from src.adapters.files import LocalBackend, SSHBackend, UnifiedFileStore
+from src.project_builder.execution.resource_resolver import ResourceResolver
+
 
 
 logger = logging.getLogger(__name__)
@@ -237,13 +240,23 @@ async def _execute_project(
             await remote_fs.connect()
             click.echo("[INIT] SSH connected ✓")
 
+        # Create file store with backends
+        backends = [LocalBackend()]
+        if remote_fs:
+            backends.append(SSHBackend(remote_fs))
+        file_store = UnifiedFileStore(backends)
+
+        # Create resource resolver
+        resource_resolver = ResourceResolver(file_store)
+
         execution_coordinator = ExecutionCoordinator(
             team_router=team_router,
             model_selector=model_selector,
             teams=teams,
             llm_provider=llm_provider,  # Enable real execution
             prompt_mode=prompt_mode,  # Sprint 1: DSPy support
-            remote_fs=remote_fs  # SSH MCP integration
+            remote_fs=remote_fs,  # SSH MCP integration
+            resource_resolver=resource_resolver
         )
 
         # Project orchestrator with real execution

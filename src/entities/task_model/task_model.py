@@ -9,6 +9,8 @@ from enum import Enum, auto
 from typing import Dict, List, Optional, Any, Union
 from datetime import datetime
 from uuid import uuid4
+from src.core.entities.file_ref import FileRef
+
 
 
 class TaskStatus(Enum):
@@ -170,12 +172,17 @@ class Task(TaskEntity):
         todos: List of atomic todos
         dependencies: IDs of tasks this depends on
         estimated_duration: Estimated time in seconds
+        resource_inputs: Files the task needs to read (List[FileRef])
+        resource_outputs: Files the task will write (List[FileRef])
     """
 
     subtasks: List["Task"] = field(default_factory=list)
     todos: List["Todo"] = field(default_factory=list)
     dependencies: List[str] = field(default_factory=list)
     estimated_duration: Optional[int] = None
+    resource_inputs: List[FileRef] = field(default_factory=list)
+    resource_outputs: List[FileRef] = field(default_factory=list)
+
 
     def add_subtask(self, subtask: "Task") -> None:
         """Add a subtask to this task (recursive decomposition).
