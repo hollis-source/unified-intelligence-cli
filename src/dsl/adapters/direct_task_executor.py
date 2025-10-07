@@ -159,16 +159,58 @@ class DirectTaskExecutor:
                 context=input_data
             )
 
-            # Convert ExecutionResult to dict format
-            return {
-                'status': result.status.name if hasattr(result, 'status') else 'SUCCESS',
-                'output': result.output if hasattr(result, 'output') else str(result),
+            # P1-1: Validate result has expected attributes
+            if not hasattr(result, 'status'):
+                logger.warning(
+                    f"ExecutionResult missing 'status' attribute - using default SUCCESS",
+                    extra={
+                        'task_identifier': task_identifier,
+                        'result_type': type(result).__name__,
+                        'has_output': hasattr(result, 'output')
+                    }
+                )
+
+            if not hasattr(result, 'output'):
+                logger.warning(
+                    f"ExecutionResult missing 'output' attribute - using string representation",
+                    extra={
+                        'task_identifier': task_identifier,
+                        'result_type': type(result).__name__,
+                        'result_str': str(result)[:200]
+                    }
+                )
+
+            # Convert ExecutionResult to dict format with validation
+            status = result.status.name if hasattr(result, 'status') else 'SUCCESS'
+            output = result.output if hasattr(result, 'output') else str(result)
+
+            # P1-1: Validate output is not None when status is SUCCESS
+            if status == 'SUCCESS' and output is None:
+                logger.warning(
+                    f"Task execution returned SUCCESS but None output - possible data loss",
+                    extra={
+                        'task_identifier': task_identifier,
+                        'agent': agent.role,
+                        'prompt': prompt[:100]
+                    }
+                )
+
+            result_dict = {
+                'status': status,
+                'output': output,
                 'metadata': {
                     'agent': agent.role,
                     'task': prompt,
                     'execution_mode': 'in-process'
                 }
             }
+
+            # P1-1: Assert result dict has required keys (fail fast on structural errors)
+            assert 'status' in result_dict, "Result dict missing 'status' key"
+            assert 'output' in result_dict, "Result dict missing 'output' key"
+            assert 'metadata' in result_dict, "Result dict missing 'metadata' key"
+
+            return result_dict
 
         except Exception as e:
             # Phase 3 Bugfix #3: Add exception logging with full stack traces
@@ -185,7 +227,7 @@ class DirectTaskExecutor:
             )
 
             # Return error with context (str(e) for backward compatibility)
-            return {
+            error_dict = {
                 'status': 'FAILED',
                 'output': None,
                 'error': str(e),
@@ -195,6 +237,14 @@ class DirectTaskExecutor:
                     'execution_mode': 'in-process'
                 }
             }
+
+            # P1-1: Assert error dict has required keys (fail fast on structural errors)
+            assert 'status' in error_dict, "Error dict missing 'status' key"
+            assert 'output' in error_dict, "Error dict missing 'output' key"
+            assert 'error' in error_dict, "Error dict missing 'error' key"
+            assert 'metadata' in error_dict, "Error dict missing 'metadata' key"
+
+            return error_dict
 
     def _identifier_to_prompt(self, identifier: str) -> str:
         """Convert task identifier to ULTRATHINK prompt.

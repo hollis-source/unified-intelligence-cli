@@ -8,6 +8,7 @@ SOLID: SRP - handles DSL workflow execution with lifecycle phases.
 """
 
 import asyncio
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
@@ -16,6 +17,8 @@ from src.entities.lifecycle import Lifecycle, LifecycleState
 from src.dsl.adapters.parser import Parser
 from src.dsl.use_cases.interpreter import Interpreter, TaskExecutor
 from src.dsl.adapters.cli_task_executor import CLITaskExecutor
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -169,6 +172,25 @@ class LifecycleWorkflowExecutor:
             interpreter.set_symbol_table(symbol_table)
 
             result = await interpreter.execute(main_node)
+
+            # P1-1: Validate result before marking success
+            result_validation = self._validate_result(result, verbose=verbose)
+            if not result_validation:
+                lifecycle.fail(
+                    error="Result validation failed",
+                    issues=["Workflow returned None or invalid result"]
+                )
+                phases_completed.append("EXECUTE")
+                execution_time = time.time() - start_time
+
+                return WorkflowExecutionResult(
+                    success=False,
+                    result=None,
+                    lifecycle=lifecycle,
+                    execution_time=execution_time,
+                    phases_completed=phases_completed,
+                    error="Result validation failed: None or invalid result returned"
+                )
 
             lifecycle.complete(result=result)
             phases_completed.append("EXECUTE")
@@ -369,3 +391,72 @@ class LifecycleWorkflowExecutor:
         """
         import click
         click.echo(f"  {message}")
+
+    def _validate_result(self, result: Any, verbose: bool = False) -> bool:
+        """Validate workflow execution result.
+
+        P1-1: Prevents silent failures by validating that execution
+        produced a valid result. Logs validation failures for debugging.
+
+        Args:
+            result: Workflow execution result to validate
+            verbose: Enable verbose logging
+
+        Returns:
+            True if result is valid, False otherwise
+
+        Validation Rules:
+            1. Result must not be None (indicates execution failure)
+            2. If result is a dict with 'status', status must not be 'FAILED'
+            3. If result is a dict with 'output', output should not be None
+               when status is 'SUCCESS'
+        """
+        # Rule 1: Result must not be None
+        if result is None:
+            logger.warning(
+                "Workflow execution returned None result - possible silent failure",
+                extra={"validation_rule": "non_null_result"}
+            )
+            if verbose:
+                self._print_detail("⚠ Validation failed: Result is None")
+            return False
+
+        # Rule 2 & 3: Validate dict results (common from DirectTaskExecutor)
+        if isinstance(result, dict):
+            # Check for failed status
+            if result.get('status') == 'FAILED':
+                logger.warning(
+                    "Workflow execution returned FAILED status",
+                    extra={
+                        "validation_rule": "success_status",
+                        "error": result.get('error'),
+                        "metadata": result.get('metadata')
+                    }
+                )
+                if verbose:
+                    self._print_detail(f"⚠ Validation failed: Status is FAILED - {result.get('error')}")
+                return False
+
+            # Check for None output when status is SUCCESS
+            if result.get('status') == 'SUCCESS' and result.get('output') is None:
+                logger.warning(
+                    "Workflow execution returned SUCCESS status but None output - possible data loss",
+                    extra={
+                        "validation_rule": "success_has_output",
+                        "metadata": result.get('metadata')
+                    }
+                )
+                if verbose:
+                    self._print_detail("⚠ Validation warning: SUCCESS status but None output")
+                # This is a warning, not a failure - some workflows may intentionally have no output
+                # return False would be too strict
+
+        # Validation passed
+        logger.debug(
+            "Result validation passed",
+            extra={
+                "result_type": type(result).__name__,
+                "has_output": bool(result.get('output')) if isinstance(result, dict) else True
+            }
+        )
+        return True

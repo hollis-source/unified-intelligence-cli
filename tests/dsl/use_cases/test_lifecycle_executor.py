@@ -395,3 +395,126 @@ class TestWorkflowExecutionResult:
 
         assert result.success is False
         assert result.error == "test error"
+
+
+@pytest.mark.asyncio
+class TestResultValidation:
+    """Test P1-1 output validation functionality."""
+
+    def test_validate_none_result_fails(self):
+        """Test that None result fails validation."""
+        executor = LifecycleWorkflowExecutor()
+
+        is_valid = executor._validate_result(None, verbose=False)
+
+        assert is_valid is False
+
+    def test_validate_dict_with_failed_status_fails(self):
+        """Test that dict with FAILED status fails validation."""
+        executor = LifecycleWorkflowExecutor()
+
+        result = {
+            'status': 'FAILED',
+            'output': None,
+            'error': 'Task execution failed',
+            'metadata': {}
+        }
+
+        is_valid = executor._validate_result(result, verbose=False)
+
+        assert is_valid is False
+
+    def test_validate_dict_with_success_status_passes(self):
+        """Test that dict with SUCCESS status and output passes validation."""
+        executor = LifecycleWorkflowExecutor()
+
+        result = {
+            'status': 'SUCCESS',
+            'output': 'Task completed successfully',
+            'metadata': {}
+        }
+
+        is_valid = executor._validate_result(result, verbose=False)
+
+        assert is_valid is True
+
+    def test_validate_dict_with_success_but_none_output_warns(self):
+        """Test that dict with SUCCESS status but None output logs warning but passes."""
+        executor = LifecycleWorkflowExecutor()
+
+        result = {
+            'status': 'SUCCESS',
+            'output': None,
+            'metadata': {}
+        }
+
+        # This should pass (some workflows may have no output)
+        # but should log a warning
+        is_valid = executor._validate_result(result, verbose=False)
+
+        assert is_valid is True  # Passes but warns
+
+    def test_validate_non_dict_result_passes(self):
+        """Test that non-dict, non-None result passes validation."""
+        executor = LifecycleWorkflowExecutor()
+
+        # String result
+        is_valid = executor._validate_result("string result", verbose=False)
+        assert is_valid is True
+
+        # List result
+        is_valid = executor._validate_result(["item1", "item2"], verbose=False)
+        assert is_valid is True
+
+        # Object result
+        is_valid = executor._validate_result(Literal("test"), verbose=False)
+        assert is_valid is True
+
+    async def test_execute_workflow_fails_when_interpreter_returns_none(self, tmp_path):
+        """Test that workflow execution fails when interpreter returns None."""
+        # Create workflow file
+        workflow_file = tmp_path / "test.ct"
+        workflow_file.write_text("functor main = task")
+
+        # Create mock task executor that returns None
+        class NoneReturningExecutor:
+            async def execute_task(self, task_name: str, input_data=None):
+                return None  # Simulate silent failure
+
+        executor = LifecycleWorkflowExecutor(
+            task_executor=NoneReturningExecutor()
+        )
+
+        result = await executor.execute_workflow(str(workflow_file))
+
+        # Should fail validation
+        assert result.success is False
+        assert "validation failed" in result.error.lower()
+        assert "EXECUTE" in result.phases_completed
+
+    async def test_execute_workflow_fails_when_interpreter_returns_failed_status(self, tmp_path):
+        """Test that workflow execution fails when interpreter returns FAILED status."""
+        # Create workflow file
+        workflow_file = tmp_path / "test.ct"
+        workflow_file.write_text("functor main = task")
+
+        # Create mock task executor that returns FAILED status
+        class FailedStatusExecutor:
+            async def execute_task(self, task_name: str, input_data=None):
+                return {
+                    'status': 'FAILED',
+                    'output': None,
+                    'error': 'Task execution failed',
+                    'metadata': {}
+                }
+
+        executor = LifecycleWorkflowExecutor(
+            task_executor=FailedStatusExecutor()
+        )
+
+        result = await executor.execute_workflow(str(workflow_file))
+
+        # Should fail validation
+        assert result.success is False
+        assert "validation failed" in result.error.lower()
+        assert "EXECUTE" in result.phases_completed
