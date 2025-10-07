@@ -24,6 +24,7 @@ from src.routing.adaptive_selector import AdaptiveModelSelector
 from src.routing.summary_repository import ModelSummaryRepository
 from src.factories.team_factory import TeamFactory
 from src.factories.provider_factory import ProviderFactory
+from src.adapters.mcp.paramiko_ssh_adapter import create_paramiko_ssh_adapter
 
 
 logger = logging.getLogger(__name__)
@@ -42,6 +43,8 @@ logger = logging.getLogger(__name__)
               help="Path to state database (default: data/project_builder_state.db)")
 @click.option("--output-dir", default="projects",
               help="Output directory for project artifacts (default: projects)")
+@click.option("--remote-host", default=None,
+              help="Remote host for SSH MCP access (format: user@hostname or hostname)")
 @click.option("--verbose", "-v", is_flag=True,
               help="Enable verbose output")
 @click.option("--resume", is_flag=True,
@@ -54,6 +57,7 @@ def build_project_command(
     prompt_mode: str,
     state_db: str,
     output_dir: str,
+    remote_host: str,
     verbose: bool,
     resume: bool
 ) -> None:
@@ -124,6 +128,7 @@ def build_project_command(
             prompt_mode=prompt_mode,
             state_db=state_db,
             output_path=output_path,
+            remote_host=remote_host,
             resume=resume
         ))
 
@@ -149,6 +154,7 @@ async def _execute_project(
     prompt_mode: str,
     state_db: str,
     output_path: Path,
+    remote_host: str,
     resume: bool
 ):
     """Execute project build asynchronously.
@@ -219,12 +225,21 @@ async def _execute_project(
         summary_repo = ModelSummaryRepository()
         model_selector = AdaptiveModelSelector(summary_repo=summary_repo)
 
+        # Create SSH adapter if remote host specified
+        remote_fs = None
+        if remote_host:
+            click.echo(f"[INIT] Setting up SSH connection to remote host: {remote_host}...")
+            remote_fs = create_paramiko_ssh_adapter(default_host=remote_host)
+            await remote_fs.connect()
+            click.echo("[INIT] SSH connected ✓")
+
         execution_coordinator = ExecutionCoordinator(
             team_router=team_router,
             model_selector=model_selector,
             teams=teams,
             llm_provider=llm_provider,  # Enable real execution
-            prompt_mode=prompt_mode  # Sprint 1: DSPy support
+            prompt_mode=prompt_mode,  # Sprint 1: DSPy support
+            remote_fs=remote_fs  # SSH MCP integration
         )
 
         # Project orchestrator with real execution

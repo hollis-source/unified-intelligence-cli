@@ -25,6 +25,7 @@ from src.dsl.entities.literal import Literal
 from src.dsl.entities.composition import Composition
 from src.dsl.entities.product import Product
 from src.adapters.agent.llm_executor import LLMAgentExecutor
+from src.adapters.mcp.ssh_mcp_client import IRemoteFileSystem
 
 
 logger = logging.getLogger(__name__)
@@ -53,7 +54,8 @@ class ExecutionCoordinator(IExecutionCoordinator):
         model_selector: AdaptiveModelSelector,
         teams: List[AgentTeam],
         llm_provider: Optional[ITextGenerator] = None,
-        prompt_mode: str = "manual"
+        prompt_mode: str = "manual",
+        remote_fs: Optional[IRemoteFileSystem] = None
     ):
         """Initialize execution coordinator.
 
@@ -63,10 +65,16 @@ class ExecutionCoordinator(IExecutionCoordinator):
             teams: Available agent teams
             llm_provider: LLM provider for real execution (if None, uses mock)
             prompt_mode: Prompt generation mode - "manual" or "dspy" (Sprint 1)
+            remote_fs: Remote file system for accessing remote codebases (DIP boundary)
         """
         self.team_router = team_router
         self.model_selector = model_selector
         self.teams = teams
+        self.remote_fs = remote_fs
+
+        # Log remote filesystem availability
+        if remote_fs:
+            logger.info("ExecutionCoordinator initialized with remote filesystem access")
 
         # Initialize LLM executor for real execution
         if llm_provider:
