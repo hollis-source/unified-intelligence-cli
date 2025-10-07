@@ -1,0 +1,55 @@
+Okay, let's see. The user wants me to create usage instructions and examples for the multiply function. But they specified that I should generate actual code, not explanations. The context mentions that the function is already implemented and tested. The function is called multiply, takes two parameters a and b, both Union[int, float], and returns a Union[int, float]. 
+
+First, I need to make sure I understand what's required. The task is to generate code that includes usage examples. Since the user said not to explain how to write code, I just need to write the code examples.
+
+Wait, the user provided some truncated information. The design_api_schema_output was cut off, but the function code is there. The test_function_output is also truncated, but the test results are available. So maybe the test code is already written, but I need to include usage examples.
+
+So the main goal is to write code that demonstrates how to use the multiply function. That would include examples of calling the function with different types of inputs, like integers and floats. Also, maybe include error handling, but the function's current code doesn't have any. Wait, the function parameters are Union[int, float], so it's supposed to handle those types. But what if someone passes a string? The current code would raise an error. However, the user hasn't mentioned adding type checking, so maybe it's beyond the scope here.
+
+The user wants the code to be complete and working. So I need to write examples that show the function in action. Let me think of some test cases. For example, multiplying two integers, two floats, and an integer with a float. Also, maybe a case where the result is a float, like 2 * 3.5.
+
+But the user's test_function_output was cut off. However, the test results are available, so maybe the test code is already there. But the task is to generate usage instructions and examples, which would be code examples.
+
+So the code should include examples of function calls. Let me structure that. Maybe a section with examples, each showing a different scenario. Also, include comments in the code to explain each example, but the user said not to include explanations unless they are code comments. Wait, the instructions say: "Do not include explanations unless they are code comments." So I can add comments in the code to describe the examples.
+
+Wait, the user's instruction says: "Generate the complete, working code for this task". So the code should be a complete script that demonstrates the usage. Let me think of writing a Python script that imports the function (assuming it's in a module), then calls it with various examples.
+
+But the function code is provided as part of the context. So maybe the code should be a standalone script that includes the function and then demonstrates its usage. However, the user's test_function_output mentions generating test code, but the task is to create usage instructions and examples, not tests.
+
+So perhaps the code should be examples of how to use the function, like:
+
+print(multiply(2, 3))
+print(multiply(2.5, 4))
+print(multiply(3, 2.0))
+
+But also, maybe include error handling. Wait, the function as written doesn't have error handling. If someone passes a string, it would raise a TypeError. But the function's parameters are defined as Union[int, float], so perhaps the user expects that the function is supposed to handle only those types. However, the user hasn't mentioned adding type checks, so maybe it's not necessary here.
+
+So the code should be examples of using the function correctly. Let me write that. Also, the user wants the code to be complete, so I need to make sure that all necessary parts are included. For example, the function is defined with from typing import Union, so the code should include that import.
+
+Putting it all together, the code would be:
+
+from typing import Union
+
+def multiply(a: Union[int, float], b: Union[int, float]) -> Union[int, float]:
+    """
+    Multiplies two numbers and returns the result.
+    
+    Parameters:
+    a (Union[int, float]): The first number.
+    b (Union[int, float]): The second number.
+    """
+    return a * b
+
+# Example usage
+if __name__ == "__main__":
+    # Multiply two integers
+    result1 = multiply(2, 3)
+    print(f"2 * 3 = {result1}")  # Output: 2 * 3 = 6
+    
+    # Multiply an integer and a float
+    result2 = multiply(2.5, 4)
+    print(f"2.5 * 4 = {result2}")  # Output: 2.5 * 4 = 10.0
+    
+    # Multiply two floats
+    result3 = multiply(3.0, 2.0)
+    print(f"3.0 * 2.0 = {result3

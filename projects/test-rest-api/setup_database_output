@@ -1,0 +1,44 @@
+```python
+# config/config.py
+import os
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'data.db')
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+```
+
+```python
+# app/__init__.py
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from config import Config
+
+db = SQLAlchemy()
+
+def create_app():
+    app = Flask(__name__)
+    app.config.from_object(Config)
+    db.init_app(app)
+    
+    with app.app_context():
+        from .models import Book
+        db.create_all()  # Create database tables
+    
+    return app
+```
+
+```python
+# app/models.py
+from app import db
+
+class Book(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    author = db.Column(db.String(100), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+```
+
+```bash
+# Run this command in the project root to initialize the database
+python app/__init__.py
+```

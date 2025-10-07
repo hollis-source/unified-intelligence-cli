@@ -1,0 +1,50 @@
+# Add Numbers Function Documentation
+
+## Overview  
+The `add_numbers` function takes two numeric inputs and returns their sum. It is designed to handle all standard numeric types including integers, floating-point numbers, and other number-like objects supported by Python's `numbers.Number` abstract base class.
+
+## Parameters  
+- **a** (`Number`): The first number to add.  
+- **b** (`Number`): The second number to add.  
+
+## Return Value  
+- **sum** (`Number`): The sum of the two input numbers.  
+
+## Example Usage  
+```python
+# Adding two integers
+result = add_numbers(5, 3)
+print(result)  # Output: 8
+
+# Adding a float and an integer
+result = add_numbers(2.5, 4)
+print(result)  # Output: 6.5
+
+# Adding two floating-point numbers
+result = add_numbers(1.1, 2.2)
+print(result)  # Output: 3.3
+```
+
+## Notes  
+- The function leverages Python's `numbers.Number` abstraction to ensure compatibility with all numeric types (e.g., `int`, `float`, `complex`, etc.).  
+- Non-numeric inputs will raise a `TypeError` at runtime.  
+
+## API Schema  
+```python
+from numbers import Number
+
+def add_numbers(a: Number, b: Number) -> Number:
+    """
+    Adds two numbers and returns the result.
+    
+    Args:
+        a (Number): First operand.
+        b (Number): Second operand.
+    
+    Returns:
+        Number: The sum of `a` and `b`.
+    """
+    return a + b
+```  
+
+This documentation assumes the function is implemented as shown in the schema and adheres to the provided test suite.

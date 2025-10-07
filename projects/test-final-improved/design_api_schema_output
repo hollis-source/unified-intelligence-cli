@@ -1,0 +1,19 @@
+```python
+def add_numbers(a: float, b: float) -> float:
+    """
+    Adds two numbers and returns the result.
+    
+    Parameters:
+    a (float): First number.
+    b (float): Second number.
+    
+    Returns:
+    float: The sum of a and b.
+    
+    Raises:
+    TypeError: If inputs are not numeric.
+    """
+    if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
+        raise TypeError("Both inputs must be numeric")
+    return a + b
+```

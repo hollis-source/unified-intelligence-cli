@@ -1,0 +1,34 @@
+Okay, I need to create test cases for the add function. Let me start by understanding what the add function does. The context mentions that the design_api_schema is completed, and the output starts with importing the numbers module and defining a function called add_numbers. The function probably adds two numbers, but I should check the code.
+
+Wait, the user provided the implement_add_function_code as "Okay, let's see..." which seems incomplete. But maybe the add function is supposed to handle numbers, possibly checking if they are instances of Number from the numbers module. So the function might validate inputs before adding.
+
+Since the user mentioned that the code_written is True, I should assume that the add function is already implemented. But since the code isn't provided, I'll have to make some assumptions. Let's assume the add function takes two arguments, checks if they are numbers, and returns their sum. If not, it might raise an error.
+
+For testing, I need to cover different scenarios: valid inputs, invalid inputs, edge cases like zero, negative numbers, etc. Since the function might have input validation, I should test both valid and invalid cases.
+
+The user wants the test code to be complete and runnable. They mentioned using a testing framework, so I'll choose pytest as it's common and concise. I'll write test cases using pytest's assert statements.
+
+First, test valid cases: adding two integers, two floats, a mix of int and float. Then test invalid cases, like strings, lists, etc., expecting a TypeError. Also, check for zero and negative numbers.
+
+Wait, the function might have specific error messages or exceptions. If the function raises a TypeError when inputs are not numbers, I'll catch that with assert_raises. But since the code isn't provided, I'll assume that the function checks if the inputs are instances of Number from the numbers module. So, the tests should verify that adding numbers works and non-numbers raise errors.
+
+I'll structure the tests with pytest's parametrize for multiple cases. Also, include edge cases like adding zero, negative numbers, and very large numbers (though the function might not have issues with that, but it's good to test).
+
+Wait, the function's parameters are a and b. The initial code snippet shows 'def add_numbers(a:' which is incomplete. Maybe the function is called add_numbers, but the user refers to it as add. That might be a mistake. But since the user says to create tests for the add function, I'll assume the function is named add, not add_numbers. Or perhaps there's a typo. Hmm, this is a bit confusing. But given the context, I'll proceed with the function name as add, unless the code is different. Since the user's code_written is True, maybe the function is named add_numbers. But the user's task says "add function", so maybe the function is named add. This is a possible point of confusion.
+
+Alternatively, maybe the function is named add_numbers, and the user made a typo. To be safe, I'll use the function name as add_numbers, as per the code snippet. But the user's task says "add function", so maybe the function is named add. This is a critical point. If the function is named add, then the tests should call add(a, b). If it's add_numbers, then add_numbers(a, b). Since the code snippet shows the function definition starts with 'def add_numbers(a:', I'll assume the function is named add_numbers. But the user's task says "add function", which could be a discrepancy. However, since the code is already written, I have to go with the code's function name. So I'll use add_numbers in the tests.
+
+So, the function is add_numbers, which takes two arguments. Now, the tests:
+
+1. Test adding two integers: add_numbers(2, 3) should return 5.
+2. Test adding a float and an integer: add_numbers(2.5, 3) should return 5.5.
+3. Test adding two floats: add_numbers(1.1, 2.2) should return 3.3.
+4. Test adding zero: add_numbers(0, 5) returns 5.
+5. Test negative numbers: add_numbers(-1, -2) returns -3.
+6. Test invalid types: add_numbers("a", 2) should raise TypeError.
+7. Test lists: add_numbers([1,2], 3) raises TypeError.
+8. Test None: add_numbers(None, 5) raises TypeError.
+
+But wait, the numbers module's Number includes int, float, and other numeric types. So if the function checks if the inputs are instances of Number, then strings, lists, etc., would be invalid.
+
+So in the tests, I'll use pytest's assert_raises to catch exceptions. However, since the user wants the tests to be complete and runnable, I need to make sure that the function's implementation is known

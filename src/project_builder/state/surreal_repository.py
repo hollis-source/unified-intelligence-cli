@@ -107,14 +107,32 @@ class SurrealDBStateRepository(IStateRepository):
         Raises:
             RuntimeError: If query execution fails
         """
-        payload = {"query": query}
+        # Prepare query with variables substitution
+        # SurrealDB's /sql endpoint expects raw SQL, not JSON
+        full_query = f"USE NS {self.namespace}; USE DB {self.database}; {query}"
+
+        # For variables, we need to serialize them to JSON strings in the query
+        # SurrealDB uses $variable syntax, but we need to pass them via headers or inline
+        headers = {
+            "Content-Type": "text/plain",  # Raw SQL, not JSON
+            "Accept": "application/json",
+            "NS": self.namespace,
+            "DB": self.database
+        }
+
         if variables:
-            payload["variables"] = variables
+            # Convert variables to SurrealDB format (JSON serialization)
+            import json
+            for key, value in variables.items():
+                # Replace $key with JSON-serialized value in query
+                json_value = json.dumps(value)
+                full_query = full_query.replace(f"${key}", json_value)
 
         try:
             response = self.session.post(
                 f"{self.base_url}/sql",
-                json=payload
+                data=full_query,  # Send raw SQL, not JSON
+                headers=headers
             )
             response.raise_for_status()
 
@@ -132,7 +150,8 @@ class SurrealDBStateRepository(IStateRepository):
                 return result
 
         except requests.exceptions.RequestException as e:
-            raise RuntimeError(f"SurrealDB query execution failed: {e}")
+            error_body = getattr(e.response, 'text', 'No response body') if hasattr(e, 'response') else 'No response'
+            raise RuntimeError(f"SurrealDB query execution failed: {e}\nResponse: {error_body}\nQuery: {full_query[:500]}")
 
     def save(self, state: ProjectState) -> None:
         """Persist project state to SurrealDB.
@@ -167,13 +186,25 @@ class SurrealDBStateRepository(IStateRepository):
 
         # Use UPSERT pattern: CREATE if not exists, UPDATE if exists
         # Record ID format: projects:{project_id}_{version}
-        record_id = f"projects:{state.project_id}_{state.version}"
+        # Escape with backticks for special characters (hyphens, underscores)
+        record_id = f"projects:`{state.project_id}_{state.version}`"
 
+        # SurrealDB UPSERT: Try CREATE first (cleaner), fall back to UPDATE
         query = f"""
-        UPDATE {record_id} CONTENT $data;
+        CREATE {record_id} CONTENT $data RETURN AFTER;
         """
 
-        self._execute_query(query, variables={"data": project_data})
+        try:
+            self._execute_query(query, variables={"data": project_data})
+        except RuntimeError as e:
+            # If CREATE failed (record exists), UPDATE instead
+            if "already exists" in str(e).lower() or "duplicate" in str(e).lower():
+                query = f"""
+                UPDATE {record_id} CONTENT $data RETURN AFTER;
+                """
+                self._execute_query(query, variables={"data": project_data})
+            else:
+                raise
 
     def load(self, project_id: str, version: Optional[int] = None) -> ProjectState:
         """Load project state from SurrealDB.

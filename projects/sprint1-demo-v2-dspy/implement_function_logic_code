@@ -1,0 +1,4 @@
+from typing import Union
+
+def multiply(a: Union[int, float], b: Union[int, float]) -> float:
+    return a * b

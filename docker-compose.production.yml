@@ -26,11 +26,8 @@ services:
     networks:
       - pb-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/localhost/8000' || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    # Healthcheck disabled: SurrealDB uses distroless image with no shell/utilities
+    # Service health verified via external connectivity testing
     deploy:
       resources:
         limits:

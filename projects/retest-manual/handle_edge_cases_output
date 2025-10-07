@@ -1,0 +1,14 @@
+```python
+def multiply(a: float, b: float) -> float:
+    """
+    Multiplies two numbers and returns the result.
+    
+    Parameters:
+    a (float): The first number.
+    b (float): The second number.
+    
+    Returns:
+    float: The product of a and b.
+    """
+    return a * b
+```

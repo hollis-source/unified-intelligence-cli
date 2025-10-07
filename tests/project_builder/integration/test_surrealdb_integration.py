@@ -75,17 +75,9 @@ def test_htn():
     Returns:
         HTNNode: Root node with 2 subtasks
     """
-    root = HTNNode(
-        task_id="root_task",
-        task_type="composite",
-        description="Test root task",
-        preconditions={},
-        effects={}
-    )
-
+    # Create child tasks first (primitive tasks with no subtasks)
     child1 = HTNNode(
         task_id="child_1",
-        task_type="primitive",
         description="First child task",
         preconditions={},
         effects={"result1": "completed"}
@@ -93,14 +85,19 @@ def test_htn():
 
     child2 = HTNNode(
         task_id="child_2",
-        task_type="primitive",
         description="Second child task",
         preconditions={"result1": "completed"},
         effects={"result2": "completed"}
     )
 
-    root.add_subtask(child1)
-    root.add_subtask(child2)
+    # Create root (composite task with subtasks)
+    root = HTNNode(
+        task_id="root_task",
+        description="Test root task",
+        subtasks=[child1, child2],
+        preconditions={},
+        effects={}
+    )
 
     return root
 
