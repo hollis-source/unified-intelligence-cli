@@ -190,9 +190,35 @@ Guidelines:
 - Keep hierarchy depth to 2-3 levels maximum
 - Primitive tasks (leaves) have empty subtasks array
 - **IMPORTANT**: The root project task MUST have empty preconditions {{}}
-- Subtask preconditions reference keys that must exist in world state
 - Effects define what state changes the task produces (e.g., {{"artifact_code": "generated_code.py"}})
 - For "{goal}", create 3-5 main tasks
+
+**WORLD STATE KEYS** (Available at execution time):
+The orchestrator automatically seeds world_state with these keys when file paths are detected in the goal:
+- `file_path` (str): Primary file path extracted from goal (e.g., "/opt/project/file.py")
+- `file_paths` (List[str]): All file paths extracted from goal
+- `file_refs` (List[str]): FileRef URIs for valid paths (e.g., ["file:///opt/project/file.py"])
+
+**PRECONDITION FORMAT RULES**:
+1. **Existence Check**: To check if a key exists (any value satisfies):
+   - Use: {{"file_path": null}} or {{"file_paths": null}}
+   - This checks that the key exists in world_state, regardless of its value
+
+2. **Value Check**: To check for a specific value:
+   - Use: {{"file_path": "/opt/project/file.py"}}
+   - This checks that the key exists AND has the exact value specified
+
+3. **CRITICAL CONSTRAINT**: Use ONLY the documented world_state keys above for preconditions
+   - ✓ VALID: {{"file_path": null}}, {{"file_paths": null}}, {{"file_refs": null}}
+   - ✗ INVALID: {{"file_exists": true}}, {{"target_file": "..."}}, {{"source_code": "..."}}
+
+4. **DO NOT** use `file_snapshots` as a precondition (loaded AFTER precondition checks)
+
+**PRECONDITION EXAMPLES**:
+- Task needs any file path: {{"file_path": null}}
+- Task needs specific file: {{"file_path": "/opt/project/specific.py"}}
+- Task needs multiple files: {{"file_paths": null}}
+- Task has no preconditions: {{}}
 
 Output ONLY the JSON structure, no additional text."""
 
