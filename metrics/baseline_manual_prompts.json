@@ -1,0 +1,190 @@
+{
+  "total_artifacts": 18,
+  "syntax_correctness": 50.0,
+  "completeness": 94.44444444444444,
+  "conciseness": 55.55555555555556,
+  "avg_code_lines": 10.166666666666666,
+  "avg_thinking_lines": 2.0555555555555554,
+  "details": [
+    {
+      "artifact_name": "design_api_schema_output",
+      "syntax_correct": false,
+      "has_todos": false,
+      "has_thinking": false,
+      "thinking_lines": 0,
+      "code_lines": 5,
+      "total_lines": 6,
+      "project": "test-artifacts-final"
+    },
+    {
+      "artifact_name": "document_function_output",
+      "syntax_correct": false,
+      "has_todos": false,
+      "has_thinking": true,
+      "thinking_lines": 7,
+      "code_lines": 3,
+      "total_lines": 55,
+      "project": "test-artifacts-final"
+    },
+    {
+      "artifact_name": "implement_function_logic_code",
+      "syntax_correct": true,
+      "has_todos": false,
+      "has_thinking": false,
+      "thinking_lines": 0,
+      "code_lines": 16,
+      "total_lines": 21,
+      "project": "test-artifacts-final"
+    },
+    {
+      "artifact_name": "test_function_output",
+      "syntax_correct": false,
+      "has_todos": false,
+      "has_thinking": true,
+      "thinking_lines": 3,
+      "code_lines": 10,
+      "total_lines": 51,
+      "project": "test-artifacts-final"
+    },
+    {
+      "artifact_name": "write_test_cases_output",
+      "syntax_correct": false,
+      "has_todos": false,
+      "has_thinking": true,
+      "thinking_lines": 4,
+      "code_lines": 10,
+      "total_lines": 73,
+      "project": "test-improved-prompts"
+    },
+    {
+      "artifact_name": "design_api_schema_output",
+      "syntax_correct": false,
+      "has_todos": false,
+      "has_thinking": true,
+      "thinking_lines": 6,
+      "code_lines": 5,
+      "total_lines": 54,
+      "project": "test-improved-prompts"
+    },
+    {
+      "artifact_name": "generate_documentation_docs",
+      "syntax_correct": true,
+      "has_todos": false,
+      "has_thinking": false,
+      "thinking_lines": 0,
+      "code_lines": 14,
+      "total_lines": 38,
+      "project": "test-improved-prompts"
+    },
+    {
+      "artifact_name": "implement_function_logic_code",
+      "syntax_correct": true,
+      "has_todos": false,
+      "has_thinking": false,
+      "thinking_lines": 0,
+      "code_lines": 16,
+      "total_lines": 19,
+      "project": "test-improved-prompts"
+    },
+    {
+      "artifact_name": "implement_endpoints_code",
+      "syntax_correct": false,
+      "has_todos": true,
+      "has_thinking": true,
+      "thinking_lines": 5,
+      "code_lines": 7,
+      "total_lines": 78,
+      "project": "test-api-final"
+    },
+    {
+      "artifact_name": "setup_project_structure_output",
+      "syntax_correct": false,
+      "has_todos": false,
+      "has_thinking": true,
+      "thinking_lines": 2,
+      "code_lines": 12,
+      "total_lines": 57,
+      "project": "test-api-final"
+    },
+    {
+      "artifact_name": "setup_database_output",
+      "syntax_correct": true,
+      "has_todos": false,
+      "has_thinking": false,
+      "thinking_lines": 0,
+      "code_lines": 16,
+      "total_lines": 46,
+      "project": "test-api-final"
+    },
+    {
+      "artifact_name": "design_api_schema_output",
+      "syntax_correct": true,
+      "has_todos": false,
+      "has_thinking": false,
+      "thinking_lines": 0,
+      "code_lines": 16,
+      "total_lines": 19,
+      "project": "test-final-improved"
+    },
+    {
+      "artifact_name": "implement_function_code",
+      "syntax_correct": true,
+      "has_todos": false,
+      "has_thinking": false,
+      "thinking_lines": 0,
+      "code_lines": 6,
+      "total_lines": 6,
+      "project": "test-final-improved"
+    },
+    {
+      "artifact_name": "code",
+      "syntax_correct": true,
+      "has_todos": false,
+      "has_thinking": false,
+      "thinking_lines": 0,
+      "code_lines": 6,
+      "total_lines": 6,
+      "project": "test-final-improved"
+    },
+    {
+      "artifact_name": "define_models_output",
+      "syntax_correct": false,
+      "has_todos": false,
+      "has_thinking": true,
+      "thinking_lines": 4,
+      "code_lines": 9,
+      "total_lines": 62,
+      "project": "test-rest-api"
+    },
+    {
+      "artifact_name": "setup_database_output",
+      "syntax_correct": true,
+      "has_todos": false,
+      "has_thinking": false,
+      "thinking_lines": 0,
+      "code_lines": 14,
+      "total_lines": 44,
+      "project": "test-rest-api"
+    },
+    {
+      "artifact_name": "create_project_folders_output",
+      "syntax_correct": true,
+      "has_todos": false,
+      "has_thinking": false,
+      "thinking_lines": 0,
+      "code_lines": 11,
+      "total_lines": 12,
+      "project": "test-rest-api"
+    },
+    {
+      "artifact_name": "create_virtual_env_output",
+      "syntax_correct": false,
+      "has_todos": false,
+      "has_thinking": true,
+      "thinking_lines": 6,
+      "code_lines": 7,
+      "total_lines": 76,
+      "project": "test-rest-api"
+    }
+  ]
+}
