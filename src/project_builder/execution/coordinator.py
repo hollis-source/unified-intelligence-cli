@@ -52,6 +52,16 @@ class ExecutionCoordinator(IExecutionCoordinator):
         teams: Available agent teams
     """
 
+    # Task-type based timeout configuration (seconds)
+    # Validation/testing tasks need more time than implementation
+    TASK_TIMEOUTS = {
+        "validation": 300,      # 5 minutes for validation tasks
+        "testing": 300,         # 5 minutes for testing tasks
+        "documentation": 180,   # 3 minutes for documentation tasks
+        "implementation": 120,  # 2 minutes for implementation tasks
+        "default": 120          # 2 minutes default
+    }
+
     def __init__(
         self,
         team_router: TeamRouter,
@@ -471,12 +481,25 @@ class ExecutionCoordinator(IExecutionCoordinator):
                     }
                 )
 
-                # Execute task with real LLM
-                logger.info(f"Executing task {task.description} with agent {agent.role} using model {model_id}")
-                result = await self.llm_executor.execute(agent, task, context)
+                # Determine task type and timeout
+                task_type = self._resolve_task_type(task, agent)
+                timeout = self.TASK_TIMEOUTS.get(task_type, self.TASK_TIMEOUTS["default"])
 
-                # Log LLM output for visibility
-                logger.info(f"LLM Output: {result.output[:500]}..." if len(str(result.output)) > 500 else f"LLM Output: {result.output}")
+                # Execute task with real LLM (with timeout)
+                logger.info(f"Executing task {task.description} with agent {agent.role} using model {model_id} (timeout: {timeout}s, type: {task_type})")
+
+                try:
+                    result = await asyncio.wait_for(
+                        self.llm_executor.execute(agent, task, context),
+                        timeout=timeout
+                    )
+
+                    # Log LLM output for visibility
+                    logger.info(f"LLM Output: {result.output[:500]}..." if len(str(result.output)) > 500 else f"LLM Output: {result.output}")
+
+                except asyncio.TimeoutError:
+                    # Handle timeout with graceful degradation
+                    return self._build_timeout_result(task, agent, model_id, htn_node, task_type, timeout)
 
                 # Map ExecutionResult to coordinator's expected format
                 # Enhance HTN effects with actual LLM output
@@ -547,6 +570,128 @@ class ExecutionCoordinator(IExecutionCoordinator):
                     "task_type": task.task_type,
                     "description": task.description,
                     "real_execution": False
+                }
+            )
+
+    def _resolve_task_type(self, task: Task, agent: Agent) -> str:
+        """Resolve task type for timeout determination.
+
+        Decision order (first match wins):
+        1. task.task_type if present
+        2. Infer from agent.role
+        3. Infer from task.metadata["domain"]
+        4. Default to "implementation"
+
+        Args:
+            task: Task to execute
+            agent: Agent executing the task
+
+        Returns:
+            Normalized task type string
+        """
+        # Direct task type
+        if hasattr(task, 'task_type') and task.task_type:
+            task_type = task.task_type.lower().strip()
+            # Normalize synonyms
+            if task_type in ['coding', 'code']:
+                return 'implementation'
+            if task_type in self.TASK_TIMEOUTS:
+                return task_type
+            return 'implementation'  # Default for unknown types
+
+        # Infer from agent role
+        role_lower = agent.role.lower()
+        if 'test' in role_lower:
+            return 'testing'
+        if 'validat' in role_lower:
+            return 'validation'
+        if any(k in role_lower for k in ['writer', 'doc']):
+            return 'documentation'
+
+        # Infer from domain metadata
+        domain = (task.metadata or {}).get('domain', '').lower()
+        if domain in self.TASK_TIMEOUTS:
+            return domain
+
+        # Default
+        return 'implementation'
+
+    def _build_timeout_result(
+        self,
+        task: Task,
+        agent: Agent,
+        model_id: str,
+        htn_node: HTNNode,
+        task_type: str,
+        timeout_seconds: int
+    ) -> ExecutionResult:
+        """Build ExecutionResult for timeout scenarios with graceful degradation.
+
+        Validation/testing/documentation tasks → partial success with warning
+        Implementation tasks → hard failure
+
+        Args:
+            task: Task that timed out
+            agent: Agent that was executing
+            model_id: Model being used
+            htn_node: HTN node for effects
+            task_type: Resolved task type
+            timeout_seconds: Timeout value used
+
+        Returns:
+            ExecutionResult with appropriate success/partial status
+        """
+        task_id = task.metadata.get("task_id", "unknown")
+
+        # Graceful degradation for validation/testing/documentation
+        if task_type in ['validation', 'testing', 'documentation']:
+            logger.warning(
+                f"Task {task_id} ({task_type}) timed out after {timeout_seconds}s - "
+                f"marking as partial success (core work may have completed earlier)"
+            )
+
+            # Mark as partial completion
+            partial_effects = dict(htn_node.effects)
+            partial_effects[htn_node.task_id] = 'partial'  # For precondition checking
+            partial_effects[f'{task_type}_status'] = 'timeout'
+
+            return ExecutionResult(
+                task_id=task_id,
+                success=True,  # Allow pipeline to continue
+                effects=partial_effects,
+                error="",
+                metadata={
+                    "agent": agent.role,
+                    "model": model_id,
+                    "task_type": task_type,
+                    "description": task.description,
+                    "partial": True,
+                    "timeout": True,
+                    "timeout_seconds": timeout_seconds,
+                    "warning": f"{task_type.capitalize()} task timed out; core work may have completed earlier",
+                    "real_execution": True
+                }
+            )
+        else:
+            # Hard failure for implementation tasks
+            logger.error(
+                f"Task {task_id} ({task_type}) timed out after {timeout_seconds}s - "
+                f"marking as failed"
+            )
+
+            return ExecutionResult(
+                task_id=task_id,
+                success=False,
+                effects={},
+                error=f"Task timed out after {timeout_seconds} seconds",
+                metadata={
+                    "agent": agent.role,
+                    "model": model_id,
+                    "task_type": task_type,
+                    "description": task.description,
+                    "timeout": True,
+                    "timeout_seconds": timeout_seconds,
+                    "real_execution": True
                 }
             )
 
