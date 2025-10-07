@@ -132,6 +132,10 @@ class ExecutionCoordinator(IExecutionCoordinator):
 
             logger.info(f"  Task {'✓ succeeded' if result.success else '✗ failed'}")
 
+        # Apply parent task effects for completed composite tasks
+        # This fixes the bug where parent effects aren't applied when all subtasks complete
+        self._apply_parent_effects(state)
+
         return results
 
     def _extract_tasks(
@@ -487,6 +491,64 @@ class ExecutionCoordinator(IExecutionCoordinator):
                     "real_execution": False
                 }
             )
+
+    def _apply_parent_effects(self, state: ProjectState) -> None:
+        """Apply effects from parent tasks when all their subtasks are completed.
+
+        Traverses the HTN tree bottom-up, applying parent task effects
+        when all subtasks have completed successfully. This fixes the issue
+        where composite tasks don't apply their effects automatically.
+
+        Args:
+            state: Current project state to update
+        """
+        if not state.htn_graph:
+            return
+
+        # Recursively apply parent effects from bottom-up
+        self._apply_parent_effects_recursive(state.htn_graph, state)
+
+    def _apply_parent_effects_recursive(self, node: HTNNode, state: ProjectState) -> bool:
+        """Recursively apply parent effects for completed composite tasks.
+
+        Args:
+            node: Current HTN node to check
+            state: Project state to update
+
+        Returns:
+            True if this node (and all its subtasks) are completed
+        """
+        # Base case: leaf node (no subtasks)
+        if not node.subtasks:
+            # Check if this task is completed
+            task_status = state.task_status.get(node.task_id, TaskStatus.PENDING)
+            return task_status == TaskStatus.COMPLETED
+
+        # Recursive case: check all subtasks
+        all_subtasks_completed = True
+        for subtask in node.subtasks:
+            subtask_completed = self._apply_parent_effects_recursive(subtask, state)
+            if not subtask_completed:
+                all_subtasks_completed = False
+
+        # If all subtasks completed, apply this parent's effects
+        if all_subtasks_completed and node.effects:
+            # Check if effects not already applied
+            effects_already_applied = all(
+                state.world_state.get(key) == value
+                for key, value in node.effects.items()
+            )
+
+            if not effects_already_applied:
+                # Apply parent effects
+                state.world_state.update(node.effects)
+                logger.info(f"Applied parent task effects for '{node.task_id}': {list(node.effects.keys())}")
+
+                # Mark parent task as completed if not already
+                if node.task_id not in state.task_status:
+                    state.task_status[node.task_id] = TaskStatus.COMPLETED
+
+        return all_subtasks_completed
 
     def _get_artifact_key(self, task: Task, htn_node: HTNNode) -> str:
         """Determine the artifact key for storing LLM output in world state.
