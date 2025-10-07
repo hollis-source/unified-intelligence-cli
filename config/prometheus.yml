@@ -1,0 +1,39 @@
+# Prometheus Configuration for Project Builder
+# Sprint 1: Production Deployment - P1.3 Observability
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'production'
+    service: 'project-builder'
+
+# Alerting configuration (optional - can be added later)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# Scrape configurations
+scrape_configs:
+  # Project Builder metrics
+  - job_name: 'project-builder'
+    static_configs:
+      - targets: ['project-builder:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # PostgreSQL metrics (requires postgres_exporter if needed)
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+
+# Recording rules for common queries
+# rule_files:
+#   - 'rules/*.yml'
