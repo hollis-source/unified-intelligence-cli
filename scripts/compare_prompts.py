@@ -146,10 +146,8 @@ def run_project_builder(task_description: str, project_id: str, model: str, prom
         '--model', model
     ]
 
-    # Add prompt mode flag (when implemented in Sprint 1)
-    # For now, manual is default, DSPy will be added in Sprint 1
+    # Add prompt mode flag (Sprint 1: Now implemented)
     if prompt_mode == 'dspy':
-        # NOTE: This flag doesn't exist yet, will be added in Sprint 1
         cmd.extend(['--prompt-mode', 'dspy'])
 
     if verbose:
@@ -229,17 +227,6 @@ def compare_prompts(task_description: str, project_id: str, model: str, verbose:
         print(f"\n{'='*80}")
         print(f"Testing with {mode.upper()} prompts")
         print(f"{'='*80}")
-
-        # Check if mode is implemented
-        if mode == 'dspy':
-            print("\n⚠️  WARNING: DSPy mode not yet implemented (Sprint 1)")
-            print("    Skipping DSPy test. Run again after Sprint 1 completion.")
-            results[mode] = {
-                'implemented': False,
-                'execution': None,
-                'metrics': None
-            }
-            continue
 
         # Run project builder
         mode_project_id = f"{project_id}-{mode}"

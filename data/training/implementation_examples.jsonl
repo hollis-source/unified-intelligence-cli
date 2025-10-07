@@ -1,0 +1,3 @@
+{"task_description": "Write a multiply function in Python", "expected_output": "def multiply(a, b):\n    return a * b"}
+{"task_description": "Write an add function in Python", "expected_output": "def add(a, b):\n    return a + b"}
+{"task_description": "Write a subtract function in Python", "expected_output": "def subtract(a, b):\n    return a - b"}

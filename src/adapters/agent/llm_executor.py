@@ -4,6 +4,7 @@ LLM-powered agent executor - Adapter layer implementation.
 Week 1: Enhanced with error_details propagation for better debugging.
 Week 9: Added passive data collection for model training pipeline.
 SYD2 Fix: Added LLM response caching to reduce latency for expensive ULTRATHINK tasks.
+Sprint 1: Added DSPy prompt optimization mode.
 """
 
 import time
@@ -12,6 +13,7 @@ from src.entities import Agent, Task, ExecutionResult, ExecutionStatus, Executio
 from src.interfaces import IAgentExecutor, ITextGenerator, LLMConfig
 from src.exceptions import ToolExecutionError
 from src.adapters.agent.llm_cache import LLMResponseCache, CacheConfig
+from src.adapters.prompt.dspy_adapter import DSPyPromptAdapter
 
 
 class LLMAgentExecutor(IAgentExecutor):
@@ -29,7 +31,8 @@ class LLMAgentExecutor(IAgentExecutor):
         provider_name: str = "unknown",
         orchestrator: str = "simple",
         cache_config: Optional[CacheConfig] = None,
-        enable_cache: bool = True
+        enable_cache: bool = True,
+        prompt_mode: str = "manual"
     ):
         """
         Initialize with LLM provider.
@@ -42,6 +45,7 @@ class LLMAgentExecutor(IAgentExecutor):
             orchestrator: Orchestrator mode (simple, openai-agents) (Week 9)
             cache_config: Optional cache configuration (SYD2 fix)
             enable_cache: Enable response caching (SYD2 fix)
+            prompt_mode: Prompt generation mode - "manual" or "dspy" (Sprint 1)
         """
         self.llm_provider = llm_provider
         self.default_config = default_config or LLMConfig(
@@ -51,12 +55,19 @@ class LLMAgentExecutor(IAgentExecutor):
         self.data_collector = data_collector
         self.provider_name = provider_name
         self.orchestrator = orchestrator
+        self.prompt_mode = prompt_mode
 
         # SYD2 FIX: Initialize response cache for expensive ULTRATHINK tasks
         if enable_cache:
             self.cache = LLMResponseCache(cache_config)
         else:
             self.cache = None
+
+        # Sprint 1: Initialize DSPy adapter if DSPy mode enabled
+        if prompt_mode == "dspy":
+            self.dspy_adapter = DSPyPromptAdapter(llm_provider, use_chain_of_thought=True)
+        else:
+            self.dspy_adapter = None
 
     async def execute(
         self,
@@ -81,24 +92,39 @@ class LLMAgentExecutor(IAgentExecutor):
         # Week 9: Track execution time for data collection
         start_time = time.time()
 
-        # Build prompt based on agent role and task
-        messages = self._build_messages(agent, task, context)
+        # Sprint 1: Route to DSPy adapter if enabled
+        if self.prompt_mode == "dspy" and self.dspy_adapter:
+            try:
+                response = self.dspy_adapter.generate_for_task(task, context)
+                cache_hit = False  # DSPy has its own caching
+                messages = []  # DSPy handles message building internally
+            except Exception as e:
+                # Fallback to manual prompts if DSPy fails
+                messages = self._build_messages(agent, task, context)
+                response = self.llm_provider.generate(
+                    messages=messages,
+                    config=self.default_config
+                )
+                cache_hit = False
+        else:
+            # Manual prompt mode (existing behavior)
+            # Build prompt based on agent role and task
+            messages = self._build_messages(agent, task, context)
 
-        # SYD2 FIX: Check cache before expensive LLM call
-        cache_hit = False
-        response = None
+            # SYD2 FIX: Check cache before expensive LLM call
+            cache_hit = False
+            response = None
 
-        if self.cache:
-            # Extract task description for cache keying
-            task_desc = self._extract_task_description(task)
-            response = self.cache.get(
-                messages=messages,
-                task_description=task_desc,
-                model_name=self.provider_name
-            )
-            cache_hit = response is not None
+            if self.cache:
+                # Extract task description for cache keying
+                task_desc = self._extract_task_description(task)
+                response = self.cache.get(
+                    messages=messages,
+                    task_description=task_desc,
+                    model_name=self.provider_name
+                )
+                cache_hit = response is not None
 
-        try:
             if not cache_hit:
                 # Generate response using LLM (cache miss or disabled)
                 response = self.llm_provider.generate(
@@ -115,6 +141,8 @@ class LLMAgentExecutor(IAgentExecutor):
                         task_description=task_desc,
                         model_name=self.provider_name
                     )
+
+        try:
 
             # Calculate execution duration
             duration_ms = int((time.time() - start_time) * 1000)
@@ -348,12 +376,16 @@ Generate the documentation now:"""
 Context:
 {self._format_world_state(world_state)}
 
-INSTRUCTIONS:
-Generate the specific artifact or output required for this task. Be concrete and actionable.
-If code is needed, provide actual code. If a document is needed, provide the actual document.
-DO NOT provide explanations of how to do the task - DO THE TASK.
+IMPORTANT: You must generate the actual artifact/output, NOT explain how to do it.
 
-Complete the task now:"""
+INSTRUCTIONS:
+1. If the task requires code: Write the complete, working code (NO explanations)
+2. If the task requires a document: Write the complete document (NO meta-discussion)
+3. If the task requires configuration: Provide the actual config file content
+4. DO NOT write "I need to...", "Let's think...", or "First, I should..." - JUST DO IT
+5. Return ONLY the requested artifact
+
+Generate the output now:"""
 
         return prompt
 

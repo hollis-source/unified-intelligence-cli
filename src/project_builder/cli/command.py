@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
               help="LLM model to use (grok, qwen3_next_80b_thinking, qwen3_hf_inference, qwen3_zerogpu, replicate, tongyi, auto)")
 @click.option("--parallel/--sequential", default=True,
               help="Enable/disable parallel task execution (default: parallel)")
+@click.option("--prompt-mode", default="manual", type=click.Choice(["manual", "dspy"]),
+              help="Prompt generation mode - 'manual' (existing) or 'dspy' (optimized)")
 @click.option("--state-db", default="data/project_builder_state.db",
               help="Path to state database (default: data/project_builder_state.db)")
 @click.option("--output-dir", default="projects",
@@ -48,6 +50,7 @@ def build_project_command(
     project_id: str,
     model: str,
     parallel: bool,
+    prompt_mode: str,
     state_db: str,
     output_dir: str,
     verbose: bool,
@@ -106,6 +109,7 @@ def build_project_command(
         click.echo(f"Goal: {goal}")
     click.echo(f"Project ID: {project_id}")
     click.echo(f"Parallel Execution: {parallel}")
+    click.echo(f"Prompt Mode: {prompt_mode.upper()}")
     click.echo(f"Output Directory: {output_path}")
     click.echo()
 
@@ -116,6 +120,7 @@ def build_project_command(
             project_id=project_id,
             model=model,
             parallel=parallel,
+            prompt_mode=prompt_mode,
             state_db=state_db,
             output_path=output_path,
             resume=resume
@@ -140,6 +145,7 @@ async def _execute_project(
     project_id: str,
     model: str,
     parallel: bool,
+    prompt_mode: str,
     state_db: str,
     output_path: Path,
     resume: bool
@@ -151,6 +157,7 @@ async def _execute_project(
         project_id: Unique project identifier
         model: LLM model to use
         parallel: Enable parallel execution
+        prompt_mode: Prompt generation mode (manual or dspy)
         state_db: Path to state database
         output_path: Output directory path
         resume: Resume existing project
@@ -207,7 +214,8 @@ async def _execute_project(
             team_router=team_router,
             model_selector=model_selector,
             teams=teams,
-            llm_provider=llm_provider  # Enable real execution
+            llm_provider=llm_provider,  # Enable real execution
+            prompt_mode=prompt_mode  # Sprint 1: DSPy support
         )
 
         # Project orchestrator with real execution

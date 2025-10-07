@@ -52,7 +52,8 @@ class ExecutionCoordinator(IExecutionCoordinator):
         team_router: TeamRouter,
         model_selector: AdaptiveModelSelector,
         teams: List[AgentTeam],
-        llm_provider: Optional[ITextGenerator] = None
+        llm_provider: Optional[ITextGenerator] = None,
+        prompt_mode: str = "manual"
     ):
         """Initialize execution coordinator.
 
@@ -61,6 +62,7 @@ class ExecutionCoordinator(IExecutionCoordinator):
             model_selector: Adaptive model selection component
             teams: Available agent teams
             llm_provider: LLM provider for real execution (if None, uses mock)
+            prompt_mode: Prompt generation mode - "manual" or "dspy" (Sprint 1)
         """
         self.team_router = team_router
         self.model_selector = model_selector
@@ -72,9 +74,10 @@ class ExecutionCoordinator(IExecutionCoordinator):
                 llm_provider=llm_provider,
                 provider_name="project-builder",
                 orchestrator="coordinator",
-                enable_cache=True
+                enable_cache=True,
+                prompt_mode=prompt_mode  # Sprint 1: DSPy support
             )
-            logger.info("ExecutionCoordinator initialized with real LLM execution")
+            logger.info(f"ExecutionCoordinator initialized with real LLM execution (prompt_mode={prompt_mode})")
         else:
             self.llm_executor = None
             logger.info("ExecutionCoordinator initialized with mock execution")
@@ -236,19 +239,31 @@ class ExecutionCoordinator(IExecutionCoordinator):
         """
         desc = htn_node.description.lower()
 
-        # Common task types
-        if any(kw in desc for kw in ['design', 'architect', 'plan']):
-            return 'design'
-        if any(kw in desc for kw in ['implement', 'write', 'code', 'create']):
-            return 'implementation'
+        # Check more specific task types first (to avoid false matches with generic keywords)
+
+        # Testing tasks (check before 'write'/'create' which are generic)
         if any(kw in desc for kw in ['test', 'verify', 'validate']):
             return 'testing'
+
+        # Documentation tasks (check before 'write'/'generate')
         if any(kw in desc for kw in ['document', 'doc', 'readme']):
             return 'documentation'
+
+        # Design/architecture tasks
+        if any(kw in desc for kw in ['design', 'architect', 'plan', 'schema']):
+            return 'design'
+
+        # Research tasks
         if any(kw in desc for kw in ['research', 'analyze', 'investigate']):
             return 'research'
+
+        # Deployment tasks
         if any(kw in desc for kw in ['deploy', 'release', 'publish']):
             return 'deployment'
+
+        # Implementation tasks (checked last since keywords are generic)
+        if any(kw in desc for kw in ['implement', 'write', 'code', 'create', 'define', 'setup', 'configure', 'build', 'generate', 'develop']):
+            return 'implementation'
 
         return 'general'
 
@@ -408,11 +423,22 @@ class ExecutionCoordinator(IExecutionCoordinator):
                 # Enhance HTN effects with actual LLM output
                 enhanced_effects = dict(htn_node.effects)  # Copy HTN effects
 
-                # Store the actual artifact in world state
-                # Use a meaningful key based on the task
+                # Add task completion status flag for precondition checking
+                # Format: {task_id: 'completed'}
+                enhanced_effects[htn_node.task_id] = 'completed'
+
+                # Store the actual artifact content in artifact_* keys (overwrites HTN filename placeholder)
+                # AND in task-specific keys for context passing
                 artifact_key = self._get_artifact_key(task, htn_node)
                 if artifact_key:
                     enhanced_effects[artifact_key] = result.output
+
+                # Also overwrite any artifact_* keys from HTN with actual content
+                for key in list(enhanced_effects.keys()):
+                    if key.startswith('artifact_'):
+                        # Replace filename placeholder with actual LLM-generated content
+                        enhanced_effects[key] = result.output
+                        logger.debug(f"  Stored artifact in {key}")
 
                 return ExecutionResult(
                     task_id=task.metadata.get("task_id", "unknown"),
