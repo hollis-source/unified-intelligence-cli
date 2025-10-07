@@ -47,6 +47,7 @@ def surrealdb_repo(surrealdb_available):
         pytest.skip("SurrealDB not available at localhost:8001")
 
     # Set environment for SurrealDB
+    # Read password from environment (set in .env file)
     env_vars = {
         "PB_DB_TYPE": "surrealdb",
         "PB_DB_HOST": "localhost",
@@ -54,7 +55,7 @@ def surrealdb_repo(surrealdb_available):
         "PB_DB_NAMESPACE": "project_builder",
         "PB_DB_DATABASE": "test",  # Use test database
         "PB_DB_USER": "root",
-        "PB_DB_PASSWORD": "changeme"
+        "PB_DB_PASSWORD": os.getenv("PB_DB_PASSWORD", "changeme")  # Use env var or fallback
     }
 
     with pytest.MonkeyPatch.context() as mp:
