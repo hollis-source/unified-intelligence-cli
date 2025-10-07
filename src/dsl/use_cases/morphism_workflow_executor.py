@@ -51,15 +51,17 @@ class MorphismWorkflowExecutor(HTNWorkflowExecutor):
 
     def __init__(
         self,
-        task_executor=None,
-        parser=None,
+        task_executor,
+        parser,
         transformations: Optional[List[Morphism]] = None
     ):
         """Initialize morphism workflow executor.
 
+        P1-2: Dependencies now REQUIRED (no defaults) to follow Dependency Inversion Principle.
+
         Args:
-            task_executor: Task executor implementation (defaults to CLITaskExecutor)
-            parser: DSL parser (defaults to Parser())
+            task_executor: Task executor implementation (TaskExecutor Protocol)
+            parser: DSL parser implementation (Parser Protocol)
             transformations: List of morphism transformations to apply (optional)
         """
         super().__init__(task_executor, parser)

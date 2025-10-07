@@ -10,15 +10,36 @@ SOLID: SRP - handles DSL workflow execution with lifecycle phases.
 import asyncio
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Protocol
 from dataclasses import dataclass
 
 from src.entities.lifecycle import Lifecycle, LifecycleState
-from src.dsl.adapters.parser import Parser
 from src.dsl.use_cases.interpreter import Interpreter, TaskExecutor
-from src.dsl.adapters.cli_task_executor import CLITaskExecutor
 
 logger = logging.getLogger(__name__)
+
+
+# P1-2: Define Parser protocol to avoid coupling to concrete adapter
+class Parser(Protocol):
+    """Parser interface for DSL parsing.
+
+    Allows use cases to depend on abstraction instead of concrete Parser adapter.
+    Follows Dependency Inversion Principle (DIP).
+    """
+
+    def parse(self, dsl_text: str) -> Any:
+        """Parse DSL text into AST.
+
+        Args:
+            dsl_text: DSL program text
+
+        Returns:
+            Parsed AST
+
+        Raises:
+            Exception: If parsing fails
+        """
+        ...
 
 
 @dataclass
@@ -61,17 +82,31 @@ class LifecycleWorkflowExecutor:
 
     def __init__(
         self,
-        task_executor: Optional[TaskExecutor] = None,
-        parser: Optional[Parser] = None
+        task_executor: TaskExecutor,
+        parser: Parser
     ):
         """Initialize lifecycle executor.
 
+        P1-2: Dependencies now REQUIRED (no defaults) to follow Dependency Inversion Principle.
+        Composition root (main.py, tests) must explicitly provide implementations.
+
         Args:
-            task_executor: Task executor implementation (defaults to CLITaskExecutor)
-            parser: DSL parser (defaults to Parser())
+            task_executor: Task executor implementation (Protocol)
+            parser: DSL parser implementation (Protocol)
+
+        Example:
+            from src.dsl.adapters.parser import Parser as ConcreteParser
+            from src.dsl.adapters.cli_task_executor import CLITaskExecutor
+
+            parser = ConcreteParser()
+            executor_impl = CLITaskExecutor()
+            lifecycle = LifecycleWorkflowExecutor(
+                task_executor=executor_impl,
+                parser=parser
+            )
         """
-        self.task_executor = task_executor or CLITaskExecutor()
-        self.parser = parser or Parser()
+        self.task_executor = task_executor
+        self.parser = parser
 
     async def execute_workflow(
         self,

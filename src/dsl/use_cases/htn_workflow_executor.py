@@ -39,12 +39,14 @@ class HTNWorkflowExecutor(LifecycleWorkflowExecutor):
         # Output shows HTN decomposition info in DECOMPOSE phase
     """
 
-    def __init__(self, task_executor=None, parser=None):
+    def __init__(self, task_executor, parser):
         """Initialize HTN workflow executor.
 
+        P1-2: Dependencies now REQUIRED (no defaults) to follow Dependency Inversion Principle.
+
         Args:
-            task_executor: Task executor implementation (defaults to CLITaskExecutor)
-            parser: DSL parser (defaults to Parser())
+            task_executor: Task executor implementation (TaskExecutor Protocol)
+            parser: DSL parser implementation (Parser Protocol)
         """
         super().__init__(task_executor, parser)
         self.htn_compiler = HTNCompiler()

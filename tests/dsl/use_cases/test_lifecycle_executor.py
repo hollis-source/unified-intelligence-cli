@@ -1,6 +1,8 @@
 """Tests for lifecycle-aware DSL workflow executor.
 
 Tests cover lifecycle phases, validation, and error handling.
+
+P1-2: Updated to provide explicit dependencies (task_executor, parser) per DIP.
 """
 
 import pytest
@@ -14,6 +16,8 @@ from src.dsl.entities.literal import Literal
 from src.dsl.entities.composition import Composition
 from src.dsl.entities.functor import Functor
 from src.entities.lifecycle import LifecycleState
+from src.dsl.adapters.parser import Parser
+from src.dsl.adapters.cli_task_executor import CLITaskExecutor
 
 
 class MockTaskExecutor:
@@ -36,15 +40,45 @@ class MockParser:
         return self.ast_to_return
 
 
+# P1-2: Helper to create executor with defaults for tests
+def create_test_executor(task_executor=None, parser=None):
+    """Create lifecycle executor with test defaults.
+
+    P1-2: Since LifecycleWorkflowExecutor no longer provides defaults,
+    this helper provides them for test convenience while maintaining DIP.
+
+    Args:
+        task_executor: Optional task executor (defaults to MockTaskExecutor)
+        parser: Optional parser (defaults to MockParser with Literal("test"))
+
+    Returns:
+        LifecycleWorkflowExecutor instance with explicit dependencies
+    """
+    task_executor = task_executor or MockTaskExecutor()
+    parser = parser or MockParser(Literal("test"))
+    return LifecycleWorkflowExecutor(task_executor=task_executor, parser=parser)
+
+
 class TestLifecycleWorkflowExecutor:
     """Test lifecycle executor basic functionality."""
 
     def test_create_executor_with_defaults(self):
-        """Test creating executor with default dependencies."""
-        executor = LifecycleWorkflowExecutor()
+        """Test creating executor with explicit default dependencies.
 
-        assert executor.task_executor is not None
-        assert executor.parser is not None
+        P1-2: Defaults are no longer provided by executor - composition root
+        (test setup) provides them explicitly per Dependency Inversion Principle.
+        """
+        # P1-2: Explicitly provide dependencies instead of relying on defaults
+        task_executor = MockTaskExecutor()
+        parser = MockParser(Literal("test"))
+
+        executor = LifecycleWorkflowExecutor(
+            task_executor=task_executor,
+            parser=parser
+        )
+
+        assert executor.task_executor is task_executor
+        assert executor.parser is parser
 
     def test_create_executor_with_custom_dependencies(self):
         """Test creating executor with custom dependencies."""
@@ -69,14 +103,14 @@ class TestWorkflowFileReading:
         workflow_file = tmp_path / "test.ct"
         workflow_file.write_text("functor test = build")
 
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
         content = executor._read_workflow_file(str(workflow_file))
 
         assert content == "functor test = build"
 
     def test_read_nonexistent_file_raises_error(self):
         """Test reading nonexistent file raises FileNotFoundError."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         with pytest.raises(FileNotFoundError):
             executor._read_workflow_file("/nonexistent/file.ct")
@@ -87,7 +121,7 @@ class TestWorkflowValidation:
 
     def test_validate_valid_workflow(self):
         """Test validating valid workflow."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         ast = [Functor("test", Literal("build"))]
         symbol_table = {"test": Literal("build")}
@@ -100,7 +134,7 @@ class TestWorkflowValidation:
 
     def test_validate_empty_workflow(self):
         """Test validating empty workflow fails."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         result = executor._validate_workflow([], {})
 
@@ -109,7 +143,7 @@ class TestWorkflowValidation:
 
     def test_validate_workflow_with_functors(self):
         """Test validation includes functor count."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         ast = [
             Functor("f1", Literal("task1")),
@@ -128,7 +162,7 @@ class TestSymbolTableExtraction:
 
     def test_extract_from_functor_list(self):
         """Test extracting functors from list."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         ast = [
             Functor("build", Literal("compile")),
@@ -143,7 +177,7 @@ class TestSymbolTableExtraction:
 
     def test_extract_from_empty_list(self):
         """Test extracting from empty AST."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         symbol_table = executor._extract_symbol_table([])
 
@@ -151,7 +185,7 @@ class TestSymbolTableExtraction:
 
     def test_extract_from_non_list(self):
         """Test extracting from non-list AST."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         ast = Literal("test")
         symbol_table = executor._extract_symbol_table(ast)
@@ -164,7 +198,7 @@ class TestMainNodeExtraction:
 
     def test_get_main_from_functor_list(self):
         """Test getting last functor as main node."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         f1 = Functor("first", Literal("task1"))
         f2 = Functor("second", Literal("task2"))
@@ -176,7 +210,7 @@ class TestMainNodeExtraction:
 
     def test_get_main_from_non_list(self):
         """Test getting main from single node."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         node = Literal("task")
         main = executor._get_main_node(node)
@@ -185,7 +219,7 @@ class TestMainNodeExtraction:
 
     def test_get_main_from_empty_list(self):
         """Test getting main from empty list returns None."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         main = executor._get_main_node([])
 
@@ -197,7 +231,7 @@ class TestTaskCounting:
 
     def test_count_primitive_task(self):
         """Test counting primitive task."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         node = Literal("task")
         count = executor._count_tasks(node)
@@ -206,7 +240,7 @@ class TestTaskCounting:
 
     def test_count_composition(self):
         """Test counting composition."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         node = Composition(Literal("f"), Literal("g"))
         count = executor._count_tasks(node)
@@ -215,7 +249,7 @@ class TestTaskCounting:
 
     def test_count_functor(self):
         """Test counting functor."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         node = Functor("test", Literal("task"))
         count = executor._count_tasks(node)
@@ -235,7 +269,7 @@ class TestWorkflowExecution:
 
         # Create executor with mock dependencies
         task_executor = MockTaskExecutor()
-        executor = LifecycleWorkflowExecutor(task_executor=task_executor)
+        executor = LifecycleWorkflowExecutor(task_executor=task_executor, parser=Parser())
 
         # Execute
         result = await executor.execute_workflow(str(workflow_file))
@@ -250,7 +284,7 @@ class TestWorkflowExecution:
 
     async def test_execute_nonexistent_file_fails(self):
         """Test executing nonexistent file fails gracefully."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         result = await executor.execute_workflow("/nonexistent/file.ct")
 
@@ -266,7 +300,7 @@ class TestWorkflowExecution:
 
         # Mock parser to return empty AST
         parser = MockParser([])
-        executor = LifecycleWorkflowExecutor(parser=parser)
+        executor = LifecycleWorkflowExecutor(task_executor=MockTaskExecutor(), parser=parser)
 
         result = await executor.execute_workflow(str(workflow_file))
 
@@ -281,7 +315,7 @@ class TestWorkflowExecution:
         workflow_file.write_text("functor main = task")
 
         task_executor = MockTaskExecutor()
-        executor = LifecycleWorkflowExecutor(task_executor=task_executor)
+        executor = LifecycleWorkflowExecutor(task_executor=task_executor, parser=Parser())
 
         result = await executor.execute_workflow(str(workflow_file))
 
@@ -298,7 +332,7 @@ class TestLifecyclePhases:
         workflow_file.write_text("functor test = build")
 
         task_executor = MockTaskExecutor()
-        executor = LifecycleWorkflowExecutor(task_executor=task_executor)
+        executor = LifecycleWorkflowExecutor(task_executor=task_executor, parser=Parser())
 
         result = await executor.execute_workflow(str(workflow_file))
 
@@ -314,7 +348,7 @@ class TestLifecyclePhases:
         workflow_file.write_text("")
 
         parser = MockParser([])  # Empty AST fails validation
-        executor = LifecycleWorkflowExecutor(parser=parser)
+        executor = LifecycleWorkflowExecutor(task_executor=MockTaskExecutor(), parser=parser)
 
         result = await executor.execute_workflow(str(workflow_file))
 
@@ -403,7 +437,7 @@ class TestResultValidation:
 
     def test_validate_none_result_fails(self):
         """Test that None result fails validation."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         is_valid = executor._validate_result(None, verbose=False)
 
@@ -411,7 +445,7 @@ class TestResultValidation:
 
     def test_validate_dict_with_failed_status_fails(self):
         """Test that dict with FAILED status fails validation."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         result = {
             'status': 'FAILED',
@@ -426,7 +460,7 @@ class TestResultValidation:
 
     def test_validate_dict_with_success_status_passes(self):
         """Test that dict with SUCCESS status and output passes validation."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         result = {
             'status': 'SUCCESS',
@@ -440,7 +474,7 @@ class TestResultValidation:
 
     def test_validate_dict_with_success_but_none_output_warns(self):
         """Test that dict with SUCCESS status but None output logs warning but passes."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         result = {
             'status': 'SUCCESS',
@@ -456,7 +490,7 @@ class TestResultValidation:
 
     def test_validate_non_dict_result_passes(self):
         """Test that non-dict, non-None result passes validation."""
-        executor = LifecycleWorkflowExecutor()
+        executor = create_test_executor()
 
         # String result
         is_valid = executor._validate_result("string result", verbose=False)
@@ -482,7 +516,8 @@ class TestResultValidation:
                 return None  # Simulate silent failure
 
         executor = LifecycleWorkflowExecutor(
-            task_executor=NoneReturningExecutor()
+            task_executor=NoneReturningExecutor(),
+            parser=Parser()
         )
 
         result = await executor.execute_workflow(str(workflow_file))
@@ -509,7 +544,8 @@ class TestResultValidation:
                 }
 
         executor = LifecycleWorkflowExecutor(
-            task_executor=FailedStatusExecutor()
+            task_executor=FailedStatusExecutor(),
+            parser=Parser()
         )
 
         result = await executor.execute_workflow(str(workflow_file))

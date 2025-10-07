@@ -94,7 +94,7 @@ class TestMorphismWorkflowExecutorInit:
 
     def test_init_without_transformations(self, mock_task_executor):
         """Executor initializes with empty transformations list."""
-        executor = MorphismWorkflowExecutor(task_executor=mock_task_executor)
+        executor = MorphismWorkflowExecutor(task_executor=mock_task_executor, parser=Parser())
 
         assert executor.transformations == []
         assert executor.task_executor == mock_task_executor
@@ -105,7 +105,7 @@ class TestMorphismWorkflowExecutorInit:
             WorkflowMorphism.htn_flatten(),
             WorkflowMorphism.htn_simplify()
         ]
-        executor = MorphismWorkflowExecutor(
+        executor = MorphismWorkflowExecutor(parser=Parser(),
             task_executor=mock_task_executor,
             transformations=transformations
         )
@@ -468,7 +468,7 @@ class TestIntegration:
             functor main = comp2
         """)
 
-        executor = MorphismWorkflowExecutor(
+        executor = MorphismWorkflowExecutor(parser=Parser(),
             task_executor=mock_task_executor,
             transformations=[WorkflowMorphism.workflow_optimize()]
         )
@@ -501,7 +501,7 @@ class TestIntegration:
             "htn_simplify"
         ])
 
-        executor = MorphismWorkflowExecutor(
+        executor = MorphismWorkflowExecutor(parser=Parser(),
             task_executor=mock_task_executor,
             transformations=[pipeline]
         )
