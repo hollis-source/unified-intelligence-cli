@@ -194,12 +194,22 @@ class ProjectStateManager(IStateManager):
             raise ValueError("State not initialized. Call initialize() first.")
 
         # Extract artifacts from world state
-        # Convention: artifacts are stored with "artifact_" prefix
-        artifacts = {
-            key.replace("artifact_", ""): value
-            for key, value in self.current_state.world_state.items()
-            if key.startswith("artifact_")
-        }
+        # Convention: artifacts are stored with "artifact_" prefix OR end with artifact suffixes
+        artifacts = {}
+
+        for key, value in self.current_state.world_state.items():
+            # Include artifact_* keys (HTN convention)
+            if key.startswith("artifact_"):
+                artifact_name = key.replace("artifact_", "")
+                artifacts[artifact_name] = value
+
+            # Also include keys ending with common artifact suffixes (real execution output)
+            elif any(key.endswith(suffix) for suffix in ['_code', '_function', '_test', '_docs', '_output']):
+                # Skip if value is just a status flag (completed, True, etc.)
+                if isinstance(value, str) and len(value) > 50 and value not in ['completed', 'True', 'False']:
+                    # Extract clean name: "implement_add_function_code" -> "add_function_code"
+                    artifact_name = key
+                    artifacts[artifact_name] = value
 
         return artifacts
 
