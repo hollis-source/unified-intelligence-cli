@@ -308,6 +308,24 @@ class SSHMCPClient(IRemoteFileSystem):
     # IRemoteFileSystem Implementation
     # ========================================================================
 
+    async def read_file(self, host: str, path: str) -> str:
+        """Read file content from remote host."""
+        result = await self._call_tool("ssh_read_file", {"host": host, "path": path})
+        content = result.get("content", [{}])[0].get("text", "")
+        return content
+
+    async def write_file(self, host: str, path: str, content: str) -> int:
+        """Write content to file on remote host. Returns bytes written."""
+        result = await self._call_tool(
+            "ssh_write_file",
+            {"host": host, "path": path, "content": content}
+        )
+        response_text = result.get("content", [{}])[0].get("text", "")
+
+        # Parse response like "File written successfully (X bytes)"
+        bytes_written = len(content.encode('utf-8'))
+        return bytes_written
+
     async def list_directory(self, host: str, path: str) -> str:
         """List directory contents on remote host."""
         result = await self._call_tool("ssh_list_dir", {"host": host, "path": path})
