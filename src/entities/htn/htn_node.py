@@ -59,17 +59,41 @@ class HTNNode:
     def check_preconditions(self, state: Dict[str, Any]) -> bool:
         """Verify preconditions against current state.
 
+        Supports two precondition formats:
+        1. Existence check: {"key": None} - checks if key exists (any value satisfies)
+        2. Value check: {"key": "value"} - checks if key exists AND has exact value
+
         Args:
             state: Current world state to check against
 
         Returns:
             True if all preconditions are satisfied
+
+        Examples:
+            >>> node = HTNNode("task", "desc", preconditions={"file_path": None})
+            >>> node.check_preconditions({"file_path": "/opt/file.py"})
+            True
+            >>> node.check_preconditions({})
+            False
+            >>> node = HTNNode("task", "desc", preconditions={"file_path": "/opt/file.py"})
+            >>> node.check_preconditions({"file_path": "/opt/file.py"})
+            True
+            >>> node.check_preconditions({"file_path": "/other/file.py"})
+            False
         """
         for key, expected_value in self.preconditions.items():
+            # Check if key exists in state
             if key not in state:
                 return False
+
+            # If expected_value is None, only check existence (any value satisfies)
+            if expected_value is None:
+                continue
+
+            # Otherwise, check for exact value match
             if state[key] != expected_value:
                 return False
+
         return True
 
     def apply_effects(self, state: Dict[str, Any]) -> Dict[str, Any]:

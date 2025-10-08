@@ -6,6 +6,8 @@ Meta-Operational Lifecycle: Plan → Verify → Decompose → Execute.
 
 import time
 import asyncio
+import re
+
 from typing import List, Optional
 
 from src.interfaces import (
@@ -19,6 +21,7 @@ from src.interfaces import (
     ExecutionResult,
     TaskStatus
 )
+from src.core.entities.file_ref import FileRef
 from src.dsl.entities.literal import Literal
 
 
@@ -99,6 +102,28 @@ class ProjectOrchestrator(IProjectOrchestrator):
 
             # Initialize state
             state = self.state_manager.initialize(project_id, htn_graph)
+
+            # Seed world_state with file paths mentioned in the goal so HTN preconditions like
+            # {'file_path': '/opt/...'} can be satisfied at start.
+            paths = re.findall(r'(/[-\w/\.]+)', goal)
+            if paths:
+                # Primary path used by tasks expecting a single 'file_path'
+                state.world_state['file_path'] = paths[0]
+                # Preserve all discovered paths for downstream components
+                state.world_state['file_paths'] = paths
+                # Optional: also expose typed FileRef URIs for resource resolution
+                try:
+                    file_ref_uris = []
+                    for p in paths:
+                        uri = f"file://{p}"
+                        ref = FileRef.parse(uri)
+                        file_ref_uris.append(ref.to_uri())
+                    if file_ref_uris:
+                        state.world_state['file_refs'] = file_ref_uris
+                except Exception:
+                    # Best-effort; don't block initialization if parsing fails
+                    pass
+
 
             # PHASE 2: VERIFY - Validate initial state
             print("[VERIFY] Validating initial state")
