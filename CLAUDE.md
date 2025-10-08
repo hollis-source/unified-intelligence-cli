@@ -325,3 +325,4 @@ IMPORTANT: Always critique outputs against SOLID and Martin's principles, sugges
 - "our tools" = DSL + CLI (ultrathink)
 - search for existing (ultrathink)
 - "The key is methodical validation of our existing system before introducing more complexity."
+- Key Lesson: When you hit an architectural problem, stop and think (or delegate to auggie). Hacking never leads to  maintainable code. Architecture first, always.
