@@ -2,6 +2,7 @@
 
 from .agent import Agent, Task
 from .execution import ExecutionResult, ExecutionContext, ExecutionStatus
+from .file_ref import FileRef
 from .agent_team import (
     AgentTeam,
     FrontendTeam,
@@ -27,6 +28,7 @@ __all__ = [
     "ExecutionResult",
     "ExecutionContext",
     "ExecutionStatus",
+    "FileRef",
     "AgentTeam",
     "FrontendTeam",
     "BackendTeam",

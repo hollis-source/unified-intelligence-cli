@@ -4,6 +4,7 @@ from .llm_provider import ITextGenerator, IToolSupportedProvider, LLMConfig
 from .agent_executor import IAgentExecutor, IAgentSelector, IAgentCoordinator
 from .factory_interfaces import IAgentFactory, IProviderFactory
 from .task_planner import ITaskPlanner, ExecutionPlan
+from .file_store import IFileStore
 from .project_builder import (
     IStateManager,
     IStateRepository,
@@ -29,6 +30,7 @@ __all__ = [
     "IProviderFactory",
     "ITaskPlanner",
     "ExecutionPlan",
+    "IFileStore",
     "IStateManager",
     "IStateRepository",
     "IProjectOrchestrator",
