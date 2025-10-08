@@ -71,11 +71,9 @@ class SurrealDBStateRepository(IStateRepository):
         # Create persistent session with authentication
         self.session = requests.Session()
         self.session.auth = (username, password)
+        # Only set Accept by default; set NS/DB per-request for SQL calls (SurrealDB v2.x)
         self.session.headers.update({
-            "Content-Type": "application/json",
             "Accept": "application/json",
-            "NS": namespace,
-            "DB": database
         })
 
         # Test connection
@@ -88,7 +86,8 @@ class SurrealDBStateRepository(IStateRepository):
             ConnectionError: If unable to connect to SurrealDB
         """
         try:
-            response = self.session.get(f"{self.base_url}/health")
+            # Use a minimal request without NS/DB headers; /health is unauthenticated
+            response = requests.get(f"{self.base_url}/health")
             if response.status_code != 200:
                 raise ConnectionError(f"SurrealDB health check failed: {response.status_code}")
         except requests.exceptions.RequestException as e:
@@ -114,10 +113,11 @@ class SurrealDBStateRepository(IStateRepository):
         # For variables, we need to serialize them to JSON strings in the query
         # SurrealDB uses $variable syntax, but we need to pass them via headers or inline
         headers = {
-            "Content-Type": "text/plain",  # Raw SQL, not JSON
+            # For SurrealDB v2.x, specify Surreal-NS/Surreal-DB and Accept.
+            # Do not set Content-Type to avoid 415; body is raw SurrealQL.
+            "Surreal-NS": self.namespace,
+            "Surreal-DB": self.database,
             "Accept": "application/json",
-            "NS": self.namespace,
-            "DB": self.database
         }
 
         if variables:

@@ -24,15 +24,22 @@ USE DB production;
 -- Projects: Main project metadata
 DEFINE TABLE projects SCHEMAFULL;
 DEFINE FIELD project_id ON TABLE projects TYPE string ASSERT $value != NONE;
-DEFINE FIELD goal ON TABLE projects TYPE string ASSERT $value != NONE;
+DEFINE FIELD goal ON TABLE projects TYPE option<string>;  -- Optional: Derived from HTN root description
 DEFINE FIELD created_at ON TABLE projects TYPE datetime DEFAULT time::now();
 DEFINE FIELD updated_at ON TABLE projects TYPE datetime DEFAULT time::now();
 DEFINE FIELD status ON TABLE projects TYPE string DEFAULT 'in_progress';
 DEFINE FIELD completion_percentage ON TABLE projects TYPE number DEFAULT 0.0;
 DEFINE FIELD metadata ON TABLE projects TYPE object DEFAULT {};
+-- State-specific fields (for Project Builder state persistence)
+DEFINE FIELD version ON TABLE projects TYPE option<int>;
+DEFINE FIELD htn_graph ON TABLE projects TYPE option<string>;  -- Base64-encoded pickle
+DEFINE FIELD task_status ON TABLE projects TYPE option<object>;
+DEFINE FIELD world_state ON TABLE projects TYPE option<object>;
+DEFINE FIELD last_updated ON TABLE projects TYPE option<string>;
 
 -- Indexes for performance
-DEFINE INDEX project_id_idx ON TABLE projects COLUMNS project_id UNIQUE;
+DEFINE INDEX project_id_idx ON TABLE projects COLUMNS project_id;  -- Not unique: allows versioning
+DEFINE INDEX project_version_idx ON TABLE projects COLUMNS project_id, version UNIQUE;  -- Unique per version
 DEFINE INDEX status_idx ON TABLE projects COLUMNS status;
 DEFINE INDEX created_at_idx ON TABLE projects COLUMNS created_at;
 
