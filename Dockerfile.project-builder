@@ -28,8 +28,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tini \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy installed packages from builder
-COPY --from=builder /root/.local /root/.local
+# Create directory for Python packages
+RUN mkdir -p /opt/python-packages
+
+# Copy installed packages from builder to shared location
+COPY --from=builder /root/.local /opt/python-packages
 
 # Copy application code
 COPY src/ ./src/
@@ -44,13 +47,14 @@ RUN chmod +x ./wait-for.sh
 RUN mkdir -p /app/projects /app/data /app/logs
 
 # Set environment variables
-ENV PATH=/root/.local/bin:$PATH \
-    PYTHONPATH=/app:$PYTHONPATH \
+ENV PATH=/opt/python-packages/bin:$PATH \
+    PYTHONPATH=/app:/opt/python-packages/lib/python3.12/site-packages:$PYTHONPATH \
     PYTHONUNBUFFERED=1
 
 # Create non-root user for security
 RUN useradd -m -u 1000 pbuser && \
-    chown -R pbuser:pbuser /app
+    chown -R pbuser:pbuser /app && \
+    chmod -R 755 /opt/python-packages
 
 USER pbuser
 

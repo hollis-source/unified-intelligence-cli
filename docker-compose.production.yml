@@ -87,7 +87,7 @@ services:
       - PB_DB_DATABASE=production
       - PB_DB_USER=root
       - PB_DB_PASSWORD=${PB_DB_PASSWORD:-changeme}
-      - SURREALDB_URL=http://surrealdb:8001
+      - SURREALDB_URL=http://surrealdb:8000
       # Redis connection
       - REDIS_URL=redis://redis:6379/0
       - LLM_CACHE_ENABLED=true
@@ -122,7 +122,7 @@ services:
         condition: service_started  # Changed: SurrealDB has no healthcheck (distroless)
       redis:
         condition: service_healthy  # Redis has proper healthcheck
-    command: ["sh", "-c", "./wait-for.sh http://surrealdb:8001/health && python -m src.project_builder.cli.command --help"]
+    command: ["sh", "-c", "./wait-for.sh http://surrealdb:8000/health && python scripts/run-health-server.py"]
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
