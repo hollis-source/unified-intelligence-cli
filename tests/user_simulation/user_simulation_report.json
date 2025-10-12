@@ -1,0 +1,111 @@
+{
+  "summary": {
+    "scenarios_run": 6,
+    "total_actions": 6,
+    "total_successes": 5,
+    "total_failures": 1,
+    "success_rate": 0.8333333333333334,
+    "total_errors": 1
+  },
+  "scenarios": [
+    {
+      "name": "new_user_first_task",
+      "actions": 1,
+      "successes": 1,
+      "failures": 0,
+      "duration": 0.003811359405517578,
+      "errors": [],
+      "warnings": [],
+      "performance": {}
+    },
+    {
+      "name": "code_review_workflow",
+      "actions": 1,
+      "successes": 1,
+      "failures": 0,
+      "duration": 0.010564804077148438,
+      "errors": [],
+      "warnings": [],
+      "performance": {
+        "multi_task_duration": 0.010536670684814453
+      }
+    },
+    {
+      "name": "research_task",
+      "actions": 1,
+      "successes": 1,
+      "failures": 0,
+      "duration": 0.0032732486724853516,
+      "errors": [],
+      "warnings": [],
+      "performance": {}
+    },
+    {
+      "name": "tool_usage",
+      "actions": 1,
+      "successes": 1,
+      "failures": 0,
+      "duration": 0.004018306732177734,
+      "errors": [],
+      "warnings": [],
+      "performance": {}
+    },
+    {
+      "name": "stress_test",
+      "actions": 1,
+      "successes": 1,
+      "failures": 0,
+      "duration": 0.01494145393371582,
+      "errors": [],
+      "warnings": [],
+      "performance": {
+        "stress_test": {
+          "success": true,
+          "duration": 0.014920711517333984,
+          "tasks_completed": 10,
+          "tasks_failed": 0,
+          "exceptions": 0,
+          "throughput": 670.209325365121,
+          "issues": []
+        }
+      }
+    },
+    {
+      "name": "error_handling",
+      "actions": 1,
+      "successes": 0,
+      "failures": 1,
+      "duration": 4.673004150390625e-05,
+      "errors": [
+        {
+          "action": "submit_task",
+          "task": "",
+          "error": "Task description cannot be empty"
+        }
+      ],
+      "warnings": [],
+      "performance": {}
+    }
+  ],
+  "critical_issues": [
+    {
+      "action": "submit_task",
+      "task": "",
+      "error": "Task description cannot be empty"
+    }
+  ],
+  "performance_summary": {
+    "avg_duration": 0.006109317143758138,
+    "stress_test_data": [
+      {
+        "success": true,
+        "duration": 0.014920711517333984,
+        "tasks_completed": 10,
+        "tasks_failed": 0,
+        "exceptions": 0,
+        "throughput": 670.209325365121,
+        "issues": []
+      }
+    ]
+  }
+}

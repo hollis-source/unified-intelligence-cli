@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+files=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.py$' || true)
+[ -z "$files" ] && exit 0
+python -m governance.clean_architecture_linter --files $files || {
+  echo "\nClean Architecture linter failed. Fix issues or bypass with --no-verify." >&2
+  exit 1
+}
+

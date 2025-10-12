@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: project-builder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis
+        app.kubernetes.io/part-of: project-builder
+    spec:
+      serviceAccountName: default
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 999
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          command: ["sh","-c"]
+          args:
+            - |
+              REDIS_PASSWORD=$(cat /run/secrets/redis_password) && \
+              exec redis-server \
+                --requirepass "$REDIS_PASSWORD" \
+                --appendonly yes \
+                --maxmemory 256mb \
+                --maxmemory-policy allkeys-lru \
+                --dir /data \
+                --protected-mode yes \
+                --maxclients 100 \
+                --timeout 300 \
+                --rename-command CONFIG "" \
+                --rename-command SHUTDOWN "" \
+                --rename-command DEBUG "" \
+                --rename-command SAVE "" \
+                --rename-command BGSAVE "" \
+                --rename-command BGREWRITEAOF "" \
+                --rename-command MONITOR "" \
+                --rename-command SLAVEOF "" \
+                --rename-command REPLICAOF "" \
+                --rename-command ROLE "" \
+                --rename-command FAILOVER ""
+          ports:
+            - containerPort: 6379
+              name: redis
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 999
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: tmp
+              mountPath: /tmp
+            - name: secrets
+              mountPath: /run/secrets
+              readOnly: true
+          livenessProbe:
+            exec:
+              command: ["sh","-c","REDISCLI_AUTH=$(cat /run/secrets/redis_password) redis-cli ping | grep -q PONG"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            exec:
+              command: ["sh","-c","REDISCLI_AUTH=$(cat /run/secrets/redis_password) redis-cli ping | grep -q PONG"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 10
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: redis-data
+        - name: tmp
+          emptyDir: {}
+        - name: secrets
+          secret:
+            secretName: project-builder-secrets
+            items:
+              - key: redis_password
+                path: redis_password
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: project-builder
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+

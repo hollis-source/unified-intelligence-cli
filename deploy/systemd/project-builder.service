@@ -1,0 +1,77 @@
+[Unit]
+Description=Project Builder - Autonomous Code Generation Service
+Documentation=https://github.com/unified-intelligence-cli
+After=network.target docker.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=ui-cli_jake
+WorkingDirectory=/home/ui-cli_jake/unified-intelligence-cli
+
+# Environment variables (non-sensitive config)
+Environment="PATH=/home/ui-cli_jake/unified-intelligence-cli/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PYTHONPATH=/home/ui-cli_jake/unified-intelligence-cli"
+Environment="PB_ENV=production"
+Environment="PB_LOG_LEVEL=INFO"
+Environment="PB_LOG_FORMAT=json"
+
+# Load secrets from environment file (create /etc/project-builder/secrets.env)
+EnvironmentFile=/etc/project-builder/secrets.env
+
+# Ensure Docker services are running
+ExecStartPre=/bin/bash -c 'docker compose -f docker-compose.production.yml up -d surrealdb redis prometheus'
+
+# Wait for database to be ready
+ExecStartPre=/bin/bash -c 'for i in {1..30}; do curl -sf http://localhost:8000/health && break || sleep 2; done'
+
+# Start health server (provides /health and /metrics endpoints)
+ExecStart=/home/ui-cli_jake/unified-intelligence-cli/venv/bin/python3 scripts/run-health-server.py
+
+# Graceful shutdown
+ExecStop=/bin/kill -SIGTERM $MAINPID
+ExecStopPost=/bin/bash -c 'sleep 5'
+
+# Reload configuration
+ExecReload=/bin/kill -HUP $MAINPID
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+StartLimitInterval=300
+StartLimitBurst=5
+
+# Logging (JSON format for structured logging)
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=project-builder
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/ui-cli_jake/unified-intelligence-cli/logs /home/ui-cli_jake/unified-intelligence-cli/data /home/ui-cli_jake/unified-intelligence-cli/projects
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=true
+LockPersonality=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+PrivateDevices=true
+
+# Resource limits
+MemoryMax=4G
+MemoryHigh=3G
+CPUQuota=400%
+TasksMax=200
+IOWeight=500
+
+# Health monitoring
+WatchdogSec=60
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target

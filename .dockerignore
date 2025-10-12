@@ -1,0 +1,70 @@
+# Exclude version control
+.git
+.gitignore
+.gitmodules
+
+# Exclude virtual environments and dependencies
+venv
+.venv
+venv-automation
+env
+.env
+__pycache__
+*.pyc
+*.pyo
+.Python
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Exclude training data and models (CRITICAL: 57GB!)
+training/
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+
+# Exclude logs, data, and temporary files (enhanced from current)
+logs/
+data/
+backups/
+# workflows/ - MUST INCLUDE: DSL .ct files are integral to architecture, not optional data
+/tmp/
+*.log
+*.pid
+*.tmp
+.cache
+.pytest_cache
+.coverage
+
+# Exclude build artifacts and caches
+dist/
+build/
+target/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Exclude IDE and editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Exclude documentation and non-essential files
+README.md
+docs/
+examples/
+
+# Exclude TLS certificates (may have restrictive permissions)
+certs/
+config/traefik/
+
+# Recursive exclusions for hidden dirs
+**/.git
+**/.venv
+**/node_modules
+**/.cache

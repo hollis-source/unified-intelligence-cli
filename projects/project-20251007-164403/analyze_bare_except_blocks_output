@@ -1,0 +1,22 @@
+{
+  "file": "/opt/grokmonster/cna-dad-release-v1.0/src/services/db_status.py",
+  "bare_except_blocks": [
+    {
+      "line_number": 42,
+      "code_snippet": "except:\n    logger.error(\"Unexpected error: %s\", str(sys.exc_info()[0]))",
+      "exception_types": ["All exceptions (bare except)"],
+      "risk": "Catches all exceptions including SystemExit, KeyboardInterrupt, and others. May hide critical errors."
+    },
+    {
+      "line_number": 89,
+      "code_snippet": "except:\n    return {'status': 'error', 'message': 'Database operation failed'}",
+      "exception_types": ["All exceptions (bare except)"],
+      "risk": "Generic error handling may prevent proper error diagnosis and recovery."
+    }
+  ],
+  "recommendations": [
+    "Replace bare except blocks with specific exception types (e.g., except Exception:)",
+    "Add detailed logging with exception type and traceback for debugging",
+    "Consider using a global exception handler for unhandled exceptions"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "total_interactions": 302,
+  "successful": 298,
+  "failed": 4,
+  "success_rate": 0.9867549668874173,
+  "duration_stats": {
+    "avg_ms": 20072.795302013423,
+    "median_ms": 10908.0,
+    "min_ms": 0,
+    "max_ms": 138316,
+    "avg_s": 20.07279530201342,
+    "median_s": 10.908
+  },
+  "agent_distribution": {
+    "coder": 178,
+    "tester": 76,
+    "coordinator": 20,
+    "researcher": 26,
+    "reviewer": 2
+  },
+  "provider_distribution": {
+    "mock": 1,
+    "tongyi": 86,
+    "replicate": 215
+  },
+  "model_distribution": {
+    "null": 302
+  },
+  "task_metrics": {
+    "avg_task_length_chars": 74.8476821192053,
+    "avg_output_length_chars": 2008.03355704698
+  }
+}

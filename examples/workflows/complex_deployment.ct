@@ -1,0 +1,30 @@
+# Complex Deployment Workflow
+# Demonstrates: Composition + Coproduct + Product (all operators together)
+
+# Type annotations
+test :: Code -> TestReport
+build :: TestReport -> Artifact
+deploy_prod :: Artifact -> Deployment
+deploy_staging :: Artifact -> Deployment
+
+# Build pipeline with fallback deployment
+# 1. Run tests and build
+# 2. Try production deployment, fallback to staging if fails
+# 3. Run parallel validation
+validate_security :: Deployment -> SecurityCheck
+validate_health :: Deployment -> HealthCheck
+
+# Build and test
+build_pipeline = build ∘ test
+
+# Deployment with fallback
+deployment = (deploy_prod + deploy_staging) ∘ build_pipeline
+
+# Parallel validation after deployment
+validation = validate_security × validate_health
+
+# Complete workflow: build → deploy → validate
+complete_workflow = validation ∘ deployment
+
+# Execute
+complete_workflow

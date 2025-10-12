@@ -1,0 +1,27 @@
+### `multiply(a: Union[int, float], b: Union[int, float]) -> float`
+#### Overview
+Multiplies two numbers and returns the result as a float. This function supports both integer and floating-point inputs, ensuring consistent output types.
+
+#### Parameters
+- `a` (Union[int, float]): The first number to multiply. Can be an integer or float.
+- `b` (Union[int, float]): The second number to multiply. Can be an integer or float.
+
+#### Return Value
+- `float`: The product of `a` and `b`, always returned as a float (even if inputs are integers).
+
+#### Examples
+```python
+multiply(3, 4)        # Returns 12.0
+multiply(2.5, 3)      # Returns 7.5
+multiply(-1, 5)       # Returns -5.0
+multiply(0, 100)      # Returns 0.0
+multiply(1.1, 2.2)    # Returns 2.42
+```
+
+#### Edge Cases
+- **Zero inputs**: `multiply(0, 5)` returns `0.0`.
+- **Negative numbers**: Handles negative values correctly (e.g., `multiply(-2, -3)` returns `6.0`).
+- **Large values**: Supports arbitrary-precision arithmetic (e.g., `multiply(1e100, 1e100)` returns `1e200` as a float).
+
+#### Notes
+- Non-numeric inputs (e.g., strings) will raise a `TypeError` at runtime. Ensure inputs are valid numbers.

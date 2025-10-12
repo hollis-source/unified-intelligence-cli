@@ -1,0 +1,17 @@
+# Qwen3-8B Post-Training Pipeline
+# Real-world example: Model training post-processing workflow
+#
+# Flow:
+# 1. merge_lora: Merge LoRA adapters into Qwen3-8B base model (10-15 min)
+# 2. convert_gguf: Convert merged HF model to GGUF f16 format (30-60 min)
+# 3. quantize_q4: Quantize GGUF to Q4_K_M for CPU inference (~4.5GB) (15-30 min)
+# 4. evaluate_model: Test on 31-example holdout set, measure metrics (15-30 min)
+# 5. generate_report: Create deployment recommendation (deploy/iterate/abort)
+#
+# Total estimated time: 1.5-2.5 hours
+# Result propagation: Each step receives output from previous step
+#
+# Category Theory: (g ∘ e ∘ q ∘ c ∘ m)(lora_checkpoint)
+# = generate_report(evaluate(quantize(convert(merge(lora_checkpoint)))))
+
+generate_report ∘ evaluate_model ∘ quantize_q4 ∘ convert_gguf ∘ merge_lora

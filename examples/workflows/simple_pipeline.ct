@@ -1,0 +1,4 @@
+# Simple CI/CD Pipeline
+# Sequential execution: build → test → deploy
+
+deploy ∘ test ∘ build

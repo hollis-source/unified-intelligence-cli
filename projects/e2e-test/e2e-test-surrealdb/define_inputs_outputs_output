@@ -1,0 +1,21 @@
+```python
+def add_numbers(a, b):
+    """
+    Adds two numbers and returns the sum.
+    
+    Args:
+        a (int or float): The first number.
+        b (int or float): The second number.
+    
+    Returns:
+        int or float: The sum of a and b.
+    
+    Raises:
+        TypeError: If a or b are not numbers.
+    """
+    if not isinstance(a, (int, float)):
+        raise TypeError("First argument must be a number")
+    if not isinstance(b, (int, float)):
+        raise TypeError("Second argument must be a number")
+    return a + b
+```

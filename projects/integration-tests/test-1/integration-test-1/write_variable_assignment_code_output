@@ -1,0 +1,11 @@
+```python
+# This code assigns the variable as specified
+message = 'Hello World'
+
+# Optional: Verify the assignment (no error handling needed for simple string assignment)
+try:
+    assert message == 'Hello World'
+    print("Variable assigned successfully.")
+except AssertionError as e:
+    print(f"Assignment failed: {e}")
+```

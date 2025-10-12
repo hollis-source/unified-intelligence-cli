@@ -1,0 +1,134 @@
+{
+  "ci_cd_pipeline": {
+    "task_id": "root_ci_cd",
+    "description": "Automated CI/CD pipeline with git hooks and GitHub Actions",
+    "subtasks": [
+      {
+        "task_id": "setup_git_hooks",
+        "description": "Setup git hooks for pre-commit and post-commit automation",
+        "priority": 1,
+        "dependencies": [],
+        "subtasks": [
+          {
+            "task_id": "setup_git_hooks.1",
+            "description": "Create pre-commit hook for linting and testing",
+            "file": ".git/hooks/pre-commit"
+          },
+          {
+            "task_id": "setup_git_hooks.2",
+            "description": "Create post-commit hook for optional auto-commit",
+            "file": ".git/hooks/post-commit"
+          }
+        ]
+      },
+      {
+        "task_id": "github_actions_ci",
+        "description": "Create GitHub Actions workflow for CI",
+        "priority": 2,
+        "dependencies": [],
+        "subtasks": [
+          {
+            "task_id": "github_actions_ci.1",
+            "description": "Create CI workflow with lint, test, build",
+            "file": ".github/workflows/ci.yml"
+          }
+        ]
+      },
+      {
+        "task_id": "github_actions_cd",
+        "description": "Create GitHub Actions workflow for CD",
+        "priority": 3,
+        "dependencies": ["github_actions_ci"],
+        "subtasks": [
+          {
+            "task_id": "github_actions_cd.1",
+            "description": "Create CD workflow for production deployment",
+            "file": ".github/workflows/cd.yml"
+          }
+        ]
+      },
+      {
+        "task_id": "github_actions_security",
+        "description": "Create GitHub Actions workflow for security scanning",
+        "priority": 4,
+        "dependencies": [],
+        "subtasks": [
+          {
+            "task_id": "github_actions_security.1",
+            "description": "Add secret scanning and vulnerability checks",
+            "file": ".github/workflows/security.yml"
+          }
+        ]
+      }
+    ],
+    "preconditions": {},
+    "effects": {}
+  },
+  "rest_api": {
+    "task_id": "root_rest_api",
+    "description": "REST API scaffold with FastAPI and CRUD endpoints",
+    "subtasks": [
+      {
+        "task_id": "setup_fastapi",
+        "description": "Setup FastAPI application structure",
+        "priority": 1,
+        "dependencies": [],
+        "subtasks": [
+          {
+            "task_id": "setup_fastapi.1",
+            "description": "Create main.py with FastAPI app initialization",
+            "file": "src/main.py"
+          },
+          {
+            "task_id": "setup_fastapi.2",
+            "description": "Create models directory for Pydantic models",
+            "file": "src/models/__init__.py"
+          }
+        ]
+      },
+      {
+        "task_id": "create_endpoints",
+        "description": "Create REST API endpoints",
+        "priority": 2,
+        "dependencies": ["setup_fastapi"],
+        "subtasks": [
+          {
+            "task_id": "create_endpoints.1",
+            "description": "Create CRUD endpoints for users",
+            "file": "src/routes/users.py"
+          },
+          {
+            "task_id": "create_endpoints.2",
+            "description": "Create CRUD endpoints for posts",
+            "file": "src/routes/posts.py"
+          }
+        ]
+      }
+    ],
+    "preconditions": {},
+    "effects": {}
+  },
+  "default": {
+    "task_id": "root_default",
+    "description": "Default decomposition for generic goals",
+    "subtasks": [
+      {
+        "task_id": "analyze_requirements",
+        "description": "Analyze project requirements",
+        "priority": 1,
+        "dependencies": [],
+        "subtasks": []
+      },
+      {
+        "task_id": "implement_solution",
+        "description": "Implement the solution",
+        "priority": 2,
+        "dependencies": ["analyze_requirements"],
+        "subtasks": []
+      }
+    ],
+    "preconditions": {},
+    "effects": {}
+  }
+}
+

@@ -1,0 +1,28 @@
+# Resilient Pipeline with Multiple Fallbacks
+# Demonstrates: Nested coproducts, resilience patterns, tool history tracking
+
+# Type annotations
+primary_model :: Task -> Result
+backup_model :: Task -> Result
+emergency_model :: Task -> Result
+
+# Analysis tasks
+analyze_code :: Code -> Analysis
+review_architecture :: Code -> Review
+suggest_improvements :: (Analysis × Review) -> Suggestions
+
+# Triple fallback for critical analysis
+# Priority: primary → backup → emergency
+resilient_analysis = (primary_model + backup_model + emergency_model)
+
+# Parallel code analysis and review
+parallel_review = analyze_code × review_architecture
+
+# Complete workflow with resilience
+# 1. Parallel analysis and review
+# 2. Generate suggestions using resilient model
+complete = resilient_analysis ∘ suggest_improvements ∘ parallel_review
+
+# Execute
+# Tool history will track all execution attempts and fallbacks
+complete

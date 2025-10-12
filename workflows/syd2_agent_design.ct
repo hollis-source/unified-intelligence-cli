@@ -1,0 +1,20 @@
+# SYD2 Autonomous Agent Design Workflow
+# Uses category theory composition to orchestrate multi-agent design
+
+# Type annotations for workflow components
+design_architecture :: () -> Architecture
+design_task_generator :: () -> TaskGenerator  
+design_metrics_analyzer :: () -> MetricsAnalyzer
+design_ssh_integration :: () -> SSHIntegration
+design_improvement_loop :: () -> ImprovementLoop
+
+# Parallel design phase (5 teams work concurrently using broadcast **)
+parallel_design = design_architecture ** design_task_generator ** design_metrics_analyzer ** design_ssh_integration ** design_improvement_loop
+
+# Sequential composition: integrate components
+integrate_components :: (Architecture × TaskGenerator × MetricsAnalyzer × SSHIntegration × ImprovementLoop) -> IntegratedSystem
+validate_integration :: IntegratedSystem -> ValidationReport
+generate_implementation :: ValidationReport -> ImplementationPlan
+
+# Complete workflow: parallel design → integration → validation → implementation
+functor syd2_agent_workflow = generate_implementation o validate_integration o integrate_components o parallel_design

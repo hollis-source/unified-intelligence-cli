@@ -1,0 +1,19 @@
+# Priorities Analysis Workflow
+# Uses DSL composition + CLI multi-agent orchestration to determine next steps
+
+# Type signatures for priority analysis tasks
+analyze_current_state :: () -> StateAnalysis
+assess_dsl_priorities :: () -> DSLPriorities
+assess_sprint_priorities :: () -> SprintPriorities
+evaluate_syd2_synergy :: () -> SYD2Synergy
+synthesize_recommendation :: (StateAnalysis × DSLPriorities × SprintPriorities × SYD2Synergy) -> FinalRecommendation
+
+# Parallel analysis phase using broadcast operator (**)
+# Each team analyzes independently and concurrently
+parallel_analysis = analyze_current_state ** assess_dsl_priorities ** assess_sprint_priorities ** evaluate_syd2_synergy
+
+# Sequential composition: gather analyses → synthesize recommendation
+# Product (×) takes tuple of results, functor (o) chains the pipeline
+functor priorities_workflow = synthesize_recommendation o parallel_analysis
+
+# Expected result: Prioritized implementation plan with clear next steps

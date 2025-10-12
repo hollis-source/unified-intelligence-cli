@@ -1,0 +1,4 @@
+Usage: python -m src.main [OPTIONS]
+Try 'python -m src.main --help' for help.
+
+Error: No such option: --output-format

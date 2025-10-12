@@ -1,0 +1,74 @@
+{
+  "uid": "sys-overview",
+  "title": "System Overview",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": { "list": [] },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Prometheus Up",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}},
+      "targets": [{"expr": "up{job=\"prometheus\"}", "legendFormat": "prometheus"}]
+    },
+    {
+      "type": "stat",
+      "title": "Project Builder Up",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}},
+      "targets": [{"expr": "up{job=\"project-builder\"}", "legendFormat": "project-builder"}]
+    },
+    {
+      "type": "stat",
+      "title": "Traefik Up",
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}},
+      "targets": [{"expr": "up{job=\"traefik\"}", "legendFormat": "traefik"}]
+    },
+    {
+      "type": "stat",
+      "title": "SurrealDB Up",
+      "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+      "options": {"reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}},
+      "targets": [{"expr": "up{job=\"surrealdb\"}", "legendFormat": "surrealdb"}]
+    },
+    {
+      "type": "gauge",
+      "title": "Uptime (hours)",
+      "gridPos": {"x": 0, "y": 4, "w": 8, "h": 6},
+      "options": {"reduceOptions": {"calcs": ["last"], "fields": "", "values": false}},
+      "targets": [{"expr": "project_builder_uptime_seconds / 3600", "legendFormat": "PB uptime (h)"}]
+    },
+    {
+      "type": "stat",
+      "title": "Projects Total",
+      "gridPos": {"x": 8, "y": 4, "w": 8, "h": 6},
+      "options": {"reduceOptions": {"calcs": ["last"], "fields": "", "values": false}},
+      "targets": [{"expr": "project_builder_projects_total", "legendFormat": "total"}]
+    },
+    {
+      "type": "stat",
+      "title": "Success Rate (5m)",
+      "gridPos": {"x": 16, "y": 4, "w": 8, "h": 6},
+      "options": {"reduceOptions": {"calcs": ["last"], "fields": "", "values": false}},
+      "targets": [{"expr": "rate(project_builder_projects_success[5m]) / on() rate(project_builder_projects_total[5m])", "legendFormat": "success rate"}],
+      "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}}
+    },
+    {
+      "type": "timeseries",
+      "title": "Requests/Projects per second (5m avg)",
+      "gridPos": {"x": 0, "y": 10, "w": 24, "h": 8},
+      "options": {"legend": {"displayMode": "table"}},
+      "targets": [
+        {"expr": "rate(project_builder_projects_total[5m])", "legendFormat": "projects/s"},
+        {"expr": "rate(project_builder_projects_success[5m])", "legendFormat": "success/s"},
+        {"expr": "rate(project_builder_projects_failed[5m])", "legendFormat": "failed/s"}
+      ]
+    }
+  ]
+}
+

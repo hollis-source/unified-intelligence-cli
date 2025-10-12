@@ -1,0 +1,42 @@
+# Traefik Dynamic Configuration - TLS Settings
+# Purpose: Configure TLS certificates for development environment
+# Location: ./config/traefik/tls.yml
+#
+# Security Notes:
+# - Development uses self-signed certificates from ./certs/dev/
+# - Production should use Let's Encrypt or proper CA-signed certificates
+# - Update certificate paths for production deployment
+
+tls:
+  # Certificate stores
+  certificates:
+    # Development certificate for *.dev.local domains
+    - certFile: /etc/traefik/certs/fullchain.pem
+      keyFile: /etc/traefik/certs/privkey.pem
+      stores:
+        - default
+  
+  # TLS options
+  options:
+    default:
+      minVersion: VersionTLS12
+      sniStrict: true
+      cipherSuites:
+        # Modern cipher suites (TLS 1.2+)
+        - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256
+        - TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384
+        - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305
+        - TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305
+      curvePreferences:
+        - CurveP521
+        - CurveP384
+  
+  # Store configuration
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /etc/traefik/certs/fullchain.pem
+        keyFile: /etc/traefik/certs/privkey.pem
+

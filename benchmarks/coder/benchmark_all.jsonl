@@ -1,0 +1,258 @@
+{"task_id": 282, "description": "Design Observer pattern for task progress notifications", "category": "9", "agent": "coder"}
+{"task_id": 10, "description": "Implement a TaskCoordinatorUseCase that delegates to executor via dependency injection", "category": "1", "agent": "coder"}
+{"task_id": 126, "description": "Implement checkpoint saving strategy during LoRA training with resumption support", "category": "4", "agent": "coder"}
+{"task_id": 63, "description": "Validate that LocalTongyiAdapter and TongyiAdapter are truly interchangeable", "category": "2", "agent": "coder"}
+{"task_id": 6, "description": "Create an ExecutionContext entity to track conversation history and shared state", "category": "1", "agent": "coder"}
+{"task_id": 86, "description": "Implement tests for CapabilityBasedSelector with overlapping agent capabilities", "category": "3", "agent": "coder"}
+{"task_id": 280, "description": "Design cost optimization strategy for cloud resources and API usage", "category": "8", "agent": "coder"}
+{"task_id": 214, "description": "Rename modules and packages to match their primary responsibility", "category": "6", "agent": "coder"}
+{"task_id": 47, "description": "Refactor CLI adapter to separate argument parsing from command execution", "category": "2", "agent": "coder"}
+{"task_id": 53, "description": "Implement template method pattern in base orchestrator for custom workflow steps", "category": "2", "agent": "coder"}
+{"task_id": 161, "description": "Implement task dependency resolution algorithm using topological sort", "category": "5", "agent": "coder"}
+{"task_id": 4, "description": "Refactor the Task entity to enforce business rules: priority must be 1-5, description non-empty", "category": "1", "agent": "coder"}
+{"task_id": 199, "description": "Implement backup and restore for execution history and results", "category": "5", "agent": "coder"}
+{"task_id": 30, "description": "Implement an IErrorHandler interface with handle_error(exception, context) method", "category": "1", "agent": "coder"}
+{"task_id": 201, "description": "Identify and eliminate long parameter lists using parameter objects", "category": "6", "agent": "coder"}
+{"task_id": 249, "description": "Document deployment procedures for different environments", "category": "7", "agent": "coder"}
+{"task_id": 122, "description": "Design a training data preprocessing pipeline: JSONL to instruction-response pairs", "category": "4", "agent": "coder"}
+{"task_id": 228, "description": "Reduce cognitive load by extracting helper methods", "category": "6", "agent": "coder"}
+{"task_id": 138, "description": "Create data augmentation pipeline for increasing training dataset diversity", "category": "4", "agent": "coder"}
+{"task_id": 250, "description": "Create runbook for common operational tasks and incident response", "category": "7", "agent": "coder"}
+{"task_id": 239, "description": "Generate API reference documentation from docstrings using Sphinx", "category": "7", "agent": "coder"}
+{"task_id": 226, "description": "Replace complex boolean expressions with intention-revealing variables", "category": "6", "agent": "coder"}
+{"task_id": 82, "description": "Create parameterized tests for Agent.can_handle() with 10 different task descriptions", "category": "3", "agent": "coder"}
+{"task_id": 106, "description": "Create tests for TaskQueue data structure before implementation with TDD", "category": "3", "agent": "coder"}
+{"task_id": 75, "description": "Replace direct aiohttp usage with abstract IHttpClient interface in adapters", "category": "2", "agent": "coder"}
+{"task_id": 222, "description": "Extract validation logic from business logic into separate validators", "category": "6", "agent": "coder"}
+{"task_id": 188, "description": "Implement secrets management using environment variables with validation", "category": "5", "agent": "coder"}
+{"task_id": 146, "description": "Implement automated evaluation using reference answers and similarity metrics", "category": "4", "agent": "coder"}
+{"task_id": 3, "description": "Vary agent types for diversity", "category": "9", "agent": "coder"}
+{"task_id": 230, "description": "Simplify API surfaces by reducing the number of public methods", "category": "6", "agent": "coder"}
+{"task_id": 196, "description": "Implement health check endpoint for monitoring system status", "category": "5", "agent": "coder"}
+{"task_id": 164, "description": "Implement parallel task execution with asyncio ensuring proper exception handling", "category": "5", "agent": "coder"}
+{"task_id": 22, "description": "Create a RateLimitingAdapter that enforces API request limits with token bucket algorithm", "category": "1", "agent": "coder"}
+{"task_id": 64, "description": "Create contract tests that all ITextGenerator implementations must pass", "category": "2", "agent": "coder"}
+{"task_id": 206, "description": "Remove duplicate code by extracting common logic into shared utilities", "category": "6", "agent": "coder"}
+{"task_id": 16, "description": "Design a ContextManagementUseCase that maintains conversation history between tasks", "category": "1", "agent": "coder"}
+{"task_id": 263, "description": "Create onboarding plan for new developers joining project", "category": "8", "agent": "coder"}
+{"task_id": 123, "description": "Implement a LoRA configuration generator that selects hyperparameters based on model size", "category": "4", "agent": "coder"}
+{"task_id": 277, "description": "Estimate effort for implementing new features using story points", "category": "8", "agent": "coder"}
+{"task_id": 29, "description": "Create an IConfigurationProvider interface for runtime configuration access", "category": "1", "agent": "coder"}
+{"task_id": 157, "description": "Implement streaming response handling for real-time output display", "category": "4", "agent": "coder"}
+{"task_id": 211, "description": "Refactor cryptic abbreviations into full descriptive names", "category": "6", "agent": "coder"}
+{"task_id": 99, "description": "Design a test double factory that generates mocks, stubs, and spies for all interfaces", "category": "3", "agent": "coder"}
+{"task_id": 240, "description": "Create quick start guide showing basic CLI usage patterns", "category": "7", "agent": "coder"}
+{"task_id": 279, "description": "Create capacity planning model for LLM inference workload", "category": "8", "agent": "coder"}
+{"task_id": 46, "description": "Separate error logging from error handling in exception handling code", "category": "2", "agent": "coder"}
+{"task_id": 140, "description": "Implement stratified sampling for train/validation split maintaining agent distribution", "category": "4", "agent": "coder"}
+{"task_id": 131, "description": "Design a caching strategy for model inference to reduce redundant computation", "category": "4", "agent": "coder"}
+{"task_id": 28, "description": "Design an IExecutionMonitor interface for tracking task progress and metrics", "category": "1", "agent": "coder"}
+{"task_id": 101, "description": "Implement property-based tests using Hypothesis for entity validation logic", "category": "3", "agent": "coder"}
+{"task_id": 235, "description": "Create type hints for all function signatures with generics where appropriate", "category": "7", "agent": "coder"}
+{"task_id": 177, "description": "Implement structured error hierarchy with specific exception types for each failure mode", "category": "5", "agent": "coder"}
+{"task_id": 274, "description": "Design retrospective process for continuous improvement", "category": "8", "agent": "coder"}
+{"task_id": 160, "description": "Implement speculative decoding for faster inference with quality preservation", "category": "4", "agent": "coder"}
+{"task_id": 69, "description": "Design IMetricsReader and IMetricsWriter instead of combined IMetricsCollector", "category": "2", "agent": "coder"}
+{"task_id": 43, "description": "Refactor config.py to separate file I/O from configuration validation logic", "category": "2", "agent": "coder"}
+{"task_id": 298, "description": "Implement producer-consumer pattern for task queue processing", "category": "9", "agent": "coder"}
+{"task_id": 251, "description": "Write architecture overview diagram with layer dependencies", "category": "7", "agent": "coder"}
+{"task_id": 205, "description": "Refactor switch statements into polymorphism using strategy pattern", "category": "6", "agent": "coder"}
+{"task_id": 163, "description": "Design and implement task retry logic with exponential backoff and jitter", "category": "5", "agent": "coder"}
+{"task_id": 142, "description": "Design active learning pipeline to select most informative examples for annotation", "category": "4", "agent": "coder"}
+{"task_id": 5, "description": "Implement equality and hash methods for Agent entity to enable set operations", "category": "1", "agent": "coder"}
+{"task_id": 54, "description": "Create an extension point system for custom error handling strategies", "category": "2", "agent": "coder"}
+{"task_id": 76, "description": "Refactor logging calls to depend on ILogger interface instead of concrete logger", "category": "2", "agent": "coder"}
+{"task_id": 68, "description": "Split ITaskPlanner into ITaskAnalyzer and IExecutionPlanner interfaces", "category": "2", "agent": "coder"}
+{"task_id": 11, "description": "Refactor task_coordinator.py to remove direct LLM provider dependency (DIP violation)", "category": "1", "agent": "coder"}
+{"task_id": 130, "description": "Implement GGUF model quantization pipeline using llama.cpp tools", "category": "4", "agent": "coder"}
+{"task_id": 286, "description": "Create Facade pattern to simplify complex subsystem interactions", "category": "9", "agent": "coder"}
+{"task_id": 31, "description": "Design an IMetricsCollector interface for gathering execution statistics", "category": "1", "agent": "coder"}
+{"task_id": 243, "description": "Document configuration options with examples and default values", "category": "7", "agent": "coder"}
+{"task_id": 48, "description": "Extract validation logic from entity constructors into dedicated Validator classes", "category": "2", "agent": "coder"}
+{"task_id": 150, "description": "Create model comparison dashboard showing metrics across different versions", "category": "4", "agent": "coder"}
+{"task_id": 3, "description": "Design an ExecutionResult value object with status, output, errors, and metadata", "category": "1", "agent": "coder"}
+{"task_id": 197, "description": "Create diagnostic command that outputs system info, versions, and configuration", "category": "5", "agent": "coder"}
+{"task_id": 190, "description": "Design hot-reload capability for configuration changes without restart", "category": "5", "agent": "coder"}
+{"task_id": 203, "description": "Extract feature envy code moving logic closer to data", "category": "6", "agent": "coder"}
+{"task_id": 139, "description": "Design data deduplication algorithm to remove similar training examples", "category": "4", "agent": "coder"}
+{"task_id": 220, "description": "Extract callback logic into named functions for clarity", "category": "6", "agent": "coder"}
+{"task_id": 113, "description": "Calculate cyclomatic complexity for all modules and identify refactoring candidates", "category": "3", "agent": "coder"}
+{"task_id": 49, "description": "Design an extensible plugin system for adding new agent types without modifying core code", "category": "2", "agent": "coder"}
+{"task_id": 153, "description": "Design prompt engineering templates optimized for each agent type", "category": "4", "agent": "coder"}
+{"task_id": 270, "description": "Break down 'implement monitoring' into metrics, logging, alerting tasks", "category": "8", "agent": "coder"}
+{"task_id": 80, "description": "Create IProcessExecutor interface to abstract subprocess/shell command execution", "category": "2", "agent": "coder"}
+{"task_id": 234, "description": "Add inline comments explaining complex algorithms and business rules", "category": "7", "agent": "coder"}
+{"task_id": 93, "description": "Create tests for agent selection with real task descriptions and fuzzy matching", "category": "3", "agent": "coder"}
+{"task_id": 39, "description": "Create a scope management system for singleton vs transient dependencies", "category": "1", "agent": "coder"}
+{"task_id": 152, "description": "Implement continuous evaluation pipeline that runs on every model update", "category": "4", "agent": "coder"}
+{"task_id": 14, "description": "Implement a ParallelTaskExecutor use case with proper exception aggregation", "category": "1", "agent": "coder"}
+{"task_id": 200, "description": "Create migration scripts for database schema evolution", "category": "5", "agent": "coder"}
+{"task_id": 290, "description": "Design CQRS pattern separating read and write models", "category": "9", "agent": "coder"}
+{"task_id": 67, "description": "Create focused IReadOnlyConfig interface for components that only read configuration", "category": "2", "agent": "coder"}
+{"task_id": 34, "description": "Implement a ServiceLocator pattern for resolving dependencies at runtime", "category": "1", "agent": "coder"}
+{"task_id": 292, "description": "Implement Repository pattern for data access abstraction", "category": "9", "agent": "coder"}
+{"task_id": 1, "description": "Implement a Task entity with id, description, priority, dependencies fields following immutability principles", "category": "1", "agent": "coder"}
+{"task_id": 182, "description": "Design graceful degradation when LLM provider is unavailable (fallback to mock)", "category": "5", "agent": "coder"}
+{"task_id": 151, "description": "Design task-specific evaluation metrics (code correctness, test coverage, plan completeness)", "category": "4", "agent": "coder"}
+{"task_id": 242, "description": "Create troubleshooting guide with common errors and solutions", "category": "7", "agent": "coder"}
+{"task_id": 38, "description": "Implement a provider pattern for lazy initialization of expensive dependencies", "category": "1", "agent": "coder"}
+{"task_id": 133, "description": "Implement model warm-up procedure to reduce first-token latency", "category": "4", "agent": "coder"}
+{"task_id": 193, "description": "Implement logging configuration with different levels (DEBUG, INFO, WARN, ERROR)", "category": "5", "agent": "coder"}
+{"task_id": 95, "description": "Design tests for data collection integration with actual task execution", "category": "3", "agent": "coder"}
+{"task_id": 120, "description": "Calculate maintainability index for codebase and track over time", "category": "3", "agent": "coder"}
+{"task_id": 35, "description": "Create a factory method that builds TaskCoordinator with all required dependencies injected", "category": "1", "agent": "coder"}
+{"task_id": 225, "description": "Refactor deeply nested code into flat structure using extraction", "category": "6", "agent": "coder"}
+{"task_id": 178, "description": "Create error recovery strategies: retry, fallback, skip, abort with configurable policies", "category": "5", "agent": "coder"}
+{"task_id": 246, "description": "Document design patterns used in codebase with examples", "category": "7", "agent": "coder"}
+{"task_id": 154, "description": "Implement few-shot learning examples injected into prompts for better responses", "category": "4", "agent": "coder"}
+{"task_id": 162, "description": "Create agent capability matching using fuzzy string matching with configurable threshold", "category": "5", "agent": "coder"}
+{"task_id": 147, "description": "Create human evaluation framework with rubrics for response quality assessment", "category": "4", "agent": "coder"}
+{"task_id": 253, "description": "Document LoRA fine-tuning process with hyperparameter tuning guide", "category": "7", "agent": "coder"}
+{"task_id": 73, "description": "Refactor direct OpenAI SDK usage to depend on abstract IOpenAIClient interface", "category": "2", "agent": "coder"}
+{"task_id": 33, "description": "Refactor main.py to use proper DI container instead of manual composition", "category": "1", "agent": "coder"}
+{"task_id": 192, "description": "Create configuration migration tool for upgrading between versions", "category": "5", "agent": "coder"}
+{"task_id": 216, "description": "Extract long functions (>20 lines) into smaller, focused functions", "category": "6", "agent": "coder"}
+{"task_id": 221, "description": "Refactor inline lambda expressions into descriptive function definitions", "category": "6", "agent": "coder"}
+{"task_id": 50, "description": "Implement strategy pattern for different task selection algorithms (capability-based, ML-based, random)", "category": "2", "agent": "coder"}
+{"task_id": 296, "description": "Design thread pool executor for CPU-bound operations", "category": "9", "agent": "coder"}
+{"task_id": 181, "description": "Create error context capture including stack traces, inputs, and environment state", "category": "5", "agent": "coder"}
+{"task_id": 79, "description": "Refactor JSON serialization to use abstract ISerializer interface", "category": "2", "agent": "coder"}
+{"task_id": 173, "description": "Create --watch mode that monitors files and re-runs tasks on changes", "category": "5", "agent": "coder"}
+{"task_id": 245, "description": "Create API versioning strategy and compatibility matrix", "category": "7", "agent": "coder"}
+{"task_id": 186, "description": "Create configuration validation with detailed error messages for invalid values", "category": "5", "agent": "coder"}
+{"task_id": 210, "description": "Extract magic numbers and strings into named constants with documentation", "category": "6", "agent": "coder"}
+{"task_id": 175, "description": "Implement tab completion for bash/zsh shells with dynamic task suggestions", "category": "5", "agent": "coder"}
+{"task_id": 20, "description": "Refactor llm_executor.py to extract message building logic into separate MessageBuilder", "category": "1", "agent": "coder"}
+{"task_id": 233, "description": "Document all class invariants and preconditions in docstrings", "category": "7", "agent": "coder"}
+{"task_id": 137, "description": "Implement JSONL validation script that checks schema compliance for training data", "category": "4", "agent": "coder"}
+{"task_id": 4, "description": "Mix theoretical (research, design) with practical (implement, test)", "category": "9", "agent": "coder"}
+{"task_id": 238, "description": "Create architecture decision records (ADRs) for major design choices", "category": "7", "agent": "coder"}
+{"task_id": 155, "description": "Create dynamic context window management to fit maximum relevant history", "category": "4", "agent": "coder"}
+{"task_id": 159, "description": "Design prompt caching strategy to reuse common system prompts", "category": "4", "agent": "coder"}
+{"task_id": 167, "description": "Implement task prioritization algorithm considering dependencies and deadlines", "category": "5", "agent": "coder"}
+{"task_id": 185, "description": "Implement hierarchical configuration: defaults < config file < env vars < CLI args", "category": "5", "agent": "coder"}
+{"task_id": 219, "description": "Split functions with many local variables into smaller scoped functions", "category": "6", "agent": "coder"}
+{"task_id": 261, "description": "Design release strategy with versioning and backward compatibility", "category": "8", "agent": "coder"}
+{"task_id": 136, "description": "Implement dynamic model loading/unloading based on memory pressure", "category": "4", "agent": "coder"}
+{"task_id": 269, "description": "Plan 'refactor for Clean Architecture' with layer-by-layer approach", "category": "8", "agent": "coder"}
+{"task_id": 66, "description": "Refactor IAgentCoordinator to separate planning from execution concerns", "category": "2", "agent": "coder"}
+{"task_id": 297, "description": "Create async/await patterns for I/O-bound LLM calls", "category": "9", "agent": "coder"}
+{"task_id": 232, "description": "Create module-level documentation explaining purpose and usage", "category": "7", "agent": "coder"}
+{"task_id": 37, "description": "Refactor composition.py to support constructor injection for all components", "category": "1", "agent": "coder"}
+{"task_id": 229, "description": "Flatten inheritance hierarchies that are too deep (>3 levels)", "category": "6", "agent": "coder"}
+{"task_id": 124, "description": "Create a training script that loads GGUF models and applies LoRA adapters using PEFT", "category": "4", "agent": "coder"}
+{"task_id": 156, "description": "Design token budget allocation strategy across system/user/assistant messages", "category": "4", "agent": "coder"}
+{"task_id": 293, "description": "Design Saga pattern for distributed task orchestration", "category": "9", "agent": "coder"}
+{"task_id": 289, "description": "Implement Event Sourcing for audit trail of all task executions", "category": "9", "agent": "coder"}
+{"task_id": 174, "description": "Design --profile flag that outputs performance metrics for each execution step", "category": "5", "agent": "coder"}
+{"task_id": 56, "description": "Implement decorator pattern for adding behavior to executors without modifying them", "category": "2", "agent": "coder"}
+{"task_id": 17, "description": "Implement a LocalFileStorageAdapter for persisting execution results to JSON", "category": "1", "agent": "coder"}
+{"task_id": 213, "description": "Improve function names to describe what they do, not how they do it", "category": "6", "agent": "coder"}
+{"task_id": 125, "description": "Design an evaluation framework for comparing base model vs LoRA fine-tuned performance", "category": "4", "agent": "coder"}
+{"task_id": 88, "description": "Create tests for DataCollector with disabled mode and file write errors", "category": "3", "agent": "coder"}
+{"task_id": 287, "description": "Implement Proxy pattern for lazy loading of heavy resources", "category": "9", "agent": "coder"}
+{"task_id": 275, "description": "Create development workflow documentation with branching strategy", "category": "8", "agent": "coder"}
+{"task_id": 15, "description": "Create a TaskPrioritizationUseCase that sorts tasks by priority and dependencies", "category": "1", "agent": "coder"}
+{"task_id": 98, "description": "Implement test data builders using fluent interface pattern for complex objects", "category": "3", "agent": "coder"}
+{"task_id": 264, "description": "Break down 'implement agent orchestration' into 10 subtasks", "category": "8", "agent": "coder"}
+{"task_id": 171, "description": "Design --explain mode that outputs reasoning for agent selection and planning", "category": "5", "agent": "coder"}
+{"task_id": 72, "description": "Split IErrorHandler into IErrorLogger and IErrorRecovery interfaces", "category": "2", "agent": "coder"}
+{"task_id": 247, "description": "Create contribution guide explaining development workflow and standards", "category": "7", "agent": "coder"}
+{"task_id": 145, "description": "Design comprehensive benchmark suite covering all agent types and task categories", "category": "4", "agent": "coder"}
+{"task_id": 294, "description": "Create Microkernel architecture for plugin system", "category": "9", "agent": "coder"}
+{"task_id": 1, "description": "Start with simpler tasks (implementation, research)", "category": "9", "agent": "coder"}
+{"task_id": 165, "description": "Create conversation context management that tracks history across multi-turn interactions", "category": "5", "agent": "coder"}
+{"task_id": 45, "description": "Extract retry logic from LLM adapters into standalone RetryPolicy class", "category": "2", "agent": "coder"}
+{"task_id": 204, "description": "Eliminate primitive obsession by creating value objects for domain concepts", "category": "6", "agent": "coder"}
+{"task_id": 184, "description": "Create error telemetry collection for debugging production issues", "category": "5", "agent": "coder"}
+{"task_id": 19, "description": "Design a GrokLLMAdapter that translates between our interface and xAI API format", "category": "1", "agent": "coder"}
+{"task_id": 194, "description": "Create structured logging with JSON output for machine-readable logs", "category": "5", "agent": "coder"}
+{"task_id": 71, "description": "Create separate IHealthCheck interface instead of embedding in provider interfaces", "category": "2", "agent": "coder"}
+{"task_id": 55, "description": "Design a visitor pattern for different result formatters (JSON, YAML, console, HTML)", "category": "2", "agent": "coder"}
+{"task_id": 107, "description": "Implement TDD workflow for new CachedExecutor: red, green, refactor", "category": "3", "agent": "coder"}
+{"task_id": 112, "description": "Implement TDD for dependency graph validation in Task entity", "category": "3", "agent": "coder"}
+{"task_id": 42, "description": "Extract message formatting logic from LLMAgentExecutor into dedicated MessageFormatter class", "category": "2", "agent": "coder"}
+{"task_id": 110, "description": "Design tests for rate limiting before implementing RateLimitingAdapter", "category": "3", "agent": "coder"}
+{"task_id": 191, "description": "Implement configuration profiles for different use cases (fast, quality, balanced)", "category": "5", "agent": "coder"}
+{"task_id": 143, "description": "Implement data versioning system to track training data evolution over time", "category": "4", "agent": "coder"}
+{"task_id": 244, "description": "Write migration guides for upgrading between major versions", "category": "7", "agent": "coder"}
+{"task_id": 257, "description": "Create project roadmap for next 3 months with milestones and deliverables", "category": "8", "agent": "coder"}
+{"task_id": 26, "description": "Create an IAgentSelector interface with select_agent(task) -> Agent method", "category": "1", "agent": "coder"}
+{"task_id": 283, "description": "Create Chain of Responsibility for error handling pipeline", "category": "9", "agent": "coder"}
+{"task_id": 241, "description": "Write comprehensive user guide covering all features and options", "category": "7", "agent": "coder"}
+{"task_id": 77, "description": "Create ITimeProvider abstraction to eliminate datetime.now() calls for testability", "category": "2", "agent": "coder"}
+{"task_id": 61, "description": "Ensure all AgentSelector implementations handle null/empty task descriptions consistently", "category": "2", "agent": "coder"}
+{"task_id": 198, "description": "Design data export utility for training data in multiple formats", "category": "5", "agent": "coder"}
+{"task_id": 231, "description": "Write comprehensive docstrings for all public functions with examples", "category": "7", "agent": "coder"}
+{"task_id": 18, "description": "Create a ConsoleOutputAdapter that formats results with color-coded status indicators", "category": "1", "agent": "coder"}
+{"task_id": 209, "description": "Rename ambiguous variables and functions to reveal intent clearly", "category": "6", "agent": "coder"}
+{"task_id": 51, "description": "Create abstract base TaskExecutor that supports new execution strategies via inheritance", "category": "2", "agent": "coder"}
+{"task_id": 176, "description": "Create --template system for saving and reusing common task patterns", "category": "5", "agent": "coder"}
+{"task_id": 109, "description": "Create failing tests for parallel task batching logic, implement incrementally", "category": "3", "agent": "coder"}
+{"task_id": 187, "description": "Design environment-specific configs (dev, staging, prod) with inheritance", "category": "5", "agent": "coder"}
+{"task_id": 189, "description": "Create configuration schema documentation generator from dataclass definitions", "category": "5", "agent": "coder"}
+{"task_id": 78, "description": "Replace direct environment variable access with IEnvironmentProvider interface", "category": "2", "agent": "coder"}
+{"task_id": 170, "description": "Create --dry-run flag that shows execution plan without running tasks", "category": "5", "agent": "coder"}
+{"task_id": 21, "description": "Implement a CachingLLMAdapter decorator that stores recent responses for reuse", "category": "1", "agent": "coder"}
+{"task_id": 115, "description": "Analyze code duplication using tools and extract common abstractions", "category": "3", "agent": "coder"}
+{"task_id": 32, "description": "Create an IModelProvider interface that abstracts LLM implementation details", "category": "1", "agent": "coder"}
+{"task_id": 166, "description": "Design and implement task cancellation mechanism with cleanup hooks", "category": "5", "agent": "coder"}
+{"task_id": 144, "description": "Create synthetic data generation using GPT-4 to bootstrap training dataset", "category": "4", "agent": "coder"}
+{"task_id": 215, "description": "Create clear distinction between public API and internal implementation names", "category": "6", "agent": "coder"}
+{"task_id": 12, "description": "Create a RetryExecutionUseCase that wraps executor with exponential backoff strategy", "category": "1", "agent": "coder"}
+{"task_id": 70, "description": "Refactor IAgentExecutor to extract context management into IContextManager", "category": "2", "agent": "coder"}
+{"task_id": 281, "description": "Implement Command pattern for undoable task execution", "category": "9", "agent": "coder"}
+{"task_id": 105, "description": "Write failing tests for a new AgentMetrics entity, then implement to pass", "category": "3", "agent": "coder"}
+{"task_id": 108, "description": "Write tests first for ExecutionHistory tracking feature, then implement", "category": "3", "agent": "coder"}
+{"task_id": 25, "description": "Design an ITaskRepository interface for CRUD operations on tasks", "category": "1", "agent": "coder"}
+{"task_id": 116, "description": "Measure average function length and refactor functions over 20 lines", "category": "3", "agent": "coder"}
+{"task_id": 285, "description": "Design State pattern for task lifecycle management", "category": "9", "agent": "coder"}
+{"task_id": 295, "description": "Implement actor model for concurrent task processing", "category": "9", "agent": "coder"}
+{"task_id": 102, "description": "Design test utilities for asserting Clean Architecture layer dependencies", "category": "3", "agent": "coder"}
+{"task_id": 224, "description": "Simplify nested if statements using guard clauses", "category": "6", "agent": "coder"}
+{"task_id": 284, "description": "Implement Memento pattern for execution state checkpointing", "category": "9", "agent": "coder"}
+{"task_id": 40, "description": "Design a testing mock factory that provides test doubles for all interfaces", "category": "1", "agent": "coder"}
+{"task_id": 258, "description": "Design feature prioritization framework based on value and effort", "category": "8", "agent": "coder"}
+{"task_id": 103, "description": "Create performance benchmark tests for LLM adapter response times", "category": "3", "agent": "coder"}
+{"task_id": 288, "description": "Design Builder pattern for complex configuration construction", "category": "9", "agent": "coder"}
+{"task_id": 207, "description": "Eliminate dead code identified through coverage analysis", "category": "6", "agent": "coder"}
+{"task_id": 41, "description": "Identify SRP violations in task_coordinator.py and propose refactoring strategy", "category": "2", "agent": "coder"}
+{"task_id": 236, "description": "Document exceptions that can be raised by each function", "category": "7", "agent": "coder"}
+{"task_id": 223, "description": "Reduce cyclomatic complexity of high-complexity functions using early returns", "category": "6", "agent": "coder"}
+{"task_id": 2, "description": "Create an Agent entity that validates role and capabilities on initialization", "category": "1", "agent": "coder"}
+{"task_id": 255, "description": "Document llama.cpp integration patterns and optimization techniques", "category": "7", "agent": "coder"}
+{"task_id": 237, "description": "Write usage examples in docstrings showing common patterns", "category": "7", "agent": "coder"}
+{"task_id": 74, "description": "Create IFileSystem abstraction to eliminate direct Path/os.path dependencies", "category": "2", "agent": "coder"}
+{"task_id": 179, "description": "Design user-friendly error messages with suggestions and troubleshooting steps", "category": "5", "agent": "coder"}
+{"task_id": 141, "description": "Create data quality metrics: average token length, vocabulary diversity, error rate", "category": "4", "agent": "coder"}
+{"task_id": 59, "description": "Create a test suite that validates LSP compliance for all executor implementations", "category": "2", "agent": "coder"}
+{"task_id": 134, "description": "Design batching strategy for parallel inference requests with optimal batch size", "category": "4", "agent": "coder"}
+{"task_id": 291, "description": "Create Hexagonal Architecture ports and adapters mapping", "category": "9", "agent": "coder"}
+{"task_id": 208, "description": "Refactor complex conditionals into guard clauses and early returns", "category": "6", "agent": "coder"}
+{"task_id": 195, "description": "Design metrics collection system tracking execution time, tokens, costs", "category": "5", "agent": "coder"}
+{"task_id": 212, "description": "Standardize naming conventions across codebase (snake_case, PascalCase)", "category": "6", "agent": "coder"}
+{"task_id": 52, "description": "Design a middleware pipeline for LLM requests that's extensible via composition", "category": "2", "agent": "coder"}
+{"task_id": 172, "description": "Implement --format option supporting JSON, YAML, table, and markdown outputs", "category": "5", "agent": "coder"}
+{"task_id": 7, "description": "Design a TaskDependency value object that validates acyclic dependency graphs", "category": "1", "agent": "coder"}
+{"task_id": 183, "description": "Implement circuit breaker pattern for failing LLM providers with automatic recovery", "category": "5", "agent": "coder"}
+{"task_id": 158, "description": "Create temperature and top-p optimization based on task determinism requirements", "category": "4", "agent": "coder"}
+{"task_id": 62, "description": "Refactor RetryExecutor to maintain same exception types as base IAgentExecutor", "category": "2", "agent": "coder"}
+{"task_id": 58, "description": "Refactor MockLLMProvider to fully implement ITextGenerator contract including edge cases", "category": "2", "agent": "coder"}
+{"task_id": 24, "description": "Implement a RetryAdapter that retries failed LLM calls with configurable backoff", "category": "1", "agent": "coder"}
+{"task_id": 8, "description": "Implement a Task factory method from_dict that validates all required fields", "category": "1", "agent": "coder"}
+{"task_id": 9, "description": "Design a TaskPlannerUseCase interface with abstract plan() method signature", "category": "1", "agent": "coder"}
+{"task_id": 135, "description": "Create a model selection algorithm based on task complexity and latency requirements", "category": "4", "agent": "coder"}
+{"task_id": 180, "description": "Implement error aggregation for parallel task execution showing all failures", "category": "5", "agent": "coder"}
+{"task_id": 23, "description": "Design a LoggingAdapter that wraps any ITextGenerator with structured logging", "category": "1", "agent": "coder"}
+{"task_id": 168, "description": "Create streaming output handler for real-time LLM response display", "category": "5", "agent": "coder"}
+{"task_id": 267, "description": "Break down 'implement caching layer' into design, implement, test phases", "category": "8", "agent": "coder"}
+{"task_id": 218, "description": "Extract nested loops into separate well-named functions", "category": "6", "agent": "coder"}
+{"task_id": 202, "description": "Refactor god objects into focused single-responsibility classes", "category": "6", "agent": "coder"}
+{"task_id": 27, "description": "Refactor existing interfaces to follow Interface Segregation Principle (ISP)", "category": "1", "agent": "coder"}
+{"task_id": 217, "description": "Refactor functions doing multiple things into single-purpose functions", "category": "6", "agent": "coder"}
+{"task_id": 36, "description": "Design a configuration-based DI system that reads wiring from YAML files", "category": "1", "agent": "coder"}
+{"task_id": 5, "description": "Ensure each task is well-formed: clear, specific, actionable", "category": "9", "agent": "coder"}
+{"task_id": 65, "description": "Split ITextGenerator into ISimpleGenerator and IToolAwareGenerator interfaces", "category": "2", "agent": "coder"}
+{"task_id": 169, "description": "Implement --interactive mode for multi-turn conversations with persistent context", "category": "5", "agent": "coder"}
+{"task_id": 13, "description": "Design a TaskValidationUseCase that checks task descriptions against agent capabilities", "category": "1", "agent": "coder"}
+{"task_id": 60, "description": "Fix precondition strengthening in GrokAdapter that violates LSP for timeout parameters", "category": "2", "agent": "coder"}

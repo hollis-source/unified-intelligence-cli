@@ -1,0 +1,16 @@
+# Test Duplicate Operator with Broadcast Pattern
+# Pattern: (task1 * task2 * task3) o duplicate o input
+# Expected: Input broadcasts to 3 parallel tasks
+
+# Define simple input task
+functor gather_context = ultrathink_gather_project_context_for_analysis
+
+# Define 3 parallel analysis tasks
+functor analyze_code = ultrathink_analyze_code_quality
+functor analyze_arch = ultrathink_analyze_architecture_compliance
+functor analyze_perf = ultrathink_analyze_performance_bottlenecks
+
+# Broadcast pattern: duplicate → 3 parallel tasks
+functor parallel_analyses = (analyze_code * analyze_arch * analyze_perf) o duplicate o gather_context
+
+functor main = parallel_analyses

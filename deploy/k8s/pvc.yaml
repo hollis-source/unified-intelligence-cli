@@ -1,0 +1,33 @@
+# PersistentVolumeClaims for Project Builder
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: project-artifacts-pvc
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+  - ReadWriteMany  # Multiple pods need access
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: standard  # Adjust based on your cluster
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: project-logs-pvc
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/component: storage
+spec:
+  accessModes:
+  - ReadWriteMany  # Multiple pods need access
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard  # Adjust based on your cluster

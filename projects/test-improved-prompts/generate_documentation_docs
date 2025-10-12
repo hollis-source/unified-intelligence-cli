@@ -1,0 +1,38 @@
+```python
+# multiply.py
+def multiply(a, b):
+    """
+    Multiply two numbers and return the result.
+    
+    Parameters:
+    a (int or float): The first number.
+    b (int or float): The second number.
+    
+    Returns:
+    int or float: The product of a and b.
+    """
+    return a * b
+```
+
+```python
+# test_multiply.py
+import unittest
+
+class TestMultiply(unittest.TestCase):
+    def test_integers(self):
+        self.assertEqual(multiply(2, 3), 6)
+        self.assertEqual(multiply(-2, 3), -6)
+        self.assertEqual(multiply(0, 5), 0)
+    
+    def test_floats(self):
+        self.assertEqual(multiply(2.5, 4), 10.0)
+        self.assertEqual(multiply(3.5, -2), -7.0)
+        self.assertEqual(multiply(0.0, 5.5), 0.0)
+    
+    def test_mixed_types(self):
+        self.assertEqual(multiply(2, 3.5), 7.0)
+        self.assertEqual(multiply(-2.5, 4), -10.0)
+
+if __name__ == '__main__':
+    unittest.main()
+```

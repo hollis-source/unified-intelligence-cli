@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: project-builder
+  labels:
+    name: project-builder
+    environment: production
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/component: infrastructure

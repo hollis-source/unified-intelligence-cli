@@ -1,0 +1,15 @@
+```python
+# Code to execute the written assignment
+code_to_execute = "message = 'Hello World'"
+
+# Execute the code in the global namespace to create the variable
+try:
+    exec(code_to_execute, globals())
+    # Verify the variable exists and has the correct value
+    if 'message' in globals() and globals()['message'] == 'Hello World':
+        print("Variable 'message' created successfully with value 'Hello World'.")
+    else:
+        raise ValueError("Variable not set correctly.")
+except Exception as e:
+    print(f"Error executing code: {e}")
+```

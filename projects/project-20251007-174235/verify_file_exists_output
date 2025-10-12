@@ -1,0 +1,7 @@
+import os
+
+file_path = "/opt/grokmonster/cna-dad-release-v1.0/src/services/relevance_scorer.py"
+if os.path.exists(file_path):
+    print(f"The file {file_path} exists.")
+else:
+    print(f"The file {file_path} does not exist.")

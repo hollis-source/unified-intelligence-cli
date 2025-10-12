@@ -1,0 +1,10 @@
+{
+  "file": "/opt/grokmonster/cna-dad-release-v1.0/src/services/db_status.py",
+  "modified_except_blocks": [
+    {
+      "line_number": 42,
+      "original_code": "except:\n    logger.error(\"Unexpected error: \", exc_info=True)",
+      "modified_code": "except Exception as e:\n    logger.error(f\"Unexpected error: {str(e)}\", exc_info=True)"
+    }
+  ]
+}

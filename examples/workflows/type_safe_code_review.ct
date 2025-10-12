@@ -1,0 +1,103 @@
+# Type-Safe Code Review Workflow
+# Demonstrates: Sprint 2 & 3 DSL features
+# - Hind
+
+ley-Milner type annotations
+# - Functor definitions (explicit & implicit syntax)
+# - Sequential composition (∘)
+# - Parallel composition (×)
+# - End-to-end type safety
+
+# ============================================================================
+# TYPE ANNOTATIONS (Hindley-Milner Style)
+# ============================================================================
+
+# Git operations: Fetch repository state
+get_changed_files :: () -> FileList
+get_commit_metadata :: () -> CommitInfo
+
+# Code analysis: Sequential processing
+analyze_code_style :: FileList -> StyleReport
+analyze_security :: FileList -> SecurityReport
+analyze_complexity :: FileList -> ComplexityReport
+
+# Report generation: Parallel analysis combination
+merge_reports :: (StyleReport × SecurityReport × ComplexityReport) -> FullReport
+generate_summary :: FullReport -> Summary
+post_to_github :: Summary -> ()
+
+# ============================================================================
+# WORKFLOW DEFINITIONS
+# ============================================================================
+
+# Explicit functor syntax (verbose, clear)
+functor fetch_changes = get_changed_files
+
+# Implicit functor syntax (concise, Haskell-style)
+metadata = get_commit_metadata
+
+# Sequential composition: Right-to-left execution
+# style_check ≡ analyze_code_style ∘ get_changed_files
+# Executes: get_changed_files() then analyze_code_style(result)
+style_check = analyze_code_style o fetch_changes
+
+# Parallel composition: Concurrent execution
+# Run all three analyses in parallel on the same file list
+# parallel_analysis ≡ (analyze_code_style × analyze_security × analyze_complexity) ∘ get_changed_files
+parallel_analysis = (analyze_code_style * analyze_security * analyze_complexity) o fetch_changes
+
+# Complex composition: Parallel + Sequential
+# 1. Get changed files
+# 2. Run 3 analyses in parallel
+# 3. Merge results
+# 4. Generate summary
+# 5. Post to GitHub
+functor full_code_review =
+  post_to_github o
+  generate_summary o
+  merge_reports o
+  parallel_analysis
+
+# Alternative: Short form without 'functor' keyword
+quick_review = post_to_github o generate_summary o merge_reports o parallel_analysis
+
+# ============================================================================
+# USAGE EXAMPLES
+# ============================================================================
+
+# Run individual components:
+# - fetch_changes           # Just get changed files
+# - style_check             # Get files + analyze style
+# - parallel_analysis       # Get files + run all 3 analyses in parallel
+# - full_code_review        # Complete workflow: fetch → analyze (parallel) → report → post
+
+# Category Theory Properties:
+# 1. Associativity: (f ∘ g) ∘ h ≡ f ∘ (g ∘ h)
+# 2. Identity: id ∘ f ≡ f ≡ f ∘ id
+# 3. Type Safety: Output type of g must match input type of f for (f ∘ g)
+
+# Type Flow Example (full_code_review):
+# ()
+#   → get_changed_files
+#   → FileList
+#   → (analyze_code_style × analyze_security × analyze_complexity)
+#   → (StyleReport × SecurityReport × ComplexityReport)
+#   → merge_reports
+#   → FullReport
+#   → generate_summary
+#   → Summary
+#   → post_to_github
+#   → ()
+
+# ============================================================================
+# VALIDATION
+# ============================================================================
+
+# This workflow can be validated with:
+#   validator = WorkflowValidator()
+#   report = validator.validate_file("type_safe_code_review.ct")
+#
+# Expected: ✓ PASSED
+# - All compositions type-check
+# - Category theory laws enforced
+# - Runtime type tags available for execution

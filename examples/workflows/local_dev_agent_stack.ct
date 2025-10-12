@@ -1,0 +1,18 @@
+# Local Development Agent Stack (Docker Compose)
+# Rapid iteration for agent development
+#
+# Purpose: Spin up full 12-agent stack locally for development
+# Uses docker-compose for orchestration
+#
+# Flow:
+# 1. cleanup_previous: Remove old containers and volumes
+# 2. build_dev_images: Build all agent images with dev dependencies
+# 3. start_infrastructure: Launch Redis, PostgreSQL, message queue
+# 4. start_agents: Launch all 12 agent containers
+# 5. run_integration_tests: Verify inter-agent communication
+# 6. attach_debugger: Connect remote debugger to agents
+#
+# Use case: Developer wants to test multi-agent interaction locally
+# Time: 5-8 minutes for full stack
+
+attach_debugger ∘ run_integration_tests ∘ start_agents ∘ start_infrastructure ∘ build_dev_images ∘ cleanup_previous

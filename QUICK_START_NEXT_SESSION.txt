@@ -1,0 +1,50 @@
+═══════════════════════════════════════════════════════════════
+  QUICK START - NEXT CLAUDE CODE SESSION
+═══════════════════════════════════════════════════════════════
+
+📖 READ FIRST: SESSION_HANDOFF.md (comprehensive context)
+
+✅ COMPLETED THIS SESSION:
+1. Fixed parent task effect bug (Project Builder 97% → 98%)
+2. Installed Auggie MCP (multi-model AI integration)
+
+🎯 FIRST ACTIONS IN NEW SESSION:
+
+1. Verify Auggie MCP Tools Loaded
+   --------------------------------
+   Ask yourself: "What MCP tools do I have available?"
+
+   Expected: auggie_execute, auggie_with_gpt5, auggie_with_claude
+
+   OR check: claude mcp list
+   Should show: auggie: ✓ Connected
+
+2. Test Auggie Integration
+   ------------------------
+   "Use auggie with GPT-5 to review coordinator.py parent effect fix"
+
+3. Update Production Docs
+   -----------------------
+   - docs/PROJECT_BUILDER_PRODUCTION_READINESS.md (97% → 98%)
+   - docs/INTEGRATION_TEST_REPORT.md (add fix validation)
+
+4. Run Production Validation
+   --------------------------
+   Test 3-5 real projects with diverse goals
+
+📁 KEY FILES TO READ:
+- SESSION_HANDOFF.md (START HERE - full context)
+- AUGGIE_SETUP_COMPLETE.md (auggie usage guide)
+- docs/PROJECT_BUILDER_PRODUCTION_READINESS.md (current state)
+
+🐛 IF AUGGIE TOOLS NOT AVAILABLE:
+See troubleshooting section in SESSION_HANDOFF.md
+
+💾 GIT STATUS:
+Branch: priority/prod-010
+Last commit: d8a1a2c (parent effect fix)
+Uncommitted: AUGGIE_SETUP_COMPLETE.md, SESSION_HANDOFF.md
+
+🚀 YOU'RE READY TO CONTINUE SEAMLESSLY!
+
+═══════════════════════════════════════════════════════════════

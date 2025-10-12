@@ -1,0 +1,18 @@
+{
+  "total_interactions": 302,
+  "successful_interactions": 298,
+  "training_examples": 298,
+  "splits": {
+    "train": 238,
+    "val": 29,
+    "test": 31
+  },
+  "agent_distribution": {
+    "coder": 174,
+    "tester": 76,
+    "reviewer": 2,
+    "researcher": 26,
+    "coordinator": 20
+  },
+  "random_seed": 42
+}

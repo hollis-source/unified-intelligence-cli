@@ -1,0 +1,36 @@
+# Comprehensive 24-Hour Code Review with CLAUDE.md Principles
+#
+# Reviews all code changes from last 24 hours against:
+# - Clean Code: Function length, naming, duplication, complexity
+# - Clean Architecture: SOLID violations (DIP, SRP, OCP, LSP, ISP)
+# - Clean Agile: Commit quality, test coverage, incremental development
+# - Security: API keys, secrets, error handling, input validation
+# - Category Theory: DSL composition correctness, functor laws
+# - Data-Driven: Are scoring algorithms validated with real benchmarks?
+#
+# Flow (Fixed Composition):
+# 1. get_recent_commits - Fetch commits from last 24 hours
+# 2. get_commit_details - Get diffs, stats, and file changes
+# 3. batch_analyze_commits - Send each commit to AI for deep analysis
+# 4. aggregate_commit_analyses - Combine all AI analyses
+# 5. generate_integrated_report - Create comprehensive markdown
+# 6. save_report_to_file - Save to docs/24H_COMPREHENSIVE_REVIEW.md
+#
+# Category Theory: Sequential composition (f ∘ g)
+# Each morphism preserves type: Dict → Dict → Dict → ...
+#
+# Uses "auto" orchestrator for intelligent model selection:
+#   - SPEED tasks (git operations) → Grok (5s avg)
+#   - QUALITY tasks (code analysis) → Qwen3 (13.8s, 100% success)
+#   - BALANCED (reporting) → Qwen3 (highest score: 86.34)
+#
+# Expected Output:
+# - Critical Issues: Must-fix violations with line numbers
+# - SOLID Compliance Score: DIP, SRP, OCP, LSP, ISP percentages
+# - Security Concerns: API keys, input validation, thread safety
+# - Category Theory Validation: DSL composition correctness
+# - Team Utilization: Which teams handled which tasks
+#
+# Estimated time: 60-90 seconds
+
+save_report_to_file ∘ generate_integrated_report ∘ aggregate_commit_analyses ∘ batch_analyze_commits ∘ get_commit_details ∘ get_recent_commits

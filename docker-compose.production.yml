@@ -1,0 +1,748 @@
+# Production Docker Compose for Project Builder
+# Security-Hardened Configuration with Traefik TLS Termination
+#
+# Security Features:
+# - Docker secrets for all sensitive data (no env vars for credentials)
+# - Network segmentation (internal_net + ingress_net)
+# - TLS termination via Traefik reverse proxy
+# - No direct port exposure (except Traefik 80/443)
+# - Security hardening (no-new-privileges, cap_drop, read_only where possible)
+# - Non-root user execution where supported
+# - Minimal attack surface (internal services not exposed)
+#
+# Architecture:
+# Internet → Traefik (80/443) → ingress_net → Services
+#                                internal_net → Backend Services (SurrealDB, Redis, Prometheus)
+
+# Note: Removed 'version' key (Compose v2 ignores it)
+
+# ============================================================================
+# SECRETS - Loaded from ./secrets/ directory
+# ============================================================================
+# Setup: Create ./secrets/ directory with files containing sensitive data
+# Example: echo -n "your_password" > ./secrets/surrealdb_root_password
+# ============================================================================
+secrets:
+  surrealdb_root_user:
+    file: ./secrets/surrealdb_root_user
+  surrealdb_root_password:
+    file: ./secrets/surrealdb_root_password
+  redis_password:
+    file: ./secrets/redis_password
+  grafana_admin_password:
+    file: ./secrets/grafana_admin_password
+  xai_api_key:
+    file: ./secrets/xai_api_key
+  huggingface_token:
+    file: ./secrets/huggingface_token
+  github_token:
+    file: ./secrets/github_token
+  replicate_api_token:
+    file: ./secrets/replicate_api_token
+
+# ============================================================================
+# SERVICES
+# ============================================================================
+services:
+  # ==========================================================================
+  # Traefik - Reverse Proxy with TLS Termination
+  # ==========================================================================
+  # Purpose: TLS termination, routing, automatic HTTPS
+  # Exposed: 80 (HTTP redirect), 443 (HTTPS)
+  # Security: Runs as non-root, minimal capabilities
+  # ==========================================================================
+  traefik:
+    image: traefik:v2.10
+    container_name: project-builder-traefik
+    restart: unless-stopped
+
+    # Security: Run as non-root user (UID 65532)
+    user: "65532:65532"
+
+    # Security: Prevent privilege escalation
+    security_opt:
+      - no-new-privileges:true
+
+    # Security: Drop all capabilities except NET_BIND_SERVICE (for port 80/443)
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+    command:
+      # API and dashboard (disable in production or secure properly)
+      - --api.dashboard=true
+      - --api.insecure=false  # Secure dashboard via Traefik itself
+
+      # Ping endpoint for healthchecks
+      - --ping=true
+      - --ping.entrypoint=ping
+      - --entrypoints.ping.address=:8080
+
+      # Entrypoints
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+
+      # Docker provider
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=ingress_net
+      - --providers.docker.endpoint=tcp://socket-proxy:2375
+
+      # TLS configuration
+      - --providers.file.directory=/etc/traefik/dynamic
+      - --providers.file.watch=true
+
+      # Logging
+      - --log.level=INFO
+      - --accesslog=true
+      - --accesslog.filepath=/var/log/traefik/access.log
+
+      # Metrics for Prometheus
+      - --metrics.prometheus=true
+      - --metrics.prometheus.entrypoint=metrics
+      - --entrypoints.metrics.address=:8082
+
+    ports:
+      # Only Traefik exposes ports to host
+      - "80:80"      # HTTP (redirects to HTTPS)
+      - "8443:443"   # HTTPS (port 443 used by SSH, so using 8443)
+      # - "8080:8080"  # Traefik dashboard (uncomment if needed, secure properly)
+
+    volumes:
+      # Docker socket (read-only for service discovery)
+      # Docker socket access is now via docker-socket-proxy service
+
+      # TLS certificates (development certs from ./certs/dev/)
+      - ./certs/dev:/etc/traefik/certs:ro
+
+      # Dynamic configuration for TLS
+      - ./config/traefik:/etc/traefik/dynamic:ro
+
+      # Logs
+      - traefik-logs:/var/log/traefik
+
+    networks:
+      - ingress_net  # Frontend network for routing
+      - internal_net # Backend network for metrics scraping
+
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+    labels:
+      # Traefik dashboard DISABLED for security
+      # To enable: add authentication middleware and IP allowlist
+      - "traefik.enable=false"
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================================
+  # Docker Socket Proxy - Secure Docker API access for Traefik
+  # ==========================================================================
+  # Purpose: Provide read-only Docker API access to Traefik for service discovery
+  # Security: Only exposes necessary endpoints (CONTAINERS, SERVICES, TASKS)
+  #           No direct docker.sock access from Traefik
+  # ==========================================================================
+  socket-proxy:
+    image: tecnativa/docker-socket-proxy:latest
+    container_name: socket-proxy
+    restart: unless-stopped
+
+    environment:
+      # Only enable endpoints needed by Traefik
+      - CONTAINERS=1
+      - SERVICES=1
+      - TASKS=1
+      - NETWORKS=1
+      - INFO=1        # Required for Docker info
+      - EVENTS=1      # Required for watching container changes
+      # Disable everything else for security
+      - POST=0
+      - DELETE=0
+      - BUILD=0
+      - COMMIT=0
+      - CONFIGS=0
+      - DISTRIBUTION=0
+      - EXEC=0
+      - IMAGES=0
+      - NODES=0
+      - PLUGINS=0
+      - SECRETS=0
+      - SESSION=0
+      - SWARM=0
+      - SYSTEM=0
+      - VOLUMES=0
+
+    volumes:
+      # Mount docker socket read-only
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    networks:
+      - ingress_net  # Must be on same network as Traefik
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 32M
+        reservations:
+          cpus: '0.05'
+          memory: 16M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ==========================================================================
+  # SurrealDB - Multi-model Database (Graph + Document + Vector + Relational)
+  # ==========================================================================
+  # Purpose: Primary database for Project Builder
+  # Exposed: Via Traefik at wss://db.dev.local (WebSocket Secure)
+  # Security: Secrets-based auth, internal network only, no direct port exposure
+  # ==========================================================================
+  surrealdb:
+    image: surrealdb/surrealdb:latest
+    container_name: project-builder-db
+    restart: unless-stopped
+
+    # Security: Run as non-root user (UID 1000)
+    # Note: Ensure volume permissions allow UID 1000 to write
+    user: "1000:1000"
+
+    # Security: Prevent privilege escalation
+    security_opt:
+      - no-new-privileges:true
+
+    # Security: Drop all capabilities (database doesn't need special privileges)
+    cap_drop:
+      - ALL
+
+    command:
+      - start
+      - --log=info
+      - --user=root  # SurrealDB internal user (not OS user)
+      - --pass=file:///run/secrets/surrealdb_root_password
+      - file:/data/database.db
+
+    environment:
+      - SURREAL_LOG=info
+
+    # Secrets: Password loaded from Docker secret
+    secrets:
+      - surrealdb_root_password
+
+    volumes:
+      # Persistent database storage
+      - surrealdb-data:/data
+
+      # Initialization script (read-only)
+      - ./scripts/init-surreal.surql:/init/init.surql:ro
+
+    # Security: No ports exposed to host (access via Traefik only)
+    expose:
+      - "8000"  # Internal port for Traefik routing
+
+    networks:
+      - internal_net  # Internal network only (no public exposure)
+
+    # Healthcheck disabled: SurrealDB uses distroless image with no shell/utilities
+    # Service health verified via Traefik routing and external connectivity testing
+
+    labels:
+      # SurrealDB NOT exposed via Traefik for security
+      # Database is internal-only (internal_net)
+      # Access via application services or VPN/bastion only
+      - "traefik.enable=false"
+
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================================
+  # Redis - LLM Response Cache
+  # ==========================================================================
+  # Purpose: Cache LLM responses to reduce API costs and latency
+  # Exposed: Internal network only (no external access)
+  # Security: Password-protected via secret, internal network only
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: project-builder-redis
+    restart: unless-stopped
+
+    # Security: Run as non-root user (redis user in alpine = UID 999)
+    user: "999:999"
+
+    # Security: Prevent privilege escalation
+    security_opt:
+      - no-new-privileges:true
+
+    # Security: Drop all capabilities
+    cap_drop:
+      - ALL
+
+    # Security: Read-only root filesystem (except /data for persistence)
+    read_only: true
+
+    command:
+      - sh
+      - -c
+      - |
+        # Read password from secret file
+        REDIS_PASSWORD=$$(cat /run/secrets/redis_password)
+        exec redis-server \
+          --requirepass "$$REDIS_PASSWORD" \
+          --appendonly yes \
+          --maxmemory 256mb \
+          --maxmemory-policy allkeys-lru \
+          --dir /data \
+          --protected-mode yes \
+          --maxclients 100 \
+          --timeout 300 \
+          --rename-command REPLICAOF "" \
+          --rename-command SLAVEOF "" \
+          --rename-command CONFIG "" \
+          --rename-command SHUTDOWN "" \
+          --rename-command DEBUG "" \
+          --rename-command MODULE "" \
+          --rename-command FLUSHALL "" \
+          --rename-command FLUSHDB "" \
+          --rename-command KEYS "" \
+          --rename-command BGREWRITEAOF "" \
+          --rename-command BGSAVE "" \
+          --rename-command SAVE "" \
+          --rename-command SCRIPT "" \
+          --rename-command EVAL "" \
+          --rename-command EVALSHA "" \
+          --rename-command MIGRATE "" \
+          --rename-command RESTORE "" \
+          --rename-command MONITOR "" \
+          --rename-command SYNC "" \
+          --rename-command PSYNC "" \
+          --rename-command SWAPDB "" \
+          --rename-command ACL "" \
+          --rename-command CLIENT "" \
+          --rename-command CLUSTER "" \
+          --rename-command LATENCY "" \
+          --rename-command SLOWLOG "" \
+          --rename-command REPLCONF "" \
+          --rename-command LASTSAVE "" \
+          --rename-command PFDEBUG "" \
+          --rename-command PFSELFTEST "" \
+          --rename-command INFO "" \
+          --rename-command ROLE "" \
+          --rename-command FAILOVER ""
+
+    # Secrets: Password loaded from Docker secret
+    secrets:
+      - redis_password
+
+    volumes:
+      # Persistent cache storage
+      - redis-data:/data
+
+      # Temporary directory for read-only filesystem
+      - redis-tmp:/tmp
+
+    # Security: No ports exposed to host (internal network only)
+    expose:
+      - "6379"  # Internal port only
+
+    networks:
+      - internal_net  # Internal network only
+
+    healthcheck:
+      # Healthcheck using REDISCLI_AUTH environment variable (avoids password in process list)
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$(cat /run/secrets/redis_password) redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+      start_period: 5s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================================
+  # Project Builder - Main Application Service
+  # ==========================================================================
+  # Purpose: Core application logic, HTN planning, code generation
+  # Exposed: Internal network only (no external access)
+  # Security: Secrets via *_FILE env vars, non-root user, minimal capabilities
+  # ==========================================================================
+  project-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.project-builder
+    image: project-builder:latest
+    container_name: project-builder
+    restart: unless-stopped
+
+    # Security: Run as non-root user (pbuser = UID 1000, defined in Dockerfile)
+    user: "1000:1000"
+
+    # Security: Prevent privilege escalation
+    security_opt:
+      - no-new-privileges:true
+
+    # Security: Drop all capabilities
+    cap_drop:
+      - ALL
+
+    environment:
+      # SurrealDB connection (non-sensitive config)
+      - PB_DB_TYPE=surrealdb
+      - PB_DB_HOST=surrealdb
+      - PB_DB_PORT=8000
+      - PB_DB_NAMESPACE=project_builder
+      - PB_DB_DATABASE=production
+      - PB_DB_USER=root
+
+      # SurrealDB password via secret file
+      - PB_DB_PASSWORD_FILE=/run/secrets/surrealdb_root_password
+      - SURREALDB_URL=http://surrealdb:8000
+
+      # Redis connection (password via secret file)
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD_FILE=/run/secrets/redis_password
+      - LLM_CACHE_ENABLED=true
+
+      # LLM Provider API keys via secret files
+      - XAI_API_KEY_FILE=/run/secrets/xai_api_key
+      - HUGGINGFACE_TOKEN_FILE=/run/secrets/huggingface_token
+      - GITHUB_TOKEN_FILE=/run/secrets/github_token
+      - REPLICATE_API_TOKEN_FILE=/run/secrets/replicate_api_token
+
+      # SSH/FileStore
+      - PB_SSH_KEY_PATH=/home/pbuser/.ssh/id_ed25519
+      - PB_SSH_KNOWN_HOSTS=/home/pbuser/.ssh/known_hosts
+
+      # Application configuration
+      - PB_ENV=production
+      - PB_LOG_LEVEL=${PB_LOG_LEVEL:-INFO}
+      - PB_LOG_FORMAT=json
+
+      # Prometheus metrics
+      - PROMETHEUS_ENABLED=true
+      - PROMETHEUS_PORT=8000
+
+    # Secrets: All sensitive data loaded from Docker secrets
+    secrets:
+      - surrealdb_root_password
+      - redis_password
+      - xai_api_key
+      - huggingface_token
+      - github_token
+      - replicate_api_token
+
+    volumes:
+      # Persistent storage for projects and artifacts
+      - project-artifacts:/app/projects
+      - project-logs:/app/logs
+
+      # Read-only config
+      - ./config:/app/config:ro
+
+      # SSH keys (read-only bind mount - see docs for setup)
+      # Uncomment and configure path as needed:
+      # - /srv/pb/.ssh:/home/pbuser/.ssh:ro
+
+    # Security: No ports exposed to host (internal network only)
+    expose:
+      - "8000"  # Health check + Prometheus metrics (internal only)
+
+    networks:
+      - internal_net  # Internal network for DB/Redis/Prometheus access
+
+    depends_on:
+      surrealdb:
+        condition: service_started  # SurrealDB has no healthcheck (distroless)
+      redis:
+        condition: service_healthy  # Redis has proper healthcheck
+
+    # Startup: Wait for SurrealDB to be ready, then start health server
+    command: ["sh", "-c", "./wait-for.sh http://surrealdb:8000/health && python scripts/run-health-server.py"]
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'
+          memory: 1G
+      replicas: 1
+
+    stop_grace_period: 30s
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================================
+  # Prometheus - Metrics Collection
+  # ==========================================================================
+  # Purpose: Scrape and store metrics from all services
+  # Exposed: Internal network only (no external access)
+  # Security: Read-only config, internal network only
+  # ==========================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: project-builder-prometheus
+    restart: unless-stopped
+
+    # Security: Run as non-root user (nobody = UID 65534)
+    user: "65534:65534"
+
+    # Security: Prevent privilege escalation
+    security_opt:
+      - no-new-privileges:true
+
+    # Security: Drop all capabilities
+    cap_drop:
+      - ALL
+
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.listen-address=:9090'
+
+    volumes:
+      # Read-only configuration
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+      # Persistent metrics storage
+      - prometheus-data:/prometheus
+
+    # Security: No ports exposed to host (internal network only)
+    expose:
+      - "9090"  # Internal port only
+
+    networks:
+      - internal_net  # Internal network for scraping metrics
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.1'
+          memory: 128M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================================================
+  # Grafana - Metrics Visualization
+  # ==========================================================================
+  # Purpose: Visualize Prometheus metrics via dashboards
+  # Exposed: Via Traefik at https://grafana.dev.local
+  # Security: Password via secret, TLS termination, internal network
+  # ==========================================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: project-builder-grafana
+    restart: unless-stopped
+
+    # Security: Run as non-root user (grafana user = UID 472)
+    user: "472:472"
+
+    # Security: Prevent privilege escalation
+    security_opt:
+      - no-new-privileges:true
+
+    # Security: Drop all capabilities
+    cap_drop:
+      - ALL
+
+    environment:
+      # Admin user (non-sensitive)
+      - GF_SECURITY_ADMIN_USER=admin
+
+      # Admin password via secret file
+      - GF_SECURITY_ADMIN_PASSWORD__FILE=/run/secrets/grafana_admin_password
+
+      # Security settings
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=https://grafana.dev.local
+      - GF_SERVER_DOMAIN=grafana.dev.local
+
+      # Plugins
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+
+      # Disable analytics
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+
+    # Secrets: Admin password loaded from Docker secret
+    secrets:
+      - grafana_admin_password
+
+    volumes:
+      # Persistent Grafana data
+      - grafana-data:/var/lib/grafana
+
+      # Provisioned dashboards and datasources (read-only)
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+
+    # Security: No ports exposed to host (access via Traefik only)
+    expose:
+      - "3000"  # Internal port for Traefik routing
+
+    networks:
+      - internal_net  # Internal network for Prometheus access
+      - ingress_net   # Ingress network for Traefik routing
+
+    depends_on:
+      - prometheus
+
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    labels:
+      # Enable Traefik routing
+      - "traefik.enable=true"
+
+      # HTTPS router
+      - "traefik.http.routers.grafana.rule=Host(`grafana.dev.local`)"
+      - "traefik.http.routers.grafana.entrypoints=websecure"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.service=grafana"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+      # Network specification
+      - "traefik.docker.network=ingress_net"
+
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+# Security: Network segmentation for defense in depth
+# - ingress_net: Frontend network for Traefik routing (external-facing services)
+# - internal_net: Backend network for internal services (no external access)
+# ============================================================================
+networks:
+  # Ingress network: Traefik → External-facing services (SurrealDB, Grafana)
+  ingress_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.1.0/24
+
+  # Internal network: Backend services only (Redis, Prometheus, Project Builder)
+  # Security: internal: true prevents external routing
+  internal_net:
+    driver: bridge
+    internal: true  # No external connectivity
+    ipam:
+      config:
+        - subnet: 172.29.2.0/24
+
+# ============================================================================
+# VOLUMES
+# ============================================================================
+# Persistent storage for all services
+# ============================================================================
+volumes:
+  surrealdb-data:
+    driver: local
+  redis-data:
+    driver: local
+  redis-tmp:
+    driver: local
+  project-artifacts:
+    driver: local
+  project-logs:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  traefik-logs:
+    driver: local

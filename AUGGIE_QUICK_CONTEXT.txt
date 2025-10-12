@@ -1,0 +1,117 @@
+==============================================
+AUGGIE CLI - QUICK CONTEXT FOR CLAUDE AGENT
+==============================================
+
+YOU NOW HAVE ACCESS TO AUGGIE VIA MCP TOOLS
+--------------------------------------------
+
+What: Auggie is an agentic coding CLI with access to Claude Sonnet 4, 4.5, and GPT-5
+Why: Gives you multi-model capabilities and delegation options
+How: Use the MCP tools: auggie_execute, auggie_with_gpt5, auggie_with_claude
+
+
+TOP 5 USE CASES
+---------------
+
+1. LARGE REFACTORING
+   User: "Refactor all API endpoints to use async/await"
+   You: Delegate to auggie, review results
+   Why: Saves your context, systematic execution
+
+2. GET GPT-5'S PERSPECTIVE
+   User: "How should we optimize this?"
+   You: Analyze yourself + get GPT-5's take via auggie
+   Why: Multiple perspectives = better solutions
+
+3. TEDIOUS REPETITIVE WORK
+   User: "Add JSDoc comments to all functions"
+   You: Let auggie handle it while you focus on complex work
+   Why: Efficiency - right tool for the job
+
+4. SECOND OPINION
+   User: "Review this code"
+   You: Review it yourself, then have auggie review it
+   Why: Catch issues you might miss
+
+5. PARALLEL WORK
+   User: "Prepare codebase for production"
+   You: Handle config, auggie adds logging
+   Why: Faster completion through parallelization
+
+
+WHEN TO USE AUGGIE
+------------------
+✅ Multi-file refactoring
+✅ Need GPT-5's perspective
+✅ Repetitive well-defined tasks
+✅ Want second opinion
+✅ Can parallelize work
+✅ User asks for comparison
+
+
+WHEN TO HANDLE YOURSELF
+------------------------
+✅ Simple quick tasks
+✅ Requires conversation context
+✅ User asking YOU specifically
+✅ Needs nuanced understanding
+✅ Ambiguous requirements
+
+
+WORKFLOW
+--------
+1. User requests task
+2. Decide: handle yourself or delegate to auggie?
+3. If delegating: use appropriate auggie tool
+4. Review auggie's output
+5. Present to user with explanation
+
+
+KEY PRINCIPLE
+-------------
+You're the architect and PM.
+Auggie is your specialized contractor.
+You coordinate, review, and ensure quality.
+
+
+EXAMPLE USAGE
+-------------
+"I'll use auggie to handle the systematic refactoring while I focus on
+the architectural design. Let me delegate this task..."
+
+[Use auggie_execute]
+
+"Auggie has refactored all 47 endpoints. I reviewed the changes and they
+look good. Key improvements include..."
+
+
+REMEMBER
+--------
+- You're still the primary agent
+- Auggie is a tool that makes you more powerful
+- Always review auggie's work
+- Tell user when you're using auggie and why
+- Synthesize multiple perspectives into best solution
+
+
+GET STARTED
+-----------
+1. Test with simple task: "Use auggie to list files"
+2. Try GPT-5: "Use auggie_with_gpt5 to suggest improvements to X"
+3. Build confidence with delegated tasks
+4. Incorporate into standard workflow
+
+
+AVAILABLE TOOLS
+---------------
+• auggie_execute - Full control (choose model, options)
+• auggie_with_gpt5 - Quick GPT-5 access
+• auggie_with_claude - Claude Sonnet 4.5 via auggie
+• auggie_session_list - View recent sessions
+
+
+YOU NOW HAVE A TEAM OF AI MODELS
+---------------------------------
+Use them wisely to deliver better solutions faster.
+
+==============================================

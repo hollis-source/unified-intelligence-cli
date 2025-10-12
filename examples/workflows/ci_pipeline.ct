@@ -1,0 +1,18 @@
+# CI/CD Pipeline with Sequential Composition (∘)
+# Demonstrates: Right-to-left execution, composition type checking
+
+# Type annotations (Phase 3 - optional type checking)
+format :: Code -> Code
+lint :: Code -> Code
+test :: Code -> TestReport
+build :: TestReport -> Artifact
+deploy :: Artifact -> Deployment
+
+# Sequential pipeline: format → lint → test → build → deploy
+# Execution order: format first (rightmost), then lint, then test, then build, then deploy
+# Type checking ensures: output of each step matches input of next
+
+functor ci_pipeline = deploy ∘ build ∘ test ∘ lint ∘ format
+
+# Execute the pipeline
+ci_pipeline

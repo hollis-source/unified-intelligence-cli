@@ -1,0 +1,29 @@
+# Architectural Synthesis Workflow
+# Comprehensive study and synthesis of architectural refactoring discussion
+# into a cohesive conceptual baseline document for future planning.
+#
+# Phase 1: Study the entire conversation to understand all architectural concepts
+# Phase 2: Synthesize findings into unified architecture document
+#
+# Key topics to extract:
+# - Graph-theoretic HTN-based project builder
+# - Meta-operational lifecycle (Plan → Verify → Decompose → Execute)
+# - Recursive task decomposition (Project → Task → Todo)
+# - Category theory vs graph theory formalism
+# - Resource pool considerations
+# - Executor interface abstraction
+# - Integration of DSL, CLI, and Priority Workers
+#
+# This workflow produces a comprehensive architecture document that serves
+# as the conceptual foundation for future implementation planning.
+
+# Type annotations
+study_conversation :: () -> ConversationAnalysis
+extract_concepts :: ConversationAnalysis -> ConceptList
+analyze_integration_points :: ConceptList -> IntegrationAnalysis
+synthesize_unified_model :: IntegrationAnalysis -> UnifiedArchitecture
+document_baseline :: UnifiedArchitecture -> ArchitectureDocument
+
+# Sequential synthesis pipeline with conversation study first
+# Category Theory: (f ∘ g ∘ h ∘ i ∘ j)(x)
+functor architecture_synthesis = document_baseline o synthesize_unified_model o analyze_integration_points o extract_concepts o study_conversation

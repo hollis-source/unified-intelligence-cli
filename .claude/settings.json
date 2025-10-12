@@ -1,0 +1,36 @@
+{
+  "env": {
+    "DELEGATION_MODE": "balanced"
+  },
+  "permissions": {
+    "allow": [
+      "*(*:*)"
+    ],
+    "deny": [],
+    "ask": [],
+    "defaultMode": "bypassPermissions"
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/ultrathink_submit.py\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/autocommit_post.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

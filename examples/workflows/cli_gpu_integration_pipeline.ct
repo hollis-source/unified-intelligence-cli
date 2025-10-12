@@ -1,0 +1,16 @@
+# CLI GPU Integration Development Pipeline
+# Real production example: Add GPU inference support to unified-intelligence-cli
+#
+# Feature: Deploy Qwen3-8B to Modal/Together.ai for GPU inference
+#
+# Development Flow (Clean Agile TDD):
+# 1. Parallel planning: Research APIs + Design architecture + Write specs
+# 2. TDD: Write tests first (unit + integration)
+# 3. Implement: GPU adapter + CLI commands + deployment scripts
+# 4. CI/CD: Run tests + lint + integration tests + build docs
+# 5. Deploy: Package + upload + verify
+#
+# Category Theory: Planning (parallel) → Tests (parallel) → Implementation (parallel) → CI/CD (sequential) → Deploy
+# Estimated time: 15-20 minutes (or 2-3 hours for manual implementation)
+
+deploy_to_staging ∘ build_package ∘ generate_docs ∘ integration_test ∘ run_ci_pipeline ∘ (implement_modal_adapter × implement_together_adapter × implement_cli_commands) ∘ (write_adapter_tests × write_integration_tests × write_cli_tests) ∘ (research_modal_api × research_together_api × design_architecture × write_technical_spec)

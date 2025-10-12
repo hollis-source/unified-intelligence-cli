@@ -1,0 +1,247 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: surrealdb-schema-init
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/component: database-init
+spec:
+  # Keep job history for debugging
+  ttlSecondsAfterFinished: 86400  # 24 hours
+
+  # Only run once
+  completions: 1
+  parallelism: 1
+
+  # Retry up to 5 times
+  backoffLimit: 5
+
+  template:
+    metadata:
+      labels:
+        app: surrealdb-init
+        app.kubernetes.io/name: project-builder
+        app.kubernetes.io/component: database-init
+    spec:
+      # Don't restart on failure (let backoffLimit handle retries)
+      restartPolicy: Never
+
+      # Security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+
+      # Init containers to wait for SurrealDB
+      initContainers:
+      - name: wait-for-surrealdb
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z surrealdb 8000; do echo waiting for surrealdb; sleep 5; done']
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+
+      containers:
+      - name: schema-init
+        image: alpine:3.19
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          set -e
+
+          echo "Installing dependencies..."
+          apk add --no-cache curl jq
+
+          echo "Waiting for SurrealDB to be healthy..."
+          until curl -sf http://surrealdb:8000/health; do
+            echo "SurrealDB not ready, waiting 2s..."
+            sleep 2
+          done
+
+          echo "Applying SurrealDB schema..."
+          curl -X POST \
+            -H "Content-Type: text/plain" \
+            -H "NS: ${SURREAL_NS}" \
+            -H "DB: ${SURREAL_DB}" \
+            -u "${SURREAL_USER}:${SURREAL_PASS}" \
+            -d @/schema/init-surreal.surql \
+            http://surrealdb:8000/sql
+
+          echo "Verifying schema..."
+          RESPONSE=$(curl -s -X POST \
+            -H "Content-Type: text/plain" \
+            -H "NS: ${SURREAL_NS}" \
+            -H "DB: ${SURREAL_DB}" \
+            -H "Accept: application/json" \
+            -u "${SURREAL_USER}:${SURREAL_PASS}" \
+            -d "INFO FOR DB;" \
+            http://surrealdb:8000/sql)
+
+          if echo "$RESPONSE" | grep -q "projects"; then
+            echo "✓ Table 'projects' exists"
+          else
+            echo "✗ Table 'projects' not found"
+            exit 1
+          fi
+
+          if echo "$RESPONSE" | grep -q "tasks"; then
+            echo "✓ Table 'tasks' exists"
+          else
+            echo "✗ Table 'tasks' not found"
+            exit 1
+          fi
+
+          echo "✅ SurrealDB schema initialization complete"
+
+        # Environment variables
+        env:
+        - name: SURREAL_NS
+          value: "project_builder"
+        - name: SURREAL_DB
+          value: "production"
+        - name: SURREAL_USER
+          value: "root"
+        - name: SURREAL_PASS
+          valueFrom:
+            secretKeyRef:
+              name: project-builder-secrets
+              key: surrealdb_root_password
+
+        # Security context
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop: ["ALL"]
+
+        # Volume mounts
+        volumeMounts:
+        - name: schema
+          mountPath: /schema
+          readOnly: true
+        - name: tmp
+          mountPath: /tmp
+
+        # Resource limits
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+
+      # Volumes
+      volumes:
+      - name: schema
+        configMap:
+          name: surrealdb-schema
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: surrealdb-schema
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/component: database-schema
+data:
+  init-surreal.surql: |
+    -- SurrealDB Initialization Script for Project Builder
+    -- Sprint 1: Production Deployment - SurrealDB Migration
+    --
+    -- NOTE: This is embedded in ConfigMap. Update from scripts/init-surreal.surql when schema changes.
+
+    DEFINE NAMESPACE project_builder;
+    USE NS project_builder;
+    DEFINE DATABASE production;
+    USE DB production;
+
+    -- Projects table
+    DEFINE TABLE projects SCHEMAFULL;
+    DEFINE FIELD project_id ON TABLE projects TYPE string ASSERT $value != NONE;
+    DEFINE FIELD goal ON TABLE projects TYPE option<string>;
+    DEFINE FIELD created_at ON TABLE projects TYPE datetime DEFAULT time::now();
+    DEFINE FIELD updated_at ON TABLE projects TYPE datetime DEFAULT time::now();
+    DEFINE FIELD status ON TABLE projects TYPE string DEFAULT 'in_progress';
+    DEFINE FIELD completion_percentage ON TABLE projects TYPE number DEFAULT 0.0;
+    DEFINE FIELD metadata ON TABLE projects TYPE object DEFAULT {};
+    DEFINE FIELD version ON TABLE projects TYPE option<int>;
+    DEFINE FIELD htn_graph ON TABLE projects TYPE option<string>;
+    DEFINE FIELD task_status ON TABLE projects TYPE option<object>;
+    DEFINE FIELD world_state ON TABLE projects TYPE option<object>;
+    DEFINE FIELD last_updated ON TABLE projects TYPE option<string>;
+
+    DEFINE INDEX project_id_idx ON TABLE projects COLUMNS project_id;
+    DEFINE INDEX project_version_idx ON TABLE projects COLUMNS project_id, version UNIQUE;
+    DEFINE INDEX status_idx ON TABLE projects COLUMNS status;
+    DEFINE INDEX created_at_idx ON TABLE projects COLUMNS created_at;
+
+    -- Tasks table
+    DEFINE TABLE tasks SCHEMAFULL;
+    DEFINE FIELD task_id ON TABLE tasks TYPE string ASSERT $value != NONE;
+    DEFINE FIELD task_type ON TABLE tasks TYPE string ASSERT $value != NONE;
+    DEFINE FIELD description ON TABLE tasks TYPE string ASSERT $value != NONE;
+    DEFINE FIELD status ON TABLE tasks TYPE string DEFAULT 'pending';
+    DEFINE FIELD created_at ON TABLE tasks TYPE datetime DEFAULT time::now();
+    DEFINE FIELD started_at ON TABLE tasks TYPE option<datetime>;
+    DEFINE FIELD completed_at ON TABLE tasks TYPE option<datetime>;
+    DEFINE FIELD error_message ON TABLE tasks TYPE option<string>;
+    DEFINE FIELD retry_count ON TABLE tasks TYPE int DEFAULT 0;
+    DEFINE FIELD metadata ON TABLE tasks TYPE object DEFAULT {};
+
+    DEFINE INDEX task_status_idx ON TABLE tasks COLUMNS status;
+    DEFINE INDEX task_id_idx ON TABLE tasks COLUMNS task_id;
+
+    -- Artifacts table
+    DEFINE TABLE artifacts SCHEMAFULL;
+    DEFINE FIELD artifact_name ON TABLE artifacts TYPE string ASSERT $value != NONE;
+    DEFINE FIELD artifact_type ON TABLE artifacts TYPE string ASSERT $value != NONE;
+    DEFINE FIELD content ON TABLE artifacts TYPE option<string>;
+    DEFINE FIELD quality_score ON TABLE artifacts TYPE option<number>;
+    DEFINE FIELD syntax_correct ON TABLE artifacts TYPE option<bool>;
+    DEFINE FIELD has_todos ON TABLE artifacts TYPE option<bool>;
+    DEFINE FIELD has_thinking ON TABLE artifacts TYPE option<bool>;
+    DEFINE FIELD created_at ON TABLE artifacts TYPE datetime DEFAULT time::now();
+    DEFINE FIELD metadata ON TABLE artifacts TYPE object DEFAULT {};
+    DEFINE FIELD embedding ON TABLE artifacts TYPE option<array<number>>;
+
+    DEFINE INDEX artifact_name_idx ON TABLE artifacts COLUMNS artifact_name;
+    DEFINE INDEX artifact_type_idx ON TABLE artifacts COLUMNS artifact_type;
+
+    -- Execution Metrics table
+    DEFINE TABLE execution_metrics SCHEMAFULL;
+    DEFINE FIELD execution_time_ms ON TABLE execution_metrics TYPE int;
+    DEFINE FIELD tokens_used ON TABLE execution_metrics TYPE int;
+    DEFINE FIELD cost_usd ON TABLE execution_metrics TYPE number;
+    DEFINE FIELD model_used ON TABLE execution_metrics TYPE string;
+    DEFINE FIELD timestamp ON TABLE execution_metrics TYPE datetime DEFAULT time::now();
+    DEFINE FIELD metadata ON TABLE execution_metrics TYPE object DEFAULT {};
+
+    DEFINE INDEX timestamp_idx ON TABLE execution_metrics COLUMNS timestamp;
+
+    -- Graph edges
+    DEFINE TABLE has_task SCHEMAFULL TYPE RELATION IN projects OUT tasks;
+    DEFINE FIELD created_at ON TABLE has_task TYPE datetime DEFAULT time::now();
+
+    DEFINE TABLE produces_artifact SCHEMAFULL TYPE RELATION IN tasks OUT artifacts;
+    DEFINE FIELD created_at ON TABLE produces_artifact TYPE datetime DEFAULT time::now();
+
+    DEFINE TABLE has_metric SCHEMAFULL TYPE RELATION IN projects OUT execution_metrics;
+    DEFINE FIELD created_at ON TABLE has_metric TYPE datetime DEFAULT time::now();
+
+    DEFINE TABLE task_metric SCHEMAFULL TYPE RELATION IN tasks OUT execution_metrics;
+    DEFINE FIELD created_at ON TABLE task_metric TYPE datetime DEFAULT time::now();
+
+    -- Auto-update events
+    DEFINE EVENT update_project_timestamp ON TABLE projects WHEN $event = "UPDATE" THEN (
+        UPDATE $after.id SET updated_at = time::now()
+    );

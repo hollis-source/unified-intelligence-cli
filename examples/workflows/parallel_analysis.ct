@@ -1,0 +1,14 @@
+# Parallel Analysis with Product (×)
+# Demonstrates: Concurrent execution, parallel composition
+
+# Type annotations
+security_scan :: Code -> SecurityReport
+performance_analysis :: Code -> PerformanceReport
+code_quality :: Code -> QualityReport
+
+# Parallel execution: all analyses run concurrently
+# Result: (SecurityReport × PerformanceReport × QualityReport)
+parallel_analysis = security_scan × performance_analysis × code_quality
+
+# Execute parallel analysis
+parallel_analysis

@@ -1,0 +1,112 @@
+# Sample Priorities Queue for Pilot Deployment
+# This file contains prioritized tasks for autonomous PriorityWorker execution
+
+priorities:
+  # Critical priority tasks (priority: 4)
+  - id: "pw-pilot-001"
+    title: "Validate PriorityWorker Integration"
+    priority: "critical"
+    status: "open"
+    effort_hours: 1
+    workflow: "validate-integration"
+    claimed_by: null
+    metadata:
+      description: "Run integration tests to validate PriorityWorker deployment"
+      expected_output: "All tests pass with 100% success rate"
+      dependencies: []
+
+  # High priority tasks (priority: 3)
+  - id: "pw-pilot-002"
+    title: "Test Redis Connection"
+    priority: "high"
+    status: "open"
+    effort_hours: 0.5
+    workflow: "test-redis"
+    claimed_by: null
+    metadata:
+      description: "Verify Redis connection and atomic locking mechanism"
+      expected_output: "Redis ping successful, locks acquired/released"
+      dependencies: []
+
+  - id: "pw-pilot-003"
+    title: "Test Git Branch Management"
+    priority: "high"
+    status: "open"
+    effort_hours: 0.5
+    workflow: "test-git-branches"
+    claimed_by: null
+    metadata:
+      description: "Verify branch creation, checkout, and cleanup"
+      expected_output: "Branches created/deleted without conflicts"
+      dependencies: []
+
+  # Medium priority tasks (priority: 2)
+  - id: "pw-pilot-004"
+    title: "Benchmark Task Execution Time"
+    priority: "medium"
+    status: "open"
+    effort_hours: 1
+    workflow: "benchmark-execution"
+    claimed_by: null
+    metadata:
+      description: "Measure average task execution latency"
+      expected_output: "Latency metrics collected (target: <60s per task)"
+      dependencies: ["pw-pilot-001"]
+
+  - id: "pw-pilot-005"
+    title: "Test Error Handling and Retry Logic"
+    priority: "medium"
+    status: "open"
+    effort_hours: 1
+    workflow: "test-error-handling"
+    claimed_by: null
+    metadata:
+      description: "Simulate failures and verify exponential backoff retry"
+      expected_output: "Failed tasks retried up to max_retries, then marked failed"
+      dependencies: ["pw-pilot-001"]
+
+  # Low priority tasks (priority: 1)
+  - id: "pw-pilot-006"
+    title: "Generate Metrics Report"
+    priority: "low"
+    status: "open"
+    effort_hours: 0.5
+    workflow: "generate-metrics"
+    claimed_by: null
+    metadata:
+      description: "Compile throughput, latency, and success rate metrics"
+      expected_output: "Metrics JSON file with 24h cycle statistics"
+      dependencies: ["pw-pilot-004", "pw-pilot-005"]
+
+# Example completed task (for reference)
+  - id: "pw-pilot-000"
+    title: "Setup PriorityWorker Infrastructure"
+    priority: "critical"
+    status: "completed"
+    effort_hours: 8
+    workflow: "setup-infrastructure"
+    claimed_by: "ULTRATHINK-implementation-phase"
+    metadata:
+      description: "Implement Clean Architecture layers for PriorityWorker"
+      completion_date: "2025-10-04"
+      result: "1,308 LOC generated across 6 layers"
+
+# Example failed task (for reference)
+  - id: "pw-pilot-failed"
+    title: "Test Task Intentional Failure"
+    priority: "low"
+    status: "failed"
+    effort_hours: 0.25
+    workflow: "intentional-failure"
+    claimed_by: "testing-agent"
+    metadata:
+      description: "Task designed to fail for error handling validation"
+      failure_reason: "Simulated failure for testing retry logic"
+      retry_count: 3
+
+# Notes for Pilot Deployment:
+# - Start with critical priority tasks first
+# - Ensure Redis is running: docker run -d -p 6379:6379 redis:latest
+# - Monitor task status transitions: open → claimed → in_progress → completed/failed
+# - Verify atomic claiming (no duplicate work)
+# - Validate 24h cycle completes all open tasks

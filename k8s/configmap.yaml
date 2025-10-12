@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: project-builder-config
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/part-of: project-builder
+data:
+  PB_DB_TYPE: "surrealdb"
+  PB_DB_HOST: "surrealdb"
+  PB_DB_PORT: "8000"
+  PB_DB_NAMESPACE: "project_builder"
+  PB_DB_DATABASE: "production"
+  PB_DB_USER: "root"
+  SURREALDB_URL: "http://surrealdb:8000"
+
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  LLM_CACHE_ENABLED: "true"
+
+  PB_ENV: "production"
+  PB_LOG_LEVEL: "INFO"
+  PB_LOG_FORMAT: "json"
+
+  PROMETHEUS_ENABLED: "true"
+  PROMETHEUS_PORT: "8000"
+

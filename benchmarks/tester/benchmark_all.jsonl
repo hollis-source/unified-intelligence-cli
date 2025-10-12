@@ -1,0 +1,25 @@
+{"task_id": 149, "description": "Implement A/B test analysis with statistical significance testing (t-test, chi-square)", "category": "4", "agent": "tester"}
+{"task_id": 57, "description": "Verify all ITextGenerator implementations are truly substitutable by testing with same inputs", "category": "2", "agent": "tester"}
+{"task_id": 85, "description": "Create unit tests for message building logic in LLMAgentExecutor with various contexts", "category": "3", "agent": "tester"}
+{"task_id": 83, "description": "Implement unit tests for TaskCoordinator error handling with mocked dependencies", "category": "3", "agent": "tester"}
+{"task_id": 89, "description": "Design integration tests for end-to-end task execution with mock LLM provider", "category": "3", "agent": "tester"}
+{"task_id": 91, "description": "Implement tests for LLM provider switching between mock, grok, and tongyi", "category": "3", "agent": "tester"}
+{"task_id": 148, "description": "Design regression testing suite to ensure fine-tuned model doesn't degrade on base tasks", "category": "4", "agent": "tester"}
+{"task_id": 90, "description": "Create integration tests for multi-task parallel execution with dependency resolution", "category": "3", "agent": "tester"}
+{"task_id": 92, "description": "Write integration tests for configuration loading from file with CLI override", "category": "3", "agent": "tester"}
+{"task_id": 94, "description": "Implement integration tests for error propagation through coordinator to CLI", "category": "3", "agent": "tester"}
+{"task_id": 127, "description": "Create a hyperparameter search script testing different LoRA ranks (4, 8, 16, 32, 64)", "category": "4", "agent": "tester"}
+{"task_id": 114, "description": "Measure test coverage percentage and create plan to reach 90% coverage", "category": "3", "agent": "tester"}
+{"task_id": 111, "description": "Write tests for custom exception types before creating exception hierarchy", "category": "3", "agent": "tester"}
+{"task_id": 87, "description": "Write unit tests for Config.merge_cli_args() with all parameter combinations", "category": "3", "agent": "tester"}
+{"task_id": 266, "description": "Plan 'improve test coverage to 90%' with specific module targets", "category": "8", "agent": "tester"}
+{"task_id": 97, "description": "Create pytest fixtures for common test data (tasks, agents, configs, mock LLMs)", "category": "3", "agent": "tester"}
+{"task_id": 128, "description": "Design A/B testing framework to compare baseline vs fine-tuned model responses", "category": "4", "agent": "tester"}
+{"task_id": 84, "description": "Write tests for LLMConfig validation including temperature bounds and token limits", "category": "3", "agent": "tester"}
+{"task_id": 81, "description": "Write unit tests for Task entity validation logic with edge cases (empty description, invalid priority)", "category": "3", "agent": "tester"}
+{"task_id": 104, "description": "Implement mutation testing setup to verify test suite effectiveness", "category": "3", "agent": "tester"}
+{"task_id": 272, "description": "Create CI/CD pipeline with automated testing, linting, and deployment", "category": "8", "agent": "tester"}
+{"task_id": 268, "description": "Decompose 'add CLI interactive mode' into UX, implementation, testing", "category": "8", "agent": "tester"}
+{"task_id": 96, "description": "Write integration tests for orchestrator mode switching (simple vs openai-agents)", "category": "3", "agent": "tester"}
+{"task_id": 100, "description": "Create custom pytest markers for slow, integration, and unit test categorization", "category": "3", "agent": "tester"}
+{"task_id": 248, "description": "Write testing guide showing how to write and run tests", "category": "7", "agent": "tester"}

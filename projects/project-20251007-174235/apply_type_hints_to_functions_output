@@ -1,0 +1,14 @@
+```python
+# Assuming the file contains functions like 'score_relevance' and 'analyze_text',
+# here's an example of adding type hints. Replace with actual function names and parameters.
+
+def score_relevance(text: str, keywords: list[str]) -> float:
+    """Calculate relevance score based on text and keywords."""
+    # Implementation
+    return 0.0
+
+def analyze_text(document: str, threshold: float) -> dict[str, float]:
+    """Analyze document and return relevance metrics."""
+    # Implementation
+    return {"score": 0.0, "keywords": []}
+```

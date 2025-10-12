@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.19.1",
+    "ssh2": "^1.17.0"
+  }
+}

@@ -1,0 +1,8 @@
+{"task_id": 2, "description": "Progress to complex tasks (architecture, planning)", "category": "9", "agent": "coordinator"}
+{"task_id": 227, "description": "Simplify error handling by using context managers and decorators", "category": "6", "agent": "coordinator"}
+{"task_id": 265, "description": "Decompose 'add multi-model support' into actionable work items", "category": "8", "agent": "coordinator"}
+{"task_id": 256, "description": "Plan 2-week sprint implementing new feature with story breakdown", "category": "8", "agent": "coordinator"}
+{"task_id": 276, "description": "Plan technical spike for evaluating new technologies", "category": "8", "agent": "coordinator"}
+{"task_id": 278, "description": "Plan infrastructure resources needed for production deployment", "category": "8", "agent": "coordinator"}
+{"task_id": 260, "description": "Create risk management plan identifying threats and mitigation strategies", "category": "8", "agent": "coordinator"}
+{"task_id": 259, "description": "Plan technical debt reduction sprint with measurable success criteria", "category": "8", "agent": "coordinator"}

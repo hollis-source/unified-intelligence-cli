@@ -1,0 +1,8 @@
+[
+  {
+    "id": "test_watcher_001",
+    "content": "Design and implement a comprehensive microservices architecture for the authentication system, including JWT token management, OAuth2 integration, role-based access control (RBAC), and API gateway configuration. Must follow Clean Architecture principles with proper separation of concerns across multiple services.",
+    "activeForm": "Designing and implementing microservices authentication architecture",
+    "status": "pending"
+  }
+]

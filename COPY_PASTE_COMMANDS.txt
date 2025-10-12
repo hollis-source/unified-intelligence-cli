@@ -1,0 +1,247 @@
+==============================================
+AUGGIE MCP INSTALLATION - COPY & PASTE COMMANDS
+For: root@157.90.66.183
+==============================================
+
+STEP 1: SSH to remote
+----------------------
+ssh root@157.90.66.183
+
+
+STEP 2: Install Node.js 22 (if needed)
+---------------------------------------
+# Check if already installed:
+node --version
+
+# If not installed or version < 22, run:
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+apt install -y nodejs
+node --version
+
+
+STEP 3: Install Auggie CLI
+---------------------------
+npm install -g @augmentcode/auggie
+auggie --version
+
+
+STEP 4: Authenticate Auggie
+----------------------------
+auggie login
+
+# Follow the prompts:
+# 1. Copy the URL and open in browser
+# 2. Login to Augment Code
+# 3. Copy the JSON response
+# 4. Paste it in terminal
+
+# Verify:
+auggie token print
+
+
+STEP 5: Test Auggie
+--------------------
+cd /root/projects  # or your working directory
+auggie --print "list files"
+
+
+STEP 6: Create MCP directory
+-----------------------------
+mkdir -p ~/.mcp-servers
+cd ~/.mcp-servers
+
+
+STEP 7: Create package.json
+----------------------------
+cat > ~/.mcp-servers/package.json << 'EOF'
+{
+  "name": "auggie-mcp-server",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "auggie-mcp-server.js",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0"
+  }
+}
+EOF
+
+
+STEP 8: Install dependencies
+-----------------------------
+cd ~/.mcp-servers
+npm install
+
+
+STEP 9: Create MCP server script
+---------------------------------
+# This is a large file - see auggie-mcp-server.js
+# You'll need to copy the full content from REMOTE_SETUP_GUIDE.md
+# Or download from your local machine if you have it
+
+# Quick way: Create file and paste content manually
+nano ~/.mcp-servers/auggie-mcp-server.js
+# (Paste the content from REMOTE_SETUP_GUIDE.md Step 8)
+# Save with Ctrl+X, then Y, then Enter
+
+# Make it executable
+chmod +x ~/.mcp-servers/auggie-mcp-server.js
+
+
+STEP 10: Create Claude Code config
+-----------------------------------
+mkdir -p ~/.claude
+
+cat > ~/.claude/config.json << 'EOF'
+{
+  "mcpServers": {
+    "auggie": {
+      "command": "node",
+      "args": [
+        "/root/.mcp-servers/auggie-mcp-server.js"
+      ],
+      "env": {
+        "AUGGIE_WORKSPACE": "/root/projects",
+        "AUGGIE_PATH": "auggie"
+      }
+    }
+  }
+}
+EOF
+
+# ⚠️ IMPORTANT: Edit the config if your paths are different:
+# - Change /root/projects to your actual workspace
+# - If auggie is not in PATH, use full path like /usr/local/bin/auggie
+
+
+STEP 11: Verify installation
+-----------------------------
+# Check config file
+cat ~/.claude/config.json
+
+# Check MCP server exists
+ls -la ~/.mcp-servers/auggie-mcp-server.js
+
+# Test MCP server
+node ~/.mcp-servers/auggie-mcp-server.js
+# Should show: "Auggie MCP Server running"
+# Press Ctrl+C to exit
+
+
+STEP 12: Restart Claude Code
+-----------------------------
+# Exit current session
+exit
+
+# Reconnect
+ssh root@157.90.66.183
+
+# Start Claude Code
+claude-code  # or cc or however you start it
+
+
+STEP 13: Verify MCP tools are available
+----------------------------------------
+# In Claude Code session, ask me:
+# "What MCP tools do you have available?"
+
+# I should list:
+# - auggie_execute
+# - auggie_with_gpt5
+# - auggie_with_claude
+# - auggie_session_list
+
+
+STEP 14: Test auggie integration
+---------------------------------
+# Ask me: "Use auggie to list files in /root/projects"
+# I should use the auggie_execute tool and show results
+
+# Ask me: "Use auggie with GPT-5 to suggest improvements to [some file]"
+# I should use auggie_with_gpt5 and show GPT-5's response
+
+
+==============================================
+TROUBLESHOOTING
+==============================================
+
+If auggie command not found:
+-----------------------------
+which auggie
+npm list -g @augmentcode/auggie
+
+# Update config with full path:
+nano ~/.claude/config.json
+# Change "AUGGIE_PATH": "auggie"
+# To: "AUGGIE_PATH": "/full/path/to/auggie"
+
+
+If MCP server doesn't load:
+----------------------------
+# Check config syntax:
+cat ~/.claude/config.json | python3 -m json.tool
+
+# Test MCP server manually:
+node ~/.mcp-servers/auggie-mcp-server.js
+
+
+If authentication expires:
+---------------------------
+auggie login
+auggie token print
+
+
+If dependencies missing:
+------------------------
+cd ~/.mcp-servers
+npm install
+
+
+==============================================
+CUSTOMIZATION
+==============================================
+
+Change default workspace:
+-------------------------
+nano ~/.claude/config.json
+
+# Edit "AUGGIE_WORKSPACE": "/your/preferred/path"
+
+
+Use different Node version:
+----------------------------
+# If you use nvm:
+nvm install 22
+nvm use 22
+nvm alias default 22
+
+
+==============================================
+USEFUL COMMANDS
+==============================================
+
+Check auggie status:
+-------------------
+auggie --version
+auggie token print
+auggie session list
+
+Test MCP server:
+----------------
+node ~/.mcp-servers/auggie-mcp-server.js
+
+View config:
+------------
+cat ~/.claude/config.json
+
+Restart Claude Code:
+--------------------
+exit  # then reconnect via SSH
+
+Check auggie sessions:
+----------------------
+auggie session list --limit 10
+
+
+==============================================
+END OF INSTALLATION GUIDE
+==============================================

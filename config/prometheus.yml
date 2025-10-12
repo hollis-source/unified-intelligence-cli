@@ -1,0 +1,64 @@
+# Prometheus Configuration for Project Builder
+# Scrapes metrics from all services in the stack
+
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'project-builder'
+    environment: 'production'
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # Traefik reverse proxy metrics
+  - job_name: 'traefik'
+    static_configs:
+      - targets: ['traefik:8082']
+        labels:
+          service: 'traefik'
+
+  # Project Builder application metrics
+  - job_name: 'project-builder'
+    static_configs:
+      - targets: ['project-builder:8000']
+        labels:
+          service: 'project-builder'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # SurrealDB metrics (if available)
+  # Note: SurrealDB may expose metrics on /metrics endpoint
+  - job_name: 'surrealdb'
+    static_configs:
+      - targets: ['surrealdb:8000']
+        labels:
+          service: 'surrealdb'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Redis metrics (via redis_exporter if deployed)
+  # Currently disabled - uncomment if deploying redis_exporter sidecar
+  # - job_name: 'redis'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+  #       labels:
+  #         service: 'redis'
+
+# Alerting configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets: ['alertmanager:9093']
+
+# Rule files for alerting
+rule_files:
+  - '/etc/prometheus/alerts.yml'

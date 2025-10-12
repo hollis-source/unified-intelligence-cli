@@ -1,0 +1,205 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-builder
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/component: application
+    app.kubernetes.io/version: "1.0.0"
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: project-builder
+  template:
+    metadata:
+      labels:
+        app: project-builder
+        app.kubernetes.io/name: project-builder
+        app.kubernetes.io/component: application
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      # Security context for pod
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+
+      # Service account (create if RBAC enabled)
+      serviceAccountName: project-builder
+
+      # Init containers (wait for dependencies)
+      initContainers:
+      - name: wait-for-surrealdb
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z surrealdb 8000; do echo waiting for surrealdb; sleep 2; done']
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+
+      - name: wait-for-redis
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z redis 6379; do echo waiting for redis; sleep 2; done']
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop: ["ALL"]
+
+      containers:
+      - name: project-builder
+        image: project-builder:latest
+        imagePullPolicy: IfNotPresent
+
+        # Security context for container
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1000
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # Application needs write access to /app/projects
+          capabilities:
+            drop: ["ALL"]
+
+        # Resource limits and requests
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+
+        # Environment variables from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: project-builder-config
+
+        # Environment variables from Secrets
+        env:
+        - name: PB_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: project-builder-secrets
+              key: surrealdb_root_password
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: project-builder-secrets
+              key: redis_password
+        - name: XAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: project-builder-secrets
+              key: xai_api_key
+        - name: HUGGINGFACE_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: project-builder-secrets
+              key: huggingface_token
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: project-builder-secrets
+              key: github_token
+        - name: REPLICATE_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: project-builder-secrets
+              key: replicate_api_token
+
+        # Ports
+        ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+
+        # Liveness probe (is the container alive?)
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+
+        # Readiness probe (can the container serve traffic?)
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3
+
+        # Startup probe (has the container finished starting?)
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8000
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 30  # Allow up to 5 minutes for startup
+
+        # Volume mounts
+        volumeMounts:
+        - name: project-artifacts
+          mountPath: /app/projects
+        - name: project-logs
+          mountPath: /app/logs
+        - name: tmp
+          mountPath: /tmp
+
+      # Volumes
+      volumes:
+      - name: project-artifacts
+        persistentVolumeClaim:
+          claimName: project-artifacts-pvc
+      - name: project-logs
+        persistentVolumeClaim:
+          claimName: project-logs-pvc
+      - name: tmp
+        emptyDir: {}
+
+      # Affinity rules (spread pods across nodes)
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  app: project-builder
+              topologyKey: kubernetes.io/hostname
+
+      # Tolerations (if using node taints)
+      tolerations:
+      - key: "workload"
+        operator: "Equal"
+        value: "production"
+        effect: "NoSchedule"

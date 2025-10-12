@@ -1,0 +1,21 @@
+```python
+from typing import Union
+
+def multiply(a: Union[int, float], b: Union[int, float]) -> Union[int, float]:
+    """
+    Multiplies two numbers and returns the result.
+    
+    Parameters:
+    a (int or float): The first number.
+    b (int or float): The second number.
+    
+    Returns:
+    int or float: The product of the two numbers.
+    
+    Raises:
+    TypeError: If either input is not a number.
+    """
+    if not isinstance(a, (int, float)) or not isinstance(b, (int, float)):
+        raise TypeError("Both arguments must be numbers.")
+    return a * b
+```

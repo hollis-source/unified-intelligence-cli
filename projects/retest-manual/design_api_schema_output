@@ -1,0 +1,20 @@
+```python
+def add_numbers(a: float, b: float) -> float:
+    """
+    Adds two numbers and returns the result.
+    
+    Parameters:
+    a (float): The first number.
+    b (float): The second number.
+    
+    Returns:
+    float: The sum of a and b.
+    
+    Raises:
+    TypeError: If inputs are not numbers.
+    """
+    try:
+        return a + b
+    except TypeError as e:
+        raise TypeError("Both inputs must be numbers") from e
+```

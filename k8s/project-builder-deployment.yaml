@@ -1,0 +1,141 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-builder
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/part-of: project-builder
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: project-builder
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: project-builder
+        app.kubernetes.io/part-of: project-builder
+    spec:
+      serviceAccountName: default
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-surrealdb
+          image: curlimages/curl:8.5.0
+          command: ["sh","-c"]
+          args:
+            - |
+              echo "Waiting for SurrealDB at http://surrealdb:8000/health"; \
+              for i in $(seq 1 60); do \
+                curl -sf http://surrealdb:8000/health && exit 0; \
+                echo "not ready yet"; sleep 5; \
+              done; \
+              echo "SurrealDB not ready in time"; exit 1
+      containers:
+        - name: project-builder
+          image: project-builder:latest
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: project-builder-config
+          env:
+            # Secret file paths (values live in mounted secret; only file paths are env vars)
+            - name: PB_DB_PASSWORD_FILE
+              value: /run/secrets/surrealdb_root_password
+            - name: REDIS_PASSWORD_FILE
+              value: /run/secrets/redis_password
+            - name: XAI_API_KEY_FILE
+              value: /run/secrets/xai_api_key
+            - name: HUGGINGFACE_TOKEN_FILE
+              value: /run/secrets/huggingface_token
+            - name: GITHUB_TOKEN_FILE
+              value: /run/secrets/github_token
+            - name: REPLICATE_API_TOKEN_FILE
+              value: /run/secrets/replicate_api_token
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "2000m"
+              memory: "4Gi"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: secrets
+              mountPath: /run/secrets
+              readOnly: true
+            - name: artifacts
+              mountPath: /app/projects
+            - name: logs
+              mountPath: /app/logs
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 10
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            failureThreshold: 30
+            periodSeconds: 10
+      volumes:
+        - name: secrets
+          secret:
+            secretName: project-builder-secrets
+        - name: artifacts
+          persistentVolumeClaim:
+            claimName: project-artifacts
+        - name: logs
+          persistentVolumeClaim:
+            claimName: project-logs
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: project-artifacts
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/component: artifacts
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: project-logs
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/component: logs
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+

@@ -1,0 +1,15 @@
+# Git Commit All Uncommitted Changes
+# Real-world DSL usage: Orchestrate git workflow with safety checks
+#
+# Flow:
+# 1. Analyze uncommitted changes (categorize files)
+# 2. Generate descriptive commit message based on analysis
+# 3. Run tests to verify code works
+# 4. Stage files (git add)
+# 5. Create commit with generated message
+# 6. Verify commit succeeded
+#
+# Category Theory: Sequential composition with result propagation
+# Each task receives output from previous task as input
+
+verify_commit ∘ create_commit ∘ stage_files ∘ run_tests ∘ generate_commit_message ∘ analyze_uncommitted_changes

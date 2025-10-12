@@ -1,0 +1,15 @@
+{
+  "name": "ssh-remote",
+  "command": "node",
+  "args": [
+    "/home/ui-cli_jake/unified-intelligence-cli/ssh-mcp-server.js"
+  ],
+  "env": {
+    "SSH_MCP_ALLOWED_HOSTS": "syd2.jacobhollis.com,localhost",
+    "SSH_MCP_ALLOWED_PATHS": "/opt,/home,/tmp",
+    "SSH_MCP_SSH_KEY_PATH": "/home/ui-cli_jake/.ssh/id_ed25519",
+    "SSH_MCP_MAX_CONNECTIONS": "8",
+    "SSH_MCP_LOG_LEVEL": "info"
+  }
+}
+

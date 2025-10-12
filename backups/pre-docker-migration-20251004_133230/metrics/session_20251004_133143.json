@@ -1,0 +1,29 @@
+{
+  "session_id": "20251004_133143",
+  "timestamp": "2025-10-04T13:32:18.834933",
+  "routing_metrics": [
+    {
+      "timestamp": "2025-10-04T13:31:59.554169",
+      "task_description": "ULTRATHINK: Execute Option C - Docker Multi-Worker Deployment for PriorityWorker.\n\nCurrent State:\n- ",
+      "classified_domain": "devops",
+      "domain_score": 15.0,
+      "target_team": "Infrastructure",
+      "target_agent": "devops-lead",
+      "expected_domain": null,
+      "expected_team": null,
+      "is_correct": null
+    }
+  ],
+  "model_metrics": [],
+  "team_metrics": [],
+  "summary": {
+    "routing_accuracy": 0.0,
+    "total_routing_decisions": 1,
+    "correct_routing_decisions": 0,
+    "model_selection_breakdown": {},
+    "fallback_usage_rate": 0.0,
+    "team_utilization": {},
+    "total_model_selections": 0,
+    "total_team_snapshots": 0
+  }
+}

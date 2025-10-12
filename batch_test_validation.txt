@@ -1,0 +1,4 @@
+Create a simple Python calculator module
+Create a basic todo list CLI application
+Create a simple HTTP server with Flask
+Create a data validation utility with Pydantic

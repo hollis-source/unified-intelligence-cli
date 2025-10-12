@@ -1,0 +1,448 @@
+"""
+Unified Intelligence CLI - Main entry point.
+Clean Architecture: Composition root with minimal responsibilities.
+"""
+
+import click
+import asyncio
+import logging
+from pathlib import Path
+from typing import List, Any, Coroutine
+from dotenv import load_dotenv
+from src.observability.tracing import init_tracing, start_span
+
+from src.entities import Task
+from src.composition import compose_dependencies
+from src.factories import AgentFactory, ProviderFactory, TeamFactory
+from src.adapters.cli import ResultFormatter
+from src.config import Config
+from src import __version__
+
+# Load environment variables from .env file
+# Security: API keys and secrets should be in .env, not hardcoded
+env_file = Path(__file__).parent.parent / ".env"
+if env_file.exists():
+    load_dotenv(env_file)
+    logging.debug(f"Loaded environment variables from {env_file}")
+init_tracing(service_name="unified-intelligence-cli")
+
+
+@click.command()
+@click.version_option(version=__version__)
+@click.option("--workflow", "-w", type=click.Path(exists=True),
+              help="Execute .ct workflow file (DSL mode)")
+@click.option("--task", "-t", "task_descriptions", multiple=True,
+              help="Task description (can be specified multiple times, direct mode)")
+@click.option("--provider", type=click.Choice(["mock", "grok", "tongyi", "tongyi-local", "replicate", "qwen3_zerogpu", "qwen3_hf_inference", "qwen3_next_80b_thinking", "auto"]), default="auto",
+              help="LLM provider (auto: intelligent selection, qwen3_hf_inference: 0.6-1.2s serverless, qwen3_next_80b_thinking: 50s premium reasoning, qwen3_zerogpu: 14s free, tongyi-local: local)")
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
+@click.option("--debug", is_flag=True, help="Enable debug output (LLM calls, tool details)")
+@click.option("--parallel/--sequential", default=True,
+              help="Enable/disable parallel execution")
+@click.option("--config", type=click.Path(exists=True),
+              help="Path to configuration file")
+@click.option("--timeout", type=int, default=60,
+              help="Timeout in seconds for async operations")
+@click.option("--orchestrator", type=click.Choice(["simple", "openai-agents", "hybrid"]), default="hybrid",
+              help="Orchestration mode: simple (baseline), openai-agents (SDK), or hybrid (intelligent routing, default)")
+@click.option("--collect-data", is_flag=True,
+              help="Enable data collection for model training (Week 9)")
+@click.option("--data-dir", type=click.Path(), default="data/training",
+              help="Directory to store collected training data (default: data/training)")
+@click.option("--agents", type=click.Choice(["default", "extended", "scaled"]), default="default",
+              help="Agent configuration: default (5 agents), extended (8 agents), scaled (16 agents with Category Theory & DSL teams)")
+@click.option("--routing", type=click.Choice(["individual", "team"]), default="individual",
+              help="Routing mode: individual (agent-based), team (team-based, recommended for scaled)")
+@click.option("--collect-metrics", is_flag=True,
+              help="Enable metrics collection for monitoring (Week 13)")
+@click.option("--metrics-dir", type=click.Path(), default="data/metrics",
+              help="Directory to store metrics (default: data/metrics)")
+def main(
+    workflow: str,
+    task_descriptions: tuple,
+    provider: str,
+    verbose: bool,
+    debug: bool,
+    parallel: bool,
+    config: str,
+    timeout: int,
+    orchestrator: str,
+    collect_data: bool,
+    data_dir: str,
+    agents: str,
+    routing: str,
+    collect_metrics: bool,
+    metrics_dir: str
+) -> None:
+    """
+    Unified Intelligence CLI: Orchestrate agents for tasks.
+
+    Supports two execution modes:
+    1. Workflow mode (--workflow): Execute .ct DSL workflow files with lifecycle
+    2. Direct mode (--task): Direct multi-agent task execution
+
+    Clean Architecture: Main only handles CLI concerns.
+    Composition logic is delegated to compose_dependencies.
+    """
+    # Validate: Must provide either workflow or task (but not both)
+    if not workflow and not task_descriptions:
+        click.echo("Error: Must provide either --workflow or --task", err=True)
+        click.echo("\nExamples:")
+        click.echo("  Workflow mode: python -m src.main --workflow examples/workflows/ci_pipeline.ct")
+        click.echo("  Direct mode:   python -m src.main --task 'analyze code'")
+        raise click.Abort()
+
+    if workflow and task_descriptions:
+        click.echo("Warning: Both --workflow and --task provided. Using workflow mode.", err=True)
+
+    # Load configuration
+    app_config = load_config(
+        config, provider, verbose, debug, parallel, timeout,
+        orchestrator, collect_data, data_dir, agents, routing,
+        collect_metrics, metrics_dir
+    )
+
+    # Setup logging based on verbosity
+    logger = setup_logging(app_config.verbose, app_config.debug)
+
+    try:
+        # WORKFLOW MODE: Execute DSL workflow with lifecycle
+        if workflow:
+            with start_span("cli.workflow", {"workflow": str(workflow)}):
+                execute_workflow_mode(workflow, app_config, logger)
+            return
+
+        # DIRECT MODE: Standard multi-agent task execution
+        # Create factory instances (DIP: depend on abstractions)
+        agent_factory = AgentFactory()
+        team_factory = TeamFactory(agent_factory)
+        provider_factory = ProviderFactory()
+
+        # Create agents or teams based on routing mode (Week 12: Team-based routing, Week 13: Category Theory & DSL teams)
+        if app_config.routing_mode == "team":
+            # Team-based routing (Week 12/13)
+            if app_config.agent_mode == "scaled":
+                teams = team_factory.create_scaled_teams()
+                logger.info(f"Created {len(teams)} teams (scaled mode: 16 agents across 9 teams including Category Theory & DSL)")
+            elif app_config.agent_mode == "extended":
+                teams = team_factory.create_extended_teams()
+                logger.info(f"Created {len(teams)} teams (extended mode: 8 agents across teams)")
+            else:
+                teams = team_factory.create_default_teams()
+                logger.info(f"Created {len(teams)} teams (default mode: 5 single-agent teams)")
+
+            # Extract agents from teams for backward compatibility
+            agents = team_factory.get_all_agents_from_teams(teams)
+        else:
+            # Individual agent routing (Week 11, backward compatible)
+            teams = None
+            if app_config.agent_mode == "scaled":
+                agents = agent_factory.create_scaled_agents()
+                logger.info(f"Created {len(agents)} agents (scaled mode: 16 agents including Category Theory & DSL, individual routing)")
+            elif app_config.agent_mode == "extended":
+                agents = agent_factory.create_extended_agents()
+                logger.info(f"Created {len(agents)} agents (extended mode: 8 agents, individual routing)")
+            else:
+                agents = agent_factory.create_default_agents()
+                logger.info(f"Created {len(agents)} agents (default mode)")
+
+        # Create LLM provider via factory
+        llm_provider = provider_factory.create_provider(app_config.provider)
+        logger.info(f"Using {app_config.provider} LLM provider")
+        logger.info(f"Routing mode: {app_config.routing_mode}")
+
+        # Create tasks from descriptions
+        tasks = [
+            Task(
+                description=desc,
+                task_id=f"task_{i+1}",
+                priority=i+1
+            )
+            for i, desc in enumerate(task_descriptions)
+        ]
+        logger.info(f"Created {len(tasks)} tasks")
+
+        # Compose dependencies (Week 7: orchestrator mode, Week 9: data collection, Week 12: team routing, Week 13: metrics)
+        coordinator, metrics_collector = compose_dependencies(
+            llm_provider=llm_provider,
+            agents=agents,
+            logger=logger if app_config.verbose else None,
+            orchestrator_mode=app_config.orchestrator,
+            collect_data=app_config.collect_data,
+            data_dir=app_config.data_dir,
+            provider_name=app_config.provider,
+            routing_mode=app_config.routing_mode,
+            teams=teams,
+            collect_metrics=app_config.collect_metrics,
+            metrics_dir=app_config.metrics_dir
+        )
+
+        # Execute with timeout
+        with start_span("cli.coordinate", {"num_tasks": len(tasks)}):
+                results = asyncio.run(
+            execute_with_timeout(
+                coordinator.coordinate(
+                    tasks=tasks,
+                    agents=agents
+                ),
+                app_config.timeout
+            )
+        )
+
+        # Save metrics if enabled (Week 13)
+        if metrics_collector:
+            metrics_collector.save()
+            if logger:
+                logger.info(f"Metrics saved to {metrics_collector.session_file}")
+
+        # Display results (Clean Architecture: Use CLI adapter)
+        formatter = ResultFormatter(verbose=app_config.verbose)
+        formatter.format_results(results)
+
+    except asyncio.TimeoutError:
+        formatter = ResultFormatter()
+        formatter.format_error(f"Operation timed out after {app_config.timeout} seconds", "Timeout")
+        raise click.Abort()
+    except ValueError as e:
+        formatter = ResultFormatter()
+        formatter.format_error(str(e), "Configuration Error")
+        raise click.Abort()
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        formatter = ResultFormatter(verbose=app_config.verbose)
+        if app_config.verbose:
+            raise
+        else:
+            formatter.format_error(str(e))
+            raise click.Abort()
+
+
+async def _execute_workflow_async(workflow_file: str, app_config: Config, logger):
+    """Async wrapper for workflow execution with proper resource management.
+
+    Phase 3 Bugfix: Uses DirectTaskExecutor context manager for cleanup.
+    """
+    from src.dsl.use_cases.htn_workflow_executor import HTNWorkflowExecutor
+    from src.dsl.adapters.cli_task_executor import CLITaskExecutor
+    from src.dsl.adapters.direct_task_executor import DirectTaskExecutor
+
+    # Phase 3: Create factories for in-process execution
+    agent_factory = AgentFactory()
+    provider_factory = ProviderFactory()
+
+    # Create LLM provider
+    llm_provider = provider_factory.create_provider(app_config.provider)
+
+    # Phase 3: Build config dict for DirectTaskExecutor
+    executor_config = {
+        'provider': app_config.provider,
+        'agent_mode': app_config.agent_mode,
+        'routing_mode': app_config.routing_mode,
+        'verbose': app_config.verbose
+    }
+
+    # Phase 3 Bugfix: Use context manager for proper cleanup
+    async with DirectTaskExecutor(
+        llm_provider=llm_provider,
+        agent_factory=agent_factory,
+        config=executor_config
+    ) as direct_executor:
+
+        if logger:
+            logger.info(f"DirectTaskExecutor initialized with context manager (auto-cleanup)")
+
+        # Create task executor with in-process execution (Phase 3)
+        task_executor = CLITaskExecutor(
+            direct_executor=direct_executor,  # Pass managed instance
+            use_in_process=True
+        )
+
+        # Create HTN workflow executor
+        executor = HTNWorkflowExecutor(task_executor=task_executor)
+
+        # Execute workflow with lifecycle phases
+        result = await executor.execute_workflow(
+            workflow_file=workflow_file,
+            verbose=app_config.verbose
+        )
+
+        return result
+
+    # Context manager ensures cleanup after this block
+
+
+def execute_workflow_mode(workflow_file: str, app_config: Config, logger) -> None:
+    """Execute DSL workflow file with lifecycle phases.
+
+    Args:
+        workflow_file: Path to .ct workflow file
+        app_config: Application configuration
+        logger: Logger instance
+
+    Clean Architecture: Orchestrates DSL use cases.
+    Phase 3: Added in-process execution via DirectTaskExecutor.
+    Phase 3 Bugfix: Proper resource cleanup via context manager.
+    """
+    if logger:
+        logger.info(f"Executing workflow: {workflow_file}")
+        logger.info(f"Mode: Lifecycle-aware DSL execution with HTN decomposition")
+        logger.info(f"Phase 3: In-process execution enabled (no subprocess overhead)")
+        logger.info(f"Phase 3 Bugfix: Resource cleanup enabled (context manager)")
+
+    # Execute workflow with async context manager for cleanup
+    result = asyncio.run(_execute_workflow_async(workflow_file, app_config, logger))
+
+    # Display results
+    if result.success:
+        click.echo(f"\n{'='*70}")
+        click.echo(click.style("✓ Workflow Completed Successfully", fg="green", bold=True))
+        click.echo(f"{'='*70}")
+        click.echo(f"Execution time: {result.execution_time:.2f}s")
+        click.echo(f"Phases: {' → '.join(result.phases_completed)}")
+        click.echo(f"\nResult:")
+        _print_workflow_result(result.result, indent=2)
+        click.echo(f"{'='*70}")
+    else:
+        click.echo(f"\n{'='*70}")
+        click.echo(click.style("✗ Workflow Failed", fg="red", bold=True))
+        click.echo(f"{'='*70}")
+        click.echo(f"Error: {result.error}")
+        click.echo(f"Execution time: {result.execution_time:.2f}s")
+        click.echo(f"Phases completed: {' → '.join(result.phases_completed)}")
+        click.echo(f"Failed at: {result.lifecycle.get_state().name}")
+        click.echo(f"{'='*70}")
+        raise click.Abort()
+
+
+def _print_workflow_result(result, indent: int = 0):
+    """Print workflow result recursively.
+
+    Args:
+        result: Result to print
+        indent: Indentation level
+    """
+    prefix = " " * indent
+
+    if isinstance(result, tuple):
+        click.echo(f"{prefix}Parallel Results:")
+        for i, item in enumerate(result):
+            click.echo(f"{prefix}  [{i}]:")
+            _print_workflow_result(item, indent + 4)
+    elif isinstance(result, dict):
+        for key, value in result.items():
+            if isinstance(value, (dict, list, tuple)):
+                click.echo(f"{prefix}{key}:")
+                _print_workflow_result(value, indent + 2)
+            else:
+                click.echo(f"{prefix}{key}: {value}")
+    elif isinstance(result, list):
+        for i, item in enumerate(result):
+            click.echo(f"{prefix}[{i}]: {item}")
+    else:
+        click.echo(f"{prefix}{result}")
+
+
+def load_config(
+    config_file: str,
+    provider: str,
+    verbose: bool,
+    debug: bool,
+    parallel: bool,
+    timeout: int,
+    orchestrator: str = "simple",
+    collect_data: bool = False,
+    data_dir: str = "data/training",
+    agent_mode: str = "default",
+    routing_mode: str = "individual",
+    collect_metrics: bool = False,
+    metrics_dir: str = "data/metrics"
+) -> Config:
+    """
+    Load configuration from file and merge with CLI arguments.
+
+    CLI arguments override config file settings.
+
+    Args:
+        config_file: Path to config file (optional)
+        provider: CLI provider argument
+        verbose: CLI verbose flag
+        debug: CLI debug flag (Week 3)
+        parallel: CLI parallel flag
+        timeout: CLI timeout value
+        orchestrator: CLI orchestrator mode (Week 7)
+        collect_data: CLI data collection flag (Week 9)
+        data_dir: CLI data directory (Week 9)
+        agent_mode: CLI agent mode (Week 11)
+        routing_mode: CLI routing mode (Week 12)
+
+    Returns:
+        Merged configuration
+    """
+    if config_file:
+        # Load from file and merge with CLI args
+        file_config = Config.from_file(config_file)
+        return file_config.merge_cli_args(
+            provider=provider,
+            verbose=verbose,
+            debug=debug,
+            parallel=parallel,
+            timeout=timeout,
+            orchestrator=orchestrator,
+            collect_data=collect_data,
+            data_dir=data_dir,
+            agent_mode=agent_mode,
+            routing_mode=routing_mode,
+            collect_metrics=collect_metrics,
+            metrics_dir=metrics_dir
+        )
+    else:
+        # Use CLI args only
+        return Config(
+            provider=provider,
+            verbose=verbose,
+            debug=debug,
+            parallel=parallel,
+            timeout=timeout,
+            orchestrator=orchestrator,
+            collect_data=collect_data,
+            data_dir=data_dir,
+            agent_mode=agent_mode,
+            routing_mode=routing_mode,
+            collect_metrics=collect_metrics,
+            metrics_dir=metrics_dir
+        )
+
+
+def setup_logging(verbose: bool, debug: bool) -> logging.Logger:
+    """
+    Configure logging based on verbosity.
+
+    Week 3: Three-level logging (WARNING/INFO/DEBUG).
+    Clean Code: Extract method for clarity.
+    """
+    if debug:
+        level = logging.DEBUG
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+    elif verbose:
+        level = logging.INFO
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    else:
+        level = logging.WARNING
+        log_format = "%(levelname)s - %(message)s"
+
+    # Week 4: force=True ensures reconfiguration works
+    logging.basicConfig(level=level, format=log_format, force=True)
+    return logging.getLogger(__name__)
+
+
+async def execute_with_timeout(coro: Coroutine[Any, Any, Any], timeout: int) -> Any:
+    """
+    Execute coroutine with timeout.
+
+    Production: Prevent hanging operations.
+    """
+    return await asyncio.wait_for(coro, timeout=timeout)
+
+
+if __name__ == "__main__":
+    main()

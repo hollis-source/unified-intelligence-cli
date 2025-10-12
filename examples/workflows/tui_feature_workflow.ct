@@ -1,0 +1,18 @@
+# TUI Feature Development Workflow
+# Example: Adding a new feature to the Textual TUI
+#
+# Use case: Developer wants to add real-time agent collaboration graph
+# Shows which agents are working together, data flow between them
+#
+# Flow:
+# 1. prototype_layout: Quick ASCII mockup in design doc
+# 2. create_widget: Build NetworkGraph widget (extends Textual Widget)
+# 3. implement_data_layer: Add data collection from agent events
+# 4. add_rendering: Use Rich's tree/graph rendering for visualization
+# 5. integrate_dashboard: Add tab to main dashboard
+# 6. add_tests: Unit tests for widget + integration tests
+# 7. update_docs: Screenshot + usage instructions
+#
+# Demonstrates: Rapid feature iteration with TUI framework
+
+update_docs ∘ add_tests ∘ integrate_dashboard ∘ add_rendering ∘ implement_data_layer ∘ create_widget ∘ prototype_layout

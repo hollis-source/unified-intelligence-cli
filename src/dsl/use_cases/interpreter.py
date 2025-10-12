@@ -1,0 +1,314 @@
+"""DSL Interpreter - Executes AST via multi-agent CLI.
+
+Clean Architecture: Use Case layer (business logic).
+SOLID: SRP - only interprets AST, DIP - depends on TaskExecutor abstraction.
+"""
+
+import asyncio
+from typing import Any, Protocol, Optional
+from src.dsl.entities.literal import Literal
+from src.dsl.entities.composition import Composition
+from src.dsl.entities.product import Product
+from src.dsl.entities.coproduct import Coproduct
+from src.dsl.entities.duplicate import Duplicate
+from src.dsl.entities.functor import Functor
+
+
+class TaskExecutor(Protocol):
+    """
+    Interface for task execution.
+
+    Clean Architecture: Interface layer (abstraction).
+    Implementations can be real CLI adapter or mock for testing.
+    """
+
+    async def execute_task(self, task_name: str, input_data: Any = None) -> Any:
+        """
+        Execute a task by name.
+
+        Args:
+            task_name: Name of the task to execute (e.g., "build", "test")
+            input_data: Optional input data from previous task
+
+        Returns:
+            Task execution result
+        """
+        ...
+
+
+class Interpreter:
+    """
+    Interprets and executes DSL AST via multi-agent system.
+
+    Uses visitor pattern to traverse AST nodes and execute them
+    via the TaskExecutor interface. Handles:
+    - Sequential composition (∘): Right-to-left execution
+    - Parallel product (×): Concurrent execution with asyncio
+    - Functors: Named workflow execution
+
+    Clean Architecture:
+    - Use Case layer (business logic)
+    - Depends on TaskExecutor interface (DIP)
+    - No external dependencies
+
+    Example:
+        executor = CLITaskExecutor()
+        interpreter = Interpreter(executor)
+        ast = parser.parse("test ∘ build")
+        result = await interpreter.execute(ast)
+    """
+
+    def __init__(
+        self,
+        task_executor: TaskExecutor,
+        enable_type_checking: bool = False,
+        type_env: Optional['TypeEnvironment'] = None
+    ):
+        """
+        Initialize interpreter with task executor.
+
+        Args:
+            task_executor: Implementation of TaskExecutor interface
+            enable_type_checking: If True, run type checking before execution (Phase 3)
+            type_env: Type environment with type annotations for type checking
+        """
+        self.task_executor = task_executor
+        self._current_input = None  # Thread-local input data for visitor pattern
+        self._symbol_table = {}  # Functor definitions
+        self.enable_type_checking = enable_type_checking
+        self.type_env = type_env
+
+    async def execute(self, ast_node, input_data: Any = None) -> Any:
+        """
+        Execute AST node with optional input data.
+
+        Phase 3 Enhancement: Optional type checking before execution.
+        If enable_type_checking=True, validates AST types before running.
+
+        Args:
+            ast_node: Root AST node to execute
+            input_data: Optional input data to pass to first task
+
+        Returns:
+            Execution result
+
+        Raises:
+            TypeError: If type checking is enabled and type errors are found
+
+        Example:
+            result = await interpreter.execute(Literal("build"))
+            result = await interpreter.execute(ast, input_data={"key": "value"})
+        """
+        # Phase 3: Optional type checking before execution
+        if self.enable_type_checking and self.type_env:
+            from src.dsl.types.type_inference_visitor import TypeInferenceVisitor
+
+            # Create type checker with configured type environment
+            type_visitor = TypeInferenceVisitor()
+            type_visitor.type_env = self.type_env
+
+            # Type check the AST
+            ast_node.accept(type_visitor)
+
+            # If errors found, raise exception
+            if type_visitor.has_errors():
+                error_summary = type_visitor.get_error_summary()
+                raise TypeError(
+                    f"Type checking failed:\n{error_summary}"
+                )
+
+        # Store input data for visitor methods to access
+        previous_input = self._current_input
+        self._current_input = input_data
+        try:
+            result = await ast_node.accept(self)
+            return result
+        finally:
+            # Restore previous input (for nested executions)
+            self._current_input = previous_input
+
+    def set_symbol_table(self, symbol_table: dict) -> None:
+        """
+        Set symbol table for functor resolution.
+
+        Args:
+            symbol_table: Dictionary mapping functor names to expressions
+        """
+        self._symbol_table = symbol_table
+
+    async def visit_literal(self, node: Literal) -> Any:
+        """
+        Execute literal task with input data.
+
+        Args:
+            node: Literal node containing task name
+
+        Returns:
+            Task execution result
+        """
+        # Check if literal is a functor reference
+        if node.value in self._symbol_table:
+            # Resolve functor and execute its expression
+            functor_expr = self._symbol_table[node.value]
+            return await self.execute(functor_expr, self._current_input)
+
+        # Pass current input data to task executor
+        return await self.task_executor.execute_task(node.value, self._current_input)
+
+    async def visit_composition(self, node: Composition) -> Any:
+        """
+        Execute composition (f ∘ g) - sequential execution with result propagation.
+
+        Category Theory semantics: (f ∘ g)(x) = f(g(x))
+        Execute right first with current input, pass result to left.
+
+        Args:
+            node: Composition node
+
+        Returns:
+            Final composition result
+        """
+        # Execute right first (CT right-to-left) with current input
+        right_result = await self.execute(node.right, self._current_input)
+
+        # Execute left with right's result as input (propagation!)
+        left_result = await self.execute(node.left, right_result)
+
+        # Return left result (final output of composition)
+        return left_result
+
+    async def visit_product(self, node: Product) -> Any:
+        """
+        Execute product (f × g) - parallel execution with tuple input unpacking.
+
+        Category Theory semantics: Product morphism (f × g) :: (A × C) → (B × D)
+        - Input: tuple (a, c) where a :: A, c :: C
+        - Left function f receives a
+        - Right function g receives c
+        - Output: tuple (b, d) where b :: B, d :: D
+
+        Args:
+            node: Product node
+
+        Returns:
+            Tuple of (left_result, right_result)
+        """
+        # Product morphism requires tuple input (A × C)
+        # Unpack tuple to pass correct inputs to each function
+        if isinstance(self._current_input, tuple) and len(self._current_input) == 2:
+            # Proper product semantics: unpack tuple input
+            left_input, right_input = self._current_input
+        else:
+            # Fallback: broadcast same input to both (for backward compatibility)
+            left_input = self._current_input
+            right_input = self._current_input
+
+        # Execute both tasks concurrently with their respective inputs
+        left_result, right_result = await asyncio.gather(
+            self.execute(node.left, left_input),
+            self.execute(node.right, right_input)
+        )
+
+        # Return combined results (categorical product)
+        return (left_result, right_result)
+
+    async def visit_coproduct(self, node: Coproduct) -> Any:
+        """
+        Execute coproduct (f + g) - first-success alternative with short-circuit evaluation.
+
+        Category Theory semantics: Coproduct morphism (f + g) :: A → (B + D)
+        Represents choice between alternatives with lazy evaluation.
+
+        Execution strategy:
+        1. Try left first with current input
+        2. If left succeeds → return left result (short-circuit, don't execute right)
+        3. If left fails (exception) → try right with current input
+        4. If both fail → raise combined exception
+
+        Args:
+            node: Coproduct node
+
+        Returns:
+            Result from first successful alternative (left or right)
+
+        Raises:
+            Exception: If both alternatives fail (combined error message)
+
+        Example:
+            grok_model + qwen_model
+            - Try grok first
+            - If grok succeeds → return grok result
+            - If grok fails → try qwen
+            - If both fail → raise combined error
+        """
+        left_error = None
+        right_error = None
+
+        # Try left alternative first
+        try:
+            left_result = await self.execute(node.left, self._current_input)
+            # Left succeeded → short-circuit, return immediately
+            return left_result
+        except Exception as e:
+            # Left failed → capture error, try right
+            left_error = e
+
+        # Left failed, try right alternative
+        try:
+            right_result = await self.execute(node.right, self._current_input)
+            # Right succeeded → return right result
+            return right_result
+        except Exception as e:
+            # Right also failed → capture error
+            right_error = e
+
+        # Both alternatives failed → raise combined error
+        combined_error = f"Coproduct: both alternatives failed.\nLeft: {left_error}\nRight: {right_error}"
+        raise Exception(combined_error)
+
+    async def visit_duplicate(self, node: Duplicate) -> Any:
+        """
+        Execute duplicate (diagonal functor Δ) - broadcasts input to product tuple.
+
+        Category Theory semantics: Δ(x) = (x, x)
+        Creates a product tuple from single input for broadcast composition.
+
+        Args:
+            node: Duplicate node
+
+        Returns:
+            Tuple (input, input)
+        """
+        # Duplicate current input into product tuple
+        return (self._current_input, self._current_input)
+
+    async def visit_functor(self, node: Functor) -> Any:
+        """
+        Execute functor - named workflow with input propagation.
+
+        Args:
+            node: Functor node containing name and expression
+
+        Returns:
+            Expression execution result
+        """
+        # Execute the functor's expression with current input
+        return await self.execute(node.expression, self._current_input)
+
+    async def visit_monad(self, node):
+        """
+        Execute monad (for completeness, though not used in AST).
+
+        Args:
+            node: Monad node
+
+        Returns:
+            Monad value
+        """
+        # Monads are runtime wrappers, not AST nodes
+        # If needed in future, implement bind chain execution
+        return node.value
+
+    async def visit_mock(self, node):
+        """Visit mock node (for testing) with input propagation."""
+        return await self.task_executor.execute_task(node.name, self._current_input)

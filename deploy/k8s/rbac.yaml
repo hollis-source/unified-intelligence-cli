@@ -1,0 +1,51 @@
+# RBAC Configuration for Project Builder
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: project-builder
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/component: serviceaccount
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: project-builder-role
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/component: rbac
+rules:
+# Allow reading ConfigMaps (for configuration)
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+
+# Allow reading Secrets (for credentials)
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list"]
+
+# Allow updating own deployment status
+- apiGroups: ["apps"]
+  resources: ["deployments/status"]
+  verbs: ["get", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: project-builder-rolebinding
+  namespace: project-builder
+  labels:
+    app.kubernetes.io/name: project-builder
+    app.kubernetes.io/component: rbac
+subjects:
+- kind: ServiceAccount
+  name: project-builder
+  namespace: project-builder
+roleRef:
+  kind: Role
+  name: project-builder-role
+  apiGroup: rbac.authorization.k8s.io

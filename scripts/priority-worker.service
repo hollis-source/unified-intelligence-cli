@@ -1,0 +1,38 @@
+[Unit]
+Description=Priority Worker - Autonomous Task Execution Daemon
+Documentation=https://github.com/unified-intelligence-cli
+After=network.target redis.service docker.service
+Wants=redis.service
+
+[Service]
+Type=simple
+User=ui-cli_jake
+WorkingDirectory=/home/ui-cli_jake/unified-intelligence-cli
+Environment="PATH=/home/ui-cli_jake/unified-intelligence-cli/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStartPre=/bin/bash -c 'docker ps --filter "name=redis" | grep -q redis || docker run -d --name redis -p 6379:6379 redis:latest'
+ExecStart=/home/ui-cli_jake/unified-intelligence-cli/venv/bin/python3 /home/ui-cli_jake/unified-intelligence-cli/scripts/priority_worker.py --config /home/ui-cli_jake/unified-intelligence-cli/config/priority_worker_production.yaml --loop
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/bash -c 'touch /tmp/priority_worker_stop && sleep 30'
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/home/ui-cli_jake/unified-intelligence-cli/logs/priority_worker_production.log
+StandardError=append:/home/ui-cli_jake/unified-intelligence-cli/logs/priority_worker_production.log
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/ui-cli_jake/unified-intelligence-cli/logs /home/ui-cli_jake/unified-intelligence-cli/data /tmp
+
+# Resource Limits
+MemoryMax=1G
+CPUQuota=200%
+TasksMax=100
+
+# Health Monitoring
+WatchdogSec=600
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target

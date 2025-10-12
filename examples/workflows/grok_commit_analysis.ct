@@ -1,0 +1,18 @@
+# Grok-Powered Commit Analysis
+# Use Grok (grok-code-fast-1) to analyze recent commits and generate integrated commentary
+#
+# Flow:
+# 1. get_recent_commits - Fetch last 10 commits
+# 2. get_commit_details - Get diffs and stats for each commit
+# 3. analyze_commit_with_grok - Send to Grok for AI analysis
+# 4. aggregate_commit_analyses - Combine all analyses
+# 5. generate_integrated_report - Create comprehensive markdown report
+# 6. save_report_to_file - Save to docs/GROK_COMMIT_ANALYSIS.md
+#
+# Note: Analyzes commits sequentially to avoid API rate limits
+# For parallel analysis, use product operator: (analyze_c1 × analyze_c2 × ...)
+#
+# Category Theory: Sequential composition with result propagation
+# Estimated time: 30-60 seconds (depends on Grok API response time)
+
+save_report_to_file ∘ generate_integrated_report ∘ aggregate_commit_analyses ∘ batch_analyze_commits ∘ get_commit_details ∘ get_recent_commits

@@ -1,0 +1,18 @@
+# Simple Data Processing Pipeline
+# Minimal example demonstrating type-safe DSL workflow
+
+# Type annotations
+fetch_data :: () -> RawData
+clean_data :: RawData -> CleanData
+transform_data :: CleanData -> ProcessedData
+save_results :: ProcessedData -> ()
+
+# Simple sequential pipeline using implicit functor syntax
+pipeline = save_results o transform_data o clean_data o fetch_data
+
+# Equivalent with explicit syntax
+functor data_workflow = save_results o transform_data o clean_data o fetch_data
+
+# Category Theory: (f ∘ g)(x) = f(g(x))
+# Execution flow: fetch → clean → transform → save
+# Type flow: () → RawData → CleanData → ProcessedData → ()

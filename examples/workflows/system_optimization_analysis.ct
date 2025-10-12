@@ -1,0 +1,1 @@
+save_optimization_report ∘ generate_optimization_report ∘ (get_system_resources × get_running_processes × identify_killable_processes × analyze_cpu_bottlenecks × calculate_gpu_roi)

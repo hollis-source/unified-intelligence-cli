@@ -1,0 +1,305 @@
+groups:
+- name: project_builder_health
+  interval: 30s
+  rules:
+  # Service Health Alerts
+  - alert: ProjectBuilderDown
+    expr: up{job="project-builder"} == 0
+    for: 2m
+    labels:
+      severity: critical
+      component: project-builder
+    annotations:
+      summary: "Project Builder service is down"
+      description: "Project Builder instance {{ $labels.instance }} has been down for more than 2 minutes."
+      runbook: "Check service logs: kubectl logs -n project-builder deployment/project-builder"
+
+  - alert: ProjectBuilderHighRestartRate
+    expr: rate(kube_pod_container_status_restarts_total{namespace="project-builder",container="project-builder"}[15m]) > 0.1
+    for: 5m
+    labels:
+      severity: warning
+      component: project-builder
+    annotations:
+      summary: "High restart rate detected"
+      description: "Project Builder pod {{ $labels.pod }} is restarting frequently ({{ $value }} restarts/min over 15min)."
+
+  # Resource Usage Alerts
+  - alert: ProjectBuilderHighMemoryUsage
+    expr: (container_memory_usage_bytes{namespace="project-builder",container="project-builder"} / container_spec_memory_limit_bytes{namespace="project-builder",container="project-builder"}) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      component: project-builder
+    annotations:
+      summary: "High memory usage (>90%)"
+      description: "Project Builder pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of memory limit."
+      action: "Consider increasing memory limits or investigating memory leaks."
+
+  - alert: ProjectBuilderHighCPUUsage
+    expr: (rate(container_cpu_usage_seconds_total{namespace="project-builder",container="project-builder"}[5m]) / container_spec_cpu_quota{namespace="project-builder",container="project-builder"}) > 0.9
+    for: 10m
+    labels:
+      severity: warning
+      component: project-builder
+    annotations:
+      summary: "High CPU usage (>90%)"
+      description: "Project Builder pod {{ $labels.pod }} is using {{ $value | humanizePercentage }} of CPU quota for >10min."
+      action: "Consider scaling horizontally or investigating CPU-intensive operations."
+
+  # Performance Alerts
+  - alert: ProjectBuilderSlowResponseTime
+    expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="project-builder"}[5m])) > 2
+    for: 5m
+    labels:
+      severity: warning
+      component: project-builder
+    annotations:
+      summary: "Slow response times (p95 > 2s)"
+      description: "95th percentile response time is {{ $value }}s (threshold: 2s)."
+      action: "Investigate slow endpoints or database queries."
+
+  - alert: ProjectBuilderHighErrorRate
+    expr: (rate(http_requests_total{job="project-builder",status=~"5.."}[5m]) / rate(http_requests_total{job="project-builder"}[5m])) > 0.05
+    for: 5m
+    labels:
+      severity: critical
+      component: project-builder
+    annotations:
+      summary: "High error rate (>5%)"
+      description: "Error rate is {{ $value | humanizePercentage }} over last 5 minutes."
+      action: "Check application logs for errors immediately."
+
+- name: database_health
+  interval: 30s
+  rules:
+  # SurrealDB Alerts
+  - alert: SurrealDBDown
+    expr: up{job="surrealdb"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      component: surrealdb
+    annotations:
+      summary: "SurrealDB is down"
+      description: "SurrealDB instance {{ $labels.instance }} has been down for more than 1 minute."
+      runbook: "Check database logs: kubectl logs -n project-builder statefulset/surrealdb"
+
+  - alert: SurrealDBHighConnectionCount
+    expr: surrealdb_connections_active > 80
+    for: 5m
+    labels:
+      severity: warning
+      component: surrealdb
+    annotations:
+      summary: "High SurrealDB connection count"
+      description: "SurrealDB has {{ $value }} active connections (threshold: 80)."
+      action: "Check for connection leaks or consider increasing connection pool."
+
+  - alert: SurrealDBSlowQueries
+    expr: histogram_quantile(0.95, rate(surrealdb_query_duration_seconds_bucket[5m])) > 1
+    for: 5m
+    labels:
+      severity: warning
+      component: surrealdb
+    annotations:
+      summary: "Slow database queries (p95 > 1s)"
+      description: "95th percentile query time is {{ $value }}s."
+      action: "Review slow queries and add indexes if needed."
+
+  # Redis Alerts
+  - alert: RedisDown
+    expr: up{job="redis"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      component: redis
+    annotations:
+      summary: "Redis is down"
+      description: "Redis instance {{ $labels.instance }} has been down for more than 1 minute."
+      runbook: "Check Redis logs: kubectl logs -n project-builder deployment/redis"
+
+  - alert: RedisHighMemoryUsage
+    expr: (redis_memory_used_bytes / redis_memory_max_bytes) > 0.9
+    for: 5m
+    labels:
+      severity: warning
+      component: redis
+    annotations:
+      summary: "Redis high memory usage (>90%)"
+      description: "Redis is using {{ $value | humanizePercentage }} of max memory."
+      action: "Consider increasing maxmemory or review cache eviction policy."
+
+  - alert: RedisHighEvictionRate
+    expr: rate(redis_evicted_keys_total[5m]) > 100
+    for: 5m
+    labels:
+      severity: warning
+      component: redis
+    annotations:
+      summary: "High Redis eviction rate"
+      description: "Redis is evicting {{ $value }} keys/sec."
+      action: "Increase Redis memory or review cache usage patterns."
+
+- name: optimization_metrics
+  interval: 30s
+  rules:
+  # Cache Performance
+  - alert: LowCacheHitRate
+    expr: (cache_hits / (cache_hits + cache_misses)) < 0.3
+    for: 15m
+    labels:
+      severity: warning
+      component: llm-cache
+    annotations:
+      summary: "Low LLM cache hit rate (<30%)"
+      description: "Cache hit rate is {{ $value | humanizePercentage }} over last 15min (target: ≥30%)."
+      action: "Review cache configuration and TTL settings."
+
+  - alert: ParallelExecutionDegraded
+    expr: parallel_speedup < 2.5
+    for: 10m
+    labels:
+      severity: warning
+      component: parallel-executor
+    annotations:
+      summary: "Parallel execution degraded (<2.5x speedup)"
+      description: "Parallel speedup is {{ $value }}x (target: ≥3x)."
+      action: "Check worker pool utilization and task distribution."
+
+  # Cost Monitoring
+  - alert: HighLLMCostRate
+    expr: rate(llm_cost_usd_total[1h]) > 10
+    for: 30m
+    labels:
+      severity: warning
+      component: llm-provider
+    annotations:
+      summary: "High LLM API cost rate"
+      description: "LLM costs are ${{ $value }}/hour (threshold: $10/hour)."
+      action: "Review LLM usage patterns and cache effectiveness."
+
+  - alert: HighTokenUsage
+    expr: rate(llm_tokens_used_total[1h]) > 1000000
+    for: 30m
+    labels:
+      severity: info
+      component: llm-provider
+    annotations:
+      summary: "High token usage rate"
+      description: "Using {{ $value }} tokens/hour."
+      action: "Monitor token usage for cost optimization opportunities."
+
+- name: business_metrics
+  interval: 60s
+  rules:
+  # Project Builder Metrics
+  - alert: HighProjectFailureRate
+    expr: (rate(projects_failed_total[1h]) / rate(projects_total[1h])) > 0.2
+    for: 30m
+    labels:
+      severity: warning
+      component: project-builder
+    annotations:
+      summary: "High project failure rate (>20%)"
+      description: "Project failure rate is {{ $value | humanizePercentage }} over last hour."
+      action: "Review failed project logs and common error patterns."
+
+  - alert: LowProjectThroughput
+    expr: rate(projects_completed_total[1h]) < 0.1
+    for: 1h
+    labels:
+      severity: info
+      component: project-builder
+    annotations:
+      summary: "Low project completion rate"
+      description: "Completing {{ $value }} projects/hour (consider if this is expected)."
+
+  - alert: LowArtifactQuality
+    expr: avg(artifact_quality_score) < 0.7
+    for: 1h
+    labels:
+      severity: warning
+      component: project-builder
+    annotations:
+      summary: "Low artifact quality scores"
+      description: "Average artifact quality is {{ $value }} (threshold: 0.7)."
+      action: "Review generated code quality and prompt engineering."
+
+# ============================================================
+# Cost and Usage Monitoring
+# ============================================================
+- name: llm_cost_monitoring
+  interval: 5m
+  rules:
+  - alert: LLMCostSpike
+    expr: rate(llm_cost_usd_total[5m]) > 0.05
+    for: 5m
+    labels:
+      severity: warning
+      component: llm
+    annotations:
+      summary: "LLM cost spike detected"
+      description: "LLM costs increasing at rate of ${{ $value }}/min."
+      action: "Review recent LLM usage and optimize prompts."
+
+  - alert: LLMHighErrorRate
+    expr: llm_error_rate > 0.10
+    for: 10m
+    labels:
+      severity: warning
+      component: llm
+    annotations:
+      summary: "High LLM error rate"
+      description: "LLM error rate is {{ $value | humanizePercentage }} (threshold: 10%)."
+      action: "Check LLM provider status and error logs."
+
+  - alert: LLMBudgetExceeded
+    expr: llm_cost_usd_total > 100
+    for: 1m
+    labels:
+      severity: critical
+      component: llm
+    annotations:
+      summary: "LLM budget exceeded"
+      description: "Total LLM cost is ${{ $value }} (budget: $100/day)."
+      action: "Review usage and consider rate limiting."
+
+# ============================================================
+# Performance and Error Tracking
+# ============================================================
+- name: performance_monitoring
+  interval: 5m
+  rules:
+  - alert: FunctionHighErrorRate
+    expr: function_error_rate > 0.05
+    for: 10m
+    labels:
+      severity: warning
+      component: performance
+    annotations:
+      summary: "Function has high error rate"
+      description: "Function {{ $labels.function }} error rate is {{ $value | humanizePercentage }}."
+      action: "Review function logs and error handling."
+
+  - alert: FunctionSlowPerformance
+    expr: function_duration_ms_avg > 5000
+    for: 15m
+    labels:
+      severity: warning
+      component: performance
+    annotations:
+      summary: "Function performance degraded"
+      description: "Function {{ $labels.function }} avg duration is {{ $value }}ms (threshold: 5000ms)."
+      action: "Profile function and optimize bottlenecks."
+
+  - alert: FunctionMaxDurationSpike
+    expr: function_duration_ms_max > 30000
+    for: 5m
+    labels:
+      severity: warning
+      component: performance
+    annotations:
+      summary: "Function max duration spike"
+      description: "Function {{ $labels.function }} max duration is {{ $value }}ms."
+      action: "Check for outlier requests and potential deadlocks."

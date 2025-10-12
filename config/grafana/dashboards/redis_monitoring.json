@@ -1,0 +1,58 @@
+{
+  "uid": "redis-monitoring",
+  "title": "Redis Monitoring",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "annotations": {"list": []},
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Connected Clients",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "options": {"reduceOptions": {"calcs": ["last"], "fields": "", "values": false}},
+      "targets": [{"expr": "redis_connected_clients", "legendFormat": "clients"}],
+      "description": "Requires redis_exporter to be enabled and INFO command available."
+    },
+    {
+      "type": "stat",
+      "title": "Memory Used (MB)",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "decbytes"}},
+      "options": {"reduceOptions": {"calcs": ["last"], "fields": "", "values": false}},
+      "targets": [{"expr": "redis_memory_used_bytes", "legendFormat": "memory"}],
+      "description": "Requires redis_exporter"
+    },
+    {
+      "type": "stat",
+      "title": "Commands/sec (5m)",
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "reqps"}},
+      "options": {"reduceOptions": {"calcs": ["last"], "fields": "", "values": false}},
+      "targets": [{"expr": "rate(redis_commands_processed_total[5m])", "legendFormat": "cmd/s"}],
+      "description": "Requires redis_exporter"
+    },
+    {
+      "type": "timeseries",
+      "title": "Cache Hit Rate (5m)",
+      "gridPos": {"x": 18, "y": 0, "w": 6, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "percentunit"}},
+      "targets": [
+        {"expr": "rate(redis_keyspace_hits_total[5m]) / on() (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]))", "legendFormat": "hit rate"}
+      ],
+      "description": "Requires redis_exporter"
+    },
+    {
+      "type": "timeseries",
+      "title": "Connections",
+      "gridPos": {"x": 0, "y": 4, "w": 24, "h": 8},
+      "targets": [
+        {"expr": "redis_connected_clients", "legendFormat": "clients"}
+      ],
+      "description": "Requires redis_exporter"
+    }
+  ]
+}
+

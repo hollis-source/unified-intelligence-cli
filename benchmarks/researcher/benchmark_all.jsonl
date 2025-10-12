@@ -1,0 +1,9 @@
+{"task_id": 252, "description": "Research and document best practices for Clean Architecture in Python", "category": "7", "agent": "researcher"}
+{"task_id": 118, "description": "Analyze dependency direction to ensure it points inward in Clean Architecture", "category": "3", "agent": "researcher"}
+{"task_id": 119, "description": "Measure technical debt using SonarQube or similar tool and prioritize fixes", "category": "3", "agent": "researcher"}
+{"task_id": 132, "description": "Create benchmarking script to measure tokens/second across different model sizes", "category": "4", "agent": "researcher"}
+{"task_id": 121, "description": "Research optimal LoRA rank values for 7B, 13B, and 30B parameter models with evidence", "category": "4", "agent": "researcher"}
+{"task_id": 129, "description": "Analyze memory requirements for different quantization levels (Q8, Q6, Q4, Q2) on 30B model", "category": "4", "agent": "researcher"}
+{"task_id": 44, "description": "Split TaskPlannerUseCase into TaskAnalyzer and ExecutionPlanner components", "category": "2", "agent": "researcher"}
+{"task_id": 117, "description": "Calculate coupling between modules and identify tight coupling issues", "category": "3", "agent": "researcher"}
+{"task_id": 254, "description": "Research model quantization tradeoffs and document findings", "category": "7", "agent": "researcher"}

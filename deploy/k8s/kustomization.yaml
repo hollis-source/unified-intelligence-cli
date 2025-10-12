@@ -1,0 +1,52 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: project-builder
+
+resources:
+- namespace.yaml
+- configmap.yaml
+- rbac.yaml
+- pvc.yaml
+- surrealdb-init-job.yaml
+- project-builder-deployment.yaml
+- project-builder-service.yaml
+- hpa.yaml
+
+# IMPORTANT: Secrets must be created manually or via external secrets management
+# kubectl create secret generic project-builder-secrets \
+#   --from-literal=surrealdb_root_password=<PASSWORD> \
+#   --from-literal=redis_password=<PASSWORD> \
+#   --from-literal=xai_api_key=<KEY> \
+#   --from-literal=huggingface_token=<TOKEN> \
+#   --from-literal=github_token=<TOKEN> \
+#   --from-literal=replicate_api_token=<TOKEN> \
+#   --from-literal=grafana_admin_password=<PASSWORD> \
+#   --namespace project-builder
+
+# Labels to apply to all resources
+commonLabels:
+  app.kubernetes.io/part-of: project-builder
+  app.kubernetes.io/managed-by: kustomize
+  environment: production
+
+# Annotations to apply to all resources
+commonAnnotations:
+  documentation: "https://github.com/unified-intelligence-cli"
+  contact: "ops@unified-intelligence.example.com"
+
+# Image transformations (optional - update image tags here)
+images:
+- name: project-builder
+  newName: project-builder
+  newTag: latest
+
+# Resource name prefix (optional)
+# namePrefix: prod-
+
+# ConfigMap generator (alternative to configmap.yaml)
+# configMapGenerator:
+# - name: project-builder-config
+#   literals:
+#   - PB_ENV=production
+#   - PB_LOG_LEVEL=INFO

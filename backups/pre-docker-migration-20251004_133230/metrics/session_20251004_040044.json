@@ -1,0 +1,29 @@
+{
+  "session_id": "20251004_040044",
+  "timestamp": "2025-10-04T04:01:34.228741",
+  "routing_metrics": [
+    {
+      "timestamp": "2025-10-04T04:00:53.456367",
+      "task_description": "ULTRATHINK Truncation Fix: The hybrid pilot task output shows <think> content but response is trunca",
+      "classified_domain": "security",
+      "domain_score": 1.0,
+      "target_team": "Backend",
+      "target_agent": "python-specialist",
+      "expected_domain": null,
+      "expected_team": null,
+      "is_correct": null
+    }
+  ],
+  "model_metrics": [],
+  "team_metrics": [],
+  "summary": {
+    "routing_accuracy": 0.0,
+    "total_routing_decisions": 1,
+    "correct_routing_decisions": 0,
+    "model_selection_breakdown": {},
+    "fallback_usage_rate": 0.0,
+    "team_utilization": {},
+    "total_model_selections": 0,
+    "total_team_snapshots": 0
+  }
+}

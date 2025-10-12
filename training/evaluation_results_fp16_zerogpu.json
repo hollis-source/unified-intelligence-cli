@@ -1,0 +1,290 @@
+{
+  "model": "Qwen3-8B-FP16",
+  "hardware": "ZeroGPU H200",
+  "total_examples": 31,
+  "successful": 31,
+  "failed": 0,
+  "success_rate": 100.0,
+  "avg_latency": 13.85,
+  "detailed_results": [
+    {
+      "example_id": 0,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.63,
+      "generated_length": 2516,
+      "expected_length": 2137
+    },
+    {
+      "example_id": 1,
+      "agent": "tester",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.92,
+      "generated_length": 2510,
+      "expected_length": 2222
+    },
+    {
+      "example_id": 2,
+      "agent": "coordinator",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.49,
+      "generated_length": 2783,
+      "expected_length": 2392
+    },
+    {
+      "example_id": 0,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 14.86,
+      "generated_length": 2677,
+      "expected_length": 1944
+    },
+    {
+      "example_id": 1,
+      "agent": "tester",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 14.83,
+      "generated_length": 2467,
+      "expected_length": 2238
+    },
+    {
+      "example_id": 2,
+      "agent": "coordinator",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 14.75,
+      "generated_length": 2567,
+      "expected_length": 2048
+    },
+    {
+      "example_id": 0,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.97,
+      "generated_length": 2605,
+      "expected_length": 1498
+    },
+    {
+      "example_id": 1,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.76,
+      "generated_length": 2392,
+      "expected_length": 2500
+    },
+    {
+      "example_id": 2,
+      "agent": "researcher",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 12.94,
+      "generated_length": 2827,
+      "expected_length": 2054
+    },
+    {
+      "example_id": 0,
+      "agent": "tester",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.67,
+      "generated_length": 2583,
+      "expected_length": 2209
+    },
+    {
+      "example_id": 1,
+      "agent": "tester",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.47,
+      "generated_length": 2560,
+      "expected_length": 2562
+    },
+    {
+      "example_id": 2,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.35,
+      "generated_length": 2489,
+      "expected_length": 2026
+    },
+    {
+      "example_id": 0,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.47,
+      "generated_length": 2504,
+      "expected_length": 1701
+    },
+    {
+      "example_id": 1,
+      "agent": "tester",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.68,
+      "generated_length": 2397,
+      "expected_length": 2374
+    },
+    {
+      "example_id": 2,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 14.09,
+      "generated_length": 2507,
+      "expected_length": 2293
+    },
+    {
+      "example_id": 0,
+      "agent": "researcher",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.63,
+      "generated_length": 2470,
+      "expected_length": 1878
+    },
+    {
+      "example_id": 1,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.3,
+      "generated_length": 2653,
+      "expected_length": 2370
+    },
+    {
+      "example_id": 2,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.5,
+      "generated_length": 2608,
+      "expected_length": 1814
+    },
+    {
+      "example_id": 0,
+      "agent": "tester",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.47,
+      "generated_length": 2550,
+      "expected_length": 1998
+    },
+    {
+      "example_id": 1,
+      "agent": "tester",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.47,
+      "generated_length": 2617,
+      "expected_length": 2460
+    },
+    {
+      "example_id": 2,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.52,
+      "generated_length": 2577,
+      "expected_length": 2440
+    },
+    {
+      "example_id": 0,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 14.05,
+      "generated_length": 2527,
+      "expected_length": 2230
+    },
+    {
+      "example_id": 1,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.33,
+      "generated_length": 2603,
+      "expected_length": 2263
+    },
+    {
+      "example_id": 2,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.85,
+      "generated_length": 2419,
+      "expected_length": 2075
+    },
+    {
+      "example_id": 0,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.42,
+      "generated_length": 2528,
+      "expected_length": 2455
+    },
+    {
+      "example_id": 1,
+      "agent": "tester",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.39,
+      "generated_length": 2560,
+      "expected_length": 2365
+    },
+    {
+      "example_id": 2,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 13.44,
+      "generated_length": 2701,
+      "expected_length": 2545
+    },
+    {
+      "example_id": 0,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 14.77,
+      "generated_length": 2520,
+      "expected_length": 1739
+    },
+    {
+      "example_id": 1,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 14.74,
+      "generated_length": 2890,
+      "expected_length": 1919
+    },
+    {
+      "example_id": 2,
+      "agent": "coordinator",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 14.7,
+      "generated_length": 2827,
+      "expected_length": 2379
+    },
+    {
+      "example_id": 0,
+      "agent": "coder",
+      "task_id": "task_1",
+      "success": true,
+      "latency": 14.88,
+      "generated_length": 2702,
+      "expected_length": 2334
+    }
+  ]
+}

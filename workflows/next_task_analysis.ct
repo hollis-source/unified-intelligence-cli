@@ -1,0 +1,19 @@
+# Next Task Analysis Workflow
+# Determines the immediate next implementation task after P0+P1 completion
+
+# Type signatures for next task analysis
+assess_p2_readiness :: () -> TestingReadiness
+assess_type_integration :: () -> TypeCheckingReadiness
+assess_syd2_opportunities :: () -> SYD2Enhancement
+evaluate_technical_debt :: () -> DebtAssessment
+
+# Parallel assessment using broadcast operator (**)
+parallel_assessment = assess_p2_readiness ** assess_type_integration ** assess_syd2_opportunities ** evaluate_technical_debt
+
+# Determine immediate next task
+determine_next_task :: (TestingReadiness × TypeCheckingReadiness × SYD2Enhancement × DebtAssessment) -> NextTask
+
+# Sequential workflow
+functor next_task_workflow = determine_next_task o parallel_assessment
+
+# Expected: Concrete next task with implementation plan

@@ -1,0 +1,27 @@
+# GPU Inference Provider Research Pipeline
+# Real-world DSL usage: Research best value GPU providers (October 2025)
+#
+# Excluded: vast.ai (per user request)
+# Target: Find best $/performance for 8B model inference
+#
+# Research Strategy:
+# 1. Parallel data collection from 8 providers
+# 2. Normalize pricing data to comparable format
+# 3. Calculate value metrics ($/hour, $/TFLOPS, cost for 1M tokens)
+# 4. Filter by use case (inference-optimized)
+# 5. Generate ranked recommendation
+#
+# Category Theory: Parallel fetch → Sequential analysis
+# Estimated time: 2-3 minutes (parallel fetching saves ~80%)
+#
+# Providers to research:
+# - RunPod: Pay-per-second GPU rentals (popular for inference)
+# - Lambda Labs: Reserved instances (bulk discounts)
+# - Paperspace: Gradient platform (managed inference)
+# - Together.ai: Serverless inference API
+# - Replicate: Pay-per-use model hosting
+# - Modal: Serverless GPU functions
+# - CoreWeave: Kubernetes GPU cloud (enterprise)
+# - Jarvis Labs: Educational/research pricing
+
+generate_recommendation ∘ rank_by_value ∘ calculate_metrics ∘ normalize_data ∘ (fetch_runpod × fetch_lambda × fetch_paperspace × fetch_together × fetch_replicate × fetch_modal × fetch_coreweave × fetch_jarvis)

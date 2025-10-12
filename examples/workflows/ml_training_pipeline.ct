@@ -1,0 +1,11 @@
+# Machine Learning Training Pipeline
+# Real-world example demonstrating result propagation
+#
+# Flow:
+# 1. collect_data: Gather training dataset
+# 2. (preprocess_features × augment_images): Parallel data preparation
+# 3. train_model: Train on prepared data
+# 4. (validate × benchmark): Parallel evaluation
+# 5. deploy_model: Deploy if validation passes
+
+deploy_model ∘ (validate × benchmark) ∘ train_model ∘ (preprocess_features × augment_images) ∘ collect_data

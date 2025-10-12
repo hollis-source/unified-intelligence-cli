@@ -1,0 +1,67 @@
+{
+  "uid": "pb-metrics",
+  "title": "Project Builder Metrics",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Uptime (h)",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "options": {"reduceOptions": {"calcs": ["last"], "fields": "", "values": false}},
+      "targets": [{"expr": "project_builder_uptime_seconds / 3600", "legendFormat": "uptime"}]
+    },
+    {
+      "type": "stat",
+      "title": "Total Projects",
+      "gridPos": {"x": 6, "y": 0, "w": 6, "h": 4},
+      "options": {"reduceOptions": {"calcs": ["last"], "fields": "", "values": false}},
+      "targets": [{"expr": "project_builder_projects_total", "legendFormat": "total"}]
+    },
+    {
+      "type": "stat",
+      "title": "Success Rate (5m)",
+      "gridPos": {"x": 12, "y": 0, "w": 6, "h": 4},
+      "options": {"reduceOptions": {"calcs": ["last"], "fields": "", "values": false}},
+      "fieldConfig": {"defaults": {"unit": "percentunit", "min": 0, "max": 1}},
+      "targets": [{"expr": "rate(project_builder_projects_success[5m]) / on() rate(project_builder_projects_total[5m])", "legendFormat": "success rate"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Projects by Outcome (rate 5m)",
+      "gridPos": {"x": 0, "y": 4, "w": 24, "h": 8},
+      "targets": [
+        {"expr": "rate(project_builder_projects_success[5m])", "legendFormat": "success/s"},
+        {"expr": "rate(project_builder_projects_failed[5m])", "legendFormat": "failed/s"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Tasks (rate 5m)",
+      "gridPos": {"x": 0, "y": 12, "w": 12, "h": 8},
+      "targets": [
+        {"expr": "rate(project_builder_tasks_total[5m])", "legendFormat": "tasks/s"},
+        {"expr": "rate(project_builder_tasks_completed[5m])", "legendFormat": "completed/s"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Execution Time (seconds total)",
+      "gridPos": {"x": 12, "y": 12, "w": 12, "h": 8},
+      "fieldConfig": {"defaults": {"unit": "s"}},
+      "targets": [{"expr": "project_builder_execution_time_seconds_total", "legendFormat": "total exec time (s)"}]
+    },
+    {
+      "type": "stat",
+      "title": "Avg Quality Score",
+      "gridPos": {"x": 0, "y": 20, "w": 6, "h": 4},
+      "fieldConfig": {"defaults": {"unit": "percent", "decimals": 1}},
+      "options": {"reduceOptions": {"calcs": ["last"], "fields": "", "values": false}},
+      "targets": [{"expr": "project_builder_quality_score_avg", "legendFormat": "quality"}]
+    }
+  ]
+}
+

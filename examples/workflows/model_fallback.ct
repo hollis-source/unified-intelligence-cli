@@ -1,0 +1,14 @@
+# Model Fallback Workflow with Coproduct (+)
+# Demonstrates: First-success semantics, automatic fallback
+
+# Type annotations (optional, for type checking)
+grok :: String -> Analysis
+qwen :: String -> Analysis
+claude :: String -> Analysis
+
+# Primary model with automatic fallbacks
+# Try grok first, if fails try qwen, if both fail try claude
+analysis = (grok + qwen + claude)
+
+# Execute the workflow
+analysis
