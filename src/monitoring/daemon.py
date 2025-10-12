@@ -36,29 +36,44 @@ class EndpointMonitoringDaemon:
     - Adapters injected (health checker, waker, metrics)
     """
 
-    def __init__(self, config: MonitoringConfig, metrics_port: int = 9090):
+    def __init__(
+        self,
+        config: MonitoringConfig,
+        metrics_port: int = 9090,
+        check_health_use_case: CheckEndpointHealth = None,
+        wake_endpoint_use_case: WakeEndpoint = None,
+        execute_fallback_chain_use_case = None,
+    ):
         """Initialize daemon with configuration.
 
         Args:
             config: Parsed monitoring configuration
             metrics_port: Port for Prometheus metrics endpoint
+            check_health_use_case: Optional CheckEndpointHealth use case (for testing)
+            wake_endpoint_use_case: Optional WakeEndpoint use case (for testing)
+            execute_fallback_chain_use_case: Optional ExecuteFallbackChain use case (for testing)
         """
         self.config = config
         self.metrics_port = metrics_port
 
-        # Initialize adapters
-        self.metrics_adapter = PrometheusMetricsAdapter()
-        self.health_adapter = HFInferenceHealthAdapter()
-        self.waker = HFInferenceWaker()
+        # Initialize use cases (or use injected ones for testing)
+        if check_health_use_case is None:
+            # Production: Create real adapters and use cases
+            self.metrics_adapter = PrometheusMetricsAdapter()
+            self.health_adapter = HFInferenceHealthAdapter()
+            self.waker = HFInferenceWaker()
 
-        # Initialize use cases with adapters
-        self.check_health_use_case = CheckEndpointHealth(
-            health_checker=self.health_adapter,
-            metrics_exporter=self.metrics_adapter,
-        )
-        self.wake_use_case = WakeEndpoint(
-            waker=self.waker, metrics_exporter=self.metrics_adapter
-        )
+            self.check_health_use_case = CheckEndpointHealth(
+                health_checker=self.health_adapter,
+                metrics_exporter=self.metrics_adapter,
+            )
+            self.wake_use_case = WakeEndpoint(
+                waker=self.waker, metrics_exporter=self.metrics_adapter
+            )
+        else:
+            # Testing: Use injected mocks
+            self.check_health_use_case = check_health_use_case
+            self.wake_use_case = wake_endpoint_use_case
 
         # Track running tasks for graceful shutdown
         self.tasks: Set[asyncio.Task] = set()
