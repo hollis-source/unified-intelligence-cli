@@ -5,7 +5,9 @@ Dependency Inversion Principle (DIP).
 """
 
 from .tracer import ITracer
+from .cost_tracker import ICostTracker
 
 __all__ = [
     "ITracer",
+    "ICostTracker",
 ]
