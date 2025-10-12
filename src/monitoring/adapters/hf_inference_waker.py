@@ -65,22 +65,20 @@ class HFInferenceWaker(IWaker, IReadinessPoller):
                     if response.status in (200, 503):
                         return WakeResult(
                             success=True,
-                            is_ready=(response.status == 200),
-                            wake_time_s=0  # Updated by use case
+                            wake_time_s=0,  # Updated by use case
+                            warning="Model still loading" if response.status == 503 else None
                         )
                     else:
                         body = await response.text()
                         return WakeResult(
                             success=False,
-                            is_ready=False,
-                            error_message=f"Wake failed with status {response.status}: {body[:100]}"
+                            error=f"Wake failed with status {response.status}: {body[:100]}"
                         )
 
         except aiohttp.ClientError as e:
             return WakeResult(
                 success=False,
-                is_ready=False,
-                error_message=f"Network error during wake: {type(e).__name__}: {str(e)}"
+                error=f"Network error during wake: {type(e).__name__}: {str(e)}"
             )
 
     async def poll_until_ready(self, endpoint: "Endpoint", timeout: int) -> bool:

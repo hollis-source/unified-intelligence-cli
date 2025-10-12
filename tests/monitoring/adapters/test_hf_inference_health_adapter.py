@@ -208,10 +208,11 @@ class TestNetworkError:
     @pytest.mark.asyncio
     async def test_network_error_returns_failed(self, adapter, test_endpoint):
         """Test network error returns FAILED with NETWORK_ERROR."""
+        import aiohttp
         with aioresponses() as m:
             m.post(
                 test_endpoint.url,
-                exception=Exception("Connection refused"),
+                exception=aiohttp.ClientError("Connection refused"),
             )
 
             # Act

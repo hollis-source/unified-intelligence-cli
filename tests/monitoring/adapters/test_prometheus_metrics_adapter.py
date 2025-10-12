@@ -3,6 +3,7 @@
 import pytest
 from datetime import datetime
 import asyncio
+from prometheus_client import CollectorRegistry
 
 from src.monitoring.entities import (
     Endpoint,
@@ -38,9 +39,13 @@ def health_status(test_endpoint):
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def adapter():
-    """Create PrometheusMetricsAdapter."""
+    """Create PrometheusMetricsAdapter once for all tests (module-scoped).
+
+    Prometheus metrics are global singletons, so we create the adapter once
+    and reuse it across all tests in this module.
+    """
     return PrometheusMetricsAdapter()
 
 
