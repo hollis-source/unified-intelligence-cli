@@ -3,11 +3,11 @@
 # Format: YAML for human readability + git-based coordination
 
 metadata:
-  version: "1.1"
+  version: "1.2"
   created: "2025-10-04T11:40:00Z"
-  last_updated: "2025-10-12T12:30:00Z"
+  last_updated: "2025-10-12T18:00:00Z"
   total_priorities: 8
-  completed: 1
+  completed: 2
   in_progress: 0
 
 # Priority statuses: open, claimed, in_progress, completed, failed
