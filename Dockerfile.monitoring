@@ -1,0 +1,53 @@
+# Dockerfile for Endpoint Monitoring Daemon
+# Multi-stage build for smaller final image
+
+FROM python:3.12-slim as builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Copy requirements and install dependencies
+WORKDIR /build
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install additional monitoring dependencies
+RUN pip install --no-cache-dir \
+    aiohttp==3.12.15 \
+    pyyaml==6.0.2 \
+    prometheus-client==0.21.0
+
+# Final stage
+FROM python:3.12-slim
+
+# Copy virtual environment from builder
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash monitoring
+WORKDIR /app
+
+# Copy source code
+COPY --chown=monitoring:monitoring src/ ./src/
+COPY --chown=monitoring:monitoring config/ ./config/
+
+# Switch to non-root user
+USER monitoring
+
+# Expose Prometheus metrics port
+EXPOSE 9090
+
+# Health check (metrics endpoint)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:9090/metrics')" || exit 1
+
+# Run monitoring daemon
+ENTRYPOINT ["python", "-m", "src.monitoring"]
+CMD ["--config", "config/endpoints.yaml", "--metrics-port", "9090", "--log-level", "INFO"]

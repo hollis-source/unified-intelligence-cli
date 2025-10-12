@@ -1,0 +1,74 @@
+# Endpoint Monitoring Configuration
+# This file defines endpoints to monitor and fallback chains
+
+endpoints:
+  # HuggingFace Inference API endpoints
+  hf-llama3-8b:
+    provider: huggingface
+    url: https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct
+    priority: CRITICAL
+    wake_strategy: ALWAYS_WARM
+    auth_config:
+      type: bearer
+      token_env: HF_TOKEN  # Environment variable containing auth token
+    health_check_interval: 30  # Override default (CRITICAL = 30s)
+    wake_timeout: 90
+
+  hf-mistral-7b:
+    provider: huggingface
+    url: https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2
+    priority: HIGH
+    wake_strategy: PRIORITY_BASED
+    auth_config:
+      type: bearer
+      token_env: HF_TOKEN
+    wake_timeout: 90
+
+  hf-qwen-7b:
+    provider: huggingface
+    url: https://api-inference.huggingface.co/models/Qwen/Qwen2-7B-Instruct
+    priority: MEDIUM
+    wake_strategy: REACTIVE
+    auth_config:
+      type: bearer
+      token_env: HF_TOKEN
+    health_check_interval: 120  # Check every 2 minutes
+    wake_timeout: 120
+
+  # Backup endpoint (lower priority)
+  hf-phi3-mini:
+    provider: huggingface
+    url: https://api-inference.huggingface.co/models/microsoft/Phi-3-mini-4k-instruct
+    priority: LOW
+    wake_strategy: REACTIVE
+    auth_config:
+      type: bearer
+      token_env: HF_TOKEN
+    health_check_interval: 300  # Check every 5 minutes
+    wake_timeout: 90
+
+# Fallback chains define routing when primary endpoint fails
+fallback_chains:
+  # Primary inference chain
+  llama3-chain:
+    primary_endpoint_id: hf-llama3-8b
+    secondary_endpoint_id: hf-mistral-7b
+    tertiary_endpoint_id: hf-qwen-7b
+
+  # Backup chain
+  mistral-chain:
+    primary_endpoint_id: hf-mistral-7b
+    secondary_endpoint_id: hf-qwen-7b
+    tertiary_endpoint_id: hf-phi3-mini
+
+# Priority Explanation:
+# - CRITICAL: Always warm, checked every 30s, highest priority
+# - HIGH: Warmed based on priority, checked every 60s
+# - MEDIUM: Warmed on-demand, checked every 120s
+# - LOW: Never auto-warmed, checked every 300s
+# - MINIMAL: Never auto-warmed, checked every 600s
+
+# Wake Strategy Explanation:
+# - ALWAYS_WARM: Always wake sleeping endpoints (expensive but fast)
+# - PRIORITY_BASED: Wake if priority >= HIGH (balanced)
+# - REACTIVE: Never wake automatically, only on-demand (cost-effective)
