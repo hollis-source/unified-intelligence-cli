@@ -8,6 +8,7 @@ from .trace import Trace, Span, TraceStatus
 from .cost import CostEntry, CostSummary
 from .usage import UsageEntry, UsageSummary, UsagePattern, OperationType
 from .alert import Alert, AlertRule, AlertSeverity
+from .performance import PerformanceMetric, ProfileSummary, OperationProfile, MetricType
 
 __all__ = [
     "Trace",
@@ -22,4 +23,8 @@ __all__ = [
     "Alert",
     "AlertRule",
     "AlertSeverity",
+    "PerformanceMetric",
+    "ProfileSummary",
+    "OperationProfile",
+    "MetricType",
 ]
