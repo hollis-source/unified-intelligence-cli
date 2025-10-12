@@ -196,8 +196,8 @@ priorities:
     started_at: "2025-10-12T10:00:00Z"
     completed_at: "2025-10-12T12:30:00Z"
 
-    branch: "priority/prod-010"
-    pr_url: null
+    branch: "priority/prod-010-clean"
+    pr_url: "https://github.com/hollis-source/unified-intelligence-cli/pull/new/priority/prod-010-clean"
     success: true
     error: null
     artifacts:
