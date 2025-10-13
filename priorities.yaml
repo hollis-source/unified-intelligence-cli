@@ -275,7 +275,7 @@ priorities:
       - Test metrics POST from autonomous_dev_tool.py
       - Run existing docserver tests (should pass)
     status: "open"
-    priority: "medium"
+    priority: "critical"
     effort_hours: 4
     complexity: "medium"
 
