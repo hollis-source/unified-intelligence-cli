@@ -160,6 +160,46 @@ functor main = deploy o test o build
 
 For more DSL examples, see `examples/workflows/`.
 
+### Dogfooding: Using Our Own Tools
+
+This project is built using its own autonomous development capabilities. Here are examples:
+
+**Example 1: Autonomous Development Loop**
+```bash
+# Run autonomous iterations continuously
+python autonomous_dev_tool.py run --continuous --mode fast
+
+# The tool will:
+# 1. Analyze git history, coverage, and goals from priorities.yaml
+# 2. Generate next optimal task
+# 3. Execute task on remote worker (SYD2 via SSH)
+# 4. Track metrics automatically
+# 5. Repeat until stopped
+```
+
+**Example 2: Multi-Model AI Code Generation**
+```bash
+# Use GPT-5 for pragmatic implementation
+python -c "\nfrom mcp__auggie import auggie_with_gpt5\nauggie_with_gpt5(instruction='Create REST API with users endpoint')\n"
+
+# Use Claude 4.5 for rigorous code review
+python -c "\nfrom mcp__auggie import auggie_with_claude\nauggie_with_claude(instruction='Review REST API implementation')\n"
+```
+
+**Example 3: DSL Workflow Composition**
+```bash
+# Execute category theory workflow
+./bin/ui-cli --workflow examples/workflows/parallel_analysis.ct --verbose
+
+# Workflow uses operators:
+# ∘ (compose): Sequential execution
+# × (product): Parallel execution
+# + (sum): Conditional choice
+```
+
+See [docs/DOGFOODING_GUIDE.md](docs/DOGFOODING_GUIDE.md) for comprehensive examples.
+
+
 ### HTN Decomposition (NEW - Sprint 2)
 
 Hierarchical Task Network compilation enables recursive task breakdown with composition semantics preserved:
