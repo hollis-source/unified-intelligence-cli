@@ -200,16 +200,82 @@ priorities:
       - Documentation validated: 98% production ready, ready for use
 
   - id: "metrics_dashboard"
-    title: "Create Metrics Dashboard for Priority Worker Performance"
+    title: "Create Unified Metrics Dashboard for All Dev Tools"
     description: |
-      Build dashboard to track priority worker effectiveness:
-      - Track throughput (priorities completed/week)
-      - Monitor API usage and cost per priority
-      - Quality metrics (PR review time, merge success rate)
-      - Git conflict frequency
-      - Worker utilization (Claude Code vs container hours)
+      OBJECTIVE: Extend FastAPI docserver on SYD2 into unified metrics dashboard for all dev tools.
+
+      LOCATION: /opt/docserver on syd2.jacobhollis.com (existing FastAPI server, port 8080)
+      REFERENCE: .auggie_task_unified_dashboard.txt (comprehensive specification)
+
+      PHASE 1 - BACKEND (Autonomous Orchestrator Metrics):
+
+      Task 1: Extend database schema
+      - File: /opt/docserver/src/adapters/database/sqlite_adapter.py
+      - Add create_metrics_tables() method
+      - Create tables: iterations, project_builds, workflow_executions
+      - Run initialization to create tables in docserver.db
+
+      Task 2: Create domain entities
+      - File: /opt/docserver/src/domain/iteration_metric.py (NEW)
+      - Define IterationMetric dataclass with validation
+      - Fields: timestamp, iteration_number, mode, durations, success, task_id, task_goal, task_priority
+
+      Task 3: Implement database adapter methods
+      - File: /opt/docserver/src/adapters/database/sqlite_adapter.py (EXTEND)
+      - Add insert_iteration_metric(metric) -> int
+      - Add get_iterations(filters) -> list[IterationMetric]
+      - Add get_iteration_stats() -> dict (aggregations for dashboard)
+
+      Task 4: Create use cases
+      - File: /opt/docserver/src/use_cases/record_iteration_metric.py (NEW)
+      - File: /opt/docserver/src/use_cases/get_dashboard_stats.py (NEW)
+      - Implement business logic for recording and retrieving metrics
+
+      Task 5: Add API endpoints
+      - File: /opt/docserver/src/adapters/web/api.py (EXTEND)
+      - POST /api/metrics/iteration (record metric)
+      - GET /api/metrics/iterations (list with filters)
+      - GET /api/metrics/dashboard (aggregate stats)
+      - Use existing API key authentication
+
+      Task 6: Wire up in main.py
+      - File: /opt/docserver/src/main.py (UPDATE)
+      - Instantiate new use cases
+      - Pass to API router
+      - Ensure backward compatibility
+
+      PHASE 2 - FRONTEND:
+
+      Task 7: Create dashboard UI
+      - File: /opt/docserver/static/dashboard.html (NEW)
+      - Use Tailwind CSS (matches existing docserver UI)
+      - Add Chart.js for visualizations
+      - Display: summary cards, success rate chart, duration chart, tasks by goal, 24h trend, recent iterations table
+      - Auto-refresh every 30 seconds
+
+      PHASE 3 - INTEGRATION:
+
+      Task 8: Update autonomous_dev_tool.py
+      - File: autonomous_dev_tool.py in unified-intelligence-cli repo
+      - Add POST request after metrics.record_iteration()
+      - Send to http://syd2.jacobhollis.com:8080/api/metrics/iteration
+      - Include error handling (don't fail if POST fails)
+
+      SUCCESS CRITERIA:
+      - Dashboard accessible at http://syd2.jacobhollis.com:8080/dashboard.html
+      - API endpoints return proper responses (test with curl)
+      - Charts display real metrics from autonomous_dev_tool.py
+      - Auto-refresh updates dashboard every 30s
+      - Document upload features still work (backward compatible)
+
+      TESTING:
+      - Test database schema creation
+      - Test API endpoints with curl
+      - Test dashboard UI in browser
+      - Test metrics POST from autonomous_dev_tool.py
+      - Run existing docserver tests (should pass)
     status: "open"
-    priority: "low"
+    priority: "medium"
     effort_hours: 4
     complexity: "medium"
 
@@ -229,6 +295,7 @@ priorities:
 
     created_at: "2025-10-04T11:40:00Z"
     created_by: "claude-code"
+    notes: "Use autonomous orchestrator to implement its own dashboard (ultimate dogfooding!)"
 
   - id: "prod_deploy_project_builder"
     title: "P1.1 Deploy Project Builder to production"
