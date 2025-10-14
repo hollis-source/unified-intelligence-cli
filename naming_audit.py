@@ -355,9 +355,29 @@ class NamingAuditor:
         return False
 
     def _suggest_verb_noun_name(self, func_name: str) -> str:
-        """Suggest a verb-noun name for a function."""
-        if 'test' in func_name.lower():
+        """Suggest a verb-noun name for a function.
+
+        Provides intelligent suggestions based on function name patterns.
+        """
+        func_lower = func_name.lower()
+
+        # Handle test functions
+        if 'test' in func_lower:
             return f"test_{func_name.replace('test', '').strip('_')}"
+
+        # Suggest based on common patterns
+        if any(keyword in func_lower for keyword in ['valid', 'check', 'verify']):
+            return f"validate_{func_name}"
+        elif any(keyword in func_lower for keyword in ['data', 'info', 'result']):
+            return f"get_{func_name}"
+        elif any(keyword in func_lower for keyword in ['config', 'setting', 'option']):
+            return f"configure_{func_name}"
+        elif any(keyword in func_lower for keyword in ['error', 'exception', 'failure']):
+            return f"handle_{func_name}"
+        elif func_name.endswith('s'):  # Possibly plural (e.g., users → get_users)
+            return f"get_{func_name}"
+
+        # Default: suggest processing
         return f"process_{func_name}"
 
     def _has_boolean_flag_args(self, func_node: ast.FunctionDef) -> bool:
