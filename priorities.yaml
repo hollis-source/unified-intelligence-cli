@@ -5,9 +5,9 @@
 metadata:
   version: "1.0"
   created: "2025-10-04T11:40:00Z"
-  last_updated: "2025-10-14T06:45:00Z"
+  last_updated: "2025-10-14T12:05:00Z"
   total_priorities: 7
-  completed: 2
+  completed: 3
   in_progress: 0
 
 # Priority statuses: open, claimed, in_progress, completed, failed
