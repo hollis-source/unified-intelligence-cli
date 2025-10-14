@@ -319,7 +319,7 @@ priorities:
       - Deprecated aliases in place
       - All tests pass
       - Zero breaking changes
-    status: "open"
+    status: "completed"
     priority: "critical"
     effort_hours: 2
     complexity: "medium"
