@@ -52,7 +52,7 @@ class NamingAuditor:
             # CRUD operations
             'get', 'set', 'create', 'delete', 'update', 'fetch', 'save', 'load',
             'insert', 'upsert', 'remove', 'add', 'append', 'push', 'pop', 'put',
-            'read', 'write', 'edit', 'modify', 'change', 'alter',
+            'read', 'write', 'edit', 'modify', 'change', 'alter', 'assign',
 
             # Query operations
             'find', 'search', 'filter', 'query', 'select', 'retrieve', 'lookup',
