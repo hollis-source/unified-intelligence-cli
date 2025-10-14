@@ -34,6 +34,8 @@ import requests
 # Clean Architecture: use existing orchestrator components (entities/use-cases/adapters)
 from src.claude_orchestrator.entities.worker import WorkerPoolConfig
 from src.claude_orchestrator.adapters.single_worker_pool import SingleWorkerPool
+from src.claude_orchestrator.adapters.local_worker_pool import LocalWorkerPool
+from src.claude_orchestrator.interfaces.worker_pool import IWorkerPool
 from src.claude_orchestrator.adapters.git_context_analyzer import GitContextAnalyzer
 from src.claude_orchestrator.adapters.pytest_analyzer import PytestAnalyzer
 from src.claude_orchestrator.adapters.coverage_analyzer import CoverageAnalyzer
@@ -232,17 +234,28 @@ def resolve_mode(mode: str) -> ModeConfig:
     raise click.BadParameter("mode must be one of: fast, thorough, full")
 
 
-def build_components(ssh_host: str, working_dir: str, model_name: str) -> Tuple[
-    SingleWorkerPool, AnalyzeContextUseCase, GenerateNextTaskUseCase
+def build_components(ssh_host: str, working_dir: str, model_name: str, local: bool = False) -> Tuple[
+    IWorkerPool, AnalyzeContextUseCase, GenerateNextTaskUseCase
 ]:
-    worker_config = WorkerPoolConfig(
-        pool_type="ssh",
-        max_workers=1,
-        ssh_host=ssh_host,
-        working_dir=working_dir,
-        model_name=model_name,
-    )
-    worker_pool = SingleWorkerPool(worker_config)
+    if local:
+        # Local execution - use subprocess directly
+        worker_config = WorkerPoolConfig(
+            pool_type="local",
+            max_workers=1,
+            working_dir=working_dir,
+            model_name=model_name,
+        )
+        worker_pool = LocalWorkerPool(worker_config)
+    else:
+        # SSH execution - use remote server
+        worker_config = WorkerPoolConfig(
+            pool_type="ssh",
+            max_workers=1,
+            ssh_host=ssh_host,
+            working_dir=working_dir,
+            model_name=model_name,
+        )
+        worker_pool = SingleWorkerPool(worker_config)
     analyze_context = AnalyzeContextUseCase(
         git_analyzer=GitContextAnalyzer(),
         test_analyzer=PytestAnalyzer(),
@@ -271,7 +284,7 @@ class DevRunner:
 
     def __init__(
         self,
-        worker_pool: SingleWorkerPool,
+        worker_pool: IWorkerPool,
         analyze_context: AnalyzeContextUseCase,
         generate_task: GenerateNextTaskUseCase,
         project_path: str,
@@ -377,19 +390,24 @@ def cli() -> None:
 )
 @click.option("--continuous", is_flag=True, help="Run continuously until stopped")
 @click.option("--target-goal", "target_goal", type=str, default=None, help="Explicit goal ID to target (overrides heuristics)")
-@click.option("--ssh-host", default=DEFAULT_SSH_HOST, show_default=True)
+@click.option("--local", is_flag=True, default=True, help="Use local execution (default)")
+@click.option("--ssh-host", default=DEFAULT_SSH_HOST, show_default=True, help="SSH host for remote execution")
 @click.option("--working-dir", default=DEFAULT_WORKING_DIR, show_default=True)
 @click.option("--model", default=DEFAULT_MODEL, show_default=True)
 @click.option("--project-path", default=".", show_default=True)
 @click.option("--priorities-file", default=DEFAULT_PRIORITIES_FILE, show_default=True)
-def run(iterations: int, mode: str, continuous: bool, target_goal: str, ssh_host: str, working_dir: str, model: str,
+def run(iterations: int, mode: str, continuous: bool, target_goal: str, local: bool, ssh_host: str, working_dir: str, model: str,
         project_path: str, priorities_file: str) -> None:
     """Run autonomous iterations with metrics persistence."""
     mode_cfg = resolve_mode(mode)
     metrics = MetricsTracker()
 
+    # Use local execution by default unless --no-local specified
+    # For SSH execution, use: --no-local --ssh-host user@host
+    use_local = local
+
     pool, analyze_context, generate_task = build_components(
-        ssh_host=ssh_host, working_dir=working_dir, model_name=model
+        ssh_host=ssh_host, working_dir=working_dir, model_name=model, local=use_local
     )
     runner = DevRunner(
         worker_pool=pool,
@@ -400,7 +418,8 @@ def run(iterations: int, mode: str, continuous: bool, target_goal: str, ssh_host
         target_goal_id=target_goal,
     )
 
-    click.echo(f"Starting autonomous run | mode={mode} | continuous={continuous} | iterations={iterations}")
+    execution_type = "LOCAL" if use_local else f"SSH ({ssh_host})"
+    click.echo(f"Starting autonomous run | execution={execution_type} | mode={mode} | continuous={continuous} | iterations={iterations}")
     i = 0
     try:
         while True:
