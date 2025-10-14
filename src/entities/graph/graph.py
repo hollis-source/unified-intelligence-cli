@@ -443,6 +443,17 @@ class Graph:
 
         return sub
 
+    # Backward compatibility alias (deprecated)
+    def subgraph(self, node_ids: List[str]) -> "Graph":
+        """DEPRECATED: Use extract_subgraph() instead."""
+        import warnings
+        warnings.warn(
+            "subgraph() is deprecated, use extract_subgraph() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.extract_subgraph(node_ids)
+
     def __repr__(self) -> str:
         """String representation for debugging."""
         return (
