@@ -5,8 +5,8 @@
 metadata:
   version: "1.0"
   created: "2025-10-04T11:40:00Z"
-  last_updated: "2025-10-04T11:40:00Z"
-  total_priorities: 5
+  last_updated: "2025-10-14T07:00:00Z"
+  total_priorities: 6
   completed: 0
   in_progress: 0
 
@@ -174,6 +174,56 @@ priorities:
 
     created_at: "2025-10-04T11:40:00Z"
     created_by: "claude-code"
+
+  - id: "naming_refactoring_phase_1"
+    title: "Naming Ruleset Refactoring - Phase 1: Discovery & Analysis"
+    description: |
+      Comprehensive naming audit and impact analysis for codebase-wide refactoring:
+
+      TASK 1: Create naming_audit.py script that scans entire codebase and generates:
+      - Directory naming violations (plural names, inconsistent casing, deep nesting)
+      - File naming violations (non-snake_case, cryptic names)
+      - Function naming violations (no verb-noun pairs, flag arguments, hidden side effects)
+      - Variable naming violations (single letters in large scopes, Hungarian notation)
+      Output: naming_violations_report.json + naming_violations_summary.md
+
+      TASK 2: Create prioritization matrix:
+      - Critical: Public API functions, core entity names (Phase 2)
+      - High: Service/use case functions, adapters (Phase 3)
+      - Medium: Internal helpers, private methods (Phase 4)
+      - Low: Local variables, temporary vars (Phase 5)
+      Output: refactoring_priority_matrix.md + phase_*.json goal files
+
+      TASK 3: Impact analysis:
+      - Build dependency graph (files importing violated names)
+      - Check test coverage for violated names
+      - Search documentation for references to old names
+      Output: impact_analysis_report.json + breaking_changes_forecast.md
+
+      Reference: REFACTORING_PLAN_NAMING_RULESET.md (complete 6-phase plan)
+      Ruleset: Naming Ruleset.md (Clean Code principles by Robert C. Martin)
+    status: "open"
+    priority: "high"
+    effort_hours: 2.5
+    complexity: "medium"
+
+    workflow: null
+    dependencies: []
+
+    claimed_by: null
+    claimed_at: null
+    started_at: null
+    completed_at: null
+
+    branch: null
+    pr_url: null
+    success: null
+    error: null
+    artifacts: []
+
+    created_at: "2025-10-14T07:00:00Z"
+    created_by: "claude-code"
+    notes: "Phase 1 of 6-phase naming refactoring. Generates audit data for subsequent phases."
 
 # Completed priorities (archive)
 completed_priorities: []
