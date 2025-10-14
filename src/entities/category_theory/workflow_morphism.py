@@ -22,7 +22,7 @@ class WorkflowMorphism:
     """
 
     @staticmethod
-    def htn_flatten() -> Morphism[HTNNode, HTNNode]:
+    def flatten_htn() -> Morphism[HTNNode, HTNNode]:
         """Flatten nested composition into single level.
 
         Transformation:
@@ -83,7 +83,7 @@ class WorkflowMorphism:
         )
 
     @staticmethod
-    def htn_remove_identity() -> Morphism[HTNNode, HTNNode]:
+    def remove_htn_identity() -> Morphism[HTNNode, HTNNode]:
         """Remove identity transformations from HTN.
 
         Transformation:
@@ -139,6 +139,30 @@ class WorkflowMorphism:
             transform=remove_identity_transform
         )
 
+
+    # Backward compatibility alias (deprecated)
+    @staticmethod
+    def htn_flatten() -> Morphism[HTNNode, HTNNode]:
+        """DEPRECATED: Use flatten_htn() instead."""
+        import warnings
+        warnings.warn(
+            "htn_flatten() is deprecated, use flatten_htn() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return WorkflowMorphism.flatten_htn()
+
+    # Backward compatibility alias (deprecated)
+    @staticmethod
+    def htn_remove_identity() -> Morphism[HTNNode, HTNNode]:
+        """DEPRECATED: Use remove_htn_identity() instead."""
+        import warnings
+        warnings.warn(
+            "htn_remove_identity() is deprecated, use remove_htn_identity() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return WorkflowMorphism.remove_htn_identity()
     @staticmethod
     def htn_simplify() -> Morphism[HTNNode, HTNNode]:
         """Simplify HTN by removing single-subtask nodes.
