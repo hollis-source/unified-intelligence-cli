@@ -164,7 +164,7 @@ class WorkflowMorphism:
         )
         return WorkflowMorphism.remove_htn_identity()
     @staticmethod
-    def htn_simplify() -> Morphism[HTNNode, HTNNode]:
+    def simplify_htn() -> Morphism[HTNNode, HTNNode]:
         """Simplify HTN by removing single-subtask nodes.
 
         Transformation:
@@ -203,6 +203,18 @@ class WorkflowMorphism:
             target="HTNNode",
             transform=simplify_transform
         )
+
+    # Backward compatibility alias (deprecated)
+    @staticmethod
+    def htn_simplify() -> Morphism[HTNNode, HTNNode]:
+        """DEPRECATED: Use simplify_htn() instead."""
+        import warnings
+        warnings.warn(
+            "htn_simplify() is deprecated, use simplify_htn() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return WorkflowMorphism.simplify_htn()
 
     @staticmethod
     def graph_remove_isolated_nodes() -> Morphism[Graph, Graph]:
