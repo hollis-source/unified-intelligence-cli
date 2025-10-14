@@ -246,7 +246,7 @@ class Graph:
         )
         return self.traverse_dfs(start_node, visit_fn)
 
-    def bfs(
+    def traverse_bfs(
         self,
         start_node: str,
         visit_fn: Optional[Callable[[GraphNode], None]] = None
