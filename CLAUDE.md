@@ -125,15 +125,39 @@ autonomous-task-agent-dev-orchestration/
 4. **Extensibility**: Easy to add new agent types, teams, workflow patterns
 5. **Observability**: Metrics collection, logging, error handling
 
-## Bash Commands
-- git init: Initialize repo.
-- python3 -m venv venv: Create virtual env.
-- pip install langchain click python-dotenv: Install dependencies.
-- pytest: Run tests.
-- docker build .: Containerize app.
-- git clone https://github.com/ggerganov/llama.cpp && make: Setup llama.cpp for CPU inference.
-- huggingface-cli download meta-llama/Llama-2-7b --local-dir models: Download HF model.
-- ./llama-cli -m model.gguf -p "prompt": Run inference.
+## Common Commands
+
+**Setup:**
+```bash
+python3 -m venv venv                    # Create virtual environment
+source venv/bin/activate                 # Activate venv
+pip install -e .                         # Install package in dev mode
+pip install -e ".[dev]"                  # Install with dev dependencies
+```
+
+**CLI Usage:**
+```bash
+atado --help                             # Show CLI help
+atado run task.yaml                      # Execute task from YAML
+atado orchestrate --routing team         # Team-based orchestration
+atado status                             # Check system status
+python3 -m src.main --task "description" # Direct Python invocation
+```
+
+**Testing:**
+```bash
+pytest tests/ -v                         # Run all tests with verbose
+pytest tests/unit/ -k "test_routing"     # Run specific tests
+pytest --cov=src tests/                  # Run with coverage
+```
+
+**Development:**
+```bash
+git commit -am "feat: description"       # Commit changes
+black src/ tests/                        # Format code
+mypy src/                               # Type checking
+flake8 src/                             # Linting
+```
 
 ## Code Style
 - Use PEP 8.
