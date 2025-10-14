@@ -94,8 +94,8 @@ jobs:
         context: .
         push: true
         tags: |
-          ${{ secrets.DOCKER_USERNAME }}/unified-intelligence-cli:latest
-          ${{ secrets.DOCKER_USERNAME }}/unified-intelligence-cli:${{ steps.version.outputs.VERSION }}
+          ${{ secrets.DOCKER_USERNAME }}/autonomous-task-agent-dev-orchestration:latest
+          ${{ secrets.DOCKER_USERNAME }}/autonomous-task-agent-dev-orchestration:${{ steps.version.outputs.VERSION }}
         platforms: linux/amd64,linux/arm64
         cache-from: type=gha
         cache-to: type=gha,mode=max
@@ -132,18 +132,18 @@ jobs:
       with:
         name: Release ${{ steps.version.outputs.VERSION }}
         body: |
-          # Unified Intelligence CLI ${{ steps.version.outputs.VERSION }}
+          # Autonomous Task-Agent Dev Orchestration (ATADO) ${{ steps.version.outputs.VERSION }}
           
           ## Installation
           
           **PyPI:**
           ```bash
-          pip install unified-intelligence-cli
+          pip install autonomous-task-agent-dev-orchestration
           ```
           
           **Docker:**
           ```bash
-          docker pull ${{ secrets.DOCKER_USERNAME }}/unified-intelligence-cli:${{ steps.version.outputs.VERSION }}
+          docker pull ${{ secrets.DOCKER_USERNAME }}/autonomous-task-agent-dev-orchestration:${{ steps.version.outputs.VERSION }}
           ```
           
           ## Changes

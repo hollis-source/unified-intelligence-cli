@@ -5,15 +5,15 @@
 
 ---
 
-## What is ui-cli?
+## What is atado?
 
-`ui-cli` is the **user-facing command** for the Unified Intelligence CLI project. It's the entry point that orchestrates multi-agent task execution.
+`atado` is the **user-facing command** for the Autonomous Task-Agent Dev Orchestration (ATADO) project. It's the entry point that orchestrates multi-agent task execution.
 
 ### Current Installation Methods
 
 1. **Development Mode** (No installation):
    ```bash
-   ./ui-cli --task "Your task" --provider mock
+   ./atado --task "Your task" --provider mock
    ```
 
 2. **Python Module** (No installation):
@@ -26,7 +26,7 @@
    python3 -m venv venv
    source venv/bin/activate
    pip install -e .
-   ui-cli --task "Your task" --provider mock
+   atado --task "Your task" --provider mock
    ```
 
 ---
@@ -35,7 +35,7 @@
 
 ### ✅ Implemented
 ```bash
-ui-cli --help
+atado --help
 ```
 
 **Options**:
@@ -51,12 +51,12 @@ ui-cli --help
 
 **Single Task (Mock Provider)**:
 ```bash
-./ui-cli --task "Write a Python hello world function" --provider mock
+./atado --task "Write a Python hello world function" --provider mock
 ```
 
 **Multi-Task (With Verbose)**:
 ```bash
-./ui-cli \
+./atado \
   --task "Write a factorial function" \
   --task "Write tests for factorial" \
   --provider mock \
@@ -65,19 +65,19 @@ ui-cli --help
 
 **Debug Mode (Week 3 - Flag exists but no logs)**:
 ```bash
-./ui-cli --task "Test debug" --provider tongyi --debug
+./atado --task "Test debug" --provider tongyi --debug
 # ⚠️  Currently shows no debug output (Week 4 will fix this)
 ```
 
 ---
 
-## Week 4-6 Pipeline: Enhancing ui-cli
+## Week 4-6 Pipeline: Enhancing atado
 
 ### WEEK 4: Debug Logging (Make --debug Useful)
 
 **Current Problem**:
 ```bash
-$ ./ui-cli --task "test" --provider tongyi --debug
+$ ./atado --task "test" --provider tongyi --debug
 ========================================
 Result #1
 ========================================
@@ -88,7 +88,7 @@ Output: ...
 
 **After Week 4**:
 ```bash
-$ ./ui-cli --task "test" --provider tongyi --debug
+$ ./atado --task "test" --provider tongyi --debug
 2025-09-30 15:30:01 - tongyi_adapter - DEBUG - [tongyi_adapter.py:85] - HTTP Request: http://localhost:8080/completion
 2025-09-30 15:30:01 - tongyi_adapter - DEBUG - [tongyi_adapter.py:87] - Prompt: <|im_start|>system\nYou are a helpful assistant...
 2025-09-30 15:30:02 - tongyi_adapter - DEBUG - [tongyi_adapter.py:95] - HTTP Response: 200 OK
@@ -109,7 +109,7 @@ Output: ...
 
 **Current Problem**:
 ```bash
-$ ./ui-cli --task "List files in src/ directory" --provider tongyi
+$ ./atado --task "List files in src/ directory" --provider tongyi
 ========================================
 Result #1
 ========================================
@@ -120,7 +120,7 @@ Output: I cannot list files, I can only generate text.
 
 **After Week 5**:
 ```bash
-$ ./ui-cli --task "List files in src/ directory" --provider tongyi --debug
+$ ./atado --task "List files in src/ directory" --provider tongyi --debug
 2025-09-30 15:35:01 - tongyi_adapter - DEBUG - Available tools: ['run_command', 'read_file_content', 'write_file_content', 'list_files']
 2025-09-30 15:35:02 - tongyi_adapter - DEBUG - Tool call detected: list_files(directory='src/', pattern='*.py')
 2025-09-30 15:35:02 - tools - DEBUG - Executing: list_files(directory='src/', pattern='*.py')
@@ -149,7 +149,7 @@ Metadata: {'tools_used': ['list_files']}
 
 **After Week 6**:
 ```bash
-$ ./ui-cli \
+$ ./atado \
   --task "Write a Python function to sort a list" \
   --task "Write pytest tests for the function" \
   --task "Run the tests and report results" \
@@ -186,11 +186,11 @@ Metadata: {'tools_used': ['write_file_content', 'run_command'], 'latency_ms': 23
 
 ---
 
-## Integration Points: ui-cli ↔ Week 4-6
+## Integration Points: atado ↔ Week 4-6
 
 ### Week 4 Integration
 
-**Files Modified** (all enhance ui-cli experience):
+**Files Modified** (all enhance atado experience):
 1. `src/adapters/llm/tongyi_adapter.py` - Logs HTTP requests when `--debug` flag used
 2. `src/adapters/llm/grok_adapter.py` - Logs API calls when `--debug` flag used
 3. `src/tools.py` - Logs command execution when `--debug` flag used
@@ -199,11 +199,11 @@ Metadata: {'tools_used': ['write_file_content', 'run_command'], 'latency_ms': 23
 **CLI Command Impact**:
 ```bash
 # Before Week 4
-./ui-cli --task "test" --debug
+./atado --task "test" --debug
 # → No debug output
 
 # After Week 4
-./ui-cli --task "test" --debug
+./atado --task "test" --debug
 # → Shows HTTP logs, tool logs, agent selection logs
 ```
 
@@ -218,11 +218,11 @@ Metadata: {'tools_used': ['write_file_content', 'run_command'], 'latency_ms': 23
 **CLI Command Impact**:
 ```bash
 # Before Week 5
-./ui-cli --task "List files in src/" --provider tongyi
+./atado --task "List files in src/" --provider tongyi
 # → Tongyi responds: "I cannot execute commands"
 
 # After Week 5
-./ui-cli --task "List files in src/" --provider tongyi
+./atado --task "List files in src/" --provider tongyi
 # → Tongyi calls list_files tool, returns actual directory listing
 ```
 
@@ -244,7 +244,7 @@ Metadata: {'tools_used': ['write_file_content', 'run_command'], 'latency_ms': 23
 **CLI Command Impact**:
 ```bash
 # Complex multi-task workflow (validated in Week 6)
-./ui-cli \
+./atado \
   --task "Set up a Python project with: main.py, tests/, README.md" \
   --task "Write a function to calculate Fibonacci numbers" \
   --task "Write comprehensive tests" \
@@ -260,10 +260,10 @@ Metadata: {'tools_used': ['write_file_content', 'run_command'], 'latency_ms': 23
 
 ---
 
-## ui-cli Architecture Integration
+## atado Architecture Integration
 
 ```
-User runs: ./ui-cli --task "..." --provider tongyi --debug
+User runs: ./atado --task "..." --provider tongyi --debug
     ↓
 main.py (CLI entry point)
     ↓
@@ -294,24 +294,24 @@ ResultFormatter.format_results()
 
 ---
 
-## Testing ui-cli with Week 4-6 Features
+## Testing atado with Week 4-6 Features
 
 ### Test 1: Debug Logging (Week 4)
 ```bash
-./ui-cli --task "Simple test" --provider tongyi --debug 2>&1 | grep "DEBUG"
+./atado --task "Simple test" --provider tongyi --debug 2>&1 | grep "DEBUG"
 # Should show 5+ debug log lines
 ```
 
 ### Test 2: Tool Calling (Week 5)
 ```bash
-./ui-cli --task "Create a file called hello.txt with content 'Hello World'" --provider tongyi
+./atado --task "Create a file called hello.txt with content 'Hello World'" --provider tongyi
 cat hello.txt
 # Should contain: Hello World
 ```
 
 ### Test 3: Multi-Task Coordination (Week 6)
 ```bash
-./ui-cli \
+./atado \
   --task "Write Python function: def add(a, b)" \
   --task "Write test: test_add()" \
   --task "Run pytest" \
@@ -328,29 +328,29 @@ cat hello.txt
 
 ---
 
-## Summary: ui-cli IS the Project
+## Summary: atado IS the Project
 
-**Key Insight**: `ui-cli` is not a separate app—it's the **primary interface** for the unified-intelligence-cli project.
+**Key Insight**: `atado` is not a separate app—it's the **primary interface** for the autonomous-task-agent-dev-orchestration project.
 
 **Week 4-6 Pipeline Goals**:
 1. **Week 4**: Make `--debug` flag useful (show logs)
 2. **Week 5**: Make agents powerful (use tools)
 3. **Week 6**: Validate production readiness (E2E tests)
 
-**All improvements directly enhance the ui-cli user experience.**
+**All improvements directly enhance the atado user experience.**
 
 ---
 
 ## Next Steps
 
-1. ✅ ui-cli wrapper created (`./ui-cli`)
+1. ✅ atado wrapper created (`./atado`)
 2. ⏳ Proceed with Week 4: Add debug logging
 3. ⏳ Proceed with Week 5: Add tool calling
 4. ⏳ Proceed with Week 6: E2E validation
 
 **User Command After Week 4-6**:
 ```bash
-./ui-cli \
+./atado \
   --task "Your complex task" \
   --provider tongyi \
   --debug \

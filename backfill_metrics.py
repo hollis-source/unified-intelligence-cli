@@ -29,7 +29,7 @@ PRIORITY_MAPPING = {
 
 def main():
     # Load existing metrics
-    metrics_file = Path.home() / ".ui-cli" / "autonomous_metrics.json"
+    metrics_file = Path.home() / ".atado" / "autonomous_metrics.json"
     if not metrics_file.exists():
         print(f"ERROR: Metrics file not found: {metrics_file}")
         return 1

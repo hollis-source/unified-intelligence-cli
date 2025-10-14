@@ -123,7 +123,7 @@ The user correctly identified that the native build approach was suboptimal.
 ```
 User
   ↓ uicli command
-Python CLI (unified-intelligence-cli)
+Python CLI (autonomous-task-agent-dev-orchestration)
   ↓ HTTP POST (localhost:8080/completion)
 Docker Container (llama-cpp-server)
   ↓ loads from volume

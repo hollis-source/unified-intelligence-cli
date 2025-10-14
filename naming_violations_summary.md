@@ -1,23 +1,23 @@
 # Naming Violations Report
 
-**Generated:** Tue Oct 14 10:36:10 AM CEST 2025
+**Generated:** Tue Oct 14 12:04:20 PM CEST 2025
 
 ## Summary
 
-- **Total Violations:** 938
+- **Total Violations:** 942
 - **Critical:** 0
-- **High:** 79
-- **Medium:** 250
-- **Low:** 609
+- **High:** 80
+- **Medium:** 249
+- **Low:** 613
 
 ## Violations by Type
 
 - **Directory Plural:** 71
 - **Directory Ambiguous:** 1
 - **Directory Deep Nesting:** 5
-- **Variable Single Letter:** 609
-- **Function No Verb Noun:** 226
-- **Function Boolean Flag:** 6
+- **Variable Single Letter:** 613
+- **Function No Verb Noun:** 225
+- **Function Boolean Flag:** 7
 - **File Not Snake Case:** 3
 - **Variable Hungarian Notation:** 16
 - **File Cryptic Name:** 1
@@ -84,7 +84,7 @@
 - **Suggested:** `next-priorities-analysi`
 - **Rule:** Prefer Singular Names for Directories
 
-*... and 69 more high violations*
+*... and 70 more high violations*
 
 ## Medium Priority Violations
 
@@ -153,7 +153,7 @@
 - **Suggested:** `process_demo_parse_and_execute`
 - **Rule:** Form Verb-Noun Pairs
 
-*... and 240 more medium violations*
+*... and 239 more medium violations*
 
 ## Low Priority Violations
 
@@ -227,5 +227,5 @@
 - **Suggested:** `Use descriptive name based on purpose`
 - **Rule:** Scale Length with Scope
 
-*... and 599 more low violations*
+*... and 603 more low violations*
 

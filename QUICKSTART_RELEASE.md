@@ -169,7 +169,7 @@ Here's a complete example from scratch:
 # ℹ Activating virtual environment: venv-automation
 # 
 # ======================================================================
-#   Unified Intelligence CLI - Automated Release
+#   Autonomous Task-Agent Dev Orchestration (ATADO) - Automated Release
 # ======================================================================
 # 
 # ✓ Python installed: Python 3.12.3
@@ -242,10 +242,10 @@ The `venv-automation/` directory:
 
 Once the release completes:
 
-1. ✓ Verify on PyPI: https://pypi.org/project/unified-intelligence-cli/
-2. ✓ Test installation: `pip install unified-intelligence-cli`
+1. ✓ Verify on PyPI: https://pypi.org/project/autonomous-task-agent-dev-orchestration/
+2. ✓ Test installation: `pip install autonomous-task-agent-dev-orchestration`
 3. ✓ Verify Docker Hub (if applicable)
-4. ✓ Check GitHub Release: https://github.com/YOUR_USER/unified-intelligence-cli/releases
+4. ✓ Check GitHub Release: https://github.com/YOUR_USER/autonomous-task-agent-dev-orchestration/releases
 5. ✓ Begin alpha rollout (Week 3-4)
 
 ---

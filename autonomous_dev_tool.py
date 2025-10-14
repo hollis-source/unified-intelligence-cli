@@ -6,7 +6,7 @@ stack to enable continuous autonomous development workflows with metrics
 persistence.
 
 Phase A: CLI interface + modes (Click)
-Phase B: Metrics persistence (JSON at ~/.ui-cli/autonomous_metrics.json)
+Phase B: Metrics persistence (JSON at ~/.atado/autonomous_metrics.json)
 
 Notes:
 - We do NOT modify orchestrator/use-cases; we compose them here.
@@ -106,7 +106,7 @@ class MetricsTracker:
     """
 
     def __init__(self, path: Optional[Path] = None) -> None:
-        self.base_dir = Path(os.path.expanduser("~/.ui-cli"))
+        self.base_dir = Path(os.path.expanduser("~/.atado"))
         self.base_dir.mkdir(parents=True, exist_ok=True)
         self.path = path or (self.base_dir / "autonomous_metrics.json")
         self._data: Dict[str, Any] = {"iterations": [], "aggregate": {}}
@@ -844,7 +844,7 @@ def status() -> None:
     - Success rate by mode
     - Last 5 iterations with details
 
-    Reads from ~/.ui-cli/autonomous_metrics.json
+    Reads from ~/.atado/autonomous_metrics.json
     """
     metrics = MetricsTracker()
     data = metrics.get_data()

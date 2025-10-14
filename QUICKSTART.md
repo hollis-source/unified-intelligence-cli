@@ -1,10 +1,10 @@
 # Quickstart Guide
 
-Get started with Unified Intelligence CLI in 5 minutes.
+Get started with Autonomous Task-Agent Dev Orchestration (ATADO) in 5 minutes.
 
 ## Prerequisites
 
-- Installed `ui-cli` (see [INSTALL.md](INSTALL.md))
+- Installed `atado` (see [INSTALL.md](INSTALL.md))
 - xAI API key (get from https://x.ai/)
 
 ## 1. Configure API Key
@@ -22,7 +22,7 @@ EOF
 ## 2. Your First Task
 
 ```bash
-ui-cli "Explain what clean architecture is in 3 sentences"
+atado "Explain what clean architecture is in 3 sentences"
 ```
 
 **Expected Output:**
@@ -47,7 +47,7 @@ affecting the core business rules.
 Run multiple tasks in sequence:
 
 ```bash
-ui-cli \
+atado \
   "Research: What are the key principles of clean code?" \
   "Summarize: List the top 5 principles from the research" \
   "Apply: Give an example of applying one principle"
@@ -63,7 +63,7 @@ ui-cli \
 Run tasks simultaneously for faster results:
 
 ```bash
-ui-cli --parallel \
+atado --parallel \
   "Explain dependency injection" \
   "Explain dependency inversion" \
   "Explain interface segregation"
@@ -80,10 +80,10 @@ Use different AI providers (currently supports Grok):
 
 ```bash
 # Explicit provider selection
-ui-cli --provider grok "Analyze SOLID principles"
+atado --provider grok "Analyze SOLID principles"
 
 # Specify model
-ui-cli --provider grok --model grok-beta "Your task here"
+atado --provider grok --model grok-beta "Your task here"
 ```
 
 ## Common Use Cases
@@ -91,7 +91,7 @@ ui-cli --provider grok --model grok-beta "Your task here"
 ### Use Case 1: Code Review
 
 ```bash
-ui-cli "Review this Python function for clean code principles:
+atado "Review this Python function for clean code principles:
 def calc(a,b,c):
     if c==1:
         return a+b
@@ -105,7 +105,7 @@ def calc(a,b,c):
 ### Use Case 2: Architecture Analysis
 
 ```bash
-ui-cli \
+atado \
   "Analyze: Describe the current state of microservices architecture" \
   "Pros/Cons: List advantages and disadvantages" \
   "Recommendation: Should a startup use microservices?"
@@ -114,7 +114,7 @@ ui-cli \
 ### Use Case 3: Problem Solving
 
 ```bash
-ui-cli --parallel \
+atado --parallel \
   "Solution A: How to implement caching with Redis?" \
   "Solution B: How to implement caching with Memcached?" \
   "Compare: Which caching solution is better for a Python web app?"
@@ -123,7 +123,7 @@ ui-cli --parallel \
 ### Use Case 4: Research & Summary
 
 ```bash
-ui-cli \
+atado \
   "Research: What is the difference between REST and GraphQL?" \
   "Synthesize: Create a comparison table" \
   "Decide: Which should I use for a mobile app backend?"
@@ -149,30 +149,30 @@ Create `config.json` for persistent settings:
 
 Use with:
 ```bash
-ui-cli --config config.json "Your task here"
+atado --config config.json "Your task here"
 ```
 
 ### Output Formatting
 
 ```bash
 # JSON output (for scripting)
-ui-cli --output json "List 3 design patterns" > output.json
+atado --output json "List 3 design patterns" > output.json
 
 # Verbose mode (show details)
-ui-cli --verbose "Complex analysis task"
+atado --verbose "Complex analysis task"
 
 # Quiet mode (minimal output)
-ui-cli --quiet "Simple task"
+atado --quiet "Simple task"
 ```
 
 ### Error Handling
 
 ```bash
 # Retry on failure
-ui-cli --max-retries 5 "Task that might fail"
+atado --max-retries 5 "Task that might fail"
 
 # Timeout control
-ui-cli --timeout 60 "Long-running task"
+atado --timeout 60 "Long-running task"
 ```
 
 ## Best Practices
@@ -181,12 +181,12 @@ ui-cli --timeout 60 "Long-running task"
 
 **Good:**
 ```bash
-ui-cli "Explain SOLID principles with a Python example for Single Responsibility"
+atado "Explain SOLID principles with a Python example for Single Responsibility"
 ```
 
 **Better:**
 ```bash
-ui-cli \
+atado \
   "Explain: What is the Single Responsibility Principle?" \
   "Example: Provide a Python code example violating SRP" \
   "Refactor: Show how to refactor the example to follow SRP"
@@ -196,12 +196,12 @@ ui-cli \
 
 **Good:**
 ```bash
-ui-cli "Task 1: Research" "Task 2: Analyze"
+atado "Task 1: Research" "Task 2: Analyze"
 ```
 
 **Better:**
 ```bash
-ui-cli \
+atado \
   "Research: Gather information on clean architecture" \
   "Analyze: Identify key patterns in the research" \
   "Synthesize: Create a summary of findings"
@@ -210,7 +210,7 @@ ui-cli \
 ### 3. Chain Related Tasks
 
 ```bash
-ui-cli \
+atado \
   "Define: What is technical debt?" \
   "Identify: List 5 common causes of technical debt" \
   "Prevent: Suggest strategies to avoid each cause"
@@ -219,7 +219,7 @@ ui-cli \
 ### 4. Use Parallel for Independent Tasks
 
 ```bash
-ui-cli --parallel \
+atado --parallel \
   "Research topic A independently" \
   "Research topic B independently" \
   "Research topic C independently"
@@ -236,7 +236,7 @@ ui-cli --parallel \
 export XAI_API_KEY="your_key"
 
 echo "Analyzing codebase..."
-ui-cli \
+atado \
   "Analyze: Review the code structure in $(pwd)" \
   "Recommendations: Suggest improvements" \
   "Prioritize: Rank improvements by impact"
@@ -256,7 +256,7 @@ os.environ['XAI_API_KEY'] = 'your_key'
 def run_analysis(tasks):
     """Run UI-CLI analysis tasks."""
     result = subprocess.run(
-        ['ui-cli', '--output', 'json'] + tasks,
+        ['atado', '--output', 'json'] + tasks,
         capture_output=True,
         text=True
     )
@@ -287,13 +287,13 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Install UI-CLI
-        run: pip install unified-intelligence-cli
+        run: pip install autonomous-task-agent-dev-orchestration
       
       - name: Run AI Review
         env:
           XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
         run: |
-          ui-cli \
+          atado \
             "Review: Analyze the code changes in this PR" \
             "Quality: Rate code quality (1-10)" \
             "Suggestions: List 3 improvements"
@@ -307,7 +307,7 @@ docker run --rm \
   -v $(pwd):/workspace \
   -w /workspace \
   -e XAI_API_KEY=$XAI_API_KEY \
-  unified-intelligence-cli:latest \
+  autonomous-task-agent-dev-orchestration:latest \
   "Analyze the project structure in /workspace"
 ```
 
@@ -317,29 +317,29 @@ docker run --rm \
 
 ```bash
 # Slow (sequential): ~30 seconds
-ui-cli "Task A" "Task B" "Task C"
+atado "Task A" "Task B" "Task C"
 
 # Fast (parallel): ~10 seconds
-ui-cli --parallel "Task A" "Task B" "Task C"
+atado --parallel "Task A" "Task B" "Task C"
 ```
 
 ### 2. Optimize Task Granularity
 
 **Too granular (10 API calls):**
 ```bash
-ui-cli "What is X?" "What is Y?" "What is Z?" ...
+atado "What is X?" "What is Y?" "What is Z?" ...
 ```
 
 **Optimal (1 API call):**
 ```bash
-ui-cli "Explain X, Y, and Z in detail"
+atado "Explain X, Y, and Z in detail"
 ```
 
 ### 3. Cache Responses
 
 ```bash
 # Save response for reuse
-ui-cli "Complex research task" > research.txt
+atado "Complex research task" > research.txt
 
 # Reuse saved research
 cat research.txt
@@ -361,16 +361,16 @@ export XAI_API_KEY=your_key
 
 ```bash
 # Add delay between tasks
-ui-cli "Task 1"
+atado "Task 1"
 sleep 2
-ui-cli "Task 2"
+atado "Task 2"
 ```
 
-### Issue: "Command not found: ui-cli"
+### Issue: "Command not found: atado"
 
 ```bash
 # Use full command
-unified-intelligence-cli --help
+autonomous-task-agent-dev-orchestration --help
 
 # Or run via Python
 python -m src.main --help
@@ -388,7 +388,7 @@ python -m src.main --help
    - Review `tests/` for usage patterns
 
 3. **Join Community:**
-   - Report issues: https://github.com/yourusername/unified-intelligence-cli/issues
+   - Report issues: https://github.com/yourusername/autonomous-task-agent-dev-orchestration/issues
    - Contribute: See CONTRIBUTING.md
 
 4. **Advanced Topics:**
@@ -400,28 +400,28 @@ python -m src.main --help
 
 ```bash
 # Basic usage
-ui-cli "Your task"
+atado "Your task"
 
 # Multiple tasks
-ui-cli "Task 1" "Task 2" "Task 3"
+atado "Task 1" "Task 2" "Task 3"
 
 # Parallel execution
-ui-cli --parallel "Task 1" "Task 2"
+atado --parallel "Task 1" "Task 2"
 
 # Provider selection
-ui-cli --provider grok "Task"
+atado --provider grok "Task"
 
 # Configuration file
-ui-cli --config config.json "Task"
+atado --config config.json "Task"
 
 # Output format
-ui-cli --output json "Task"
+atado --output json "Task"
 
 # Help
-ui-cli --help
+atado --help
 
 # Version
-ui-cli --version
+atado --version
 ```
 
 ---

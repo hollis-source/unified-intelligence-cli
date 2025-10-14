@@ -44,13 +44,13 @@ The **GitHub Actions workflow** is currently running. This is a **fully automate
 ## 🔍 Monitor Progress
 
 **Primary:** Check GitHub Actions workflow  
-https://github.com/hollis-source/unified-intelligence-cli/actions
+https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions
 
 **Specific workflow:**  
-https://github.com/hollis-source/unified-intelligence-cli/actions/workflows/release.yml
+https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions/workflows/release.yml
 
 **Expected Release page (after completion):**  
-https://github.com/hollis-source/unified-intelligence-cli/releases/tag/v1.0.0
+https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/releases/tag/v1.0.0
 
 ---
 
@@ -74,8 +74,8 @@ https://github.com/hollis-source/unified-intelligence-cli/releases/tag/v1.0.0
 
 The error you saw:
 ```
-ERROR: Could not find a version that satisfies the requirement unified-intelligence-cli==1.0.0
-ERROR: No matching distribution found for unified-intelligence-cli==1.0.0
+ERROR: Could not find a version that satisfies the requirement autonomous-task-agent-dev-orchestration==1.0.0
+ERROR: No matching distribution found for autonomous-task-agent-dev-orchestration==1.0.0
 ```
 
 **This is EXPECTED!** The package isn't on PyPI yet because:
@@ -92,24 +92,24 @@ ERROR: No matching distribution found for unified-intelligence-cli==1.0.0
 
 **Wait for workflow to complete**, then:
 ```bash
-pip install unified-intelligence-cli==1.0.0
+pip install autonomous-task-agent-dev-orchestration==1.0.0
 ```
 
 **Or check PyPI directly:**  
-https://pypi.org/project/unified-intelligence-cli/1.0.0/
+https://pypi.org/project/autonomous-task-agent-dev-orchestration/1.0.0/
 
 ### 2. Check Docker Hub
 
 ```bash
-docker pull YOUR_USERNAME/unified-intelligence-cli:1.0.0
+docker pull YOUR_USERNAME/autonomous-task-agent-dev-orchestration:1.0.0
 ```
 
 **Or check Docker Hub:**  
-https://hub.docker.com/r/YOUR_USERNAME/unified-intelligence-cli/tags
+https://hub.docker.com/r/YOUR_USERNAME/autonomous-task-agent-dev-orchestration/tags
 
 ### 3. Check GitHub Release
 
-https://github.com/hollis-source/unified-intelligence-cli/releases/tag/v1.0.0
+https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/releases/tag/v1.0.0
 
 ---
 
@@ -119,14 +119,14 @@ https://github.com/hollis-source/unified-intelligence-cli/releases/tag/v1.0.0
 
 ```bash
 # Wait ~10 minutes, then verify:
-pip install unified-intelligence-cli==1.0.0
-ui-cli --version
+pip install autonomous-task-agent-dev-orchestration==1.0.0
+atado --version
 ```
 
 ### Option 2: Monitor Workflow
 
 Open in browser:
-https://github.com/hollis-source/unified-intelligence-cli/actions
+https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions
 
 Watch the workflow progress in real-time.
 
@@ -134,9 +134,9 @@ Watch the workflow progress in real-time.
 
 Set a timer for 10 minutes, then check:
 ```bash
-pip search unified-intelligence-cli
+pip search autonomous-task-agent-dev-orchestration
 # Or just try:
-pip install unified-intelligence-cli
+pip install autonomous-task-agent-dev-orchestration
 ```
 
 ---
@@ -148,7 +148,7 @@ If after 15 minutes the package still isn't available:
 1. **Check workflow status:**
    ```bash
    # In browser:
-   https://github.com/hollis-source/unified-intelligence-cli/actions
+   https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions
    ```
 
 2. **Check for errors in workflow logs**
@@ -181,14 +181,14 @@ When the workflow completes successfully, you'll see:
 
 Then:
 ```bash
-$ pip install unified-intelligence-cli==1.0.0
-Collecting unified-intelligence-cli==1.0.0
-  Downloading unified_intelligence_cli-1.0.0-py3-none-any.whl
-Installing collected packages: unified-intelligence-cli
-Successfully installed unified-intelligence-cli-1.0.0
+$ pip install autonomous-task-agent-dev-orchestration==1.0.0
+Collecting autonomous-task-agent-dev-orchestration==1.0.0
+  Downloading autonomous_task_agent_dev_orchestration-1.0.0-py3-none-any.whl
+Installing collected packages: autonomous-task-agent-dev-orchestration
+Successfully installed autonomous-task-agent-dev-orchestration-1.0.0
 
-$ ui-cli --version
-ui-cli version 1.0.0
+$ atado --version
+atado version 1.0.0
 ```
 
 ---
@@ -224,4 +224,4 @@ Once the workflow completes and verification passes:
 ---
 
 **Last Updated:** 2025-09-30  
-**Monitor at:** https://github.com/hollis-source/unified-intelligence-cli/actions
+**Monitor at:** https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions

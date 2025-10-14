@@ -1,6 +1,6 @@
 # Release Process
 
-This document describes how to create a new release of Unified Intelligence CLI.
+This document describes how to create a new release of Autonomous Task-Agent Dev Orchestration (ATADO).
 
 ## Prerequisites
 
@@ -67,14 +67,14 @@ git push origin v1.0.1
 
 **PyPI:**
 ```bash
-pip install unified-intelligence-cli==1.0.1
-ui-cli --help
+pip install autonomous-task-agent-dev-orchestration==1.0.1
+atado --help
 ```
 
 **Docker:**
 ```bash
-docker pull username/unified-intelligence-cli:1.0.1
-docker run username/unified-intelligence-cli:1.0.1 --help
+docker pull username/autonomous-task-agent-dev-orchestration:1.0.1
+docker run username/autonomous-task-agent-dev-orchestration:1.0.1 --help
 ```
 
 **GitHub:**
@@ -110,8 +110,8 @@ twine upload dist/*
 ```bash
 # Build multi-arch image
 docker buildx build --platform linux/amd64,linux/arm64 \
-  -t username/unified-intelligence-cli:1.0.1 \
-  -t username/unified-intelligence-cli:latest \
+  -t username/autonomous-task-agent-dev-orchestration:1.0.1 \
+  -t username/autonomous-task-agent-dev-orchestration:latest \
   --push .
 ```
 
@@ -165,9 +165,9 @@ Note: PyPI doesn't allow deleting versions, only "yanking" (hiding from pip inst
 
 ```bash
 # Re-tag previous version as latest
-docker pull username/unified-intelligence-cli:1.0.0
-docker tag username/unified-intelligence-cli:1.0.0 username/unified-intelligence-cli:latest
-docker push username/unified-intelligence-cli:latest
+docker pull username/autonomous-task-agent-dev-orchestration:1.0.0
+docker tag username/autonomous-task-agent-dev-orchestration:1.0.0 username/autonomous-task-agent-dev-orchestration:latest
+docker push username/autonomous-task-agent-dev-orchestration:latest
 ```
 
 ### GitHub Rollback
@@ -211,7 +211,7 @@ git tag -d v1.0.1
 ### Docker Hub Setup
 
 1. Create Docker Hub account: https://hub.docker.com/signup
-2. Create repository: `unified-intelligence-cli`
+2. Create repository: `autonomous-task-agent-dev-orchestration`
 3. Create access token: https://hub.docker.com/settings/security
 4. Add credentials as GitHub secrets:
    - `DOCKER_USERNAME`: your-dockerhub-username

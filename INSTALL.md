@@ -20,12 +20,12 @@ python3 -m pip install --user pipx
 python3 -m pipx ensurepath
 ```
 
-**Then install unified-intelligence-cli:**
+**Then install autonomous-task-agent-dev-orchestration:**
 ```bash
-pipx install git+https://github.com/hollis-source/unified-intelligence-cli.git
+pipx install git+https://github.com/hollis-source/autonomous-task-agent-dev-orchestration.git
 ```
 
-That's it! pipx automatically creates an isolated environment and adds `ui-cli` to your PATH.
+That's it! pipx automatically creates an isolated environment and adds `atado` to your PATH.
 
 ### Method 2: Virtual Environment (Alternative)
 
@@ -33,16 +33,16 @@ If you prefer manual control:
 
 ```bash
 # Create virtual environment
-python3 -m venv ~/ui-cli-env
+python3 -m venv ~/atado-env
 
 # Activate it
-source ~/ui-cli-env/bin/activate
+source ~/atado-env/bin/activate
 
 # Install
-pip install git+https://github.com/hollis-source/unified-intelligence-cli.git
+pip install git+https://github.com/hollis-source/autonomous-task-agent-dev-orchestration.git
 ```
 
-**Note**: You'll need to activate the venv (`source ~/ui-cli-env/bin/activate`) each time before using `ui-cli`.
+**Note**: You'll need to activate the venv (`source ~/atado-env/bin/activate`) each time before using `atado`.
 
 ### 2. Set Up API Key
 
@@ -57,7 +57,7 @@ Replace `your-xai-api-key-here` with your actual xAI API key.
 ### 3. Verify Installation
 
 ```bash
-ui-cli --help
+atado --help
 ```
 
 You should see the help menu with all available options.
@@ -67,13 +67,13 @@ You should see the help menu with all available options.
 ### Simple Task
 
 ```bash
-ui-cli --task "Analyze this code and suggest improvements" --provider auto --routing team --agents scaled
+atado --task "Analyze this code and suggest improvements" --provider auto --routing team --agents scaled
 ```
 
 ### With Metrics Collection
 
 ```bash
-ui-cli --task "Research best practices for Python testing" \
+atado --task "Research best practices for Python testing" \
        --provider auto \
        --routing team \
        --agents scaled \
@@ -84,7 +84,7 @@ ui-cli --task "Research best practices for Python testing" \
 ### Multiple Tasks (Parallel Execution)
 
 ```bash
-ui-cli --task "Task 1 description" \
+atado --task "Task 1 description" \
        --task "Task 2 description" \
        --task "Task 3 description" \
        --provider auto \
@@ -115,7 +115,7 @@ error: externally-managed-environment
 If you see "XAI_API_KEY not found", make sure you created the `.env` file with your API key.
 
 ### Command Not Found After pipx Install
-If `ui-cli` command is not found after pipx install:
+If `atado` command is not found after pipx install:
 ```bash
 # Ensure pipx path is added
 pipx ensurepath
@@ -128,15 +128,15 @@ If you see "ModuleNotFoundError":
 
 **With pipx:**
 ```bash
-pipx uninstall unified-intelligence-cli
-pipx install git+https://github.com/hollis-source/unified-intelligence-cli.git
+pipx uninstall autonomous-task-agent-dev-orchestration
+pipx install git+https://github.com/hollis-source/autonomous-task-agent-dev-orchestration.git
 ```
 
 **With venv:**
 ```bash
-source ~/ui-cli-env/bin/activate
-pip uninstall unified-intelligence-cli
-pip install git+https://github.com/hollis-source/unified-intelligence-cli.git
+source ~/atado-env/bin/activate
+pip uninstall autonomous-task-agent-dev-orchestration
+pip install git+https://github.com/hollis-source/autonomous-task-agent-dev-orchestration.git
 ```
 
 ## Updating
@@ -145,18 +145,18 @@ To get the latest version:
 
 **With pipx:**
 ```bash
-pipx upgrade unified-intelligence-cli
+pipx upgrade autonomous-task-agent-dev-orchestration
 # or to force reinstall from GitHub:
-pipx install --force git+https://github.com/hollis-source/unified-intelligence-cli.git
+pipx install --force git+https://github.com/hollis-source/autonomous-task-agent-dev-orchestration.git
 ```
 
 **With venv:**
 ```bash
-source ~/ui-cli-env/bin/activate
-pip install --upgrade git+https://github.com/hollis-source/unified-intelligence-cli.git
+source ~/atado-env/bin/activate
+pip install --upgrade git+https://github.com/hollis-source/autonomous-task-agent-dev-orchestration.git
 ```
 
 ## Support
 
-- Issues: https://github.com/hollis-source/unified-intelligence-cli/issues
+- Issues: https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/issues
 - Documentation: See README.md in the repository

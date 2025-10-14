@@ -302,7 +302,7 @@ Quality: ✅ PASS
 ✅ **Architecture: CLEAN**
 ✅ **Production Ready: YES**
 
-The Qwen3-8B model is now fully deployed and integrated with unified-intelligence-cli, providing production-ready inference at $9/month (FREE compute). All Clean Architecture principles maintained. Performance exceeds evaluation targets (100% success rate) with acceptable latency (25s). Optional INT8 optimization available to reach <10s target if needed.
+The Qwen3-8B model is now fully deployed and integrated with autonomous-task-agent-dev-orchestration, providing production-ready inference at $9/month (FREE compute). All Clean Architecture principles maintained. Performance exceeds evaluation targets (100% success rate) with acceptable latency (25s). Optional INT8 optimization available to reach <10s target if needed.
 
 ---
 
@@ -319,4 +319,4 @@ The Qwen3-8B model is now fully deployed and integrated with unified-intelligenc
 
 ---
 
-*Generated 2025-10-03 by unified-intelligence-cli deployment automation*
+*Generated 2025-10-03 by autonomous-task-agent-dev-orchestration deployment automation*

@@ -16,12 +16,12 @@ priority_worker:
 
   # Git configuration (for branch management)
   git:
-    repo_path: /home/ui-cli_jake/unified-intelligence-cli
+    repo_path: /home/ui-cli_jake/autonomous-task-agent-dev-orchestration
     branch_prefix: priority-worker  # Prefix for created branches
 
   # DSL executor configuration (for workflow execution)
   dsl:
-    cwd: /home/ui-cli_jake/unified-intelligence-cli
+    cwd: /home/ui-cli_jake/autonomous-task-agent-dev-orchestration
     timeout: 300          # Subprocess timeout in seconds
     executor_cmd: python3 -m src.dsl.cli_integration
 

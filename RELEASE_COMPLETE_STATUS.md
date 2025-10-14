@@ -38,7 +38,7 @@
 
 **Open in browser:**
 ```
-https://github.com/hollis-source/unified-intelligence-cli/actions
+https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions
 ```
 
 Look for the workflow triggered by tag v1.0.0 and check:
@@ -57,8 +57,8 @@ If the workflow shows ❌ Failed:
 
 After workflow shows ✅ Success:
 ```bash
-pip install unified-intelligence-cli==1.0.0
-ui-cli --version
+pip install autonomous-task-agent-dev-orchestration==1.0.0
+atado --version
 ```
 
 ---
@@ -133,8 +133,8 @@ Once everything is working:
 - [ ] GitHub tag v1.0.0 exists
 - [ ] GitHub Release page shows v1.0.0
 - [ ] PyPI shows version 1.0.0
-- [ ] `pip install unified-intelligence-cli==1.0.0` works
-- [ ] `ui-cli --version` shows 1.0.0
+- [ ] `pip install autonomous-task-agent-dev-orchestration==1.0.0` works
+- [ ] `atado --version` shows 1.0.0
 - [ ] Docker Hub has image (if applicable)
 
 ---
@@ -145,7 +145,7 @@ Once everything is working:
 
 1. **Check GitHub Actions workflow** (most important!)
    ```
-   https://github.com/hollis-source/unified-intelligence-cli/actions
+   https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions
    ```
 
 2. **Look for the v1.0.0 workflow run**
@@ -197,4 +197,4 @@ Based on the status:
 
 ---
 
-**Check workflow at:** https://github.com/hollis-source/unified-intelligence-cli/actions
+**Check workflow at:** https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions

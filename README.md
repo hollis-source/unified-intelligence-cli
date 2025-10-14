@@ -1,6 +1,6 @@
-# Unified Intelligence CLI
+# Autonomous Task-Agent Dev Orchestration (ATADO)
 
-![Tests](https://github.com/hollis-source/unified-intelligence-cli/workflows/Tests/badge.svg)
+![Tests](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/workflows/Tests/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.12+-blue)
 ![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen)
 
@@ -32,8 +32,8 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 
 ```bash
 # Clone repository
-git clone https://github.com/hollis-source/unified-intelligence-cli.git
-cd unified-intelligence-cli
+git clone https://github.com/hollis-source/autonomous-task-agent-dev-orchestration.git
+cd autonomous-task-agent-dev-orchestration
 
 # Create virtual environment
 python3 -m venv venv
@@ -53,7 +53,7 @@ cp .env.example .env  # Then edit .env with your API keys
 
 **Option 1: Using wrapper script (works without venv activation)**
 ```bash
-./bin/ui-cli \
+./bin/atado \
   --task "Write a Python function for factorial" \
   --task "Write tests for factorial function" \
   --provider auto
@@ -62,7 +62,7 @@ cp .env.example .env  # Then edit .env with your API keys
 **Option 2: Using entry point (requires venv activation)**
 ```bash
 source venv/bin/activate
-ui-cli \
+atado \
   --task "Implement FizzBuzz in Python" \
   --task "Create comprehensive tests" \
   --provider grok \

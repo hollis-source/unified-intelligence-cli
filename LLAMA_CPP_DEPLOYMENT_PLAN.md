@@ -218,7 +218,7 @@ EOF
 
 ```bash
 # Navigate to project
-cd ~/unified-intelligence-cli
+cd ~/autonomous-task-agent-dev-orchestration
 
 # Create adapter file
 touch src/adapters/llm/tongyi_adapter.py
@@ -228,7 +228,7 @@ touch src/adapters/llm/tongyi_adapter.py
 
 ```python
 """
-Tongyi-DeepResearch adapter for unified-intelligence-cli.
+Tongyi-DeepResearch adapter for autonomous-task-agent-dev-orchestration.
 
 Integrates Tongyi-DeepResearch-30B via llama.cpp for coordinator agent.
 Optimized for AMD EPYC with AVX-512.
@@ -485,7 +485,7 @@ self._creators["tongyi"] = lambda config: self._create_tongyi_provider(config)
 
 ```bash
 # Run user simulation with Tongyi provider
-cd ~/unified-intelligence-cli/tests/user_simulation
+cd ~/autonomous-task-agent-dev-orchestration/tests/user_simulation
 
 # Create Tongyi-specific test
 cp realistic_scenarios.py test_tongyi_scenarios.py
@@ -595,7 +595,7 @@ models:
     help='LLM provider to use'
 )
 def main(provider: str, verbose: bool):
-    """Unified Intelligence CLI - Multi-agent task coordination."""
+    """Autonomous Task-Agent Dev Orchestration (ATADO) - Multi-agent task coordination."""
 
     coordinator = create_coordinator(
         provider_type=provider,
@@ -786,7 +786,7 @@ llama-cli -m ~/models/tongyi/Tongyi-DeepResearch-30B-A3B-Q8_0.gguf \
 ---
 
 **Plan Generated:** 2025-09-30
-**By:** Claude Code (unified-intelligence-cli) + ultrathink analysis
+**By:** Claude Code (autonomous-task-agent-dev-orchestration) + ultrathink analysis
 **Confidence:** 95% (hardware verified, model researched, architecture planned)
 **Risk Level:** LOW
 **Approval:** ✅ RECOMMENDED FOR IMMEDIATE EXECUTION
