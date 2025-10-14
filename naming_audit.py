@@ -103,7 +103,8 @@ class NamingAuditor:
 
             # Management operations
             'handle', 'manage', 'control', 'monitor', 'watch', 'track',
-            'maintain', 'coordinate', 'orchestrate', 'schedule',
+            'maintain', 'coordinate', 'orchestrate', 'schedule', 'route',
+            'direct', 'forward', 'redirect', 'dispatch',
 
             # Resource operations
             'allocate', 'deallocate', 'acquire', 'release', 'lock', 'unlock',
