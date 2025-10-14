@@ -153,10 +153,17 @@ class NamingAuditor:
             # Testing operations
             'mock', 'stub', 'spy', 'fake', 'simulate',
 
+            # Planning operations
+            'plan', 'prepare', 'design', 'draft', 'outline', 'spec', 'specify',
+
+            # Support operations
+            'support', 'supports', 'assist', 'help', 'aid',
+
             # Miscellaneous common verbs
             'clone', 'copy', 'duplicate', 'mirror', 'reflect',
             'skip', 'ignore', 'exclude', 'include', 'omit',
             'enable', 'disable', 'toggle', 'switch', 'activate', 'deactivate',
+            'flatten', 'unflatten', 'wrap', 'unwrap', 'pack', 'unpack',
         }
 
         # Python idioms that are acceptable without explicit verbs
