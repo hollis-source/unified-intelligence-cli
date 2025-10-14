@@ -10,10 +10,10 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
-    {name = "Unified Intelligence CLI Team", email = "noreply@example.com"}
+    {name = "ATADO Team", email = "noreply@example.com"}
 ]
 maintainers = [
-    {name = "Unified Intelligence CLI Team", email = "noreply@example.com"}
+    {name = "ATADO Team", email = "noreply@example.com"}
 ]
 keywords = [
     "ai",
