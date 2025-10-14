@@ -389,9 +389,38 @@ class NamingAuditor:
         return False
 
     def _has_hungarian_notation(self, var_name: str) -> bool:
-        """Check if variable uses Hungarian notation."""
-        hungarian_prefixes = ['str', 'int', 'bool', 'list', 'dict', 'obj', 'm_', 'g_']
-        return any(var_name.lower().startswith(prefix) for prefix in hungarian_prefixes)
+        """Check if variable uses Hungarian notation.
+
+        True Hungarian notation has type prefixes followed by:
+        - An underscore: str_name, int_count
+        - Or uppercase letter: strName, intCount
+
+        NOT Hungarian notation:
+        - strategy (starts with 'str' but it's part of the word)
+        - integration (starts with 'int' but it's part of the word)
+        """
+        # Type prefixes that indicate Hungarian notation
+        type_prefixes = ['str', 'int', 'bool', 'float', 'list', 'dict', 'tuple', 'set', 'obj']
+        # Scope prefixes (member/global)
+        scope_prefixes = ['m_', 'g_', 's_', 'c_']
+
+        # Check scope prefixes (they always have underscore)
+        for prefix in scope_prefixes:
+            if var_name.startswith(prefix):
+                return True
+
+        # Check type prefixes (must be followed by underscore or uppercase)
+        for prefix in type_prefixes:
+            # Pattern 1: str_name, int_count (underscore after prefix)
+            if var_name.lower().startswith(prefix + '_'):
+                return True
+            # Pattern 2: strName, intCount (uppercase after prefix)
+            if (var_name.startswith(prefix) and
+                len(var_name) > len(prefix) and
+                var_name[len(prefix)].isupper()):
+                return True
+
+        return False
 
     def _remove_hungarian_notation(self, var_name: str) -> str:
         """Remove Hungarian notation from variable name."""
