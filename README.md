@@ -296,9 +296,9 @@ python3 demo_full_workflow.py
 
 ```
 src/
-├── entities/          # Core business objects (Agent, Task, ExecutionResult)
+├── entity/            # Core business objects (Agent, Task, ExecutionResult)
 ├── use_cases/         # Business logic (TaskCoordinator, TaskPlanner)
-├── interfaces/        # Abstractions (ITextGenerator, IAgentExecutor, IAgentCoordinator)
+├── interface/         # Abstractions (ITextGenerator, IAgentExecutor, IAgentCoordinator)
 ├── adapters/          # External integrations
 │   ├── llm/          # LLM providers (GrokAdapter, MockProvider, TongyiAdapter)
 │   ├── agent/        # Agent implementations (LLMAgentExecutor)
