@@ -162,14 +162,36 @@ class Graph:
         """
         return self.reverse_edges.get(node_id, []).copy()
 
-    def node_count(self) -> int:
+    def count_nodes(self) -> int:
         """Get total number of nodes."""
         return len(self.nodes)
 
-    def edge_count(self) -> int:
+    def count_edges(self) -> int:
         """Get total number of edges."""
         return sum(len(successors) for successors in self.edges.values())
 
+
+    # Backward compatibility alias (deprecated)
+    def node_count(self) -> int:
+        """DEPRECATED: Use count_nodes() instead."""
+        import warnings
+        warnings.warn(
+            "node_count() is deprecated, use count_nodes() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.count_nodes()
+
+    # Backward compatibility alias (deprecated)
+    def edge_count(self) -> int:
+        """DEPRECATED: Use count_edges() instead."""
+        import warnings
+        warnings.warn(
+            "edge_count() is deprecated, use count_edges() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.edge_count()
     def dfs(
         self,
         start_node: str,
