@@ -1,12 +1,14 @@
 """
 Pytest configuration for LLM cache tests.
 
-Provides fixtures for Redis configuration.
+Provides fixtures for Redis configuration and entity testing.
 """
 
 import os
 import pytest
+from unittest.mock import MagicMock
 from src.adapters.agent.llm_cache import CacheConfig
+from src.entities.agent import Agent, Task
 
 
 @pytest.fixture
