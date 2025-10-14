@@ -409,7 +409,7 @@ class Graph:
                 leaves.append(node_id)
         return leaves
 
-    def subgraph(self, node_ids: List[str]) -> "Graph":
+    def extract_subgraph(self, node_ids: List[str]) -> "Graph":
         """Create subgraph containing only specified nodes.
 
         Args:
