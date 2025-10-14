@@ -1,25 +1,25 @@
 # Naming Violations Report
 
-**Generated:** Tue Oct 14 05:06:16 AM CEST 2025
+**Generated:** Tue Oct 14 10:36:10 AM CEST 2025
 
 ## Summary
 
-- **Total Violations:** 1440
+- **Total Violations:** 938
 - **Critical:** 0
 - **High:** 79
-- **Medium:** 769
-- **Low:** 592
+- **Medium:** 250
+- **Low:** 609
 
 ## Violations by Type
 
 - **Directory Plural:** 71
 - **Directory Ambiguous:** 1
 - **Directory Deep Nesting:** 5
-- **Variable Single Letter:** 592
-- **Function No Verb Noun:** 687
-- **Variable Hungarian Notation:** 74
+- **Variable Single Letter:** 609
+- **Function No Verb Noun:** 226
 - **Function Boolean Flag:** 6
 - **File Not Snake Case:** 3
+- **Variable Hungarian Notation:** 16
 - **File Cryptic Name:** 1
 
 ## High Priority Violations
@@ -118,42 +118,42 @@
 - **Suggested:** `Consider flattening directory structure`
 - **Rule:** Avoid Deep Nesting and Ambiguity
 
-### analyze_function_length
-- **File:** `analyze_functions.py`
-- **Line:** 10
-- **Issue:** Function 'analyze_function_length' should follow verb-noun pattern
-- **Suggested:** `process_analyze_function_length`
+### cli
+- **File:** `autonomous_dev_tool.py`
+- **Line:** 661
+- **Issue:** Function 'cli' should follow verb-noun pattern
+- **Suggested:** `process_cli`
 - **Rule:** Form Verb-Noun Pairs
 
-### main
-- **File:** `analyze_functions.py`
-- **Line:** 43
-- **Issue:** Function 'main' should follow verb-noun pattern
-- **Suggested:** `process_main`
+### status
+- **File:** `autonomous_dev_tool.py`
+- **Line:** 838
+- **Issue:** Function 'status' should follow verb-noun pattern
+- **Suggested:** `get_status`
 - **Rule:** Form Verb-Noun Pairs
 
-### integrator
-- **File:** `test_pr_integration.py`
-- **Line:** 91
-- **Issue:** Variable 'integrator' uses Hungarian notation, should be 'egrator'
-- **Suggested:** `egrator`
-- **Rule:** Avoid Encodings
-
-### main
-- **File:** `naming_audit.py`
-- **Line:** 388
-- **Issue:** Function 'main' should follow verb-noun pattern
-- **Suggested:** `process_main`
+### redis_config
+- **File:** `tests/conftest.py`
+- **Line:** 13
+- **Issue:** Function 'redis_config' should follow verb-noun pattern
+- **Suggested:** `configure_redis_config`
 - **Rule:** Form Verb-Noun Pairs
 
-### audit_codebase
-- **File:** `naming_audit.py`
-- **Line:** 67
-- **Issue:** Function 'audit_codebase' should follow verb-noun pattern
-- **Suggested:** `process_audit_codebase`
+### short_ttl_config
+- **File:** `tests/conftest.py`
+- **Line:** 25
+- **Issue:** Function 'short_ttl_config' should follow verb-noun pattern
+- **Suggested:** `configure_short_ttl_config`
 - **Rule:** Form Verb-Noun Pairs
 
-*... and 759 more medium violations*
+### demo_parse_and_execute
+- **File:** `examples/dsl_example.py`
+- **Line:** 76
+- **Issue:** Function 'demo_parse_and_execute' should follow verb-noun pattern
+- **Suggested:** `process_demo_parse_and_execute`
+- **Rule:** Form Verb-Noun Pairs
+
+*... and 240 more medium violations*
 
 ## Low Priority Violations
 
@@ -180,52 +180,52 @@
 
 ### f
 - **File:** `naming_audit.py`
-- **Line:** 335
+- **Line:** 543
 - **Issue:** Single-letter variable 'f' should have descriptive name
 - **Suggested:** `Use descriptive name based on purpose`
 - **Rule:** Scale Length with Scope
 
 ### f
 - **File:** `naming_audit.py`
-- **Line:** 341
+- **Line:** 549
 - **Issue:** Single-letter variable 'f' should have descriptive name
 - **Suggested:** `Use descriptive name based on purpose`
 - **Rule:** Scale Length with Scope
 
 ### f
 - **File:** `naming_audit.py`
-- **Line:** 180
+- **Line:** 298
 - **Issue:** Single-letter variable 'f' should have descriptive name
 - **Suggested:** `Use descriptive name based on purpose`
 - **Rule:** Scale Length with Scope
 
 ### v
 - **File:** `naming_audit.py`
-- **Line:** 325
+- **Line:** 533
 - **Issue:** Single-letter variable 'v' should have descriptive name
 - **Suggested:** `Use descriptive name based on purpose`
 - **Rule:** Scale Length with Scope
 
 ### v
 - **File:** `naming_audit.py`
-- **Line:** 368
+- **Line:** 576
 - **Issue:** Single-letter variable 'v' should have descriptive name
 - **Suggested:** `Use descriptive name based on purpose`
 - **Rule:** Scale Length with Scope
 
 ### v
 - **File:** `naming_audit.py`
-- **Line:** 318
+- **Line:** 526
 - **Issue:** Single-letter variable 'v' should have descriptive name
 - **Suggested:** `Use descriptive name based on purpose`
 - **Rule:** Scale Length with Scope
 
 ### v
 - **File:** `naming_audit.py`
-- **Line:** 319
+- **Line:** 527
 - **Issue:** Single-letter variable 'v' should have descriptive name
 - **Suggested:** `Use descriptive name based on purpose`
 - **Rule:** Scale Length with Scope
 
-*... and 582 more low violations*
+*... and 599 more low violations*
 

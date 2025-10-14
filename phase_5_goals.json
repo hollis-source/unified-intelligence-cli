@@ -2,8 +2,8 @@
   "phase": 5,
   "priority": "Low Priority",
   "description": "Variable names in small scopes, local helper variables, temporary variables",
-  "estimated_hours": 22.9,
-  "total_violations": 201,
+  "estimated_hours": 23.4,
+  "total_violations": 212,
   "files_to_refactor": {
     "training/models/qwen3-8b-q5-k-m/.cache/huggingface": [
       {
@@ -57,7 +57,7 @@
       {
         "violation_type": "variable_single_letter",
         "file_path": "naming_audit.py",
-        "line_number": 335,
+        "line_number": 543,
         "current_name": "f",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
@@ -67,7 +67,7 @@
       {
         "violation_type": "variable_single_letter",
         "file_path": "naming_audit.py",
-        "line_number": 341,
+        "line_number": 549,
         "current_name": "f",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
@@ -77,7 +77,7 @@
       {
         "violation_type": "variable_single_letter",
         "file_path": "naming_audit.py",
-        "line_number": 180,
+        "line_number": 298,
         "current_name": "f",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
@@ -87,7 +87,7 @@
       {
         "violation_type": "variable_single_letter",
         "file_path": "naming_audit.py",
-        "line_number": 325,
+        "line_number": 533,
         "current_name": "v",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
@@ -97,7 +97,7 @@
       {
         "violation_type": "variable_single_letter",
         "file_path": "naming_audit.py",
-        "line_number": 368,
+        "line_number": 576,
         "current_name": "v",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
@@ -107,7 +107,7 @@
       {
         "violation_type": "variable_single_letter",
         "file_path": "naming_audit.py",
-        "line_number": 318,
+        "line_number": 526,
         "current_name": "v",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
@@ -117,7 +117,7 @@
       {
         "violation_type": "variable_single_letter",
         "file_path": "naming_audit.py",
-        "line_number": 319,
+        "line_number": 527,
         "current_name": "v",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
@@ -127,7 +127,7 @@
       {
         "violation_type": "variable_single_letter",
         "file_path": "naming_audit.py",
-        "line_number": 320,
+        "line_number": 528,
         "current_name": "v",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
@@ -137,12 +137,184 @@
       {
         "violation_type": "variable_single_letter",
         "file_path": "naming_audit.py",
-        "line_number": 321,
+        "line_number": 529,
         "current_name": "v",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
         "ruleset_reference": "Scale Length with Scope",
         "description": "Single-letter variable 'v' should have descriptive name"
+      }
+    ],
+    "impact_analyzer.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 404,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 410,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 416,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 372,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 434,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 506,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 394,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 395,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 396,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 397,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 429,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 430,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 389,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 390,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 391,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 392,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "impact_analyzer.py",
+        "line_number": 440,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
       }
     ],
     "demo_full_workflow.py": [
@@ -201,76 +373,116 @@
         "description": "Single-letter variable 'f' should have descriptive name"
       }
     ],
-    "autonomous_dev_tool.py": [
+    "simple_impact_analyzer.py": [
       {
         "violation_type": "variable_single_letter",
-        "file_path": "autonomous_dev_tool.py",
-        "line_number": 227,
-        "current_name": "m",
+        "file_path": "simple_impact_analyzer.py",
+        "line_number": 241,
+        "current_name": "f",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
         "ruleset_reference": "Scale Length with Scope",
-        "description": "Single-letter variable 'm' should have descriptive name"
+        "description": "Single-letter variable 'f' should have descriptive name"
       },
       {
         "violation_type": "variable_single_letter",
-        "file_path": "autonomous_dev_tool.py",
-        "line_number": 146,
-        "current_name": "g",
+        "file_path": "simple_impact_analyzer.py",
+        "line_number": 267,
+        "current_name": "f",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
         "ruleset_reference": "Scale Length with Scope",
-        "description": "Single-letter variable 'g' should have descriptive name"
+        "description": "Single-letter variable 'f' should have descriptive name"
       },
       {
         "violation_type": "variable_single_letter",
-        "file_path": "autonomous_dev_tool.py",
-        "line_number": 147,
-        "current_name": "p",
+        "file_path": "simple_impact_analyzer.py",
+        "line_number": 285,
+        "current_name": "f",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
         "ruleset_reference": "Scale Length with Scope",
-        "description": "Single-letter variable 'p' should have descriptive name"
+        "description": "Single-letter variable 'f' should have descriptive name"
       },
       {
         "violation_type": "variable_single_letter",
-        "file_path": "autonomous_dev_tool.py",
-        "line_number": 137,
-        "current_name": "m",
+        "file_path": "simple_impact_analyzer.py",
+        "line_number": 175,
+        "current_name": "f",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
         "ruleset_reference": "Scale Length with Scope",
-        "description": "Single-letter variable 'm' should have descriptive name"
+        "description": "Single-letter variable 'f' should have descriptive name"
       },
       {
         "violation_type": "variable_single_letter",
-        "file_path": "autonomous_dev_tool.py",
-        "line_number": 137,
-        "current_name": "v",
+        "file_path": "simple_impact_analyzer.py",
+        "line_number": 256,
+        "current_name": "a",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
         "ruleset_reference": "Scale Length with Scope",
-        "description": "Single-letter variable 'v' should have descriptive name"
+        "description": "Single-letter variable 'a' should have descriptive name"
       },
       {
         "violation_type": "variable_single_letter",
-        "file_path": "autonomous_dev_tool.py",
-        "line_number": 141,
-        "current_name": "m",
+        "file_path": "simple_impact_analyzer.py",
+        "line_number": 274,
+        "current_name": "a",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
         "ruleset_reference": "Scale Length with Scope",
-        "description": "Single-letter variable 'm' should have descriptive name"
+        "description": "Single-letter variable 'a' should have descriptive name"
       },
       {
         "violation_type": "variable_single_letter",
-        "file_path": "autonomous_dev_tool.py",
-        "line_number": 141,
-        "current_name": "v",
+        "file_path": "simple_impact_analyzer.py",
+        "line_number": 218,
+        "current_name": "a",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
         "ruleset_reference": "Scale Length with Scope",
-        "description": "Single-letter variable 'v' should have descriptive name"
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "simple_impact_analyzer.py",
+        "line_number": 219,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "simple_impact_analyzer.py",
+        "line_number": 220,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "simple_impact_analyzer.py",
+        "line_number": 221,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "simple_impact_analyzer.py",
+        "line_number": 131,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
       }
     ],
     "grok_checkpoint1.py": [
@@ -278,6 +490,28 @@
         "violation_type": "variable_single_letter",
         "file_path": "grok_checkpoint1.py",
         "line_number": 132,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      }
+    ],
+    "refactor_phase_2a.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "refactor_phase_2a.py",
+        "line_number": 52,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "refactor_phase_2a.py",
+        "line_number": 58,
         "current_name": "f",
         "suggested_name": "Use descriptive name based on purpose",
         "severity": "low",
@@ -307,6 +541,38 @@
         "description": "Single-letter variable 't' should have descriptive name"
       }
     ],
+    "prioritization_analyzer.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "prioritization_analyzer.py",
+        "line_number": 341,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "prioritization_analyzer.py",
+        "line_number": 350,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "prioritization_analyzer.py",
+        "line_number": 357,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      }
+    ],
     "strategy/grok_strategic_analysis.py": [
       {
         "violation_type": "variable_single_letter",
@@ -320,16 +586,6 @@
       }
     ],
     "examples/dsl_real_interpreter.py": [
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "examples/dsl_real_interpreter.py",
-        "line_number": 46,
-        "current_name": "interpreter",
-        "suggested_name": "erpreter",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interpreter' uses Hungarian notation, should be 'erpreter'"
-      },
       {
         "violation_type": "variable_single_letter",
         "file_path": "examples/dsl_real_interpreter.py",
@@ -549,16 +805,6 @@
         "severity": "low",
         "ruleset_reference": "Scale Length with Scope",
         "description": "Single-letter variable 'f' should have descriptive name"
-      },
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "scripts/grok_session.py",
-        "line_number": 250,
-        "current_name": "stream_response",
-        "suggested_name": "eam_response",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'stream_response' uses Hungarian notation, should be 'eam_response'"
       },
       {
         "violation_type": "variable_single_letter",
@@ -817,29 +1063,7 @@
         "description": "Single-letter variable 'f' should have descriptive name"
       }
     ],
-    "scripts/agent_executor_consultation.py": [
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "scripts/agent_executor_consultation.py",
-        "line_number": 7,
-        "current_name": "interface_code",
-        "suggested_name": "erface_code",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interface_code' uses Hungarian notation, should be 'erface_code'"
-      }
-    ],
     "scripts/analyze_training_data.py": [
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "scripts/analyze_training_data.py",
-        "line_number": 22,
-        "current_name": "interactions",
-        "suggested_name": "eractions",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interactions' uses Hungarian notation, should be 'eractions'"
-      },
       {
         "violation_type": "variable_single_letter",
         "file_path": "scripts/analyze_training_data.py",
@@ -849,39 +1073,9 @@
         "severity": "low",
         "ruleset_reference": "Scale Length with Scope",
         "description": "Single-letter variable 'f' should have descriptive name"
-      },
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "scripts/analyze_training_data.py",
-        "line_number": 112,
-        "current_name": "interaction",
-        "suggested_name": "eraction",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interaction' uses Hungarian notation, should be 'eraction'"
       }
     ],
     "scripts/analyze_collected_data.py": [
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "scripts/analyze_collected_data.py",
-        "line_number": 17,
-        "current_name": "interactions",
-        "suggested_name": "eractions",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interactions' uses Hungarian notation, should be 'eractions'"
-      },
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "scripts/analyze_collected_data.py",
-        "line_number": 147,
-        "current_name": "interactions",
-        "suggested_name": "eractions",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interactions' uses Hungarian notation, should be 'eractions'"
-      },
       {
         "violation_type": "variable_single_letter",
         "file_path": "scripts/analyze_collected_data.py",
@@ -905,16 +1099,6 @@
     ],
     "scripts/architecture_review.py": [
       {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "scripts/architecture_review.py",
-        "line_number": 22,
-        "current_name": "interfaces_code",
-        "suggested_name": "erfaces_code",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interfaces_code' uses Hungarian notation, should be 'erfaces_code'"
-      },
-      {
         "violation_type": "variable_single_letter",
         "file_path": "scripts/architecture_review.py",
         "line_number": 108,
@@ -923,18 +1107,6 @@
         "severity": "low",
         "ruleset_reference": "Scale Length with Scope",
         "description": "Single-letter variable 'f' should have descriptive name"
-      }
-    ],
-    "scripts/architecture_consultation.py": [
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "scripts/architecture_consultation.py",
-        "line_number": 7,
-        "current_name": "interface_code",
-        "suggested_name": "erface_code",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interface_code' uses Hungarian notation, should be 'erface_code'"
       }
     ],
     "scripts/grok_implement_refactoring.py": [
@@ -1005,16 +1177,6 @@
         "severity": "low",
         "ruleset_reference": "Scale Length with Scope",
         "description": "Single-letter variable 'f' should have descriptive name"
-      },
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "scripts/alert_monitor.py",
-        "line_number": 76,
-        "current_name": "interval",
-        "suggested_name": "erval",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interval' uses Hungarian notation, should be 'erval'"
       }
     ],
     "scripts/consult_grok.py": [
@@ -1124,16 +1286,6 @@
       }
     ],
     "scripts/run_code_review_workflow.py": [
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "scripts/run_code_review_workflow.py",
-        "line_number": 81,
-        "current_name": "interpreter",
-        "suggested_name": "erpreter",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interpreter' uses Hungarian notation, should be 'erpreter'"
-      },
       {
         "violation_type": "variable_single_letter",
         "file_path": "scripts/run_code_review_workflow.py",
@@ -2067,46 +2219,6 @@
     ],
     "training/scripts/prepare_training_data.py": [
       {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "training/scripts/prepare_training_data.py",
-        "line_number": 21,
-        "current_name": "interactions",
-        "suggested_name": "eractions",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interactions' uses Hungarian notation, should be 'eractions'"
-      },
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "training/scripts/prepare_training_data.py",
-        "line_number": 99,
-        "current_name": "interactions",
-        "suggested_name": "eractions",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interactions' uses Hungarian notation, should be 'eractions'"
-      },
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "training/scripts/prepare_training_data.py",
-        "line_number": 109,
-        "current_name": "interaction",
-        "suggested_name": "eraction",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interaction' uses Hungarian notation, should be 'eraction'"
-      },
-      {
-        "violation_type": "variable_hungarian_notation",
-        "file_path": "training/scripts/prepare_training_data.py",
-        "line_number": 185,
-        "current_name": "interactions_file",
-        "suggested_name": "eractions_file",
-        "severity": "medium",
-        "ruleset_reference": "Avoid Encodings",
-        "description": "Variable 'interactions_file' uses Hungarian notation, should be 'eractions_file'"
-      },
-      {
         "violation_type": "variable_single_letter",
         "file_path": "training/scripts/prepare_training_data.py",
         "line_number": 22,
@@ -2151,13 +2263,13 @@
   "summary": {
     "by_type": {
       "directory_deep_nesting": 3,
-      "variable_single_letter": 177,
-      "variable_hungarian_notation": 18,
-      "file_not_snake_case": 3
+      "variable_single_letter": 203,
+      "file_not_snake_case": 3,
+      "variable_hungarian_notation": 3
     },
     "by_severity": {
-      "medium": 24,
-      "low": 177
+      "medium": 9,
+      "low": 203
     }
   }
 }
