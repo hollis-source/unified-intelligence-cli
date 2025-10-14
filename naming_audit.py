@@ -117,7 +117,8 @@ class NamingAuditor:
 
             # Aggregation operations
             'collect', 'gather', 'aggregate', 'accumulate', 'merge', 'combine',
-            'join', 'split', 'group', 'partition', 'chunk', 'batch',
+            'join', 'split', 'group', 'partition', 'chunk', 'batch', 'decompose',
+            'disassemble', 'separate', 'divide',
 
             # Traversal operations
             'traverse', 'walk', 'visit', 'iterate', 'scan', 'explore',
