@@ -271,7 +271,7 @@ class MetricsCollector:
         routing_total = len(self.routing_metrics)
         routing_correct = sum(
             1 for routing_metric in self.routing_metrics
-            if m.is_correct is True
+            if routing_metric.is_correct is True
         )
         routing_accuracy = (
             (routing_correct / routing_total * 100)
@@ -281,7 +281,7 @@ class MetricsCollector:
         # Model selection breakdown
         model_counts = {}
         for model_metric in self.model_metrics:
-            model_counts[m.selected_model] = model_counts.get(m.selected_model, 0) + 1
+            model_counts[model_metric.selected_model] = model_counts.get(model_metric.selected_model, 0) + 1
 
         # Fallback usage
         fallback_count = sum(1 for model_metric in self.model_metrics if model_metric.fallback_used)
@@ -293,7 +293,7 @@ class MetricsCollector:
         # Team utilization
         team_counts = {}
         for team_metric in self.team_metrics:
-            team_counts[m.team_name] = m.tasks_handled
+            team_counts[team_metric.team_name] = team_metric.tasks_handled
 
         return {
             "routing_accuracy": round(routing_accuracy, 2),
