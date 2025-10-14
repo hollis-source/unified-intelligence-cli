@@ -16,14 +16,16 @@ maintainers = [
     {name = "ATADO Team", email = "noreply@example.com"}
 ]
 keywords = [
-    "ai",
-    "agents",
+    "autonomous",
+    "task",
+    "agent",
     "multi-agent",
     "orchestration",
+    "htn",
+    "dev-tools",
+    "automation",
     "cli",
     "llm",
-    "grok",
-    "automation",
     "clean-architecture"
 ]
 classifiers = [
