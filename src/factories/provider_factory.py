@@ -15,6 +15,7 @@ from src.factories.provider_creators import (
     TongyiLocalProviderCreator,
     ReplicateProviderCreator,
     Qwen3ProviderCreator,
+    QwenAgentProviderCreator,
     OrchestratorProviderCreator
 )
 
