@@ -453,6 +453,90 @@ priorities:
     created_by: "claude-code"
     notes: "Phase 2D of 2A-2D split. Final validation and documentation."
 
+  - id: "repository_rename_phase_3"
+    title: "Phase 3: Repository Rename to autonomous-task-agent-dev-orchestration"
+    description: |
+      Comprehensive repository rename from unified-intelligence-cli to autonomous-task-agent-dev-orchestration (ATADO).
+
+      RATIONALE:
+      - Functionally descriptive name for AI agents working in codebase without context
+      - Captures core elements: autonomous, task-centric, agent-based, dev-focused, orchestrated
+      - HTN (Hierarchical Task Networks) naturally explained by "task" emphasis
+      - No metaphors or abstractions - transparent purpose
+
+      PHASES COMPLETED:
+
+      Phase 3A: Package Configuration
+      - Updated pyproject.toml: package name, CLI commands (atado), authors, URLs, keywords
+      - CLI commands: atado (primary), autonomous-task-agent-dev-orchestration (full)
+      - 5 auto-commits
+
+      Phase 3B: Documentation & Configuration
+      - Refactored CLAUDE.md with project identity, architecture overview, workflows
+      - Updated 32 files: README, CONTRIBUTING, deployment guides, GitHub workflows
+      - Updated configs: priority_worker.yaml, docker-compose.yml, agent templates
+      - Created rename_phase_3b.py automation script
+      - 781 insertions, 211 deletions
+
+      Phase 3C: Source Code & Tests
+      - Updated 19 Python files in src/ and tests/
+      - 50 reference changes (package names, CLI commands, paths)
+      - Created rename_phase_3c.py for targeted updates
+      - 54 files changed with new test files
+
+      Phase 3D: Final Validation
+      - All imports working correctly
+      - Zero old references remaining
+      - Package configuration validated
+      - CONTINUATION.md Docker reference updated
+
+      TOTAL IMPACT:
+      - Files updated: 105+ files
+      - References changed: 300+ instances
+      - Commits: 63 total
+      - Duration: ~2 hours
+
+      SUCCESS CRITERIA:
+      - ✅ Package name updated to autonomous-task-agent-dev-orchestration
+      - ✅ CLI command renamed to atado
+      - ✅ All documentation updated
+      - ✅ All source code updated
+      - ✅ All tests updated
+      - ✅ All imports working
+      - ✅ Zero breaking changes
+      - ✅ Validation complete
+    status: "completed"
+    priority: "critical"
+    effort_hours: 2
+    complexity: "medium"
+
+    workflow: null
+    dependencies: ["naming_refactoring_phase_2c"]
+
+    claimed_by: "claude-code"
+    claimed_at: "2025-10-14T12:20:00Z"
+    started_at: "2025-10-14T12:20:00Z"
+    completed_at: "2025-10-14T14:00:00Z"
+
+    branch: "feat/dashboard-integration-production"
+    pr_url: null
+    success: true
+    error: null
+    artifacts: [
+      "6b191ed", "2b5cc52", "1ab4335", "8a19c96", "542a420",  # Phase 3A
+      "bb99bf0", "e7ee8f5", "b9ea6af", "5c818aa",              # CLAUDE.md
+      "a17f10a",                                                # Phase 3B
+      "0fb0dd4",                                                # Phase 3C
+      "b4082cc",                                                # Phase 3D
+      "rename_phase_3b.py",
+      "rename_phase_3c.py",
+      "PHASE_3_COMPLETION.md"
+    ]
+
+    created_at: "2025-10-14T12:20:00Z"
+    created_by: "claude-code"
+    notes: "Phase 3: Comprehensive rename to functionally descriptive name for AI agent transparency. All 105+ files updated systematically across 4 phases."
+
 # Completed priorities (archive)
 completed_priorities: []
 
