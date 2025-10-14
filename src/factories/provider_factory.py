@@ -106,7 +106,7 @@ class ProviderFactory(IProviderFactory):
         DIP Compliance: All creation delegated to IProviderCreator implementations.
 
         Args:
-            provider_type: Type of provider (mock, grok, tongyi-local, qwen3_zerogpu, auto)
+            provider_type: Type of provider (mock, grok, tongyi-local, qwen3_zerogpu, qwen-agent, auto)
             config: Provider configuration dict
 
         Returns:
