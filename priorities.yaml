@@ -276,38 +276,52 @@ priorities:
     notes: "Phase 2A of 2A-2D split. COMPLETED. 12 variables renamed, zero breaking changes."
 
   - id: "naming_refactoring_phase_2b"
-    title: "Phase 2B: Function Renames (92 violations)"
+    title: "Phase 2B: Function Renames (12 violations - UPDATED)"
     description: |
-      Rename 92 functions to verb-noun pattern with backward compatibility aliases.
+      Rename 12 functions to verb-noun pattern with backward compatibility aliases.
 
-      TASK: Create and execute refactor_phase_2b.py script in 4 batches:
-      - Rename functions to follow verb-noun pattern
+      UPDATED: After fixing audit script, reduced from 92 to 12 functions (87% false positives removed).
+
+      TASK: Create and execute refactor_phase_2b.py script:
+      - Rename functions to follow verb-noun pattern (context-aware, not generic)
       - Keep old names as deprecated aliases
-      - Update internal calls to use new names
+      - Update internal calls to use new names (40 call sites)
 
-      INPUT: phase_2_goals.json (filter violation_type == 'function_no_verb_noun')
+      INPUT: phase_2_goals.json (12 function violations)
 
-      BATCHES:
-      - Batch 1: Core entities (6 files, ~23 functions)
-      - Batch 2: Adapters (10 files, ~23 functions)
-      - Batch 3: Use cases (8 files, ~23 functions)
-      - Batch 4: Orchestrators (10 files, ~23 functions)
+      FILES (3 total):
+      1. src/entities/category_theory/morphism.py (2 functions)
+         - identity() → create_identity()
+         - composed_transform() → apply_composed_transform()
+      2. src/entities/category_theory/workflow_morphism.py (4 functions)
+         - htn_flatten() → flatten_htn()
+         - htn_remove_identity() → remove_htn_identity()
+         - htn_simplify() → simplify_htn()
+         - workflow_optimize() → optimize_workflow()
+      3. src/entities/graph/graph.py (6 functions)
+         - node_count() → count_nodes()
+         - edge_count() → count_edges()
+         - dfs() → traverse_dfs()
+         - bfs() → traverse_bfs()
+         - topological_sort() → sort_topologically()
+         - subgraph() → extract_subgraph()
 
-      STEPS PER BATCH:
-      1. Rename functions, create deprecated aliases
-      2. Update internal calls
-      3. Test: pytest tests/<area>/ -v
-      4. Commit: "Phase 2B Batch N: Rename functions in <area>"
+      STEPS:
+      1. Create refactor_phase_2b.py with context-aware renames
+      2. Execute script on all 12 violations
+      3. Test: pytest tests/ -v
+      4. Commit: "Phase 2B: Rename 12 functions for Clean Code compliance"
 
-      REFERENCE: docs/PHASE_2_EXECUTION_PLAN.md (Phase 2B section)
+      REFERENCE: PHASE_2B_INSTRUCTIONS.md (detailed rename specifications)
 
       SUCCESS CRITERIA:
-      - All 92 functions renamed
+      - All 12 functions renamed with verb-noun patterns
       - Deprecated aliases in place
       - All tests pass
+      - Zero breaking changes
     status: "open"
     priority: "critical"
-    effort_hours: 15
+    effort_hours: 2
     complexity: "medium"
 
     workflow: null
@@ -326,7 +340,7 @@ priorities:
 
     created_at: "2025-10-14T06:36:00Z"
     created_by: "claude-code"
-    notes: "Phase 2B of 2A-2D split. Execute in 4 batches with backward compatibility."
+    notes: "Phase 2B of 2A-2D split. UPDATED: 12 functions (from 92) after audit fix. Context-aware renames."
 
   - id: "naming_refactoring_phase_2c"
     title: "Phase 2C: Directory Renames (4 violations)"
