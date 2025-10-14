@@ -82,7 +82,7 @@ class Morphism(Generic[A, B]):
             name=f"{self.name} ∘ {other.name}",
             source=other.source,
             target=self.target,
-            transform=composed_transform
+            transform=apply_composed_transform
         )
 
     def __repr__(self) -> str:
