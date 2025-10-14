@@ -127,7 +127,7 @@ priorities:
       - Add predictive issue detection
       - Create alerting system for ML-detected issues
       - Integrate with existing improvement orchestrator
-    status: "open"
+    status: "cancelled"
     priority: "medium"
     effort_hours: 10
     complexity: "high"
@@ -135,21 +135,32 @@ priorities:
     workflow: null  # Complex task, human-driven preferred
     dependencies: []
 
-    # Reserved for human work (complex ML implementation)
+    # Cancelled - not applicable to current architecture
     claimed_by: "claude-code"
     claimed_at: "2025-10-04T11:40:00Z"
     started_at: null
-    completed_at: null
+    completed_at: "2025-10-14T03:40:00Z"
 
     branch: null
     pr_url: null
-    success: null
-    error: null
+    success: false
+    error: "Cancelled - not applicable"
     artifacts: []
 
     created_at: "2025-10-04T11:40:00Z"
     created_by: "claude-code"
-    notes: "Reserved for Claude Code - requires complex ML decisions"
+    notes: |
+      CANCELLED: 2025-10-14
+
+      Reason: Not applicable to current architecture. We use pre-trained LLMs (GPT-5,
+      Claude Sonnet 4.5) via API, not custom-trained ML models. Anomaly detection for
+      these models is handled by their providers (OpenAI, Anthropic).
+
+      Alternative approach: Monitor API response patterns and error rates through
+      existing unified metrics dashboard instead of training custom ML models.
+
+      Decision: Terminate this priority as it was based on incorrect assumption that
+      we would be training/fine-tuning our own ML models for the system.
 
   - id: "documentation_updates"
     title: "Update Documentation for DSL Workflows + Priority System"
