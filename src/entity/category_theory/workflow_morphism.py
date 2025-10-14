@@ -5,9 +5,9 @@ while preserving semantic correctness through category theory laws.
 """
 
 from typing import List
-from src.entities.category_theory import Morphism
-from src.entities.htn import HTNNode
-from src.entities.graph import Graph
+from src.entity.category_theory import Morphism
+from src.entity.htn import HTNNode
+from src.entity.graph import Graph
 
 
 class WorkflowMorphism:
