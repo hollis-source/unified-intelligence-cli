@@ -1,13 +1,13 @@
-# unified-intelligence-cli Priority Queue
+# Autonomous Task-Agent Dev Orchestration (ATADO) Priority Queue
 # Managed by: Claude Code sessions + Containerized priority worker
 # Format: YAML for human readability + git-based coordination
 
 metadata:
   version: "1.0"
   created: "2025-10-04T11:40:00Z"
-  last_updated: "2025-10-14T12:15:00Z"
-  total_priorities: 7
-  completed: 4
+  last_updated: "2025-10-14T14:00:00Z"
+  total_priorities: 8
+  completed: 5
   in_progress: 0
 
 # Priority statuses: open, claimed, in_progress, completed, failed
