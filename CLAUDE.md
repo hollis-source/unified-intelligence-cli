@@ -160,16 +160,39 @@ flake8 src/                             # Linting
 ```
 
 ## Code Style
-- Use PEP 8.
-- Meaningful variable names (e.g., unify_agents_use_case instead of u).
-- Docstrings for all functions.
-- Type hints where possible.
 
-## Workflows
-- **Explore and Plan**: Analyze query, search codebase, GitHub/Hugging Face/Stack Overflow for existing implementations—only create new if none exist or are inadequate, citing data-based reasons. Create plan (e.g., GitHub issue).
-- **Code and Test**: Write tests first, implement to pass, verify with subagents. Challenge your own suggestions critically.
-- **Iterate and Commit**: Refactor per principles, commit with descriptive messages. Highlight any innovations' risks or data support.
-- **AI-Specific**: For Hugging Face/llama.cpp, use dependency inversion; cache responses. Quantize models (e.g., Q4) for CPU efficiency.
+- **PEP 8 compliance**: Use black formatter (line length 100)
+- **Type hints**: All function signatures, return types, class attributes
+- **Docstrings**: Google style for all public functions, classes
+- **Naming**:
+  - Functions: `verb_noun()` pattern (e.g., `create_agent()`, `route_task()`)
+  - Classes: PascalCase (e.g., `TeamRouter`, `HTNNode`)
+  - Variables: Descriptive snake_case (e.g., `task_coordinator`, not `tc`)
+  - Constants: UPPER_SNAKE_CASE (e.g., `MAX_RETRIES`)
+- **Imports**: Grouped (stdlib, third-party, local) and sorted with isort
+
+## Development Workflows
+
+**Adding New Agent Type:**
+1. Define entity in `src/entity/` (extend Agent base class)
+2. Create interface in `src/interface/` if new capability needed
+3. Implement factory method in `src/factories/agent_factory.py`
+4. Add routing logic in `src/routing/team_router.py`
+5. Write tests in `tests/unit/entity/`
+6. Update agent configs in `config/agents.yml`
+
+**Adding New Orchestration Strategy:**
+1. Create adapter in `src/adapters/orchestration/`
+2. Implement IOrchestrator interface contract
+3. Add selection logic in orchestration factory
+4. Test with integration tests
+5. Document in architecture docs
+
+**Working with HTN/DSL:**
+1. HTN nodes defined in `src/entity/htn/htn_node.py`
+2. DSL compiler in `src/dsl/adapters/htn_compiler.py`
+3. Category theory operations in `src/entity/category_theory/`
+4. Test DSL workflows in `tests/integration/dsl/`
 
 ## Clean Agile Practices
 Follow Clean Agile principles for sustainable development:
