@@ -46,7 +46,7 @@ class HTNNode:
         Returns:
             True if task has subtasks (internal node)
         """
-        return len(self.subtasks) > 0
+        return self.subtasks is not None and len(self.subtasks) > 0
 
     def add_subtask(self, subtask: "HTNNode") -> None:
         """Add a child task to this node.
