@@ -374,6 +374,17 @@ class Graph:
         # Return reversed stack (reverse postorder)
         return list(reversed(stack))
 
+    # Backward compatibility alias (deprecated)
+    def topological_sort(self) -> List[str]:
+        """DEPRECATED: Use sort_topologically() instead."""
+        import warnings
+        warnings.warn(
+            "topological_sort() is deprecated, use sort_topologically() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.sort_topologically()
+
     def find_roots(self) -> List[str]:
         """Find all root nodes (nodes with no incoming edges).
 
