@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0", "wheel", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "unified-intelligence-cli"
+name = "autonomous-task-agent-dev-orchestration"
 version = "1.0.0"
-description = "Production-ready multi-agent task orchestration framework with Clean Architecture"
+description = "Autonomous task-agent orchestration framework for accelerating development work"
 readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "MIT"}
