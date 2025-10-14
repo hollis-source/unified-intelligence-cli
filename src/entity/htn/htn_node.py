@@ -147,6 +147,8 @@ class HTNNode:
         """
         if self.is_primitive():
             return 0
+        if self.subtasks is None or len(self.subtasks) == 0:
+            return 0
         return 1 + max(subtask.get_depth() for subtask in self.subtasks)
 
     def __repr__(self) -> str:
