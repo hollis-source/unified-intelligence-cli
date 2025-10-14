@@ -144,6 +144,48 @@ class Qwen3ProviderCreator:
         return Qwen3InferenceAdapter(space_id=space_id, timeout=timeout)
 
 
+class QwenAgentProviderCreator:
+    """
+    Creator for Qwen-Agent provider (Official Qwen framework).
+
+    Wraps Qwen-Agent framework for optimized Qwen3 model inference.
+
+    Features:
+    - Hermes-style function calling (Qwen3-optimized)
+    - Parallel tool calls
+    - MCP support
+    - Built-in Qwen-Agent tools
+
+    Configuration:
+        model: Model ID (default: Qwen/Qwen3-Next-80B-A3B-Instruct)
+        endpoint_url: Inference endpoint URL (default: from QWEN_ENDPOINT env)
+        thinking_mode: Enable thinking mode (default: False)
+        temperature: Sampling temperature (default: 0.7)
+        max_tokens: Maximum output tokens (default: 16384)
+    """
+
+    def create(self, config: Optional[Dict[str, Any]] = None) -> ITextGenerator:
+        from src.adapters.llm.qwen_agent_adapter import create_qwen_agent_adapter
+
+        model = "Qwen/Qwen3-Next-80B-A3B-Instruct"
+        endpoint_url = None
+        thinking_mode = False
+
+        if config:
+            if "model" in config:
+                model = config["model"]
+            if "endpoint_url" in config:
+                endpoint_url = config["endpoint_url"]
+            if "thinking_mode" in config:
+                thinking_mode = config["thinking_mode"]
+
+        return create_qwen_agent_adapter(
+            model=model,
+            endpoint_url=endpoint_url,
+            thinking_mode=thinking_mode
+        )
+
+
 class OrchestratorProviderCreator:
     """
     Creator for intelligent multi-model orchestrator.
