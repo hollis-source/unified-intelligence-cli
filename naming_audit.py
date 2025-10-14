@@ -61,7 +61,8 @@ class NamingAuditor:
             # Transformation operations
             'process', 'transform', 'convert', 'parse', 'format', 'serialize',
             'deserialize', 'encode', 'decode', 'compress', 'decompress',
-            'extract', 'replace', 'substitute', 'swap', 'rename',
+            'extract', 'replace', 'substitute', 'swap', 'rename', 'simplify',
+            'optimize', 'deduplicate', 'dedup', 'normalize', 'denormalize',
 
             # Validation operations
             'validate', 'check', 'verify', 'test', 'assert', 'ensure', 'confirm',
