@@ -2,13 +2,13 @@
 
 import logging
 from typing import Optional, List
-from src.entities import Agent, AgentTeam, MetricsCollector
+from src.entity import Agent, AgentTeam, MetricsCollector
 from src.use_cases.task_planner import TaskPlannerUseCase
 from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 from src.adapters.agent.capability_selector import CapabilityBasedSelector
 from src.adapters.agent.team_selector import TeamBasedSelector
 from src.adapters.agent.llm_executor import LLMAgentExecutor
-from src.interfaces import ITextGenerator, IAgentCoordinator
+from src.interface import ITextGenerator, IAgentCoordinator
 from src.factories.provider_factory import ProviderFactory
 from src.factories.agent_factory import AgentFactory
 from src.factories.orchestration_factory import OrchestrationFactory

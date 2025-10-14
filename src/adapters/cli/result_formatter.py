@@ -13,7 +13,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich import box
-from src.entities import ExecutionResult, ExecutionStatus
+from src.entity import ExecutionResult, ExecutionStatus
 
 
 class ResultFormatter:

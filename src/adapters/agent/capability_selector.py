@@ -2,8 +2,8 @@
 
 import difflib
 from typing import List, Optional
-from src.entities import Agent, Task
-from src.interfaces import IAgentSelector
+from src.entity import Agent, Task
+from src.interface import IAgentSelector
 
 
 class CapabilityBasedSelector(IAgentSelector):

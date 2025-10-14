@@ -5,9 +5,9 @@ while preserving semantic correctness through category theory laws.
 """
 
 from typing import List
-from src.entities.category_theory import Morphism
-from src.entities.htn import HTNNode
-from src.entities.graph import Graph
+from src.entity.category_theory import Morphism
+from src.entity.htn import HTNNode
+from src.entity.graph import Graph
 
 
 class WorkflowMorphism:
@@ -315,7 +315,7 @@ class WorkflowMorphism:
         Returns:
             Composed morphism representing full optimization pipeline
         """
-        from src.entities.category_theory.morphism import compose_chain
+        from src.entity.category_theory.morphism import compose_chain
 
         # Create individual transformation morphisms
         flatten = WorkflowMorphism.flatten_htn()
@@ -357,7 +357,7 @@ def create_transformation_pipeline(
         pipeline = create_transformation_pipeline(["htn_flatten", "htn_simplify"])
         optimized_htn = pipeline(original_htn)
     """
-    from src.entities.category_theory.morphism import compose_chain
+    from src.entity.category_theory.morphism import compose_chain
 
     # Map transformation names to factory methods
     transform_map = {

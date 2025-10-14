@@ -10,7 +10,7 @@ Speed: 2-5x faster than CPU inference (~3-5s vs 12s)
 import os
 import logging
 from typing import List, Dict, Any, Optional
-from src.interfaces.llm_provider import ITextGenerator, LLMConfig
+from src.interface.llm_provider import ITextGenerator, LLMConfig
 
 logger = logging.getLogger(__name__)
 

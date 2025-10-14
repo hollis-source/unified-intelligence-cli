@@ -18,10 +18,10 @@ from src.dsl.use_cases.htn_workflow_executor import (
     WorkflowExecutionResult
 )
 from src.dsl.use_cases.interpreter import Interpreter
-from src.entities.category_theory import Morphism
-from src.entities.category_theory.workflow_morphism import WorkflowMorphism
-from src.entities.htn import HTNNode
-from src.entities.lifecycle import Lifecycle
+from src.entity.category_theory import Morphism
+from src.entity.category_theory.workflow_morphism import WorkflowMorphism
+from src.entity.htn import HTNNode
+from src.entity.lifecycle import Lifecycle
 
 
 class MorphismWorkflowExecutor(HTNWorkflowExecutor):
@@ -283,7 +283,7 @@ class MorphismWorkflowExecutor(HTNWorkflowExecutor):
         Returns:
             Transformed HTN structure
         """
-        from src.entities.category_theory.morphism import compose_chain
+        from src.entity.category_theory.morphism import compose_chain
 
         if not self.transformations:
             return htn

@@ -1,7 +1,7 @@
 """Mock LLM provider for testing - Adapter layer."""
 
 from typing import List, Dict, Any, Optional
-from src.interfaces import ITextGenerator, IToolSupportedProvider, LLMConfig
+from src.interface import ITextGenerator, IToolSupportedProvider, LLMConfig
 
 
 class MockLLMProvider(ITextGenerator):

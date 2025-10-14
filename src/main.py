@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import List, Any, Coroutine
 from dotenv import load_dotenv
 
-from src.entities import Task
+from src.entity import Task
 from src.composition import compose_dependencies
 from src.factories import AgentFactory, ProviderFactory, TeamFactory
 from src.adapters.cli import ResultFormatter

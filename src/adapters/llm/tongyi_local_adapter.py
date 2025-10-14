@@ -15,7 +15,7 @@ import aiohttp
 import asyncio
 import logging
 from typing import List, Dict, Any, Optional
-from src.interfaces import ITextGenerator
+from src.interface import ITextGenerator
 
 logger = logging.getLogger(__name__)
 

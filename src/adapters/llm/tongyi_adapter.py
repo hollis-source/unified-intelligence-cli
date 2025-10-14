@@ -10,7 +10,7 @@ import time
 import re
 import json
 from typing import List, Dict, Any, Optional
-from src.interfaces import ITextGenerator, IToolSupportedProvider, LLMConfig
+from src.interface import ITextGenerator, IToolSupportedProvider, LLMConfig
 
 # Week 4: Debug logging for HTTP operations
 logger = logging.getLogger(__name__)

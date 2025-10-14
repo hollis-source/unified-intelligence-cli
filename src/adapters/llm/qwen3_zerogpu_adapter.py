@@ -18,7 +18,7 @@ Performance Metrics (Evaluated):
 from typing import List, Dict, Any, Optional
 from gradio_client import Client
 
-from src.interfaces import ITextGenerator, LLMConfig
+from src.interface import ITextGenerator, LLMConfig
 
 
 class Qwen3ZeroGPUAdapter(ITextGenerator):

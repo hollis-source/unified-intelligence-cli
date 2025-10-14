@@ -8,8 +8,8 @@ SYD2 Fix: Added LLM response caching to reduce latency for expensive ULTRATHINK 
 
 import time
 from typing import Optional, Any
-from src.entities import Agent, Task, ExecutionResult, ExecutionStatus, ExecutionContext
-from src.interfaces import IAgentExecutor, ITextGenerator, LLMConfig
+from src.entity import Agent, Task, ExecutionResult, ExecutionStatus, ExecutionContext
+from src.interface import IAgentExecutor, ITextGenerator, LLMConfig
 from src.exceptions import ToolExecutionError
 from src.adapters.agent.llm_cache import LLMResponseCache, CacheConfig
 

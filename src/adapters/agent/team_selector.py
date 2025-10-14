@@ -8,8 +8,8 @@ Clean Architecture: Adapter layer, implements IAgentSelector interface.
 
 import logging
 from typing import List, Optional
-from src.entities import Task, Agent, AgentTeam
-from src.interfaces import IAgentSelector
+from src.entity import Task, Agent, AgentTeam
+from src.interface import IAgentSelector
 from src.routing.team_router import TeamRouter
 
 

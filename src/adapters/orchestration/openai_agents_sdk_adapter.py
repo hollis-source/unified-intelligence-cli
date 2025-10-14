@@ -15,8 +15,8 @@ Status: Phase 1 - Basic implementation (handoffs in Phase 2)
 import logging
 from typing import List, Optional, Dict, Any
 
-from src.entities import Agent, Task, ExecutionResult, ExecutionStatus, ExecutionContext
-from src.interfaces import IAgentCoordinator, ITextGenerator
+from src.entity import Agent, Task, ExecutionResult, ExecutionStatus, ExecutionContext
+from src.interface import IAgentCoordinator, ITextGenerator
 
 # OpenAI Agents SDK imports
 try:
