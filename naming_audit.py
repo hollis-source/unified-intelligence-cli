@@ -47,14 +47,71 @@ class NamingAuditor:
         if verbose:
             logging.basicConfig(level=logging.DEBUG)
         
-        # Common verbs for function naming
+        # Common verbs for function naming (verb prefixes and standalone verbs)
         self.common_verbs = {
+            # CRUD operations
             'get', 'set', 'create', 'delete', 'update', 'fetch', 'save', 'load',
-            'process', 'validate', 'calculate', 'generate', 'parse', 'render',
-            'send', 'receive', 'execute', 'run', 'start', 'stop', 'init',
-            'initialize', 'configure', 'setup', 'cleanup', 'build', 'make',
-            'find', 'search', 'filter', 'sort', 'transform', 'convert',
-            'check', 'verify', 'test', 'handle', 'manage', 'control'
+            'insert', 'upsert', 'remove', 'add', 'append', 'push', 'pop', 'put',
+
+            # Query operations
+            'find', 'search', 'filter', 'query', 'select', 'retrieve', 'lookup',
+
+            # Transformation operations
+            'process', 'transform', 'convert', 'parse', 'format', 'serialize',
+            'deserialize', 'encode', 'decode', 'compress', 'decompress',
+
+            # Validation operations
+            'validate', 'check', 'verify', 'test', 'assert', 'ensure', 'confirm',
+
+            # Computation operations
+            'calculate', 'compute', 'evaluate', 'derive', 'determine',
+
+            # Generation operations
+            'generate', 'build', 'make', 'construct', 'assemble', 'compose',
+
+            # Communication operations
+            'send', 'receive', 'emit', 'publish', 'subscribe', 'notify', 'broadcast',
+
+            # Rendering operations
+            'render', 'draw', 'display', 'show', 'print', 'output',
+
+            # Execution operations
+            'execute', 'run', 'invoke', 'call', 'trigger', 'dispatch', 'apply',
+
+            # Lifecycle operations
+            'start', 'stop', 'pause', 'resume', 'restart', 'init', 'initialize',
+            'configure', 'setup', 'cleanup', 'teardown', 'shutdown', 'close', 'open',
+
+            # Management operations
+            'handle', 'manage', 'control', 'monitor', 'watch', 'track',
+
+            # Aggregation operations
+            'collect', 'gather', 'aggregate', 'accumulate', 'merge', 'combine',
+            'join', 'split', 'group', 'partition',
+
+            # Traversal operations
+            'traverse', 'walk', 'visit', 'iterate', 'scan', 'explore',
+
+            # Sorting operations
+            'sort', 'order', 'rank', 'prioritize', 'organize',
+
+            # Mapping operations
+            'map', 'reduce', 'fold', 'unfold', 'zip', 'flatten',
+
+            # Modal verbs (can/should/must patterns)
+            'can', 'could', 'should', 'would', 'will', 'must', 'may', 'might',
+
+            # State verbs (is/has/exists patterns)
+            'is', 'are', 'was', 'were', 'has', 'have', 'had', 'exists', 'contains',
+
+            # Recording operations
+            'record', 'log', 'register', 'report', 'capture', 'trace',
+        }
+
+        # Python idioms that are acceptable without explicit verbs
+        self.python_idioms = {
+            'to_dict', 'from_dict', 'to_json', 'from_json', 'to_string',
+            'to_list', 'from_string', 'as_dict', 'as_json', 'as_list'
         }
         
         # Directories that are allowed to be plural
