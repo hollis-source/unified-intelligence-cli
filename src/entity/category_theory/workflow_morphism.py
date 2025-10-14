@@ -357,7 +357,7 @@ def create_transformation_pipeline(
         pipeline = create_transformation_pipeline(["htn_flatten", "htn_simplify"])
         optimized_htn = pipeline(original_htn)
     """
-    from src.entities.category_theory.morphism import compose_chain
+    from src.entity.category_theory.morphism import compose_chain
 
     # Map transformation names to factory methods
     transform_map = {
