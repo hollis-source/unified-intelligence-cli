@@ -307,7 +307,7 @@ class WorkflowMorphism:
         )
 
     @staticmethod
-    def workflow_optimize() -> Morphism[HTNNode, HTNNode]:
+    def optimize_workflow() -> Morphism[HTNNode, HTNNode]:
         """Composite transformation: flatten + remove identity + simplify.
 
         Applies multiple optimization steps in sequence using morphism composition.
@@ -318,13 +318,25 @@ class WorkflowMorphism:
         from src.entities.category_theory.morphism import compose_chain
 
         # Create individual transformation morphisms
-        flatten = WorkflowMorphism.htn_flatten()
-        remove_id = WorkflowMorphism.htn_remove_identity()
-        simplify = WorkflowMorphism.htn_simplify()
+        flatten = WorkflowMorphism.flatten_htn()
+        remove_id = WorkflowMorphism.remove_htn_identity()
+        simplify = WorkflowMorphism.simplify_htn()
 
         # Compose: simplify ∘ remove_id ∘ flatten
         # (flatten first, then remove identities, then simplify)
         return compose_chain(flatten, remove_id, simplify)
+
+    # Backward compatibility alias (deprecated)
+    @staticmethod
+    def workflow_optimize() -> Morphism[HTNNode, HTNNode]:
+        """DEPRECATED: Use optimize_workflow() instead."""
+        import warnings
+        warnings.warn(
+            "workflow_optimize() is deprecated, use optimize_workflow() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return WorkflowMorphism.optimize_workflow()
 
 
 def create_transformation_pipeline(
