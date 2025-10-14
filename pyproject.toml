@@ -71,11 +71,11 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hollis-source/unified-intelligence-cli"
-Documentation = "https://github.com/hollis-source/unified-intelligence-cli#readme"
-Repository = "https://github.com/hollis-source/unified-intelligence-cli"
-Issues = "https://github.com/hollis-source/unified-intelligence-cli/issues"
-Changelog = "https://github.com/hollis-source/unified-intelligence-cli/releases"
+Homepage = "https://github.com/hollis-source/autonomous-task-agent-dev-orchestration"
+Documentation = "https://github.com/hollis-source/autonomous-task-agent-dev-orchestration#readme"
+Repository = "https://github.com/hollis-source/autonomous-task-agent-dev-orchestration"
+Issues = "https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/issues"
+Changelog = "https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/releases"
 
 [project.scripts]
 ui-cli = "src.main:main"
