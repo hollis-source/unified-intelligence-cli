@@ -288,6 +288,21 @@ class Graph:
 
         return result
 
+    # Backward compatibility alias (deprecated)
+    def bfs(
+        self,
+        start_node: str,
+        visit_fn: Optional[Callable[[GraphNode], None]] = None
+    ) -> List[str]:
+        """DEPRECATED: Use traverse_bfs() instead."""
+        import warnings
+        warnings.warn(
+            "bfs() is deprecated, use traverse_bfs() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.traverse_bfs(start_node, visit_fn)
+
     def has_cycle(self) -> bool:
         """Detect if graph contains any cycles.
 
