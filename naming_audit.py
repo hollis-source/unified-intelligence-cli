@@ -423,11 +423,34 @@ class NamingAuditor:
         return False
 
     def _remove_hungarian_notation(self, var_name: str) -> str:
-        """Remove Hungarian notation from variable name."""
-        hungarian_prefixes = ['str', 'int', 'bool', 'list', 'dict', 'obj', 'm_', 'g_']
-        for prefix in hungarian_prefixes:
-            if var_name.lower().startswith(prefix):
-                return var_name[len(prefix):].lstrip('_')
+        """Remove Hungarian notation from variable name.
+
+        Examples:
+        - str_name → name
+        - strName → name
+        - m_count → count
+        """
+        type_prefixes = ['str', 'int', 'bool', 'float', 'list', 'dict', 'tuple', 'set', 'obj']
+        scope_prefixes = ['m_', 'g_', 's_', 'c_']
+
+        # Remove scope prefixes (always with underscore)
+        for prefix in scope_prefixes:
+            if var_name.startswith(prefix):
+                return var_name[len(prefix):]
+
+        # Remove type prefixes (underscore or camelCase)
+        for prefix in type_prefixes:
+            # Pattern 1: str_name → name
+            if var_name.lower().startswith(prefix + '_'):
+                return var_name[len(prefix) + 1:]
+            # Pattern 2: strName → name
+            if (var_name.startswith(prefix) and
+                len(var_name) > len(prefix) and
+                var_name[len(prefix)].isupper()):
+                # Convert first letter to lowercase: strName → name
+                remainder = var_name[len(prefix):]
+                return remainder[0].lower() + remainder[1:] if remainder else var_name
+
         return var_name
 
 
