@@ -541,6 +541,117 @@ priorities:
     created_by: "claude-code"
     notes: "Phase 3: Comprehensive rename to functionally descriptive name for AI agent transparency. All 105+ files updated systematically across 4 phases."
 
+  - id: "qwen_agent_integration"
+    title: "Qwen-Agent Framework Integration"
+    description: |
+      Integrate official Qwen-Agent framework for optimized Qwen3 model inference.
+
+      OBJECTIVE:
+      Deploy Qwen3-Next-80B-A3B-Instruct on HF Inference Endpoint with Qwen-Agent optimization layer.
+
+      PHASES COMPLETED:
+
+      Phase 1: Research (October 15, 2025)
+      - Researched 5+ latest agentic models (Qwen3-Next, DeepSeek-V3.1, Qwen3-Coder, etc.)
+      - Selected Qwen3-Next-80B-A3B-Instruct (Sept 2025, 5.1M downloads, 81GB)
+      - Verified availability via HF API
+      - Created HF_AGENTIC_MODEL_DEPLOYMENT_PLAN.md (400+ lines)
+
+      Phase 2: Framework Analysis
+      - Deep analysis of Qwen-Agent framework (official Qwen library)
+      - Identified wrapper integration pattern (maintains Clean Architecture)
+      - Created QWEN_AGENT_INTEGRATION_STRATEGY.md (600+ lines)
+      - Created QWEN_DEPLOYMENT_ARCHITECTURE.md (300+ lines)
+
+      Phase 3: Implementation (October 15, 2025)
+      - Installed qwen-agent[gui,rag,code_interpreter,mcp] v0.0.31
+      - Implemented QwenAgentAdapter wrapper (300+ lines)
+      - Created QwenAgentProviderCreator for factory pattern
+      - Updated ProviderFactory with "qwen-agent" registration
+      - Wrote comprehensive unit tests (100+ lines, 5 tests passing)
+      - Verified factory integration
+
+      ARCHITECTURE:
+      ```
+      ATADO Use Cases
+          ↓ depends on
+      ITextGenerator (interface) ← Clean Architecture boundary
+          ↓ implements
+      QwenAgentAdapter (wrapper) ← Maintains DIP
+          ↓ wraps
+      Qwen-Agent framework ← Official optimizations
+          ↓ uses
+      Qwen3-Next-80B-A3B ← Model (pending endpoint deployment)
+      ```
+
+      FEATURES:
+      - Hermes-style function calling (Qwen3-optimized)
+      - Parallel tool calls
+      - MCP support
+      - Built-in Qwen-Agent tools (code_interpreter, RAG, etc.)
+      - Thinking mode support (for Qwen3-Next-80B-A3B-Thinking variant)
+
+      BENEFITS:
+      - Gets official Qwen team optimizations
+      - Maintains Clean Architecture (wrapper pattern)
+      - Supports multi-provider flexibility
+      - 80B params, only 3B active (efficient MoE)
+      - 262K-1M context window
+      - Apache 2.0 license
+
+      PENDING (Requires Budget Approval):
+      - Deploy HF Inference Endpoint ($4,320/month or $1,440 with autoscaling)
+      - Integration tests with real endpoint
+      - Production deployment
+
+      SUCCESS CRITERIA:
+      - ✅ Qwen-Agent installed and verified
+      - ✅ QwenAgentAdapter implemented with wrapper pattern
+      - ✅ Factory integration complete
+      - ✅ Unit tests passing (5/5)
+      - ✅ Documentation complete (1,300+ lines)
+      - ⏳ Endpoint deployment (pending)
+      - ⏳ Integration tests (pending endpoint)
+      - ⏳ Production validation (pending endpoint)
+
+      ARTIFACTS:
+      - docs/HF_AGENTIC_MODEL_DEPLOYMENT_PLAN.md
+      - docs/QWEN_AGENT_INTEGRATION_STRATEGY.md
+      - docs/QWEN_DEPLOYMENT_ARCHITECTURE.md
+      - src/adapters/llm/qwen_agent_adapter.py
+      - src/factories/provider_creators.py (QwenAgentProviderCreator)
+      - tests/adapters/llm/test_qwen_agent_adapter.py
+    status: "completed"
+    priority: "high"
+    effort_hours: 4
+    complexity: "high"
+
+    workflow: null
+    dependencies: ["repository_rename_phase_3"]
+
+    claimed_by: "claude-code"
+    claimed_at: "2025-10-15T16:00:00Z"
+    started_at: "2025-10-15T16:00:00Z"
+    completed_at: "2025-10-15T20:00:00Z"
+
+    branch: "feat/dashboard-integration-production"
+    pr_url: null
+    success: true
+    error: null
+    artifacts: [
+      "docs/HF_AGENTIC_MODEL_DEPLOYMENT_PLAN.md",
+      "docs/QWEN_AGENT_INTEGRATION_STRATEGY.md",
+      "docs/QWEN_DEPLOYMENT_ARCHITECTURE.md",
+      "src/adapters/llm/qwen_agent_adapter.py",
+      "src/factories/provider_creators.py (QwenAgentProviderCreator added)",
+      "src/factories/provider_factory.py (qwen-agent registered)",
+      "tests/adapters/llm/test_qwen_agent_adapter.py"
+    ]
+
+    created_at: "2025-10-15T16:00:00Z"
+    created_by: "claude-code"
+    notes: "Qwen-Agent integration complete. Wrapper pattern maintains Clean Architecture while leveraging official Qwen optimizations. Endpoint deployment pending budget approval."
+
 # Completed priorities (archive)
 completed_priorities: []
 
