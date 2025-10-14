@@ -11,7 +11,7 @@ Week 13: Extracted from ProviderFactory to fix DIP violation.
 
 import os
 from typing import Optional, Dict, Any, Protocol
-from src.interfaces import ITextGenerator
+from src.interface import ITextGenerator
 
 
 class IProviderCreator(Protocol):

@@ -9,7 +9,7 @@ Week 13: Added metrics collection (Priority 3).
 import re
 import logging
 from typing import Dict, List, Optional
-from src.entities import Task
+from src.entity import Task
 
 
 logger = logging.getLogger(__name__)

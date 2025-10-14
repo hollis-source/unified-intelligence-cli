@@ -3,8 +3,8 @@
 import json
 import logging
 from typing import List, Optional, Set
-from src.entities import Agent, Task, ExecutionContext
-from src.interfaces import (
+from src.entity import Agent, Task, ExecutionContext
+from src.interface import (
     ITaskPlanner,
     ExecutionPlan,
     ITextGenerator,

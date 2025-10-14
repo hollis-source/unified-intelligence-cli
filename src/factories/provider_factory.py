@@ -6,7 +6,7 @@ Week 13: Refactored to fix DIP violation (no direct adapter imports).
 """
 
 from typing import Optional, Dict, Any
-from src.interfaces import ITextGenerator, IProviderFactory
+from src.interface import ITextGenerator, IProviderFactory
 from src.factories.provider_creators import (
     IProviderCreator,
     MockProviderCreator,

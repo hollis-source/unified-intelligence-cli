@@ -2,8 +2,8 @@
 
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from src.entities import Agent, Task
-from src.entities.execution import ExecutionResult, ExecutionContext
+from src.entity import Agent, Task
+from src.entity.execution import ExecutionResult, ExecutionContext
 
 
 class IAgentExecutor(ABC):

@@ -1,8 +1,8 @@
 """Agent factory - Creates agents from configuration."""
 
 from typing import List, Dict, Any
-from src.entities import Agent
-from src.interfaces import IAgentFactory
+from src.entity import Agent
+from src.interface import IAgentFactory
 
 
 class AgentFactory(IAgentFactory):

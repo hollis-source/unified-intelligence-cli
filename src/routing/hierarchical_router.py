@@ -8,7 +8,7 @@ Week 11: Core infrastructure for 15-agent scaling.
 import re
 import logging
 from typing import List, Optional, Tuple
-from src.entities import Task, Agent
+from src.entity import Task, Agent
 from src.routing.orchestrator_router import OrchestratorRouter
 from src.routing.domain_classifier import DomainClassifier
 

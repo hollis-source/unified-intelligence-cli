@@ -7,7 +7,7 @@ Clean Architecture: Factory pattern for team creation.
 """
 
 from typing import List
-from src.entities import (
+from src.entity import (
     Agent,
     AgentTeam,
     FrontendTeam,

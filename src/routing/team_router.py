@@ -9,7 +9,7 @@ Clean Architecture: Strategy pattern for team-based routing.
 
 import logging
 from typing import List, Optional
-from src.entities import Task, Agent, AgentTeam
+from src.entity import Task, Agent, AgentTeam
 from src.routing.domain_classifier import DomainClassifier
 
 

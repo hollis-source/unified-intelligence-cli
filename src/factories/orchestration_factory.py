@@ -14,8 +14,8 @@ import os
 import logging
 from typing import List, Optional
 
-from src.entities import Agent
-from src.interfaces import IAgentCoordinator, ITextGenerator, IAgentExecutor, ITaskPlanner
+from src.entity import Agent
+from src.interface import IAgentCoordinator, ITextGenerator, IAgentExecutor, ITaskPlanner
 from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 
 # Optional: OpenAI Agents SDK

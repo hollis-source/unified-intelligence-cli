@@ -8,7 +8,7 @@ Clean Code: Fail fast with clear messages.
 """
 
 from typing import Optional, Tuple
-from src.entities import Task
+from src.entity import Task
 
 
 class ValidationError(Exception):

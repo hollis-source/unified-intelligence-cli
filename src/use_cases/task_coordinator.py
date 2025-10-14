@@ -3,8 +3,8 @@
 import asyncio
 import logging
 from typing import List, Optional, Dict
-from src.entities import Agent, Task, ExecutionResult, ExecutionStatus, ExecutionContext
-from src.interfaces import (
+from src.entity import Agent, Task, ExecutionResult, ExecutionStatus, ExecutionContext
+from src.interface import (
     IAgentCoordinator,
     IAgentExecutor,
     ITaskPlanner,
