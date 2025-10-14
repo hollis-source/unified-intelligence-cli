@@ -74,7 +74,7 @@ class Morphism(Generic[A, B]):
             )
 
         # Create composed transformation: (f ∘ g)(x) = f(g(x))
-        def composed_transform(x: A) -> C:
+        def apply_composed_transform(x: A) -> C:
             intermediate = other.transform(x)
             return self.transform(intermediate)
 
@@ -90,7 +90,7 @@ class Morphism(Generic[A, B]):
         return f"Morphism('{self.name}': {self.source} → {self.target})"
 
     @staticmethod
-    def identity(obj_type: str) -> "Morphism[A, A]":
+    def create_identity(obj_type: str) -> "Morphism[A, A]":
         """Create identity morphism for an object type.
 
         The identity morphism id_A: A → A satisfies:
@@ -110,6 +110,18 @@ class Morphism(Generic[A, B]):
             transform=lambda x: x  # Identity function
         )
 
+
+    # Backward compatibility alias (deprecated)
+    @staticmethod
+    def identity(obj_type: str) -> "Morphism[A, A]":
+        """DEPRECATED: Use create_identity() instead."""
+        import warnings
+        warnings.warn(
+            "identity() is deprecated, use create_identity() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return Morphism.create_identity(obj_type)
     def verify_associativity(
         self,
         g: "Morphism[B, C]",
