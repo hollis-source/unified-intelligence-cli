@@ -54,6 +54,8 @@ class HTNNode:
         Args:
             subtask: HTN node to add as child
         """
+        if self.subtasks is None:
+            self.subtasks = []
         self.subtasks.append(subtask)
 
     def check_preconditions(self, state: Dict[str, Any]) -> bool:
