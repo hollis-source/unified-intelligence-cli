@@ -38,7 +38,7 @@ class HTNNode:
         Returns:
             True if task has no subtasks (leaf node)
         """
-        return len(self.subtasks) == 0
+        return self.subtasks is None or len(self.subtasks) == 0
 
     def is_compound(self) -> bool:
         """Check if this is a compound (non-leaf) task.
