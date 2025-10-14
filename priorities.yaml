@@ -607,10 +607,13 @@ priorities:
       - 262K-1M context window
       - Apache 2.0 license
 
-      PENDING (Requires Budget Approval):
-      - Deploy HF Inference Endpoint ($4,320/month or $1,440 with autoscaling)
-      - Integration tests with real endpoint
-      - Production deployment
+      DEPLOYED ENDPOINT:
+      - URL: https://crlqq5n5zwaz4rnh.us-east-2.aws.endpoints.huggingface.cloud
+      - Model: Qwen/Qwen3-Next-80B-A3B-Thinking
+      - Hardware: 2x NVIDIA H200
+      - Framework: vLLM v0.10.2 (OpenAI-compatible)
+      - Status: Running with autoscaling (scale-to-zero after 60s)
+      - Cost: ~$1,440/month (8 hours/day estimated)
 
       SUCCESS CRITERIA:
       - ✅ Qwen-Agent installed and verified
@@ -618,9 +621,10 @@ priorities:
       - ✅ Factory integration complete
       - ✅ Unit tests passing (5/5)
       - ✅ Documentation complete (1,300+ lines)
-      - ⏳ Endpoint deployment (pending)
-      - ⏳ Integration tests (pending endpoint)
-      - ⏳ Production validation (pending endpoint)
+      - ✅ Endpoint deployed and running
+      - ✅ Integration tests passing (4/4 = 100%)
+      - ✅ Thinking mode validated
+      - ⏳ Production validation (in progress)
 
       ARTIFACTS:
       - docs/HF_AGENTIC_MODEL_DEPLOYMENT_PLAN.md
