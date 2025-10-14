@@ -84,19 +84,46 @@ python3 -m src.main \
 Apply these rigorously when reviewing or generating code:
 
 - **Clean Code**: Functions should be small (under 20 lines), with meaningful names revealing intent. Eliminate duplication via abstraction. Use TDD; ensure explicit error handling.
-- **Clean Architecture**: Structure with entities (core business objects, e.g., IntelligenceQuery) at the center, use cases around them, and adapters for externals (e.g., Hugging Face model APIs). Protect business logic from frameworks or UIs.
-- **Clean Agile**: Deliver small iterations focused on value. Promote refactoring, pair programming (simulate via subagents), and continuous integration.
+- **Clean Architecture**: Structure with entities (core business objects like Agent, Task, HTNNode) at center, use cases around them (TaskCoordinator, TaskPlanner), and adapters for externals (LLM providers, orchestrators). Protect business logic from frameworks.
+- **Clean Agile**: Deliver small iterations focused on value. Promote refactoring, pair programming (simulate via multi-agent collaboration), and continuous integration.
 - **SOLID Principles**:
-  - **Single Responsibility (SRP)**: One reason to change per class/module (e.g., separate agent coordination from model inference).
-  - **Open-Closed (OCP)**: Open for extension, closed for modification (use abstractions for new models).
-  - **Liskov Substitution (LSP)**: Subtypes substitutable without breaking (ensure custom agents match base interfaces).
-  - **Interface Segregation (ISP)**: Small, specific interfaces (e.g., separate query from training interfaces).
-  - **Dependency Inversion (DIP)**: Depend on abstractions (inject model services to avoid lock-in).
+  - **Single Responsibility (SRP)**: One reason to change per class/module (e.g., separate routing from execution).
+  - **Open-Closed (OCP)**: Open for extension, closed for modification (use abstractions for new agent types, orchestrators).
+  - **Liskov Substitution (LSP)**: Subtypes substitutable without breaking (all agents follow IAgentExecutor contract).
+  - **Interface Segregation (ISP)**: Small, specific interfaces (ITextGenerator, IAgentSelector, ITaskPlanner separate).
+  - **Dependency Inversion (DIP)**: Depend on abstractions (inject providers, executors, routers).
 
 ## Project-Specific Context
-- Focus on Python for the CLI (using Click or Typer), with integrations to open-source Hugging Face models run on CPU via llama.cpp (e.g., convert to GGUF, run inference locally).
-- Directory Structure: Work in /home/yourusername/projects/autonomous-task-agent-dev-orchestration. Use /opt/ai-tools for agents, /data/ai-models for models.
-- Key Goals: Ensure modularity for swapping models, testability for stochastic AI behaviors, and scalability for server use. Search existing implementations (e.g., on GitHub, Hugging Face) before creating new; only innovate if data supports it aligns with SOLID.
+
+**Technology Stack:**
+- **Language**: Python 3.12+ with type hints
+- **CLI**: Click framework
+- **LLM Providers**: OpenAI, Anthropic, Grok, local models
+- **DSL**: Lark parser for category theory workflow language
+- **Architecture**: Clean Architecture with entities, use cases, adapters pattern
+
+**Directory Structure:**
+```
+autonomous-task-agent-dev-orchestration/
+├── src/
+│   ├── entity/          # Core domain models (Agent, Task, HTNNode, Team)
+│   ├── interface/       # Abstract contracts (IAgentExecutor, ITextGenerator)
+│   ├── use_cases/       # Business logic (TaskCoordinator, TaskPlanner)
+│   ├── adapters/        # External integrations (LLM, CLI, orchestration)
+│   ├── routing/         # Team-based routing (TeamRouter, HierarchicalRouter)
+│   ├── dsl/            # Category theory DSL (HTN compiler, morphisms)
+│   ├── factories/       # Object creation (AgentFactory, TeamFactory)
+│   └── main.py         # CLI entry point
+├── tests/              # Comprehensive test suite
+└── config/             # YAML configurations for agents, teams, workers
+```
+
+**Key Design Goals:**
+1. **Modularity**: Swappable LLM providers, orchestration strategies, routing algorithms
+2. **Testability**: Mock-friendly interfaces, dependency injection throughout
+3. **Autonomy**: Priority queue-driven execution with minimal human intervention
+4. **Extensibility**: Easy to add new agent types, teams, workflow patterns
+5. **Observability**: Metrics collection, logging, error handling
 
 ## Bash Commands
 - git init: Initialize repo.
