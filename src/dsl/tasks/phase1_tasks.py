@@ -23,7 +23,7 @@ async def design_priority_worker(input_data: Any = None) -> Dict[str, Any]:
         WorkerDesign with architecture and implementation details
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -76,7 +76,7 @@ async def design_redis_queue(input_data: Any = None) -> Dict[str, Any]:
         QueueDesign with Redis schema and operations
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -125,7 +125,7 @@ async def design_git_integration(input_data: Any = None) -> Dict[str, Any]:
         GitDesign with branch management and commit strategies
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -176,7 +176,7 @@ async def design_pr_automation(input_data: Any = None) -> Dict[str, Any]:
         PRDesign with automation strategy
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -250,7 +250,7 @@ async def synthesize_implementation(input_data: Any = None) -> Dict[str, Any]:
         designs_text = str(input_data)
 
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",

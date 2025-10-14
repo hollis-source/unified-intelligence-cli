@@ -23,7 +23,7 @@ async def analyze_current_state(input_data: Any = None) -> Dict[str, Any]:
         StateAnalysis with current project status
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -31,7 +31,7 @@ async def analyze_current_state(input_data: Any = None) -> Dict[str, Any]:
         "--verbose",  # Enable full output display
         "--timeout", "180",
         "--task",
-        "ULTRATHINK: Analyze unified-intelligence-cli current state. "
+        "ULTRATHINK: Analyze autonomous-task-agent-dev-orchestration current state. "
         "Review: recent commits, SYD2 deployment, Sprint 1 Phase 1 completion, "
         "Story 2 research. Assess: architecture quality, technical debt, "
         "production readiness. Output: concise state summary."
@@ -54,7 +54,7 @@ async def assess_dsl_priorities(input_data: Any = None) -> Dict[str, Any]:
         DSLPriorities with recommended enhancements
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -84,7 +84,7 @@ async def assess_sprint_priorities(input_data: Any = None) -> Dict[str, Any]:
         SprintPriorities with recommended phase order
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -114,7 +114,7 @@ async def evaluate_syd2_synergy(input_data: Any = None) -> Dict[str, Any]:
         SYD2Synergy with synergy scores for priorities
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -156,7 +156,7 @@ async def synthesize_recommendation(input_data: Any = None) -> Dict[str, Any]:
         analyses_text = str(input_data)
 
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",

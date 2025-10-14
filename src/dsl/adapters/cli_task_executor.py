@@ -1,4 +1,4 @@
-"""CLI Task Executor - Connects DSL to unified-intelligence-cli.
+"""CLI Task Executor - Connects DSL to autonomous-task-agent-dev-orchestration.
 
 Clean Architecture: Adapter layer (external system integration).
 SOLID: SRP - only executes tasks via CLI, DIP - implements TaskExecutor interface.
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 class CLITaskExecutor:
     """
-    Executes DSL tasks via unified-intelligence-cli multi-agent system.
+    Executes DSL tasks via autonomous-task-agent-dev-orchestration multi-agent system.
 
     Implements TaskExecutor protocol, bridging DSL interpreter to
     the existing CLI infrastructure. Maps task names to agents and

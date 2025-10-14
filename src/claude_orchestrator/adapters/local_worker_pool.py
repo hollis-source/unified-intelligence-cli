@@ -49,7 +49,7 @@ class LocalWorkerPool(IWorkerPool):
         config = WorkerPoolConfig(
             pool_type="local",
             max_workers=1,
-            working_dir="/home/ui-cli_jake/unified-intelligence-cli",
+            working_dir="/home/ui-cli_jake/autonomous-task-agent-dev-orchestration",
             model_name="sonnet4",
         )
 

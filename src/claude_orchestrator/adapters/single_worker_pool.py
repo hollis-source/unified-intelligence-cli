@@ -49,7 +49,7 @@ class SingleWorkerPool(IWorkerPool):
             pool_type="ssh",
             max_workers=1,
             ssh_host="ui-cli_jake@syd2.jacobhollis.com",
-            working_dir="/home/ui-cli_jake/unified-intelligence-cli",
+            working_dir="/home/ui-cli_jake/autonomous-task-agent-dev-orchestration",
         )
 
         pool = SingleWorkerPool(config)

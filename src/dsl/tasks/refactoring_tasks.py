@@ -417,7 +417,7 @@ async def create_refactoring_report(input_data: Any = None) -> Dict[str, Any]:
         "4. **Pair Programming**: Review with teammate or AI assistant",
         "",
         "---",
-        "Generated via DSL + unified-intelligence-cli"
+        "Generated via DSL + autonomous-task-agent-dev-orchestration"
     ])
 
     report = "\n".join(report_lines)
