@@ -339,7 +339,7 @@ class Graph:
 
         return False
 
-    def topological_sort(self) -> List[str]:
+    def sort_topologically(self) -> List[str]:
         """Topological sort of nodes (valid only for DAGs).
 
         Returns nodes in order such that for every edge (u, v),
