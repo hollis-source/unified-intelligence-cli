@@ -104,12 +104,14 @@ class WorkflowMorphism:
             if htn.subtasks:
                 # Filter out identity subtasks
                 filtered_subtasks = []
+                removed_any = False
                 for subtask in htn.subtasks:
                     # Recursively process
                     processed = remove_identity_transform(subtask)
 
                     # Skip if it's an identity (id_* pattern or empty)
                     if processed.task_id.startswith("id_") or processed.description == "identity":
+                        removed_any = True
                         continue
 
                     filtered_subtasks.append(processed)
@@ -119,15 +121,20 @@ class WorkflowMorphism:
                     return HTNNode(
                         task_id=f"id_{htn.task_id}",
                         description="identity",
+                        subtasks=None,
                         metadata={"removed_identities": True}
                     )
 
-                # Return with filtered subtasks
+                # Return with filtered subtasks, add metadata if any removed
+                new_metadata = htn.metadata.copy() if htn.metadata else {}
+                if removed_any:
+                    new_metadata["removed_identities"] = True
+
                 return HTNNode(
                     task_id=htn.task_id,
                     description=htn.description,
                     subtasks=filtered_subtasks,
-                    metadata=htn.metadata
+                    metadata=new_metadata
                 )
 
             return htn
