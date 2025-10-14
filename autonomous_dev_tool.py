@@ -158,48 +158,58 @@ class MetricsTracker:
         }
 
     def _post_to_dashboard(self, metrics: Dict[str, Any]) -> None:
-        """POST metrics to unified dashboard API.
+        """POST metrics to unified dashboard API with retry logic.
 
         Fails silently if dashboard unavailable to not block local metrics.
+        Implements exponential backoff: 3 attempts with 1s, 2s, 4s delays.
         Following Clean Architecture: external I/O isolated in adapter layer.
         """
-        try:
-            # Map our modes/priorities to dashboard's expected values
-            mode_mapping = {
-                "fast": "autonomous",
-                "thorough": "execution",
-                "full": "validation",
-            }
-            priority_mapping = {
-                "P1": "critical",
-                "P2": "high",
-                "P3": "medium",
-                "P4": "low",
-                "critical": "critical",
-                "high": "high",
-                "medium": "medium",
-                "low": "low",
-            }
+        # Map our modes/priorities to dashboard's expected values
+        mode_mapping = {
+            "fast": "autonomous",
+            "thorough": "execution",
+            "full": "validation",
+        }
+        priority_mapping = {
+            "P1": "critical",
+            "P2": "high",
+            "P3": "medium",
+            "P4": "low",
+            "critical": "critical",
+            "high": "high",
+            "medium": "medium",
+            "low": "low",
+        }
 
-            payload = metrics.copy()
-            payload["mode"] = mode_mapping.get(payload.get("mode"), "autonomous")
+        payload = metrics.copy()
+        payload["mode"] = mode_mapping.get(payload.get("mode"), "autonomous")
 
-            # Map priority if present
-            if "task_priority" in payload and payload["task_priority"]:
-                payload["task_priority"] = priority_mapping.get(
-                    payload["task_priority"], "medium"
-                )
-
-            response = requests.post(
-                DASHBOARD_API_URL,
-                json=payload,
-                headers={"X-API-Key": DASHBOARD_API_KEY},
-                timeout=5,
+        # Map priority if present
+        if "task_priority" in payload and payload["task_priority"]:
+            payload["task_priority"] = priority_mapping.get(
+                payload["task_priority"], "medium"
             )
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            # Log but don't fail - local metrics still persisted
-            click.echo(f"[MetricsTracker] Warning: Failed to POST to dashboard: {e}", err=True)
+
+        # Retry logic with exponential backoff
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(
+                    DASHBOARD_API_URL,
+                    json=payload,
+                    headers={"X-API-Key": DASHBOARD_API_KEY},
+                    timeout=5,
+                )
+                response.raise_for_status()
+                return  # Success - exit
+            except requests.exceptions.RequestException as e:
+                if attempt < max_retries - 1:
+                    # Exponential backoff: 1s, 2s, 4s
+                    delay = 2 ** attempt
+                    time.sleep(delay)
+                else:
+                    # Final attempt failed - log but don't fail
+                    click.echo(f"[MetricsTracker] Warning: Failed to POST to dashboard after {max_retries} attempts: {e}", err=True)
 
 
 # ==============================
