@@ -314,7 +314,20 @@ Estimated Time: {task.estimated_minutes} minutes
             # Open log file for stdout/stderr
             log_file = open(log_path, 'w')
 
+            # Prepare environment - explicitly set HOME to avoid /root access
+            env = os.environ.copy()
+            home_dir = os.path.expanduser('~')
+            env['HOME'] = home_dir
+
+            # DEBUG: Log environment setup
+            import sys
+            print(f"[LocalWorkerPool DEBUG] HOME set to: {home_dir}", file=sys.stderr)
+            print(f"[LocalWorkerPool DEBUG] USER: {env.get('USER')}", file=sys.stderr)
+            print(f"[LocalWorkerPool DEBUG] CWD: {working_dir}", file=sys.stderr)
+            print(f"[LocalWorkerPool DEBUG] CMD: {' '.join(auggie_cmd)}", file=sys.stderr)
+
             # Start process in background
+            # IMPORTANT: Pass env with correct HOME to avoid /root permission errors
             process = subprocess.Popen(
                 auggie_cmd,
                 cwd=working_dir,
@@ -322,6 +335,7 @@ Estimated Time: {task.estimated_minutes} minutes
                 stderr=subprocess.STDOUT,
                 stdin=subprocess.DEVNULL,
                 start_new_session=True,  # Detach from parent process
+                env=env,  # Inherit environment with correct HOME
             )
 
             # Write PID to file

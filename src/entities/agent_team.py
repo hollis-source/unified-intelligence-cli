@@ -99,7 +99,7 @@ class AgentTeam:
 
     def __repr__(self) -> str:
         """String representation for debugging."""
-        agent_roles = [a.role for a in self.agents]
+        agent_roles = [agent.role for agent in self.agents]
         lead_str = f" (lead: {self.lead_agent.role})" if self.lead_agent else ""
         return f"AgentTeam('{self.name}', domain='{self.domain}', agents={agent_roles}{lead_str})"
 

@@ -254,14 +254,14 @@ class MetricsCollector:
             data = {
                 "session_id": self.session_id,
                 "timestamp": datetime.now().isoformat(),
-                "routing_metrics": [m.to_dict() for m in self.routing_metrics],
-                "model_metrics": [m.to_dict() for m in self.model_metrics],
-                "team_metrics": [m.to_dict() for m in self.team_metrics],
+                "routing_metrics": [metric.to_dict() for metric in self.routing_metrics],
+                "model_metrics": [metric.to_dict() for metric in self.model_metrics],
+                "team_metrics": [metric.to_dict() for metric in self.team_metrics],
                 "summary": self._calculate_summary()
             }
 
-            with open(self.session_file, "w") as f:
-                json.dump(data, f, indent=2)
+            with open(self.session_file, "w") as file_handle:
+                json.dump(data, file_handle, indent=2)
 
             logger.info(f"Metrics saved to {self.session_file}")
 
@@ -270,7 +270,7 @@ class MetricsCollector:
         # Routing accuracy
         routing_total = len(self.routing_metrics)
         routing_correct = sum(
-            1 for m in self.routing_metrics
+            1 for routing_metric in self.routing_metrics
             if m.is_correct is True
         )
         routing_accuracy = (
@@ -280,11 +280,11 @@ class MetricsCollector:
 
         # Model selection breakdown
         model_counts = {}
-        for m in self.model_metrics:
+        for model_metric in self.model_metrics:
             model_counts[m.selected_model] = model_counts.get(m.selected_model, 0) + 1
 
         # Fallback usage
-        fallback_count = sum(1 for m in self.model_metrics if m.fallback_used)
+        fallback_count = sum(1 for model_metric in self.model_metrics if model_metric.fallback_used)
         fallback_rate = (
             (fallback_count / len(self.model_metrics) * 100)
             if self.model_metrics else 0.0
@@ -292,7 +292,7 @@ class MetricsCollector:
 
         # Team utilization
         team_counts = {}
-        for m in self.team_metrics:
+        for team_metric in self.team_metrics:
             team_counts[m.team_name] = m.tasks_handled
 
         return {
