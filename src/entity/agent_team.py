@@ -8,7 +8,7 @@ Clean Architecture: Core domain entity with no external dependencies.
 
 from dataclasses import dataclass, field
 from typing import List, Optional
-from src.entities.agent import Agent, Task
+from src.entity.agent import Agent, Task
 
 
 @dataclass
