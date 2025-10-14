@@ -225,61 +225,37 @@ priorities:
     created_by: "claude-code"
     notes: "Phase 1 of 6-phase naming refactoring. COMPLETED. Generated audit data for subsequent phases."
 
-  - id: "naming_refactoring_phase_2"
-    title: "Naming Ruleset Refactoring - Phase 2: Critical Priority Refactoring"
+  - id: "naming_refactoring_phase_2a"
+    title: "Phase 2A: Variable Renames (16 violations)"
     description: |
-      Execute Phase 2 of naming refactoring: 112 critical priority violations.
+      Rename 16 variables for Clean Code compliance. ZERO breaking changes (local scope only).
 
-      **IMPORTANT**: Follow the detailed execution plan at docs/PHASE_2_EXECUTION_PLAN.md
-
-      Execute in 4 safe sub-phases with backward compatibility:
-
-      PHASE 2A: Variable Renames (1-2 hours, 16 violations)
+      TASK: Create and execute refactor_phase_2a.py script:
       - Rename 12 single-letter variables to descriptive names
-      - Rename 4 Hungarian notation variables
-      - Local scope only - ZERO breaking changes
-      - Test: pytest tests/ -v
+      - Rename 4 Hungarian notation variables (remove type prefixes)
+      - All changes are in local function scopes - no external impact
 
-      PHASE 2B: Function Renames (12-15 hours, 92 violations)
-      - Rename 92 functions to verb-noun pattern
-      - Create deprecated aliases for backward compatibility
-      - Update internal calls to use new names
-      - Execute in 4 batches with testing between each
-      - Test after each batch: pytest tests/ -v
+      INPUT: phase_2_goals.json (filter violation_type in ['variable_single_letter', 'variable_hungarian_notation'])
 
-      PHASE 2C: Directory Renames (6-8 hours, 4 violations)
-      - Phase 2C-1: Create compatibility shims (non-breaking)
-      - Phase 2C-2: Update ~61 imports to new directory names
-      - Directories: src/entities→entity, src/interfaces→interface, etc.
-      - Both old and new imports work via shims
-      - Test: pytest tests/ -v && manual import tests
+      STEPS:
+      1. Create refactor_phase_2a.py that:
+         - Reads phase_2_goals.json
+         - Filters 16 variable violations
+         - Uses AST or simple regex to rename variables in their local scopes
+      2. Execute script on all 16 violations
+      3. Test: pytest tests/ -v
+      4. Commit: "Phase 2A: Rename 16 variables for Clean Code compliance"
 
-      PHASE 2D: Validation & Documentation (2-3 hours)
-      - Run full validation suite
-      - Update documentation
-      - Create Phase 2 completion summary
+      REFERENCE: docs/PHASE_2_EXECUTION_PLAN.md (Phase 2A section)
 
-      **Key Safety Measures:**
-      - Backward compatibility via function aliases and directory shims
-      - Test after each sub-phase
-      - Atomic git commits per sub-phase
-      - Rollback procedures documented in execution plan
-
-      **Input Files:**
-      - phase_2_goals.json (112 violations)
-      - docs/PHASE_2_EXECUTION_PLAN.md (detailed plan)
-      - breaking_changes_forecast.md (risk analysis)
-
-      **Expected Output:**
-      - Refactoring scripts: refactor_phase_2a.py, refactor_phase_2b.py, create_shims.py, update_all_imports.py
-      - Compatibility layers: function aliases, directory shims
-      - Phase 2 completion summary
-      - All tests passing
-      - Zero breaking changes (backward compatible)
+      SUCCESS CRITERIA:
+      - All 16 variables renamed
+      - Zero breaking changes (local scope only)
+      - All tests pass
     status: "open"
     priority: "critical"
-    effort_hours: 28
-    complexity: "high"
+    effort_hours: 2
+    complexity: "low"
 
     workflow: null
     dependencies: ["naming_refactoring_phase_1"]
@@ -295,9 +271,173 @@ priorities:
     error: null
     artifacts: []
 
-    created_at: "2025-10-14T06:00:00Z"
+    created_at: "2025-10-14T06:36:00Z"
     created_by: "claude-code"
-    notes: "Phase 2 of 6. Uses detailed execution plan with backward compatibility strategy. Estimated 22-28 hours."
+    notes: "Phase 2A of 2A-2D split. Safest sub-phase (local variables only)."
+
+  - id: "naming_refactoring_phase_2b"
+    title: "Phase 2B: Function Renames (92 violations)"
+    description: |
+      Rename 92 functions to verb-noun pattern with backward compatibility aliases.
+
+      TASK: Create and execute refactor_phase_2b.py script in 4 batches:
+      - Rename functions to follow verb-noun pattern
+      - Keep old names as deprecated aliases
+      - Update internal calls to use new names
+
+      INPUT: phase_2_goals.json (filter violation_type == 'function_no_verb_noun')
+
+      BATCHES:
+      - Batch 1: Core entities (6 files, ~23 functions)
+      - Batch 2: Adapters (10 files, ~23 functions)
+      - Batch 3: Use cases (8 files, ~23 functions)
+      - Batch 4: Orchestrators (10 files, ~23 functions)
+
+      STEPS PER BATCH:
+      1. Rename functions, create deprecated aliases
+      2. Update internal calls
+      3. Test: pytest tests/<area>/ -v
+      4. Commit: "Phase 2B Batch N: Rename functions in <area>"
+
+      REFERENCE: docs/PHASE_2_EXECUTION_PLAN.md (Phase 2B section)
+
+      SUCCESS CRITERIA:
+      - All 92 functions renamed
+      - Deprecated aliases in place
+      - All tests pass
+    status: "open"
+    priority: "critical"
+    effort_hours: 15
+    complexity: "medium"
+
+    workflow: null
+    dependencies: ["naming_refactoring_phase_2a"]
+
+    claimed_by: null
+    claimed_at: null
+    started_at: null
+    completed_at: null
+
+    branch: null
+    pr_url: null
+    success: null
+    error: null
+    artifacts: []
+
+    created_at: "2025-10-14T06:36:00Z"
+    created_by: "claude-code"
+    notes: "Phase 2B of 2A-2D split. Execute in 4 batches with backward compatibility."
+
+  - id: "naming_refactoring_phase_2c"
+    title: "Phase 2C: Directory Renames (4 violations)"
+    description: |
+      Rename 4 directories from plural to singular with compatibility shims.
+
+      TASK: Two-phase approach for zero breaking changes:
+
+      PHASE 2C-1: Create Compatibility Shims (non-breaking)
+      - Copy src/entities → src/entity
+      - Copy src/interfaces → src/interface
+      - Copy src/core/entities → src/core/entity
+      - Copy src/core/ports → src/core/port
+      - Add compatibility shims at old locations (re-export from new)
+      - Both old and new imports work
+
+      PHASE 2C-2: Update Imports (~61 files)
+      - Create update_all_imports.py script
+      - Update all imports to use new directory names
+      - Test both old and new imports still work (via shims)
+
+      INPUT: phase_2_goals.json (filter violation_type == 'directory_plural')
+
+      STEPS:
+      1. Execute Phase 2C-1 (shims)
+      2. Test: pytest tests/ -v && manual import tests
+      3. Commit: "Phase 2C-1: Add compatibility shims for directory renames"
+      4. Execute Phase 2C-2 (update imports)
+      5. Test: pytest tests/ -v
+      6. Commit: "Phase 2C-2: Update imports to new directory names"
+
+      REFERENCE: docs/PHASE_2_EXECUTION_PLAN.md (Phase 2C section)
+
+      SUCCESS CRITERIA:
+      - New directories created
+      - Compatibility shims in place
+      - All imports updated
+      - Both old and new imports work
+      - All tests pass
+    status: "open"
+    priority: "critical"
+    effort_hours: 8
+    complexity: "high"
+
+    workflow: null
+    dependencies: ["naming_refactoring_phase_2b"]
+
+    claimed_by: null
+    claimed_at: null
+    started_at: null
+    completed_at: null
+
+    branch: null
+    pr_url: null
+    success: null
+    error: null
+    artifacts: []
+
+    created_at: "2025-10-14T06:36:00Z"
+    created_by: "claude-code"
+    notes: "Phase 2C of 2A-2D split. Highest risk - directory renames with shims."
+
+  - id: "naming_refactoring_phase_2d"
+    title: "Phase 2D: Validation & Documentation"
+    description: |
+      Final validation and documentation for Phase 2 completion.
+
+      TASKS:
+      1. Run full validation suite:
+         - pytest tests/ -v --cov=src
+         - python3 -m py_compile src/**/*.py
+         - Test both old and new imports work
+      2. Update documentation:
+         - README.md (if directory names referenced)
+         - ARCHITECTURE.md
+         - Docstrings with import examples
+      3. Create Phase 2 completion summary:
+         - PHASE_2_COMPLETION_SUMMARY.md
+         - Document all changes (2A, 2B, 2C, 2D)
+         - List backward compatibility measures
+         - Migration guide
+
+      REFERENCE: docs/PHASE_2_EXECUTION_PLAN.md (Phase 2D section)
+
+      SUCCESS CRITERIA:
+      - All tests pass (100% success)
+      - No import errors
+      - Documentation updated
+      - Completion summary created
+    status: "open"
+    priority: "high"
+    effort_hours: 3
+    complexity: "low"
+
+    workflow: null
+    dependencies: ["naming_refactoring_phase_2c"]
+
+    claimed_by: null
+    claimed_at: null
+    started_at: null
+    completed_at: null
+
+    branch: null
+    pr_url: null
+    success: null
+    error: null
+    artifacts: []
+
+    created_at: "2025-10-14T06:36:00Z"
+    created_by: "claude-code"
+    notes: "Phase 2D of 2A-2D split. Final validation and documentation."
 
 # Completed priorities (archive)
 completed_priorities: []
