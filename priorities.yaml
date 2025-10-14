@@ -380,7 +380,7 @@ priorities:
       - All imports updated
       - Both old and new imports work
       - All tests pass
-    status: "open"
+    status: "completed"
     priority: "critical"
     effort_hours: 8
     complexity: "high"
@@ -388,10 +388,10 @@ priorities:
     workflow: null
     dependencies: ["naming_refactoring_phase_2b"]
 
-    claimed_by: null
-    claimed_at: null
-    started_at: null
-    completed_at: null
+    claimed_by: "claude-code"
+    claimed_at: "2025-10-14T12:09:00Z"
+    started_at: "2025-10-14T12:09:00Z"
+    completed_at: "2025-10-14T12:15:00Z"
 
     branch: null
     pr_url: null
