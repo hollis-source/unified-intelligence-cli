@@ -192,7 +192,7 @@ class Graph:
             stacklevel=2
         )
         return self.count_edges()
-    def dfs(
+    def traverse_dfs(
         self,
         start_node: str,
         visit_fn: Optional[Callable[[GraphNode], None]] = None
@@ -230,6 +230,21 @@ class Graph:
 
         _dfs_recursive(start_node)
         return result
+
+    # Backward compatibility alias (deprecated)
+    def dfs(
+        self,
+        start_node: str,
+        visit_fn: Optional[Callable[[GraphNode], None]] = None
+    ) -> List[str]:
+        """DEPRECATED: Use traverse_dfs() instead."""
+        import warnings
+        warnings.warn(
+            "dfs() is deprecated, use traverse_dfs() instead",
+            DeprecationWarning,
+            stacklevel=2
+        )
+        return self.traverse_dfs(start_node, visit_fn)
 
     def bfs(
         self,
