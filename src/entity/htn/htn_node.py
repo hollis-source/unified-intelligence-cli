@@ -153,7 +153,7 @@ class HTNNode:
 
     def __repr__(self) -> str:
         """String representation for debugging."""
-        subtask_count = len(self.subtasks)
+        subtask_count = 0 if self.subtasks is None else len(self.subtasks)
         task_type = "primitive" if self.is_primitive() else "compound"
         return (
             f"HTNNode(id='{self.task_id}', "
