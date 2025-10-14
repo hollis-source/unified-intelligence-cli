@@ -329,11 +329,29 @@ class NamingAuditor:
         return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
     def _has_verb_noun_pattern(self, func_name: str) -> bool:
-        """Check if function name follows verb-noun pattern."""
-        # Check if starts with common verb
-        for verb in self.common_verbs:
-            if func_name.lower().startswith(verb):
+        """Check if function name follows verb-noun pattern.
+
+        Accepts:
+        1. Functions starting with a verb: get_user(), can_handle(), is_valid()
+        2. Functions that ARE a single verb: compose(), execute(), validate()
+        3. Python idioms: to_dict(), from_dict(), as_json()
+        """
+        func_lower = func_name.lower()
+
+        # Check for Python idioms first (exact match)
+        if func_lower in self.python_idioms:
+            return True
+
+        # Check if function IS a single verb (no underscore, entire name is a verb)
+        if '_' not in func_name and func_lower in self.common_verbs:
+            return True
+
+        # Check if function starts with a verb followed by underscore (verb_noun pattern)
+        if '_' in func_name:
+            first_word = func_name.split('_')[0].lower()
+            if first_word in self.common_verbs:
                 return True
+
         return False
 
     def _suggest_verb_noun_name(self, func_name: str) -> str:
