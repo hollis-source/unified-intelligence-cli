@@ -191,7 +191,7 @@ class Graph:
             DeprecationWarning,
             stacklevel=2
         )
-        return self.edge_count()
+        return self.count_edges()
     def dfs(
         self,
         start_node: str,
