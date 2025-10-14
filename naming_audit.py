@@ -108,7 +108,8 @@ class NamingAuditor:
 
             # Resource operations
             'allocate', 'deallocate', 'acquire', 'release', 'lock', 'unlock',
-            'claim', 'relinquish', 'reserve', 'free',
+            'claim', 'relinquish', 'reserve', 'free', 'register', 'unregister',
+            'subscribe', 'unsubscribe', 'bind', 'unbind', 'attach', 'detach',
 
             # Synchronization operations
             'sync', 'synchronize', 'wait', 'poll', 'block', 'unblock',
