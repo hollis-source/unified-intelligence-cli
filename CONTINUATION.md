@@ -203,7 +203,7 @@ Phase 1 complete when:
 
 ## Additional Context
 
-- Docker container running: `unified-intelligence-cli_priority-worker_1`
+- Docker container running: `autonomous-task-agent-dev-orchestration_priority-worker_1`
 - Redis: `localhost:6379` (clean state, 4 real tasks)
 - Config: `config/priority_worker_docker.yaml` (3s cycles for testing)
 - Venv: `venv/` (tenacity, gradio-client installed)
