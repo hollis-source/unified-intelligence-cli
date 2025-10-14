@@ -99,6 +99,7 @@ class NamingAuditor:
             'start', 'stop', 'pause', 'resume', 'restart', 'init', 'initialize',
             'configure', 'setup', 'cleanup', 'teardown', 'shutdown', 'close', 'open',
             'destroy', 'dispose', 'finalize', 'reset', 'clear', 'flush',
+            'complete', 'finish', 'end', 'terminate', 'transition', 'fail', 'succeed',
 
             # Management operations
             'handle', 'manage', 'control', 'monitor', 'watch', 'track',
