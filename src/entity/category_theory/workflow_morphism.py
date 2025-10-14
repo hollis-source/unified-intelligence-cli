@@ -315,7 +315,7 @@ class WorkflowMorphism:
         Returns:
             Composed morphism representing full optimization pipeline
         """
-        from src.entities.category_theory.morphism import compose_chain
+        from src.entity.category_theory.morphism import compose_chain
 
         # Create individual transformation morphisms
         flatten = WorkflowMorphism.flatten_htn()
