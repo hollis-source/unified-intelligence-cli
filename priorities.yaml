@@ -3,14 +3,15 @@
 # Format: YAML for human readability + git-based coordination
 
 metadata:
-  version: "1.5"
+  version: "1.6"
   created: "2025-10-04T11:40:00Z"
-  last_updated: "2025-10-13T02:30:00Z"
+  last_updated: "2025-10-14T03:40:00Z"
   total_priorities: 8
-  completed: 5
+  completed: 7
+  cancelled: 1
   in_progress: 0
 
-# Priority statuses: open, claimed, in_progress, completed, failed
+# Priority statuses: open, claimed, in_progress, completed, cancelled, failed
 # Workers: claude-code (interactive), container-worker-* (autonomous)
 
 priorities:
