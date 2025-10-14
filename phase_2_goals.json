@@ -1,0 +1,1188 @@
+{
+  "phase": 2,
+  "priority": "Critical Priority",
+  "description": "Public API functions, core entity names, architectural layer misalignments",
+  "estimated_hours": 22.2,
+  "total_violations": 112,
+  "files_to_refactor": {
+    "src/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "src/interfaces": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/interfaces",
+        "line_number": null,
+        "current_name": "interfaces",
+        "suggested_name": "interface",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'interfaces' uses plural form, should be singular"
+      }
+    ],
+    "src/core/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/core/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "src/core/ports": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/core/ports",
+        "line_number": null,
+        "current_name": "ports",
+        "suggested_name": "port",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'ports' uses plural form, should be singular"
+      }
+    ],
+    "src/composition.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/composition.py",
+        "line_number": 20,
+        "current_name": "compose_dependencies",
+        "suggested_name": "process_compose_dependencies",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'compose_dependencies' should follow verb-noun pattern"
+      }
+    ],
+    "src/main.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/main.py",
+        "line_number": 56,
+        "current_name": "main",
+        "suggested_name": "process_main",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'main' should follow verb-noun pattern"
+      }
+    ],
+    "src/entities/metrics.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 38,
+        "current_name": "to_dict",
+        "suggested_name": "process_to_dict",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'to_dict' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 60,
+        "current_name": "to_dict",
+        "suggested_name": "process_to_dict",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'to_dict' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 79,
+        "current_name": "to_dict",
+        "suggested_name": "process_to_dict",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'to_dict' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 130,
+        "current_name": "record_routing",
+        "suggested_name": "process_record_routing",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'record_routing' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 176,
+        "current_name": "record_model_selection",
+        "suggested_name": "process_record_model_selection",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'record_model_selection' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 216,
+        "current_name": "record_team_utilization",
+        "suggested_name": "process_record_team_utilization",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'record_team_utilization' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 283,
+        "current_name": "m",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'm' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 295,
+        "current_name": "m",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'm' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 263,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 273,
+        "current_name": "m",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'm' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 287,
+        "current_name": "m",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'm' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 257,
+        "current_name": "m",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'm' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 258,
+        "current_name": "m",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'm' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/metrics.py",
+        "line_number": 259,
+        "current_name": "m",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'm' should have descriptive name"
+      }
+    ],
+    "src/entities/agent_team.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 40,
+        "current_name": "route_internally",
+        "suggested_name": "process_route_internally",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'route_internally' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 74,
+        "current_name": "can_handle",
+        "suggested_name": "process_can_handle",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'can_handle' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 121,
+        "current_name": "route_internally",
+        "suggested_name": "process_route_internally",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'route_internally' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 155,
+        "current_name": "route_internally",
+        "suggested_name": "process_route_internally",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'route_internally' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 194,
+        "current_name": "route_internally",
+        "suggested_name": "process_route_internally",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'route_internally' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 247,
+        "current_name": "route_internally",
+        "suggested_name": "process_route_internally",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'route_internally' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 266,
+        "current_name": "route_internally",
+        "suggested_name": "process_route_internally",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'route_internally' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 296,
+        "current_name": "route_internally",
+        "suggested_name": "process_route_internally",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'route_internally' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 313,
+        "current_name": "route_internally",
+        "suggested_name": "process_route_internally",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'route_internally' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 341,
+        "current_name": "route_internally",
+        "suggested_name": "process_route_internally",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'route_internally' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 397,
+        "current_name": "route_internally",
+        "suggested_name": "process_route_internally",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'route_internally' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "variable_hungarian_notation",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 206,
+        "current_name": "strategy_keywords",
+        "suggested_name": "ategy_keywords",
+        "severity": "medium",
+        "ruleset_reference": "Avoid Encodings",
+        "description": "Variable 'strategy_keywords' uses Hungarian notation, should be 'ategy_keywords'"
+      },
+      {
+        "violation_type": "variable_hungarian_notation",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 218,
+        "current_name": "integration_engineer",
+        "suggested_name": "egration_engineer",
+        "severity": "medium",
+        "ruleset_reference": "Avoid Encodings",
+        "description": "Variable 'integration_engineer' uses Hungarian notation, should be 'egration_engineer'"
+      },
+      {
+        "violation_type": "variable_hungarian_notation",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 220,
+        "current_name": "integration_keywords",
+        "suggested_name": "egration_keywords",
+        "severity": "medium",
+        "ruleset_reference": "Avoid Encodings",
+        "description": "Variable 'integration_keywords' uses Hungarian notation, should be 'egration_keywords'"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/agent_team.py",
+        "line_number": 102,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      }
+    ],
+    "src/entities/agent.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/agent.py",
+        "line_number": 23,
+        "current_name": "can_handle",
+        "suggested_name": "process_can_handle",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'can_handle' should follow verb-noun pattern"
+      }
+    ],
+    "src/interfaces/llm_provider.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/interfaces/llm_provider.py",
+        "line_number": 73,
+        "current_name": "supports_tools",
+        "suggested_name": "process_supports_tools",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'supports_tools' should follow verb-noun pattern"
+      }
+    ],
+    "src/interfaces/agent_executor.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/interfaces/agent_executor.py",
+        "line_number": 43,
+        "current_name": "select_agent",
+        "suggested_name": "process_select_agent",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'select_agent' should follow verb-noun pattern"
+      }
+    ],
+    "src/interfaces/factory_interfaces.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/interfaces/factory_interfaces.py",
+        "line_number": 71,
+        "current_name": "register_provider",
+        "suggested_name": "process_register_provider",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'register_provider' should follow verb-noun pattern"
+      }
+    ],
+    "src/entities/category_theory/workflow_morphism.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 25,
+        "current_name": "htn_flatten",
+        "suggested_name": "process_htn_flatten",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'htn_flatten' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 86,
+        "current_name": "htn_remove_identity",
+        "suggested_name": "process_htn_remove_identity",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'htn_remove_identity' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 143,
+        "current_name": "htn_simplify",
+        "suggested_name": "process_htn_simplify",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'htn_simplify' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 184,
+        "current_name": "graph_remove_isolated_nodes",
+        "suggested_name": "process_graph_remove_isolated_nodes",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'graph_remove_isolated_nodes' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 235,
+        "current_name": "graph_deduplicate",
+        "suggested_name": "process_graph_deduplicate",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'graph_deduplicate' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 274,
+        "current_name": "workflow_optimize",
+        "suggested_name": "process_workflow_optimize",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'workflow_optimize' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 39,
+        "current_name": "flatten_transform",
+        "suggested_name": "process_flatten_transform",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'flatten_transform' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 99,
+        "current_name": "remove_identity_transform",
+        "suggested_name": "process_remove_identity_transform",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'remove_identity_transform' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 154,
+        "current_name": "simplify_transform",
+        "suggested_name": "process_simplify_transform",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'simplify_transform' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 198,
+        "current_name": "remove_isolated_transform",
+        "suggested_name": "process_remove_isolated_transform",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'remove_isolated_transform' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 248,
+        "current_name": "deduplicate_transform",
+        "suggested_name": "process_deduplicate_transform",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'deduplicate_transform' should follow verb-noun pattern"
+      }
+    ],
+    "src/entities/category_theory/morphism.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 183,
+        "current_name": "compose_chain",
+        "suggested_name": "process_compose_chain",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'compose_chain' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 12,
+        "current_name": "A",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'A' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 13,
+        "current_name": "B",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'B' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 14,
+        "current_name": "C",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'C' should have descriptive name"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 51,
+        "current_name": "compose",
+        "suggested_name": "process_compose",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'compose' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 93,
+        "current_name": "identity",
+        "suggested_name": "process_identity",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'identity' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 77,
+        "current_name": "composed_transform",
+        "suggested_name": "process_composed_transform",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'composed_transform' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "variable_hungarian_notation",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 78,
+        "current_name": "intermediate",
+        "suggested_name": "ermediate",
+        "severity": "medium",
+        "ruleset_reference": "Avoid Encodings",
+        "description": "Variable 'intermediate' uses Hungarian notation, should be 'ermediate'"
+      }
+    ],
+    "src/entities/task_model/task_model.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/task_model/task_model.py",
+        "line_number": 314,
+        "current_name": "traverse_hierarchy",
+        "suggested_name": "process_traverse_hierarchy",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'traverse_hierarchy' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/task_model/task_model.py",
+        "line_number": 59,
+        "current_name": "is_terminal",
+        "suggested_name": "process_is_terminal",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'is_terminal' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/task_model/task_model.py",
+        "line_number": 67,
+        "current_name": "is_active",
+        "suggested_name": "process_is_active",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'is_active' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/task_model/task_model.py",
+        "line_number": 100,
+        "current_name": "add_task",
+        "suggested_name": "process_add_task",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'add_task' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/task_model/task_model.py",
+        "line_number": 180,
+        "current_name": "add_subtask",
+        "suggested_name": "process_add_subtask",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'add_subtask' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/task_model/task_model.py",
+        "line_number": 189,
+        "current_name": "add_todo",
+        "suggested_name": "process_add_todo",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'add_todo' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/task_model/task_model.py",
+        "line_number": 244,
+        "current_name": "is_leaf",
+        "suggested_name": "process_is_leaf",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'is_leaf' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/task_model/task_model.py",
+        "line_number": 252,
+        "current_name": "is_composite",
+        "suggested_name": "process_is_composite",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'is_composite' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/task_model/task_model.py",
+        "line_number": 270,
+        "current_name": "has_dependencies",
+        "suggested_name": "process_has_dependencies",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'has_dependencies' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/task_model/task_model.py",
+        "line_number": 296,
+        "current_name": "complete",
+        "suggested_name": "process_complete",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'complete' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/task_model/task_model.py",
+        "line_number": 301,
+        "current_name": "is_completed",
+        "suggested_name": "process_is_completed",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'is_completed' should follow verb-noun pattern"
+      }
+    ],
+    "src/entities/lifecycle/lifecycle.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/lifecycle/lifecycle.py",
+        "line_number": 84,
+        "current_name": "is_terminal",
+        "suggested_name": "process_is_terminal",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'is_terminal' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/lifecycle/lifecycle.py",
+        "line_number": 92,
+        "current_name": "can_transition_to",
+        "suggested_name": "process_can_transition_to",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'can_transition_to' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/lifecycle/lifecycle.py",
+        "line_number": 104,
+        "current_name": "transition",
+        "suggested_name": "process_transition",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'transition' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/lifecycle/lifecycle.py",
+        "line_number": 139,
+        "current_name": "plan",
+        "suggested_name": "process_plan",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'plan' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/lifecycle/lifecycle.py",
+        "line_number": 173,
+        "current_name": "decompose",
+        "suggested_name": "process_decompose",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'decompose' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/lifecycle/lifecycle.py",
+        "line_number": 197,
+        "current_name": "complete",
+        "suggested_name": "process_complete",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'complete' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/lifecycle/lifecycle.py",
+        "line_number": 208,
+        "current_name": "fail",
+        "suggested_name": "process_fail",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'fail' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/lifecycle/lifecycle.py",
+        "line_number": 217,
+        "current_name": "retry",
+        "suggested_name": "process_retry",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'retry' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/lifecycle/lifecycle.py",
+        "line_number": 260,
+        "current_name": "register_callback",
+        "suggested_name": "process_register_callback",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'register_callback' should follow verb-noun pattern"
+      }
+    ],
+    "src/entities/executor/executor.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/executor/executor.py",
+        "line_number": 68,
+        "current_name": "can_execute",
+        "suggested_name": "process_can_execute",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'can_execute' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/executor/executor.py",
+        "line_number": 103,
+        "current_name": "is_available",
+        "suggested_name": "process_is_available",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'is_available' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/executor/executor.py",
+        "line_number": 111,
+        "current_name": "is_busy",
+        "suggested_name": "process_is_busy",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'is_busy' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/executor/executor.py",
+        "line_number": 120,
+        "current_name": "cancel",
+        "suggested_name": "process_cancel",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'cancel' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/executor/executor.py",
+        "line_number": 183,
+        "current_name": "can_execute",
+        "suggested_name": "process_can_execute",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'can_execute' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/executor/executor.py",
+        "line_number": 253,
+        "current_name": "cancel",
+        "suggested_name": "process_cancel",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'cancel' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/executor/executor.py",
+        "line_number": 280,
+        "current_name": "register_executor",
+        "suggested_name": "process_register_executor",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'register_executor' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/executor/executor.py",
+        "line_number": 288,
+        "current_name": "unregister_executor",
+        "suggested_name": "process_unregister_executor",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'unregister_executor' should follow verb-noun pattern"
+      }
+    ],
+    "src/entities/htn/htn_node.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/htn/htn_node.py",
+        "line_number": 35,
+        "current_name": "is_primitive",
+        "suggested_name": "process_is_primitive",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'is_primitive' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/htn/htn_node.py",
+        "line_number": 43,
+        "current_name": "is_compound",
+        "suggested_name": "process_is_compound",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'is_compound' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/htn/htn_node.py",
+        "line_number": 51,
+        "current_name": "add_subtask",
+        "suggested_name": "process_add_subtask",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'add_subtask' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/htn/htn_node.py",
+        "line_number": 75,
+        "current_name": "apply_effects",
+        "suggested_name": "process_apply_effects",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'apply_effects' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/htn/htn_node.py",
+        "line_number": 91,
+        "current_name": "decompose",
+        "suggested_name": "process_decompose",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'decompose' should follow verb-noun pattern"
+      }
+    ],
+    "src/entities/graph/graph.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 59,
+        "current_name": "add_node",
+        "suggested_name": "process_add_node",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'add_node' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 94,
+        "current_name": "has_node",
+        "suggested_name": "process_has_node",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'has_node' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 105,
+        "current_name": "add_edge",
+        "suggested_name": "process_add_edge",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'add_edge' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 128,
+        "current_name": "has_edge",
+        "suggested_name": "process_has_edge",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'has_edge' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 165,
+        "current_name": "node_count",
+        "suggested_name": "process_node_count",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'node_count' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 169,
+        "current_name": "edge_count",
+        "suggested_name": "process_edge_count",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'edge_count' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 173,
+        "current_name": "dfs",
+        "suggested_name": "process_dfs",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'dfs' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 212,
+        "current_name": "bfs",
+        "suggested_name": "process_bfs",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'bfs' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 254,
+        "current_name": "has_cycle",
+        "suggested_name": "process_has_cycle",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'has_cycle' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 290,
+        "current_name": "topological_sort",
+        "suggested_name": "process_topological_sort",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'topological_sort' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 349,
+        "current_name": "subgraph",
+        "suggested_name": "process_subgraph",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'subgraph' should follow verb-noun pattern"
+      }
+    ],
+    "src/claude_orchestrator/interfaces/pr_integrator.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/interfaces/pr_integrator.py",
+        "line_number": 31,
+        "current_name": "merge_pr",
+        "suggested_name": "process_merge_pr",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'merge_pr' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/interfaces/pr_integrator.py",
+        "line_number": 54,
+        "current_name": "can_merge",
+        "suggested_name": "process_can_merge",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'can_merge' should follow verb-noun pattern"
+      }
+    ],
+    "src/claude_orchestrator/interfaces/context_analyzer.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/interfaces/context_analyzer.py",
+        "line_number": 60,
+        "current_name": "analyze",
+        "suggested_name": "process_analyze",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'analyze' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/interfaces/context_analyzer.py",
+        "line_number": 137,
+        "current_name": "analyze_coverage",
+        "suggested_name": "process_analyze_coverage",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'analyze_coverage' should follow verb-noun pattern"
+      }
+    ],
+    "src/claude_orchestrator/interfaces/worker_pool.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/interfaces/worker_pool.py",
+        "line_number": 98,
+        "current_name": "assign_task",
+        "suggested_name": "process_assign_task",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'assign_task' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/interfaces/worker_pool.py",
+        "line_number": 144,
+        "current_name": "wait_for_completion",
+        "suggested_name": "process_wait_for_completion",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'wait_for_completion' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/interfaces/worker_pool.py",
+        "line_number": 167,
+        "current_name": "cancel_task",
+        "suggested_name": "process_cancel_task",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'cancel_task' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/interfaces/worker_pool.py",
+        "line_number": 186,
+        "current_name": "list_active_tasks",
+        "suggested_name": "process_list_active_tasks",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'list_active_tasks' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/interfaces/worker_pool.py",
+        "line_number": 196,
+        "current_name": "shutdown",
+        "suggested_name": "process_shutdown",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'shutdown' should follow verb-noun pattern"
+      }
+    ],
+    "src/claude_orchestrator/interfaces/pr_reviewer.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/interfaces/pr_reviewer.py",
+        "line_number": 49,
+        "current_name": "review_pr",
+        "suggested_name": "process_review_pr",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'review_pr' should follow verb-noun pattern"
+      }
+    ]
+  },
+  "summary": {
+    "by_type": {
+      "directory_plural": 4,
+      "function_no_verb_noun": 92,
+      "variable_single_letter": 12,
+      "variable_hungarian_notation": 4
+    },
+    "by_severity": {
+      "high": 4,
+      "medium": 96,
+      "low": 12
+    }
+  }
+}
