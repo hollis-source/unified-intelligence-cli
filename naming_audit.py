@@ -52,66 +52,115 @@ class NamingAuditor:
             # CRUD operations
             'get', 'set', 'create', 'delete', 'update', 'fetch', 'save', 'load',
             'insert', 'upsert', 'remove', 'add', 'append', 'push', 'pop', 'put',
+            'read', 'write', 'edit', 'modify', 'change', 'alter',
 
             # Query operations
             'find', 'search', 'filter', 'query', 'select', 'retrieve', 'lookup',
+            'count', 'list', 'enumerate', 'index',
 
             # Transformation operations
             'process', 'transform', 'convert', 'parse', 'format', 'serialize',
             'deserialize', 'encode', 'decode', 'compress', 'decompress',
+            'extract', 'replace', 'substitute', 'swap', 'rename',
 
             # Validation operations
             'validate', 'check', 'verify', 'test', 'assert', 'ensure', 'confirm',
+            'approve', 'reject', 'accept', 'deny',
 
             # Computation operations
             'calculate', 'compute', 'evaluate', 'derive', 'determine',
+            'measure', 'estimate', 'predict', 'forecast',
+
+            # Analysis operations
+            'analyze', 'audit', 'inspect', 'examine', 'review', 'assess',
+            'diagnose', 'profile', 'debug', 'troubleshoot',
+
+            # Comparison operations
+            'compare', 'diff', 'match', 'equal', 'differ',
 
             # Generation operations
             'generate', 'build', 'make', 'construct', 'assemble', 'compose',
+            'synthesize', 'produce', 'yield', 'emit',
 
             # Communication operations
             'send', 'receive', 'emit', 'publish', 'subscribe', 'notify', 'broadcast',
+            'announce', 'signal', 'alert', 'warn',
 
             # Rendering operations
             'render', 'draw', 'display', 'show', 'print', 'output',
+            'visualize', 'plot', 'graph',
 
             # Execution operations
             'execute', 'run', 'invoke', 'call', 'trigger', 'dispatch', 'apply',
+            'launch', 'spawn', 'fork', 'implement', 'perform', 'do',
 
             # Lifecycle operations
             'start', 'stop', 'pause', 'resume', 'restart', 'init', 'initialize',
             'configure', 'setup', 'cleanup', 'teardown', 'shutdown', 'close', 'open',
+            'destroy', 'dispose', 'finalize', 'reset', 'clear', 'flush',
 
             # Management operations
             'handle', 'manage', 'control', 'monitor', 'watch', 'track',
+            'maintain', 'coordinate', 'orchestrate', 'schedule',
+
+            # Resource operations
+            'allocate', 'deallocate', 'acquire', 'release', 'lock', 'unlock',
+            'claim', 'relinquish', 'reserve', 'free',
+
+            # Synchronization operations
+            'sync', 'synchronize', 'wait', 'poll', 'block', 'unblock',
+            'timeout', 'retry', 'cancel', 'abort',
 
             # Aggregation operations
             'collect', 'gather', 'aggregate', 'accumulate', 'merge', 'combine',
-            'join', 'split', 'group', 'partition',
+            'join', 'split', 'group', 'partition', 'chunk', 'batch',
 
             # Traversal operations
             'traverse', 'walk', 'visit', 'iterate', 'scan', 'explore',
+            'navigate', 'browse', 'crawl',
 
             # Sorting operations
             'sort', 'order', 'rank', 'prioritize', 'organize',
+            'arrange', 'reorder', 'shuffle',
 
             # Mapping operations
             'map', 'reduce', 'fold', 'unfold', 'zip', 'flatten',
+            'expand', 'collapse', 'nest', 'unnest',
+
+            # Resolution operations
+            'resolve', 'lookup', 'dereference', 'expand', 'interpolate',
 
             # Modal verbs (can/should/must patterns)
             'can', 'could', 'should', 'would', 'will', 'must', 'may', 'might',
 
             # State verbs (is/has/exists patterns)
             'is', 'are', 'was', 'were', 'has', 'have', 'had', 'exists', 'contains',
+            'includes', 'lacks', 'needs', 'requires',
 
             # Recording operations
             'record', 'log', 'register', 'report', 'capture', 'trace',
+            'snapshot', 'checkpoint', 'backup', 'archive',
+
+            # User interaction operations
+            'prompt', 'ask', 'request', 'respond', 'reply', 'answer',
+            'confirm', 'deny', 'cancel', 'submit',
+
+            # Testing operations
+            'mock', 'stub', 'spy', 'fake', 'simulate',
+
+            # Miscellaneous common verbs
+            'clone', 'copy', 'duplicate', 'mirror', 'reflect',
+            'skip', 'ignore', 'exclude', 'include', 'omit',
+            'enable', 'disable', 'toggle', 'switch', 'activate', 'deactivate',
         }
 
         # Python idioms that are acceptable without explicit verbs
+        # (Entry points, special patterns, dataclass methods)
         self.python_idioms = {
+            'main',  # Standard entry point
             'to_dict', 'from_dict', 'to_json', 'from_json', 'to_string',
-            'to_list', 'from_string', 'as_dict', 'as_json', 'as_list'
+            'to_list', 'from_string', 'as_dict', 'as_json', 'as_list',
+            'asdict', 'astuple',  # dataclasses methods
         }
         
         # Directories that are allowed to be plural
