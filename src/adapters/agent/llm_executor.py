@@ -218,15 +218,17 @@ class LLMAgentExecutor(IAgentExecutor):
         context: Optional[ExecutionContext]
     ) -> list:
         """
-        Build message list for LLM with ultrathink capability.
+        Build message list for LLM with optional ultrathink capability.
 
         SRP: Message construction logic.
         Week 13: Added chain-of-thought prompting for deeper analysis.
+        Phase 4B: Made ULTRATHINK optional (disable for models with language issues).
         """
         messages = []
 
-        # System message with ultrathink instructions
-        system_prompt = f"""You are a {agent.role} agent with capabilities: {', '.join(agent.capabilities)}.
+        if self.enable_ultrathink:
+            # System message with ULTRATHINK instructions
+            system_prompt = f"""You are a {agent.role} agent with capabilities: {', '.join(agent.capabilities)}.
 
 ULTRATHINK MODE: You MUST think step-by-step through problems before answering.
 - Use <think></think> tags to show your reasoning process
@@ -237,14 +239,7 @@ ULTRATHINK MODE: You MUST think step-by-step through problems before answering.
 
 Complete the given task using your expertise and deep analytical thinking."""
 
-        messages.append({"role": "system", "content": system_prompt})
-
-        # Add context history if available
-        if context and context.history:
-            messages.extend(context.history[-5:])  # Last 5 messages for context
-
-        # Add task as user message with ultrathink trigger
-        task_prompt = f"""Task: {task.description}
+            task_prompt = f"""Task: {task.description}
 
 IMPORTANT: Think through this problem step-by-step using <think></think> tags before providing your final answer. Consider:
 1. What is being asked?
@@ -254,7 +249,23 @@ IMPORTANT: Think through this problem step-by-step using <think></think> tags be
 5. What is the optimal solution?
 
 Think deeply, then provide your response."""
+        else:
+            # Simple system message (for models with ULTRATHINK compatibility issues)
+            system_prompt = f"""You are a {agent.role} agent with capabilities: {', '.join(agent.capabilities)}.
 
+Complete the given task using your expertise and professional knowledge."""
+
+            task_prompt = f"""Task: {task.description}
+
+Provide a clear, professional response based on your expertise."""
+
+        messages.append({"role": "system", "content": system_prompt})
+
+        # Add context history if available
+        if context and context.history:
+            messages.extend(context.history[-5:])  # Last 5 messages for context
+
+        # Add task as user message
         messages.append({
             "role": "user",
             "content": task_prompt
