@@ -24,7 +24,7 @@ class LLMAgentExecutor(IAgentExecutor):
 
     def __init__(
         self,
-        llm_provider: ITextGenerator,
+        llm_provider: Union[ITextGenerator, IAsyncTextGenerator],
         default_config: Optional[LLMConfig] = None,
         data_collector: Optional[Any] = None,
         provider_name: str = "unknown",
@@ -37,7 +37,7 @@ class LLMAgentExecutor(IAgentExecutor):
         Initialize with LLM provider.
 
         Args:
-            llm_provider: LLM for agent intelligence
+            llm_provider: LLM for agent intelligence (sync or async)
             default_config: Default LLM configuration
             data_collector: Optional DataCollector for training data (Week 9)
             provider_name: LLM provider name (mock, grok, tongyi) (Week 9)
@@ -47,6 +47,7 @@ class LLMAgentExecutor(IAgentExecutor):
             enable_ultrathink: Enable ULTRATHINK prompts (Phase 4B: disable for Granite)
         """
         self.llm_provider = llm_provider
+        self.is_async_provider = isinstance(llm_provider, IAsyncTextGenerator)
         self.default_config = default_config or LLMConfig(
             temperature=0.7,
             max_tokens=1024  # Qwen3 HF Space limit (was 500, too restrictive)
