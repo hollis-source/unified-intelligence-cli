@@ -704,6 +704,227 @@ priorities:
     created_by: "claude-code"
     notes: "Qwen-Agent integration AND endpoint deployment complete. Thinking mode provides reasoning transparency for agentic debugging. All integration tests passing (4/4). Endpoint running on 2x H200 with autoscaling. Cost: $1,440/month (8h/day). Production-ready."
 
+  - id: "specialist_agents_implementation"
+    title: "Implement 5 Specialist Agents for Domain-Specific Analysis"
+    description: |
+      Create 5 specialist agent definitions for deep codebase analysis:
+
+      SPECIALISTS TO IMPLEMENT:
+      1. **Python Engineer**
+         - Capabilities: python, code-quality, refactoring, patterns, type-hints, pythonic-idioms
+         - Focus: Code quality, design patterns, anti-patterns, technical debt
+         - Tier: 3
+
+      2. **DSL Engineer**
+         - Capabilities: dsl, parsers, grammars, compilers, lark, language-design
+         - Focus: DSL implementation (src/dsl/), grammar optimization, language extensions
+         - Tier: 3
+
+      3. **Category Theory Specialist**
+         - Capabilities: category-theory, morphisms, functors, composition, mathematical-abstractions
+         - Focus: Category-theoretic patterns (src/entity/category_theory/), morphism usage
+         - Tier: 3
+
+      4. **HTN Expert**
+         - Capabilities: htn, hierarchical-planning, graph-theory, dag, topological-sort, planning-algorithms
+         - Focus: HTN planning (src/entity/htn/), graph algorithms, DAG optimization
+         - Tier: 3
+
+      5. **Algorithms Expert**
+         - Capabilities: algorithms, complexity-analysis, optimization, big-o, performance, data-structures
+         - Focus: Performance bottlenecks, Big O analysis, algorithmic optimizations
+         - Tier: 3
+
+      DELIVERABLES:
+      - specialist_agents.py (agent definitions with capabilities)
+      - create_theory_team() function (group 4 specialists into Theory Team)
+      - Integration with existing agent factory
+
+      PURPOSE:
+      Enable deep domain-specific analysis for finding underutilized features and integration opportunities.
+
+      REFERENCE: Phase 4B integration testing with Granite + RAG demonstrated specialist prompts produce higher quality analysis than generalist agents.
+    status: "open"
+    priority: "high"
+    effort_hours: 1
+    complexity: "low"
+
+    workflow: null
+    dependencies: ["qwen_agent_integration"]
+
+    claimed_by: null
+    claimed_at: null
+    started_at: null
+    completed_at: null
+
+    branch: null
+    pr_url: null
+    success: null
+    error: null
+    artifacts: []
+
+    created_at: "2025-10-15T18:00:00Z"
+    created_by: "claude-code"
+    notes: "Foundation for multi-agent codebase analysis. Specialists complement existing generalist agents (architect, integration-architect, etc.)."
+
+  - id: "specialist_agents_validation"
+    title: "Validate Specialist Agents with Granite + RAG"
+    description: |
+      Test that 5 specialist agents work correctly with Granite LLM and RAG system.
+
+      TEST OBJECTIVES:
+      1. Verify each specialist responds to domain-specific prompts
+      2. Validate RAG provides relevant codebase context
+      3. Confirm English-only responses (ULTRATHINK disabled for Granite)
+      4. Test specialist vs generalist output quality
+
+      TEST TASKS (5 quick validation tests):
+      - Python Engineer: "Explain 3 Python design patterns"
+      - DSL Engineer: "What is Lark parser generator?"
+      - Category Theory: "Define morphism with programming example"
+      - HTN Expert: "Explain HTN planning and DAGs"
+      - Algorithms Expert: "Compare O(n²) vs O(n log n)"
+
+      DELIVERABLE:
+      - test_specialist_agents.py (5 validation tests)
+      - All 5 tests passing (✅ status, >100 char outputs, English)
+
+      SUCCESS CRITERIA:
+      - All 5 specialists respond successfully
+      - Outputs are domain-appropriate (not generic)
+      - RAG context injection works
+      - Average latency <30s per agent
+      - Zero Chinese language responses
+
+      REFERENCE: Granite integration (Phase 4B) requires enable_ultrathink=False and works with simple prompts.
+    status: "open"
+    priority: "high"
+    effort_hours: 0.5
+    complexity: "low"
+
+    workflow: null
+    dependencies: ["specialist_agents_implementation"]
+
+    claimed_by: null
+    claimed_at: null
+    started_at: null
+    completed_at: null
+
+    branch: null
+    pr_url: null
+    success: null
+    error: null
+    artifacts: []
+
+    created_at: "2025-10-15T18:00:00Z"
+    created_by: "claude-code"
+    notes: "Pre-flight test before running expensive 7-agent analysis. Fast validation (5 min runtime)."
+
+  - id: "codebase_integration_analysis"
+    title: "Multi-Agent Codebase Analysis: Find Underutilized Features"
+    description: |
+      Run comprehensive 7-agent analysis to find features not integrated into ATADO framework.
+
+      OBJECTIVE:
+      Identify standalone scripts, utilities, and capabilities in unified-intelligence-cli that could be exposed as ATADO agent capabilities or integrated features.
+
+      WORKFLOW (2 phases):
+
+      PHASE 1: Parallel Domain Analysis (7 agents)
+      1. **Python Engineer**: Code quality audit across all .py files
+         - Identify well-architected modules vs technical debt
+         - Find refactoring opportunities
+         - Output: 800 words
+
+      2. **DSL Engineer**: DSL implementation analysis (src/dsl/)
+         - Grammar efficiency, parser performance
+         - Unused DSL features, extension opportunities
+         - Could DSL be exposed to agents?
+         - Output: 800 words
+
+      3. **Category Theory Specialist**: Category-theoretic patterns (src/entity/category_theory/)
+         - Morphism composition quality
+         - Underutilized categorical abstractions
+         - Integration with agent workflows
+         - Output: 800 words
+
+      4. **HTN Expert**: HTN planning analysis (src/entity/htn/)
+         - Planning efficiency, graph optimization
+         - DAG validation, topological sort usage
+         - Could HTN planning be agent capability?
+         - Output: 800 words
+
+      5. **Algorithms Expert**: Performance bottleneck analysis
+         - Time/space complexity of key algorithms
+         - O(n²) → O(n log n) optimization opportunities
+         - Caching, memoization potential
+         - Output: 800 words
+
+      6. **Software Architect**: ATADO core architecture review
+         - Clean Architecture compliance
+         - SOLID principles adherence
+         - Architectural inconsistencies
+         - Output: 600 words
+
+      7. **Integration Architect**: Standalone features discovery
+         - Root-level .py files not integrated
+         - scripts/ utilities not exposed
+         - Features that could be agent capabilities
+         - Output: 600 words
+
+      PHASE 2: Synthesis (1 agent)
+      - Chief Architect synthesizes 7 analyses
+      - Output: Integration roadmap with top 5 priorities
+      - Format: integration_roadmap.md (1500 words)
+
+      TECHNICAL DETAILS:
+      - LLM: IBM Granite 4.0-H (local, $0 cost)
+      - RAG: Enabled (SurrealDB codebase context)
+      - Load balancing: 2x llama.cpp instances (8080, 8081)
+      - Execution: Parallel (Phase 1), Sequential (Phase 2)
+      - Estimated duration: 30-60s (Phase 1) + 30s (Phase 2) = 60-90s total
+
+      DELIVERABLES:
+      - analyze_with_specialists.py (7-agent workflow script)
+      - phase1_specialist_analyses.md (detailed analyses)
+      - integration_roadmap.md (actionable plan with priorities)
+
+      SUCCESS CRITERIA:
+      - All 7 agents complete successfully
+      - Phase 1 completes in <90s (parallel execution)
+      - Integration roadmap identifies 5+ concrete opportunities
+      - Each opportunity has: name, benefit, complexity, effort estimate
+      - Roadmap includes implementation priority order
+
+      USE CASE:
+      This is the user's real task: "Find features in unified-intelligence-cli not yet integrated into ATADO, build integration plan."
+
+      REFERENCE:
+      - Granite Phase 4B integration complete (100% tests passing)
+      - Multi-agent orchestration untested but architecture ready
+    status: "open"
+    priority: "critical"
+    effort_hours: 1.5
+    complexity: "medium"
+
+    workflow: null
+    dependencies: ["specialist_agents_validation"]
+
+    claimed_by: null
+    claimed_at: null
+    started_at: null
+    completed_at: null
+
+    branch: null
+    pr_url: null
+    success: null
+    error: null
+    artifacts: []
+
+    created_at: "2025-10-15T18:00:00Z"
+    created_by: "claude-code"
+    notes: "User's actual task: codebase refactoring work to find integration opportunities. Validates multi-agent orchestration with Granite. Dogfooding our own tools."
+
 # Completed priorities (archive)
 completed_priorities: []
 
