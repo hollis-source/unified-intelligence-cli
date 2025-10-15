@@ -29,7 +29,8 @@ class LLMAgentExecutor(IAgentExecutor):
         provider_name: str = "unknown",
         orchestrator: str = "simple",
         cache_config: Optional[CacheConfig] = None,
-        enable_cache: bool = True
+        enable_cache: bool = True,
+        enable_ultrathink: bool = True
     ):
         """
         Initialize with LLM provider.
