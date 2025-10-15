@@ -43,6 +43,7 @@ class LLMAgentExecutor(IAgentExecutor):
             orchestrator: Orchestrator mode (simple, openai-agents) (Week 9)
             cache_config: Optional cache configuration (SYD2 fix)
             enable_cache: Enable response caching (SYD2 fix)
+            enable_ultrathink: Enable ULTRATHINK prompts (Phase 4B: disable for Granite)
         """
         self.llm_provider = llm_provider
         self.default_config = default_config or LLMConfig(
@@ -52,6 +53,7 @@ class LLMAgentExecutor(IAgentExecutor):
         self.data_collector = data_collector
         self.provider_name = provider_name
         self.orchestrator = orchestrator
+        self.enable_ultrathink = enable_ultrathink
 
         # SYD2 FIX: Initialize response cache for expensive ULTRATHINK tasks
         if enable_cache:
