@@ -106,10 +106,17 @@ class LLMAgentExecutor(IAgentExecutor):
         try:
             if not cache_hit:
                 # Generate response using LLM (cache miss or disabled)
-                response = self.llm_provider.generate(
-                    messages=messages,
-                    config=self.default_config
-                )
+                # Support both sync and async providers
+                if self.is_async_provider:
+                    response = await self.llm_provider.generate(
+                        messages=messages,
+                        config=self.default_config
+                    )
+                else:
+                    response = self.llm_provider.generate(
+                        messages=messages,
+                        config=self.default_config
+                    )
 
                 # Store in cache for future requests
                 if self.cache:
