@@ -452,7 +452,35 @@ File locations:
             "database": """- Include SQL operations (CREATE, SELECT, INSERT, etc.)
 - Consider indexing strategies (INDEX keyword)
 - Add constraints (PRIMARY KEY, FOREIGN KEY, UNIQUE, NOT NULL)
-- Think about transactions and performance (TRANSACTION, EXPLAIN)""",
+- Think about transactions and performance (TRANSACTION, EXPLAIN)
+
+EXAMPLE OUTPUT FORMAT:
+"Database schema design:
+
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_email ON users(email);
+```
+
+**Performance considerations:**
+- Index on email for fast lookups
+- SERIAL for auto-incrementing IDs
+- TIMESTAMP for audit trail
+
+**Constraints:**
+- UNIQUE prevents duplicate emails
+- NOT NULL ensures data integrity
+
+File locations:
+- db/migrations/001_create_users_table.sql:1 - Add users table migration
+- db/schema.sql:45 - Update master schema
+- docs/database/INDEXES.md:22 - Document indexing strategy"
+""",
 
             "devops": """- Always include a CI/CD YAML config example in your response
 - Use these exact keywords: "name:", "run:", "steps:", "jobs:"
