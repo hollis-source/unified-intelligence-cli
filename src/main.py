@@ -189,6 +189,17 @@ def main(
             if logger:
                 logger.info(f"Metrics saved to {metrics_collector.session_file}")
 
+        # Phase 2: Output token usage metadata to stderr for metrics harness
+        if app_config.collect_metrics and results:
+            import json
+            import sys
+            # Extract usage from first result's metadata
+            usage = {}
+            if results[0].metadata and "usage" in results[0].metadata:
+                usage = results[0].metadata["usage"]
+            # Output as JSON to stderr for metrics_harness to parse
+            print(json.dumps(usage), file=sys.stderr)
+
         # Display results (Clean Architecture: Use CLI adapter)
         formatter = ResultFormatter(verbose=app_config.verbose)
         formatter.format_results(results)
