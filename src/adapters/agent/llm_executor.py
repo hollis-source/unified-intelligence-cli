@@ -515,6 +515,85 @@ File locations:
 - docs/DEPLOYMENT.md:55 - Document CI/CD pipeline"
 """,
 
+            "qa": """- Use BDD Gherkin syntax: "Feature:", "Scenario:", "Given", "When", "Then", "And"
+- Include acceptance criteria validation
+- Focus on user perspective and behavior
+- Use keywords: "acceptance", "user journey", "feature validation", "scenario"
+- Structure scenarios with clear Given/When/Then format
+
+EXAMPLE OUTPUT FORMAT:
+"BDD Scenarios for user login feature:
+
+```gherkin
+Feature: User Login
+  As a registered user
+  I want to log in with my credentials
+  So that I can access my personalized dashboard
+
+Scenario: Successful login with valid credentials
+  Given a registered user with email "test@example.com" and password "pass123"
+  And the user is on the login page
+  When the user enters their email and password
+  And clicks the "Login" button
+  Then the user should be redirected to the dashboard
+  And a success message "Welcome back!" should be displayed
+  And the session cookie should be set
+
+Scenario: Failed login with invalid password
+  Given a registered user with email "test@example.com"
+  And the user is on the login page
+  When the user enters their email and incorrect password
+  And clicks the "Login" button
+  Then an error message "Invalid credentials" should be displayed
+  And the user should remain on the login page
+  And no session cookie should be set
+```
+
+**Acceptance Criteria Validation:**
+✓ User can log in with valid credentials
+✓ Failed login shows appropriate error message
+✓ Successful login redirects to dashboard
+✓ Login sets session cookie correctly
+
+File locations:
+- tests/acceptance/features/login.feature:1 - Create Gherkin scenarios
+- src/components/LoginForm.tsx:42 - Reference login UI component
+- src/api/auth.py:18 - Reference authentication API endpoint
+- tests/fixtures/users.py:8 - Add test user data"
+""",
+
+            "qa-lead": """- Use BDD Gherkin syntax: "Feature:", "Scenario:", "Given", "When", "Then", "And"
+- Include acceptance criteria validation
+- Focus on user perspective and behavior
+- Use keywords: "acceptance", "user journey", "feature validation", "scenario"
+- Structure scenarios with clear Given/When/Then format
+
+EXAMPLE OUTPUT FORMAT:
+"BDD Scenarios for user login feature:
+
+```gherkin
+Feature: User Login
+  As a registered user
+  I want to log in with my credentials
+  So that I can access my personalized dashboard
+
+Scenario: Successful login with valid credentials
+  Given a registered user with email "test@example.com" and password "pass123"
+  And the user is on the login page
+  When the user enters their email and password
+  And clicks the "Login" button
+  Then the user should be redirected to the dashboard
+  And a success message "Welcome back!" should be displayed
+  And the session cookie should be set
+```
+
+File locations:
+- tests/acceptance/features/login.feature:1 - Create Gherkin scenarios
+- src/components/LoginForm.tsx:42 - Reference login UI component
+- src/api/auth.py:18 - Reference authentication API endpoint
+- tests/fixtures/users.py:8 - Add test user data"
+""",
+
             "qa-engineer": """- Use BDD Gherkin syntax: "Feature:", "Scenario:", "Given", "When", "Then", "And"
 - Include acceptance criteria validation
 - Focus on user perspective and behavior
