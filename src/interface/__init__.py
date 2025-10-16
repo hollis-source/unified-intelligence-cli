@@ -9,6 +9,7 @@ __all__ = [
     "ITextGenerator",
     "IToolSupportedProvider",
     "LLMConfig",
+    "GenerationResult",
     "IAgentExecutor",
     "IAgentSelector",
     "IAgentCoordinator",
