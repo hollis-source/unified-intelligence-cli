@@ -49,13 +49,38 @@ class DomainClassifier:
         "testing": [
             # HIGH-PRIORITY: Agent task prefix (weight 100)
             r"^\[test agent task\]",
-            # Regular testing keywords
-            r"\btest\b", r"testing", r"tests", r"\bqa\b",
-            r"quality assurance", r"validate", r"verify", r"check",
+            # Regular testing keywords (technical focus)
+            r"\btest\b", r"testing", r"tests",
+            r"validate", r"verify", r"check",
             r"unit test", r"integration test", r"e2e", r"end-to-end",
             r"coverage", r"pytest", r"jest", r"mocha", r"selenium",
-            r"cypress", r"test suite", r"test case", r"assertion",
-            r"mock", r"stub", r"fixture", r"tdd", r"bdd"
+            r"cypress", r"test suite", r"assertion",
+            r"mock", r"stub", r"fixture", r"tdd",
+            r"performance test", r"load test", r"security test"
+        ],
+        "qa": [
+            # HIGH-PRIORITY: Agent task prefix (weight 100)
+            r"^\[qa agent task\]", r"^\[qa engineer task\]",
+            # Acceptance testing (primary QA focus)
+            r"acceptance", r"acceptance test", r"acceptance testing",
+            r"\buat\b", r"user acceptance", r"user acceptance testing",
+            # Feature validation
+            r"feature validation", r"feature testing", r"feature verification",
+            r"requirements validation", r"requirements testing",
+            r"acceptance criteria", r"story validation",
+            # BDD (Behavior-Driven Development)
+            r"\bbdd\b", r"behavior driven", r"gherkin", r"cucumber", r"behave",
+            r"given when then", r"\bscenario\b", r"feature file",
+            # User perspective
+            r"user journey", r"user flow", r"user scenario", r"user story testing",
+            # Exploratory and manual testing
+            r"exploratory testing", r"exploratory test", r"manual testing",
+            r"manual test", r"usability testing", r"usability test",
+            # Test planning (QA-specific)
+            r"test plan", r"test planning", r"test case design",
+            r"test scenarios", r"scenario design",
+            # General QA (lower weight, may conflict)
+            r"\bqa\b", r"quality assurance", r"test case"
         ],
         "research": [
             # HIGH-PRIORITY: Agent task prefixes (weight 100)
