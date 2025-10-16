@@ -356,3 +356,39 @@ Provide a clear, professional response based on your expertise."""
             return f"ultrathink:{category}"
 
         return desc[:100]  # Limit length for cache key
+
+    def _get_agent_specific_hints(self, role: str) -> str:
+        """
+        Get agent-specific hints to guide output format.
+
+        Phase C: Quality improvement - ensure consistent keyword appearance.
+        Helps agents include patterns that AutoChecks looks for.
+        """
+        hints = {
+            "python": """- Include function/class definitions (def, class keywords)
+- Add type hints where applicable (: str, -> int, etc.)
+- Include docstrings (triple quotes)
+- Consider test cases if relevant (test_, assert)""",
+
+            "test": """- Use test function naming (test_* or def test)
+- Include assertions (assert statements)
+- Import test framework (import pytest or import unittest)
+- Use fixtures/mocks where appropriate (@pytest.fixture, Mock)""",
+
+            "architect": """- Reference architectural patterns and diagrams
+- Explain decisions and trade-offs
+- Identify components, layers, or services
+- Mention design principles (SOLID, DRY, patterns)""",
+
+            "database": """- Include SQL operations (CREATE, SELECT, INSERT, etc.)
+- Consider indexing strategies (INDEX keyword)
+- Add constraints (PRIMARY KEY, FOREIGN KEY, UNIQUE, NOT NULL)
+- Think about transactions and performance (TRANSACTION, EXPLAIN)""",
+
+            "devops": """- Provide CI/CD configuration (name:, run: fields)
+- Structure pipelines (steps:, jobs:, stages:)
+- Include containerization (Dockerfile, docker, image:)
+- Consider orchestration if relevant (kubernetes, deployment:, service:)"""
+        }
+
+        return hints.get(role, "- Provide clear, specific technical guidance")
