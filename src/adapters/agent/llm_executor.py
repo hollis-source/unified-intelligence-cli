@@ -279,7 +279,12 @@ IMPORTANT: Think through this problem step-by-step using <think></think> tags be
 4. What are the constraints and requirements?
 5. What is the optimal solution?
 
-Think deeply, then provide your response."""
+REQUIRED FORMAT: Include specific file:line references in your response.
+- Use format: path/to/file.py:line_number
+- Example: "src/main.py:42" or "tests/test_adapter.py:15"
+- Provide at least 2-3 specific file locations relevant to this task
+
+Think deeply, then provide your response with file:line references."""
         else:
             # Simple system message (for models with ULTRATHINK compatibility issues)
             system_prompt = f"""You are a {agent.role} agent with capabilities: {', '.join(agent.capabilities)}.
