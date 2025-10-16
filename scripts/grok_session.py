@@ -536,7 +536,8 @@ class GrokSession:
             "messages": self.messages.copy(),
             "message_count": len(self.messages),
             "success": success,
-            "elapsed_time": elapsed_time
+            "elapsed_time": elapsed_time,
+            "usage": usage  # Token usage from API
         }
 
     def send_message(
