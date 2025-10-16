@@ -30,21 +30,21 @@ class DomainClassifier:
         # Special: Agent task prefixes (from metrics harness)
         # These override domain keywords to ensure correct routing
         "backend": [
-            # HIGH-PRIORITY: Explicit agent task prefixes from metrics harness
-            r"^\[PYTHON AGENT TASK\]", r"^\[DATABASE AGENT TASK\]",
-            r"^\[BACKEND", r"backend.*agent",
+            # HIGH-PRIORITY: Explicit agent task prefixes from metrics harness (lowercase!)
+            r"^\[python agent task\]", r"^\[database agent task\]",
+            r"^\[backend", r"backend.*agent",
         ],
         "testing": [
-            # HIGH-PRIORITY: Explicit agent task prefix
-            r"^\[TEST AGENT TASK\]",
+            # HIGH-PRIORITY: Explicit agent task prefix (lowercase!)
+            r"^\[test agent task\]",
         ],
         "research": [
-            # HIGH-PRIORITY: Explicit agent task prefix
-            r"^\[ARCHITECT AGENT TASK\]", r"^\[RESEARCH AGENT TASK\]",
+            # HIGH-PRIORITY: Explicit agent task prefix (lowercase!)
+            r"^\[architect agent task\]", r"^\[research agent task\]",
         ],
         "devops": [
-            # HIGH-PRIORITY: Explicit agent task prefix
-            r"^\[DEVOPS AGENT TASK\]",
+            # HIGH-PRIORITY: Explicit agent task prefix (lowercase!)
+            r"^\[devops agent task\]",
         ],
         "frontend": [
             r"\bui\b", r"\bux\b", r"user interface", r"user experience",
