@@ -424,7 +424,29 @@ File locations:
 - Explain decisions and trade-offs (use "decision", "trade-off", "ADR")
 - Reference design patterns (e.g., "factory pattern", "adapter", "SOLID principles")
 - Structure your response with sections for: Architecture Overview, Components, Decisions, Trade-offs
-- Example: "The architecture diagram shows three layers: presentation, business logic, and data access..."
+
+EXAMPLE OUTPUT FORMAT:
+"Architecture recommendation:
+
+## Overview
+The system should use a layered architecture with clear separation:
+- Presentation Layer (API/UI)
+- Business Logic Layer (Use Cases)
+- Data Access Layer (Repositories)
+
+## Key Decisions
+1. Use Dependency Injection for loose coupling
+2. Apply Repository pattern for data access
+3. Implement CQRS for read/write separation
+
+## Trade-offs
+- Complexity: More layers = more files (acceptable for maintainability)
+- Performance: Abstraction cost negligible vs flexibility gains
+
+File locations:
+- docs/architecture/SYSTEM_DESIGN.md:45 - Add layered architecture diagram
+- src/use_cases/README.md:12 - Document business logic patterns
+- docs/ADR/001-dependency-injection.md:1 - Create ADR for DI decision"
 """,
 
             "database": """- Include SQL operations (CREATE, SELECT, INSERT, etc.)
