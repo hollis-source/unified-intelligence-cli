@@ -91,39 +91,44 @@ class LLMAgentExecutor(IAgentExecutor):
 
         # SYD2 FIX: Check cache before expensive LLM call
         cache_hit = False
-        response = None
+        response_text = None
+        usage = {}
 
         if self.cache:
             # Extract task description for cache keying
             task_desc = self._extract_task_description(task)
-            response = self.cache.get(
+            response_text = self.cache.get(
                 messages=messages,
                 task_description=task_desc,
                 model_name=self.provider_name
             )
-            cache_hit = response is not None
+            cache_hit = response_text is not None
 
         try:
             if not cache_hit:
                 # Generate response using LLM (cache miss or disabled)
                 # Support both sync and async providers
                 if self.is_async_provider:
-                    response = await self.llm_provider.generate(
+                    result = await self.llm_provider.generate(
                         messages=messages,
                         config=self.default_config
                     )
                 else:
-                    response = self.llm_provider.generate(
+                    result = self.llm_provider.generate(
                         messages=messages,
                         config=self.default_config
                     )
+
+                # Extract content and usage from GenerationResult
+                response_text = result.content
+                usage = result.usage
 
                 # Store in cache for future requests
                 if self.cache:
                     task_desc = self._extract_task_description(task)
                     self.cache.set(
                         messages=messages,
-                        response=response,
+                        response=response_text,
                         task_description=task_desc,
                         model_name=self.provider_name
                     )
@@ -135,7 +140,7 @@ class LLMAgentExecutor(IAgentExecutor):
             if context:
                 context.history.append({
                     "role": "assistant",
-                    "content": response,
+                    "content": response_text,
                     "agent": agent.role
                 })
 
@@ -145,7 +150,7 @@ class LLMAgentExecutor(IAgentExecutor):
                     task=task,
                     agent=agent,
                     messages=messages,
-                    output=response,
+                    output=response_text,
                     status="success",
                     duration_ms=duration_ms,
                     llm_config=self.default_config,
@@ -156,13 +161,14 @@ class LLMAgentExecutor(IAgentExecutor):
 
             return ExecutionResult(
                 status=ExecutionStatus.SUCCESS,
-                output=response,
+                output=response_text,
                 errors=[],
                 metadata={
                     "agent_role": agent.role,
                     "task_id": task.task_id,
                     "cache_hit": cache_hit,  # SYD2 FIX: Track cache performance
-                    "duration_ms": duration_ms
+                    "duration_ms": duration_ms,
+                    "usage": usage  # Phase 2: Actual token usage from LLM
                 }
             )
 
