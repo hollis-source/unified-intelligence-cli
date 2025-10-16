@@ -29,8 +29,8 @@ if env_file.exists():
               help="Execute .ct workflow file (DSL mode)")
 @click.option("--task", "-t", "task_descriptions", multiple=True,
               help="Task description (can be specified multiple times, direct mode)")
-@click.option("--provider", type=click.Choice(["mock", "grok", "tongyi", "tongyi-local", "replicate", "qwen3_zerogpu", "auto"]), default="mock",
-              help="LLM provider to use (auto: Week 13 intelligent selection, qwen3_zerogpu: ZeroGPU inference, tongyi-local: async local model)")
+@click.option("--provider", type=click.Choice(["mock", "grok", "granite", "tongyi", "tongyi-local", "replicate", "qwen3_zerogpu", "auto"]), default="mock",
+              help="LLM provider to use (granite: local IBM Granite 4.0, auto: intelligent selection, qwen3_zerogpu: ZeroGPU inference)")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.option("--debug", is_flag=True, help="Enable debug output (LLM calls, tool details)")
 @click.option("--parallel/--sequential", default=True,
