@@ -27,6 +27,25 @@ class DomainClassifier:
 
     # Domain patterns: Map domain to keyword patterns
     DOMAIN_PATTERNS: Dict[str, List[str]] = {
+        # Special: Agent task prefixes (from metrics harness)
+        # These override domain keywords to ensure correct routing
+        "backend": [
+            # HIGH-PRIORITY: Explicit agent task prefixes from metrics harness
+            r"^\[PYTHON AGENT TASK\]", r"^\[DATABASE AGENT TASK\]",
+            r"^\[BACKEND", r"backend.*agent",
+        ],
+        "testing": [
+            # HIGH-PRIORITY: Explicit agent task prefix
+            r"^\[TEST AGENT TASK\]",
+        ],
+        "research": [
+            # HIGH-PRIORITY: Explicit agent task prefix
+            r"^\[ARCHITECT AGENT TASK\]", r"^\[RESEARCH AGENT TASK\]",
+        ],
+        "devops": [
+            # HIGH-PRIORITY: Explicit agent task prefix
+            r"^\[DEVOPS AGENT TASK\]",
+        ],
         "frontend": [
             r"\bui\b", r"\bux\b", r"user interface", r"user experience",
             r"\breact\b", r"\bvue\b", r"\bangular\b", r"svelte",
