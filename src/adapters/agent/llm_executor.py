@@ -279,15 +279,24 @@ IMPORTANT: Think through this problem step-by-step using <think></think> tags be
 4. What are the constraints and requirements?
 5. What is the optimal solution?
 
-REQUIRED FORMAT: Include specific file:line references in your response.
-- Use format: path/to/file.py:line_number
-- Example: "src/main.py:42" or "tests/test_adapter.py:15"
-- Provide at least 2-3 specific file locations relevant to this task
+MANDATORY: Your response MUST include at least 3 file:line references.
+FORMAT: path/to/file.py:line_number - description
+
+EXAMPLE OUTPUT:
+"To implement this feature:
+
+1. Update src/adapters/llm/grok_adapter.py:42 - Change return type to GenerationResult
+2. Modify src/use_cases/task_planner.py:75 - Extract .content from result
+3. Add tests/unit/test_adapter.py:18 - Verify usage extraction works
+
+[Your detailed explanation here...]"
+
+VALIDATION: Responses without 3+ file:line references will be marked incomplete.
 
 AGENT-SPECIFIC GUIDANCE for {agent.role}:
 {self._get_agent_specific_hints(agent.role)}
 
-Think deeply, then provide your response with file:line references."""
+Think deeply, then provide your response. REMEMBER: Include 3+ file:line references."""
         else:
             # Simple system message (for models with ULTRATHINK compatibility issues)
             system_prompt = f"""You are a {agent.role} agent with capabilities: {', '.join(agent.capabilities)}.
