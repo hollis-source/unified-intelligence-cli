@@ -424,6 +424,7 @@ class GrokSession:
 
         tool_results = []
         success = True
+        usage = {}  # Track token usage
 
         try:
             # Make API call with retries
