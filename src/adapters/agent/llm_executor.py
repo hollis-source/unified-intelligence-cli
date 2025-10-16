@@ -300,6 +300,9 @@ Complete the given task using your expertise and professional knowledge."""
 
             task_prompt = f"""Task: {task.description}
 
+AGENT-SPECIFIC GUIDANCE for {agent.role}:
+{self._get_agent_specific_hints(agent.role)}
+
 Provide a clear, professional response based on your expertise."""
 
         messages.append({"role": "system", "content": system_prompt})
