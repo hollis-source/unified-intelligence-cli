@@ -301,9 +301,13 @@ Think deeply, then provide your response. REMEMBER: Include 3+ file:line referen
             # Simple system message (for models with ULTRATHINK compatibility issues)
             system_prompt = f"""You are a {agent.role} agent with capabilities: {', '.join(agent.capabilities)}.
 
-IMPORTANT: When providing responses, include specific file:line references.
+MANDATORY: Include at least 3 file:line references in your response.
 - Format: path/to/file.py:line_number - description
 - Example: "src/main.py:85 - Add error handling"
+- Example: "tests/test_main.py:42 - Verify error is raised"
+- Example: "docs/API.md:120 - Document new error codes"
+
+Your response will be validated for file:line references.
 
 Complete the given task using your expertise and professional knowledge."""
 
