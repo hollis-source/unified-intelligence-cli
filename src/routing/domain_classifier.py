@@ -201,21 +201,22 @@ class DomainClassifier:
     DOMAIN_KEYWORD_WEIGHTS: Dict[str, Dict[str, int]] = {
         # AGENT TASK PREFIXES - HIGHEST PRIORITY (100x weight)
         # These come from metrics_harness.py line 83: f"[{agent.upper()} AGENT TASK] {prompt}"
+        # NOTE: Patterns must be lowercase because description is lowercased before matching
         # Must override all other patterns to ensure correct routing
         "backend": {
-            r"^\[PYTHON AGENT TASK\]": 100,
-            r"^\[DATABASE AGENT TASK\]": 100,
-            r"^\[BACKEND": 50,
+            r"^\[python agent task\]": 100,
+            r"^\[database agent task\]": 100,
+            r"^\[backend": 50,
         },
         "testing": {
-            r"^\[TEST AGENT TASK\]": 100,
+            r"^\[test agent task\]": 100,
         },
         "research": {
-            r"^\[ARCHITECT AGENT TASK\]": 100,
-            r"^\[RESEARCH AGENT TASK\]": 100,
+            r"^\[architect agent task\]": 100,
+            r"^\[research agent task\]": 100,
         },
         "devops": {
-            r"^\[DEVOPS AGENT TASK\]": 100,
+            r"^\[devops agent task\]": 100,
         },
         "dsl": {
             # EXPLICIT TEAM IDENTIFIERS - CRITICAL for collaborative tasks (25x weight)
