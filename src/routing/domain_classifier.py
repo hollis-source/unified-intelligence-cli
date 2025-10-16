@@ -47,6 +47,9 @@ class DomainClassifier:
             r"scalability", r"distributed", r"cache", r"redis"
         ],
         "testing": [
+            # HIGH-PRIORITY: Agent task prefix (weight 100)
+            r"^\[test agent task\]",
+            # Regular testing keywords
             r"\btest\b", r"testing", r"tests", r"\bqa\b",
             r"quality assurance", r"validate", r"verify", r"check",
             r"unit test", r"integration test", r"e2e", r"end-to-end",
