@@ -421,7 +421,7 @@ def execute_task(task_path: Path, verbose: bool = False) -> Dict[str, Any]:
 
     # Create record
     record = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(datetime.UTC).isoformat() if hasattr(datetime, 'UTC') else datetime.utcnow().isoformat(),
         "task_id": task_id,
         "agent": agent,
         "ok": result["ok"],
