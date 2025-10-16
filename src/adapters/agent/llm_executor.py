@@ -284,6 +284,10 @@ Think deeply, then provide your response."""
             # Simple system message (for models with ULTRATHINK compatibility issues)
             system_prompt = f"""You are a {agent.role} agent with capabilities: {', '.join(agent.capabilities)}.
 
+IMPORTANT: When providing responses, include specific file:line references.
+- Format: path/to/file.py:line_number - description
+- Example: "src/main.py:85 - Add error handling"
+
 Complete the given task using your expertise and professional knowledge."""
 
             task_prompt = f"""Task: {task.description}
