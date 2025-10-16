@@ -236,6 +236,44 @@ class DomainClassifier:
         "devops": {
             r"^\[devops agent task\]": 100,
         },
+        "qa": {
+            # Agent task prefixes (100x weight - highest priority)
+            r"^\[qa agent task\]": 100,
+            r"^\[qa engineer task\]": 100,
+            # Acceptance testing core (15x weight - primary QA focus)
+            "acceptance": 15,
+            "acceptance test": 15,
+            "acceptance testing": 15,
+            r"\buat\b": 15,
+            "user acceptance": 15,
+            # BDD (12x weight - QA specialty)
+            r"\bbdd\b": 12,
+            "behavior driven": 12,
+            "gherkin": 12,
+            "cucumber": 12,
+            "behave": 12,
+            "given when then": 12,
+            "feature file": 12,
+            # Feature validation (10x weight)
+            "feature validation": 10,
+            "feature testing": 10,
+            "requirements validation": 10,
+            "acceptance criteria": 10,
+            # User perspective (8x weight)
+            "user journey": 8,
+            "user flow": 8,
+            "user scenario": 8,
+            # Exploratory/manual (6x weight)
+            "exploratory testing": 6,
+            "manual testing": 6,
+            "usability testing": 6,
+            # Test planning (5x weight - shared with testing team)
+            "test plan": 5,
+            "test case design": 5,
+            # General QA (3x weight - potential conflicts)
+            r"\bqa\b": 3,
+            "quality assurance": 3,
+        },
         "dsl": {
             # EXPLICIT TEAM IDENTIFIERS - CRITICAL for collaborative tasks (25x weight)
             r"^DSL Team": 25,
