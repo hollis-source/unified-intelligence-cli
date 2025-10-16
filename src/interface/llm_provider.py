@@ -14,6 +14,32 @@ class LLMConfig:
     # Provider-specific options can be added here
 
 
+@dataclass
+class GenerationResult:
+    """
+    Structured result from text generation.
+    Provides content plus metadata (usage, tool calls, etc.)
+    """
+    content: str
+    usage: Dict[str, Any]
+    metadata: Optional[Dict[str, Any]] = None
+
+    @property
+    def prompt_tokens(self) -> int:
+        """Get prompt tokens from usage."""
+        return self.usage.get("prompt_tokens", 0)
+
+    @property
+    def completion_tokens(self) -> int:
+        """Get completion tokens from usage."""
+        return self.usage.get("completion_tokens", 0)
+
+    @property
+    def total_tokens(self) -> int:
+        """Get total tokens from usage."""
+        return self.usage.get("total_tokens", 0)
+
+
 class ITextGenerator(ABC):
     """
     Core abstraction for text generation.
