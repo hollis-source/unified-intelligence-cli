@@ -284,6 +284,9 @@ REQUIRED FORMAT: Include specific file:line references in your response.
 - Example: "src/main.py:42" or "tests/test_adapter.py:15"
 - Provide at least 2-3 specific file locations relevant to this task
 
+AGENT-SPECIFIC GUIDANCE for {agent.role}:
+{self._get_agent_specific_hints(agent.role)}
+
 Think deeply, then provide your response with file:line references."""
         else:
             # Simple system message (for models with ULTRATHINK compatibility issues)
