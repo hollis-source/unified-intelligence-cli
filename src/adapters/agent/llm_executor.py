@@ -387,10 +387,21 @@ Provide a clear, professional response based on your expertise."""
 - Add constraints (PRIMARY KEY, FOREIGN KEY, UNIQUE, NOT NULL)
 - Think about transactions and performance (TRANSACTION, EXPLAIN)""",
 
-            "devops": """- Provide CI/CD configuration (name:, run: fields)
-- Structure pipelines (steps:, jobs:, stages:)
-- Include containerization (Dockerfile, docker, image:)
-- Consider orchestration if relevant (kubernetes, deployment:, service:)"""
+            "devops": """- REQUIRED: Include YAML/config blocks with "name:" and "run:" fields
+- Structure pipelines using "steps:", "jobs:", or "stages:" keywords
+- Reference containerization explicitly: "Dockerfile", "docker build", "container", "image:"
+- For orchestration: mention "kubernetes", "k8s", "deployment:", "service:", "helm"
+- Example format:
+  ```yaml
+  name: Deploy Pipeline
+  on: [push]
+  jobs:
+    deploy:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Build
+          run: docker build -t myapp .
+  ```"""
         }
 
         return hints.get(role, "- Provide clear, specific technical guidance")
