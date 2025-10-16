@@ -60,7 +60,11 @@ class GrokAdapter(IToolSupportedProvider):
         # Get last user message
         user_messages = [m for m in messages if m["role"] == "user"]
         if not user_messages:
-            return "No user message provided"
+            return GenerationResult(
+                content="No user message provided",
+                usage={},
+                metadata={}
+            )
 
         last_user_msg = user_messages[-1]["content"]
 
@@ -74,7 +78,15 @@ class GrokAdapter(IToolSupportedProvider):
             use_tools=False
         )
 
-        return result["response"]
+        # Return structured result with token usage
+        return GenerationResult(
+            content=result["response"],
+            usage=result.get("usage", {}),
+            metadata={
+                "tool_calls": result.get("tool_calls", []),
+                "elapsed_time": result.get("elapsed_time", 0)
+            }
+        )
 
     def generate_with_tools(
         self,
