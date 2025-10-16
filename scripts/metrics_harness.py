@@ -43,6 +43,7 @@ ACCEPTANCE_THRESHOLDS = {
     "test": (6, 6),
     "database": (6, 6),
     "devops": (6, 6),
+    "qa": (6, 6),  # QA agent (BDD, exploratory, test planning, UAT, etc.)
 }
 
 
