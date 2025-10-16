@@ -513,6 +513,179 @@ File locations:
 - .github/workflows/ci.yml:1 - Create GitHub Actions workflow
 - Dockerfile:1 - Add container build instructions
 - docs/DEPLOYMENT.md:55 - Document CI/CD pipeline"
+""",
+
+            "qa-engineer": """- Use BDD Gherkin syntax: "Feature:", "Scenario:", "Given", "When", "Then", "And"
+- Include acceptance criteria validation
+- Focus on user perspective and behavior
+- Use keywords: "acceptance", "user journey", "feature validation", "scenario"
+- Structure scenarios with clear Given/When/Then format
+
+EXAMPLE OUTPUT FORMAT:
+"BDD Scenarios for user login feature:
+
+```gherkin
+Feature: User Login
+  As a registered user
+  I want to log in with my credentials
+  So that I can access my personalized dashboard
+
+Scenario: Successful login with valid credentials
+  Given a registered user with email "test@example.com" and password "pass123"
+  And the user is on the login page
+  When the user enters their email and password
+  And clicks the "Login" button
+  Then the user should be redirected to the dashboard
+  And a success message "Welcome back!" should be displayed
+  And the session cookie should be set
+
+Scenario: Failed login with invalid password
+  Given a registered user with email "test@example.com"
+  And the user is on the login page
+  When the user enters their email and incorrect password
+  And clicks the "Login" button
+  Then an error message "Invalid credentials" should be displayed
+  And the user should remain on the login page
+  And no session cookie should be set
+```
+
+**Acceptance Criteria Validation:**
+✓ User can log in with valid credentials
+✓ Failed login shows appropriate error message
+✓ Successful login redirects to dashboard
+✓ Login sets session cookie correctly
+
+File locations:
+- tests/acceptance/features/login.feature:1 - Create Gherkin scenarios
+- src/components/LoginForm.tsx:42 - Reference login UI component
+- src/api/auth.py:18 - Reference authentication API endpoint
+- tests/fixtures/users.py:8 - Add test user data"
+""",
+
+            "exploratory-test-engineer": """- Design exploratory test charters with clear objectives
+- Identify risk areas and edge cases
+- Use keywords: "exploratory", "test charter", "risk area", "edge case", "usability"
+- Focus on discovering unexpected behaviors
+- Include bug reporting template
+
+EXAMPLE OUTPUT FORMAT:
+"Exploratory Testing Charter for Checkout Flow:
+
+## Test Charter #1: Payment Method Validation (45 min)
+**Objective:** Explore payment method selection and validation behavior
+
+**Areas to Explore:**
+1. Credit card input validation (format, expiry, CVV)
+2. PayPal integration flow and error handling
+3. Cryptocurrency payment gateway behavior
+4. Payment method switching mid-checkout
+
+**Risk Areas:**
+- Payment processing failures without user feedback
+- Race conditions when switching payment methods
+- Timeout handling during payment gateway calls
+- Edge cases: expired cards, insufficient funds, invalid CVV
+
+**Expected Behaviors:**
+- Invalid card shows inline error immediately
+- Gateway timeouts show user-friendly message
+- Payment switching preserves other checkout data
+- All payment errors are logged for debugging
+
+**Bug Report Template:**
+If found: Document steps, expected vs actual behavior, severity, screenshots
+
+## Test Charter #2: Shipping Address Edge Cases (30 min)
+**Objective:** Test address validation with unusual inputs
+
+**Areas to Explore:**
+1. PO Box addresses
+2. International addresses (non-US)
+3. Special characters in address fields
+4. Very long address strings
+5. Copy-paste behavior
+
+File locations:
+- tests/qa/exploratory/checkout_charters.md:1 - Document test charters
+- src/pages/CheckoutPage.tsx:95 - Reference checkout UI
+- src/components/PaymentForm.tsx:42 - Reference payment component
+- tests/qa/bugs/checkout_bugs.md:1 - Track discovered issues"
+""",
+
+            "test-case-designer": """- Design comprehensive test plans with clear structure
+- Map test scenarios to requirements
+- Use keywords: "test plan", "test scenario", "test case", "coverage", "pass/fail criteria"
+- Include test data requirements and execution estimates
+- Create traceability matrix linking tests to requirements
+
+EXAMPLE OUTPUT FORMAT:
+"Test Plan for User Profile Feature:
+
+## 1. Test Objectives
+Validate user profile management meets all acceptance criteria including data persistence, validation, email verification, and audit logging.
+
+## 2. Scope
+**In Scope:**
+- Profile data viewing and editing
+- Email change with verification flow
+- Password change with current password validation
+- Avatar upload with format/size validation
+- Audit log for profile changes
+
+**Out of Scope:**
+- Account deletion
+- Two-factor authentication
+
+## 3. Test Scenarios
+
+### Scenario 1: Profile Data Update
+**Requirement:** AC-1 - Profile data persists correctly to database
+**Prerequisites:** User logged in with existing profile
+**Test Data:** User ID: 12345, Name: "John Doe", Bio: "Software Engineer"
+**Steps:**
+1. Navigate to profile page
+2. Update name to "Jane Smith"
+3. Update bio to "Senior Engineer"
+4. Click "Save Changes"
+**Expected Result:** Changes saved, success message shown, data persists after refresh
+**Pass Criteria:** Profile shows updated name and bio immediately and after page reload
+**Fail Criteria:** Any field doesn't persist or shows old data after refresh
+**Estimated Time:** 3 min
+
+### Scenario 2: Email Change Verification Flow
+**Requirement:** AC-2 - Email change requires verification
+**Prerequisites:** User logged in, access to test email account
+**Test Data:** Current email: old@example.com, New email: new@example.com
+**Steps:**
+1. Change email in profile settings
+2. Check for verification email at new address
+3. Click verification link in email
+4. Confirm email change in app
+**Expected Result:** Verification email sent, link works, email updated after verification
+**Pass Criteria:** Email changes only after verification link clicked
+**Fail Criteria:** Email changes without verification OR verification link doesn't work
+**Estimated Time:** 5 min
+
+## 4. Requirements Traceability Matrix
+
+| Requirement | Test Scenario | Priority | Status |
+|-------------|---------------|----------|--------|
+| AC-1: Data persistence | Scenario 1 | High | Pending |
+| AC-2: Email verification | Scenario 2 | High | Pending |
+| AC-3: Password validation | Scenario 3 | High | Pending |
+| AC-4: Audit logging | Scenario 4 | Medium | Pending |
+| AC-5: Avatar validation | Scenario 5 | Medium | Pending |
+
+## 5. Test Execution Summary
+**Total Scenarios:** 5
+**Estimated Time:** 22 minutes
+**Required Test Data:** 3 user accounts, 5 test images (various formats/sizes)
+
+File locations:
+- tests/qa/test_plans/user_profile_test_plan.md:1 - Complete test plan document
+- src/models/user_profile.py:15 - Reference profile data model
+- src/components/ProfileForm.tsx:68 - Reference profile UI
+- tests/fixtures/profile_data.py:1 - Define test data fixtures"
 """
         }
 
