@@ -8,6 +8,7 @@ Clean Architecture: Strategy pattern for team-based routing.
 """
 
 import logging
+import json
 from typing import List, Optional
 from src.entity import Task, Agent, AgentTeam
 from src.routing.domain_classifier import DomainClassifier
@@ -85,9 +86,27 @@ class TeamRouter:
                 f"This is likely a bug in team's internal routing logic."
             )
 
+        # Human-readable path
         logger.info(
             f"Task '{task.description[:50]}...' → {team.name} → {agent.role}"
         )
+
+        # Structured routing event for observability
+        try:
+            top3 = getattr(self.domain_classifier, "last_top3_scores", [])
+            structured_event = {
+                "event": "routing_path",
+                "routing_path": {
+                    "domain": self._last_classified_domain,
+                    "team": team.name,
+                    "agent": agent.role,
+                    "scores": [(d, float(s)) for d, s in top3]
+                }
+            }
+            logger.info(json.dumps(structured_event))
+        except Exception:
+            # Do not fail routing due to logging issues
+            pass
 
         # Phase 3: Record metrics (Week 13)
         if self.domain_classifier.metrics_collector:
@@ -140,7 +159,9 @@ class TeamRouter:
             "general": "Orchestration",  # General → Orchestration team
             # Week 13: Specialized teams
             "category-theory": "Category Theory",  # Category Theory → CT team
-            "dsl": "DSL"  # DSL → DSL team
+            "dsl": "DSL",  # DSL → DSL team
+            # QA team (user/product quality)
+            "qa": "Quality Assurance"  # QA → Quality Assurance team
         }
 
         target_team_name = domain_to_team.get(domain, "Orchestration")
