@@ -1,0 +1,43 @@
+id: qa-08
+agent: qa
+prompt: |
+  Create a cross-browser compatibility testing plan for a video conferencing web application.
+
+  Application: Browser-Based Video Conferencing (WebRTC)
+
+  Core Features:
+  - 1-on-1 and group video calls (up to 10 participants)
+  - Screen sharing
+  - Chat during calls
+  - Virtual backgrounds
+  - Recording functionality
+  - Breakout rooms
+
+  Browser Matrix:
+  - Chrome 120+ (Windows, macOS, Linux)
+  - Firefox 121+ (Windows, macOS, Linux)
+  - Safari 17+ (macOS, iOS)
+  - Edge 120+ (Windows)
+  - Mobile browsers: Chrome Mobile, Safari Mobile
+
+  Requirements:
+  1. Identify browser-specific risks (WebRTC support variations, codec differences)
+  2. Design test matrix: Features × Browsers × OS combinations
+  3. Prioritize critical vs. nice-to-have browser/feature combinations
+  4. Specify test scenarios for each browser (functionality, performance, UI consistency)
+  5. Include fallback behavior tests (unsupported features)
+  6. Define browser version deprecation strategy
+  7. Estimate testing effort per browser/OS combination
+  8. MANDATORY: Your response MUST include at least 3 file:line references to existing code
+
+  Expected files to reference:
+  - tests/cross_browser/compatibility_matrix.md (test matrix document)
+  - src/webrtc/BrowserCapabilities.ts (browser detection and feature checks)
+  - src/webrtc/VideoConference.ts (video conference logic)
+  - docs/browser_support.md (official browser support policy)
+
+checks:
+  - "cross-browser"
+  - "compatibility"
+  - "webrtc"
+  - "test matrix"

@@ -1,0 +1,42 @@
+id: qa-07
+agent: qa
+prompt: |
+  Design accessibility testing scenarios for a web-based document editor.
+
+  Application: Collaborative Document Editor (similar to Google Docs)
+
+  Features to Test:
+  - Document creation, editing, formatting
+  - Real-time collaboration (multiple users editing)
+  - Toolbar with formatting options (bold, italic, lists, headings)
+  - Keyboard shortcuts for all actions
+  - Screen reader support
+  - High contrast mode
+  - Font size adjustment (up to 200%)
+
+  Accessibility Standards:
+  - WCAG 2.1 Level AA compliance required
+  - Section 508 compliance
+  - Support for screen readers: NVDA, JAWS, VoiceOver
+
+  Requirements:
+  1. Design test scenarios for each WCAG 2.1 principle (Perceivable, Operable, Understandable, Robust)
+  2. Include keyboard navigation tests (no mouse required)
+  3. Screen reader compatibility tests
+  4. Color contrast validation tests
+  5. Focus management and tab order tests
+  6. Define assistive technologies to test with (specific screen readers, browsers)
+  7. Specify expected behavior for each scenario
+  8. MANDATORY: Your response MUST include at least 3 file:line references to existing code
+
+  Expected files to reference:
+  - tests/accessibility/wcag_compliance_tests.md (accessibility test plan)
+  - src/components/Editor/Editor.tsx (main editor component)
+  - src/components/Toolbar/Toolbar.tsx (formatting toolbar)
+  - docs/accessibility/aria_implementation.md (ARIA attribute documentation)
+
+checks:
+  - "accessibility"
+  - "wcag"
+  - "screen reader"
+  - "keyboard navigation"

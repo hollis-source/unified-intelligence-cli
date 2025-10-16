@@ -1,0 +1,32 @@
+id: qa-05
+agent: qa
+prompt: |
+  Create a regression test plan for a database migration that adds user role-based permissions.
+
+  Migration Context:
+  - Current: Single 'admin' boolean flag on User table
+  - New: roles table (id, name, permissions), user_roles join table
+  - Migration: Migrate existing admins to 'admin' role, regular users to 'user' role
+  - New features: Fine-grained permissions (read_posts, write_posts, delete_posts, manage_users)
+  - Backwards compatibility: Old admin checks must still work
+
+  Requirements:
+  1. Identify all areas potentially affected by the migration
+  2. Design regression tests for existing functionality (ensure nothing breaks)
+  3. Design tests for new permission-based functionality
+  4. Include data migration validation tests
+  5. Specify rollback scenarios and tests
+  6. Create test data requirements (before/after migration states)
+  7. MANDATORY: Your response MUST include at least 3 file:line references to existing code
+
+  Expected files to reference:
+  - tests/regression/user_roles_migration_test.py (regression test suite)
+  - migrations/0042_add_user_roles.sql (migration script)
+  - src/models/user.py (user model with new roles)
+  - src/middleware/permissions.py (permission checking logic)
+
+checks:
+  - "regression"
+  - "migration"
+  - "backwards compatibility"
+  - "rollback"
