@@ -437,6 +437,29 @@ class AgentFactory(IAgentFactory):
                 specialization="devops"
             ),
 
+            Agent(
+                role="qa-lead",
+                capabilities=[
+                    # Product quality (not code quality - that's architecture-lead)
+                    "quality assurance", "qa", "product quality",
+                    # Acceptance testing strategy
+                    "acceptance", "acceptance testing", "uat", "user acceptance",
+                    # Requirements & validation
+                    "requirements validation", "feature validation",
+                    "acceptance criteria", "story validation",
+                    # Test planning
+                    "test strategy", "test planning", "test case design",
+                    "test scenarios", "test plan",
+                    # User perspective
+                    "user journey", "user flow", "user testing",
+                    # Exploratory & manual testing
+                    "exploratory testing", "manual testing"
+                ],
+                tier=2,
+                parent_agent="master-orchestrator",
+                specialization="qa"
+            ),
+
             # ===== TIER 3: Specialized Executors (5 agents) =====
 
             Agent(
