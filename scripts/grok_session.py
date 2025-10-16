@@ -243,6 +243,7 @@ class GrokSession:
         tool_calls_accumulator = {}  # Fix for streaming tool calls
         tool_results = []
         success = True
+        usage = {}  # Track token usage
 
         try:
             if stream:
