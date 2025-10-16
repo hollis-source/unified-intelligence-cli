@@ -51,7 +51,7 @@ class ITextGenerator(ABC):
         self,
         messages: List[Dict[str, Any]],
         config: Optional[LLMConfig] = None
-    ) -> str:
+    ) -> GenerationResult:
         """
         Generate text response from messages.
 
@@ -61,7 +61,15 @@ class ITextGenerator(ABC):
             config: Optional configuration object
 
         Returns:
-            Generated text response
+            GenerationResult containing:
+                - content: Generated text response
+                - usage: Token usage (prompt_tokens, completion_tokens, total_tokens)
+                - metadata: Optional additional metadata (tool_calls, etc.)
+
+        Example:
+            result = provider.generate([{"role": "user", "content": "Hello"}])
+            print(result.content)  # "Hello! How can I help?"
+            print(result.total_tokens)  # 42
         """
         pass
 
