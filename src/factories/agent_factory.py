@@ -562,14 +562,47 @@ class AgentFactory(IAgentFactory):
                     "given when then", "scenario", "feature file",
                     # User perspective testing
                     "user journey", "user flow", "user scenario", "user story testing",
-                    "acceptance criteria", "story validation",
-                    # QA activities
-                    "qa", "quality assurance", "exploratory testing",
-                    "manual testing", "test case", "test plan"
+                    "acceptance criteria", "story validation"
                 ],
                 tier=3,
-                parent_agent="testing-lead",
-                specialization="testing"
+                parent_agent="qa-lead",
+                specialization="qa"
+            ),
+
+            Agent(
+                role="exploratory-test-engineer",
+                capabilities=[
+                    # Exploratory testing
+                    "exploratory", "exploratory testing", "exploratory test",
+                    "ad hoc testing", "informal testing",
+                    # Manual testing
+                    "manual testing", "manual test", "manual verification",
+                    # Bug hunting
+                    "bug hunting", "edge cases", "corner cases",
+                    # Usability testing
+                    "usability", "usability testing", "user experience testing"
+                ],
+                tier=3,
+                parent_agent="qa-lead",
+                specialization="qa"
+            ),
+
+            Agent(
+                role="test-case-designer",
+                capabilities=[
+                    # Test case design
+                    "test case", "test cases", "test case design",
+                    "test scenarios", "scenario design",
+                    # Test planning
+                    "test plan", "test planning", "test strategy",
+                    # Coverage analysis
+                    "test coverage", "requirement coverage", "scenario coverage",
+                    # Test data
+                    "test data", "test data design"
+                ],
+                tier=3,
+                parent_agent="qa-lead",
+                specialization="qa"
             ),
 
             Agent(
