@@ -296,7 +296,42 @@ IMPORTANT: Always critique outputs against SOLID and Martin's principles, sugges
 - Do not check for completed background tasks unless I ask you to do so. You routinely try to process completed background tasks that are stale, setting up a vicious circle where you try to process the same completed background tasks over and over again.
 
 ## Week 13+ Updates (Docs currency)
-- QA/Testing Team: Included with roles (lead, unit-test-engineer, integration-test-engineer). See docs/QA_TEAM_ARCHITECTURE.md and QA*_ docs.
-- Current sizing: default (5 agents), extended (8 agents), scaled (16 agents across ~9 teams incl. Category Theory & DSL).
-- Routing behavior: Domain → Team → Agent with weighted classifier; misrouting debuggable via verbose routing_path logs.
-- Phase 1 fixes: Cache control (ATADO_CACHE/--no-cache, TTL, namespacing) and routing observability (correlation IDs, top-3 domain scores).
+
+### QA Team Implementation (October 2025)
+**Agent Count:** 14 agents (11 → 14, +3 QA specialists)
+
+**Team Structure:**
+- **Tier 1** (Strategic): master-orchestrator, architecture-lead
+- **Tier 2** (Domain Leads): frontend-lead, backend-lead, testing-lead, **qa-lead**, research-lead, devops-lead
+- **Tier 3** (Specialists): 8 specialists including:
+  - Testing: unit-test-engineer, integration-test-engineer
+  - **QA: qa-engineer, exploratory-test-engineer, test-case-designer**
+  - Python: python-specialist
+  - JavaScript: javascript-typescript-specialist
+  - Documentation: technical-writer
+
+**QA Team Capabilities:**
+- **qa-engineer**: BDD/Gherkin scenarios, acceptance testing, user journey tests
+- **exploratory-test-engineer**: Test charters, risk analysis, manual testing strategies
+- **test-case-designer**: Test plans, traceability matrices, scenario design
+
+**Using QA Team:**
+```bash
+# BDD Scenarios
+python3 -m src.main --task "Write BDD scenarios for login feature" \
+  --provider granite --routing team --agents scaled
+
+# Exploratory Testing
+python3 -m src.main --task "Design exploratory testing for checkout flow" \
+  --provider granite --routing team --agents scaled
+
+# Test Planning
+python3 -m src.main --task "Create test plan for user profile feature" \
+  --provider granite --routing team --agents scaled
+```
+
+**Documentation:** See `docs/QA_TEAM_*.md` for complete architecture, implementation details, and usage examples.
+
+**Current sizing:** default (5 agents), extended (8 agents), scaled (14 agents across 6 teams)
+**Routing behavior:** Domain → Team → Agent with weighted classifier; misrouting debuggable via verbose routing_path logs.
+**System Functionality:** 95% (as of October 2025)
