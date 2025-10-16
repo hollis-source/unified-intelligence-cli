@@ -458,7 +458,7 @@ def execute_suite(task_paths: List[Path], output_path: Path, verbose: bool = Fal
         except Exception as e:
             print(f"✗ ERROR: {e}")
             records.append({
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(datetime.UTC).isoformat() if hasattr(datetime, 'UTC') else datetime.utcnow().isoformat(),
                 "task_id": task_path.stem,
                 "agent": "unknown",
                 "ok": False,
