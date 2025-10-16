@@ -8,7 +8,7 @@ from typing import List, Dict, Any, Optional
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../scripts"))
 
 from grok_session import GrokSession
-from src.interface import IToolSupportedProvider, LLMConfig
+from src.interface import IToolSupportedProvider, LLMConfig, GenerationResult
 
 
 class GrokAdapter(IToolSupportedProvider):
