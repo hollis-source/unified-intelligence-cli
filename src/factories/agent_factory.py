@@ -121,14 +121,14 @@ class AgentFactory(IAgentFactory):
             ),
 
             Agent(
-                role="qa-lead",
+                role="architecture-lead",
                 capabilities=[
                     # Code review
                     "review", "code review", "inspect", "evaluate",
                     # Architecture validation
                     "architecture", "solid", "clean code", "clean architecture",
-                    # Quality assurance
-                    "quality", "qa", "quality assurance", "validate",
+                    # Code quality (not product QA)
+                    "code quality", "technical debt", "refactoring",
                     # Best practices
                     "best practices", "standards", "conventions",
                     "assess", "audit", "critique", "feedback"
@@ -318,14 +318,14 @@ class AgentFactory(IAgentFactory):
             ),
 
             Agent(
-                role="qa-lead",
+                role="architecture-lead",
                 capabilities=[
                     # Code review
                     "review", "code review", "inspect", "evaluate",
                     # Architecture validation
                     "architecture", "solid", "clean code", "clean architecture",
-                    # Quality assurance
-                    "quality", "qa", "quality assurance", "validate",
+                    # Code quality (not product QA)
+                    "code quality", "technical debt", "refactoring",
                     # Best practices
                     "best practices", "standards", "conventions",
                     "assess", "audit", "critique", "feedback"
