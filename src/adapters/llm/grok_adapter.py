@@ -39,11 +39,14 @@ class GrokAdapter(IToolSupportedProvider):
         self,
         messages: List[Dict[str, Any]],
         config: Optional[LLMConfig] = None
-    ) -> str:
+    ) -> GenerationResult:
         """
         Generate text using Grok.
 
         Adapter pattern: Translates interface to Grok specifics.
+
+        Returns:
+            GenerationResult with content, usage, and metadata
         """
         # Convert messages to Grok format
         for msg in messages:
