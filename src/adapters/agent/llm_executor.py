@@ -375,10 +375,12 @@ Provide a clear, professional response based on your expertise."""
 - Import test framework (import pytest or import unittest)
 - Use fixtures/mocks where appropriate (@pytest.fixture, Mock)""",
 
-            "architect": """- Reference architectural patterns and diagrams
-- Explain decisions and trade-offs
-- Identify components, layers, or services
-- Mention design principles (SOLID, DRY, patterns)""",
+            "architect": """- Use keywords: "architecture", "diagram", "component", "layer", "service"
+- Explain decisions and trade-offs (use "decision", "trade-off", "ADR")
+- Reference design patterns (e.g., "factory pattern", "adapter", "SOLID principles")
+- Structure your response with sections for: Architecture Overview, Components, Decisions, Trade-offs
+- Example: "The architecture diagram shows three layers: presentation, business logic, and data access..."
+""",
 
             "database": """- Include SQL operations (CREATE, SELECT, INSERT, etc.)
 - Consider indexing strategies (INDEX keyword)
