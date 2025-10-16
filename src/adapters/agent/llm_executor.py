@@ -104,6 +104,16 @@ class LLMAgentExecutor(IAgentExecutor):
             )
             cache_hit = response_text is not None
 
+            # Phase 2: Estimate usage for cache hits (no actual API call made)
+            if cache_hit:
+                estimated_tokens = len(response_text) // 4
+                usage = {
+                    "prompt_tokens": 0,  # Unknown for cache hit
+                    "completion_tokens": estimated_tokens,
+                    "total_tokens": estimated_tokens,
+                    "cached": True  # Flag to indicate estimation
+                }
+
         try:
             if not cache_hit:
                 # Generate response using LLM (cache miss or disabled)
