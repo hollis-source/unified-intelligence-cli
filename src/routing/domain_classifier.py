@@ -36,6 +36,9 @@ class DomainClassifier:
             r"navbar", r"modal", r"form validation", r"web page"
         ],
         "backend": [
+            # HIGH-PRIORITY: Agent task prefixes (weight 100)
+            r"^\[python agent task\]", r"^\[database agent task\]",
+            # Regular backend keywords
             r"\bapi\b", r"\brest\b", r"\bgraphql\b", r"endpoint",
             r"database", r"\bsql\b", r"nosql", r"mongodb", r"postgresql",
             r"server", r"microservice", r"backend", r"back-end",
