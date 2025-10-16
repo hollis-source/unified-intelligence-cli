@@ -401,7 +401,24 @@ File locations:
             "test": """- Use test function naming (test_* or def test)
 - Include assertions (assert statements)
 - Import test framework (import pytest or import unittest)
-- Use fixtures/mocks where appropriate (@pytest.fixture, Mock)""",
+- Use fixtures/mocks where appropriate (@pytest.fixture, Mock)
+
+EXAMPLE OUTPUT FORMAT:
+"Test implementation:
+
+```python
+import pytest
+
+def test_process_data():
+    result = process_data(['a', 'bb'])
+    assert result == {'a': 1, 'bb': 2}
+```
+
+File locations:
+- tests/unit/test_processor.py:15 - Add test_process_data function
+- tests/conftest.py:8 - Add fixture for test data
+- tests/integration/test_workflow.py:42 - Add integration test"
+""",
 
             "architect": """- Use keywords: "architecture", "diagram", "component", "layer", "service"
 - Explain decisions and trade-offs (use "decision", "trade-off", "ADR")
