@@ -52,6 +52,7 @@ class ProviderFactory(IProviderFactory):
         """
         self._creators["mock"] = MockProviderCreator()
         self._creators["grok"] = GrokProviderCreator()
+        self._creators["granite"] = GraniteProviderCreator()
         self._creators["tongyi"] = TongyiProviderCreator()
         self._creators["tongyi-local"] = TongyiLocalProviderCreator()
         self._creators["replicate"] = ReplicateProviderCreator()
