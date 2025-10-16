@@ -229,7 +229,7 @@ Task → Router → Team (domain-based) → Team Internal Logic → Agent
 3. **TeamFactory**: Creates teams from individual agents
 4. **TeamRouter**: Two-phase routing (domain → team, team → agent)
 
-**Example - Testing Team**:
+**Example - Testing Team** (Technical Quality):
 ```python
 class TestingTeam(AgentTeam):
     def route_internally(self, task: Task) -> Agent:
@@ -260,3 +260,10 @@ IMPORTANT: Always critique outputs against SOLID and Martin's principles, sugges
 - "our tools" = DSL + CLI (ultrathink)
 - search for existing (ultrathink)
 - "The key is methodical validation of our existing system before introducing more complexity."
+- Do not check for completed background tasks unless I ask you to do so. You routinely try to process completed background tasks that are stale, setting up a vicious circle where you try to process the same completed background tasks over and over again.
+
+## Week 13+ Updates (Docs currency)
+- QA/Testing Team: Included with roles (lead, unit-test-engineer, integration-test-engineer). See docs/QA_TEAM_ARCHITECTURE.md and QA*_ docs.
+- Current sizing: default (5 agents), extended (8 agents), scaled (16 agents across ~9 teams incl. Category Theory & DSL).
+- Routing behavior: Domain → Team → Agent with weighted classifier; misrouting debuggable via verbose routing_path logs.
+- Phase 1 fixes: Cache control (ATADO_CACHE/--no-cache, TTL, namespacing) and routing observability (correlation IDs, top-3 domain scores).
