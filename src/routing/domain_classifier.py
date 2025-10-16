@@ -58,6 +58,9 @@ class DomainClassifier:
             r"mock", r"stub", r"fixture", r"tdd", r"bdd"
         ],
         "research": [
+            # HIGH-PRIORITY: Agent task prefixes (weight 100)
+            r"^\[architect agent task\]", r"^\[research agent task\]",
+            # Regular research keywords
             r"\bresearch\b", r"investigate", r"explore", r"study",
             r"analyze", r"analysis", r"document", r"documentation",
             r"find out", r"learn about", r"understand",
