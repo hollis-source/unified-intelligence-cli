@@ -11,6 +11,7 @@ from src.factories.provider_creators import (
     IProviderCreator,
     MockProviderCreator,
     GrokProviderCreator,
+    GraniteProviderCreator,
     TongyiProviderCreator,
     TongyiLocalProviderCreator,
     ReplicateProviderCreator,
