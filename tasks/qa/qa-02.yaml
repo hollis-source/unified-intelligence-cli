@@ -1,0 +1,31 @@
+id: qa-02
+agent: qa
+prompt: |
+  Design an exploratory testing session for the new checkout flow feature.
+
+  Feature Context:
+  - E-commerce checkout with multiple payment methods (credit card, PayPal, cryptocurrency)
+  - Guest checkout option vs. logged-in user checkout
+  - Coupon code application
+  - Shipping address validation
+  - Order summary and confirmation
+
+  Requirements:
+  1. Identify key areas to explore (happy paths, edge cases, error conditions)
+  2. Design test charters for 3-4 exploratory testing sessions (30-45 min each)
+  3. List potential risk areas and high-priority scenarios
+  4. Document expected behaviors and acceptance criteria
+  5. Include usability considerations (mobile vs desktop, accessibility)
+  6. MANDATORY: Your response MUST include at least 3 file:line references to existing code
+
+  Expected files to reference:
+  - src/pages/CheckoutPage.tsx (checkout UI)
+  - src/components/PaymentForm.tsx (payment component)
+  - src/api/orders.py (order processing API)
+  - tests/qa/exploratory/checkout_charters.md (test charters document)
+
+checks:
+  - "exploratory"
+  - "test charter"
+  - "edge case"
+  - "risk"

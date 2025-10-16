@@ -460,6 +460,10 @@ class DomainClassifier:
         # Track last classification for metrics
         self.last_classification_score: float = 0.0
 
+        # Observability: retain last scores
+        self.last_weighted_scores: Dict[str, float] = {}
+        self.last_top3_scores: List[tuple[str, float]] = []
+
         logger.info(f"DomainClassifier initialized with {len(self.DOMAIN_PATTERNS)} domains")
 
     def classify(self, task: Task) -> str:
@@ -492,6 +496,7 @@ class DomainClassifier:
 
         # Calculate weighted scores per domain
         domain_scores: Dict[str, float] = {domain: 0.0 for domain in self.DOMAIN_PATTERNS}
+        top3: List[tuple[str, float]] = []
 
         for domain, patterns in self._compiled_patterns.items():
             domain_weights = self.DOMAIN_KEYWORD_WEIGHTS.get(domain, {})
@@ -503,11 +508,22 @@ class DomainClassifier:
                     weight = domain_weights.get(pattern_str, 1.0)
                     domain_scores[domain] += weight
 
-        # Find domain with highest score
-        max_score = max(domain_scores.values())
+        # Compute top-3 domains by score for observability
+        sorted_scores = sorted(domain_scores.items(), key=lambda x: x[1], reverse=True)
+        top3 = sorted_scores[:3]
 
-        # Store for metrics access
+        # Find domain with highest score
+        max_score = top3[0][1] if top3 else 0.0
+
+        # Store for metrics access and observability
         self.last_classification_score = max_score
+        self.last_weighted_scores = domain_scores
+        self.last_top3_scores = top3
+
+        if logger.isEnabledFor(logging.INFO) and top3:
+            logger.info(
+                f"DomainClassifier scores (top3): {[(d, round(s,1)) for d,s in top3]}"
+            )
 
         if max_score == 0:
             # No domain patterns matched

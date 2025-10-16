@@ -1,0 +1,32 @@
+id: qa-01
+agent: qa
+prompt: |
+  Write BDD scenarios for the user login feature using Gherkin syntax.
+
+  Feature: User Login
+  - Users should be able to log in with email and password
+  - Failed login attempts should show appropriate error messages
+  - Successful login should redirect to dashboard
+  - Login should support "Remember Me" functionality
+  - Passwords should be masked during input
+
+  Requirements:
+  1. Use Given/When/Then format for all scenarios
+  2. Cover positive and negative test cases
+  3. Include edge cases (empty fields, invalid format, etc.)
+  4. Reference specific UI elements and API endpoints
+  5. Include acceptance criteria validation
+  6. MANDATORY: Your response MUST include at least 3 file:line references to existing code
+
+  Expected files to reference:
+  - tests/acceptance/login.feature (where scenarios will be defined)
+  - src/components/LoginForm.tsx (UI component)
+  - src/api/auth.py (authentication API)
+  - tests/fixtures/users.py (test data)
+
+checks:
+  - "feature:"
+  - "scenario:"
+  - "given"
+  - "when"
+  - "then"
