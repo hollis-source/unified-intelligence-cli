@@ -291,6 +291,28 @@ def compute_auto_checks(agent: str, output: str, task_dir: Path) -> float:
         if any(kw in output for kw in ["kubernetes", "k8s", "deployment:", "service:", "helm"]):
             score += 1.0
 
+    elif agent == "qa":
+        # BDD/Gherkin scenarios (2 pts)
+        if "Feature:" in output or "Scenario:" in output:
+            score += 2.0
+
+        # Given/When/Then structure (1.5 pts)
+        if all(kw in output for kw in ["Given", "When", "Then"]):
+            score += 1.5
+
+        # Exploratory testing + Test planning (1.5 pts) - combined for overlap
+        if any(kw in output.lower() for kw in ["charter", "explore", "risk", "test plan", "traceability", "coverage"]):
+            score += 1.5
+
+        # UAT/persona-based + Accessibility + Cross-browser (2 pts total) - combined coverage indicators
+        qa_coverage_count = sum([
+            any(kw in output.lower() for kw in ["persona", "user acceptance", "uat"]),
+            any(kw in output for kw in ["WCAG", "accessibility", "screen reader", "ARIA"]),
+            any(kw in output.lower() for kw in ["browser", "compatibility", "matrix"]),
+            "P0" in output or "P1" in output or "P2" in output,  # Priority classification
+        ])
+        score += min(qa_coverage_count * 0.5, 2.0)  # 0.5 pts each, max 2 pts
+
     return min(score, 10.0)
 
 
