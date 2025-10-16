@@ -444,6 +444,14 @@ class GrokSession:
             response_text = choice.message.content or ""
             tool_calls = [tc.model_dump() for tc in choice.message.tool_calls] if choice.message.tool_calls else []
 
+            # Extract token usage
+            if hasattr(response, 'usage') and response.usage:
+                usage = {
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "completion_tokens": response.usage.completion_tokens,
+                    "total_tokens": response.usage.total_tokens
+                }
+
             # Add assistant message
             with self.messages_lock:
                 assistant_message = {"role": "assistant", "content": response_text}
