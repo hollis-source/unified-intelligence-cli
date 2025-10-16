@@ -497,6 +497,19 @@ class GrokSession:
                     temperature=temperature
                 )
 
+                # Extract token usage from follow-up (accumulate with initial usage)
+                if hasattr(follow_up_response, 'usage') and follow_up_response.usage:
+                    if usage:
+                        usage["prompt_tokens"] += follow_up_response.usage.prompt_tokens
+                        usage["completion_tokens"] += follow_up_response.usage.completion_tokens
+                        usage["total_tokens"] += follow_up_response.usage.total_tokens
+                    else:
+                        usage = {
+                            "prompt_tokens": follow_up_response.usage.prompt_tokens,
+                            "completion_tokens": follow_up_response.usage.completion_tokens,
+                            "total_tokens": follow_up_response.usage.total_tokens
+                        }
+
                 final_text = follow_up_response.choices[0].message.content
                 if final_text:
                     response_text = final_text
