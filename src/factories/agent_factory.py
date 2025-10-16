@@ -526,6 +526,30 @@ class AgentFactory(IAgentFactory):
             ),
 
             Agent(
+                role="qa-engineer",
+                capabilities=[
+                    # User acceptance testing
+                    "acceptance", "acceptance test", "acceptance testing", "uat",
+                    "user acceptance", "user acceptance testing",
+                    # Feature validation
+                    "feature validation", "feature testing", "feature verification",
+                    "requirements validation", "requirements testing",
+                    # BDD (Behavior-Driven Development)
+                    "bdd", "behavior driven", "gherkin", "cucumber", "behave",
+                    "given when then", "scenario", "feature file",
+                    # User perspective testing
+                    "user journey", "user flow", "user scenario", "user story testing",
+                    "acceptance criteria", "story validation",
+                    # QA activities
+                    "qa", "quality assurance", "exploratory testing",
+                    "manual testing", "test case", "test plan"
+                ],
+                tier=3,
+                parent_agent="testing-lead",
+                specialization="testing"
+            ),
+
+            Agent(
                 role="technical-writer",
                 capabilities=[
                     # Documentation
