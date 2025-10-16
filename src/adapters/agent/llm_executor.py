@@ -486,12 +486,34 @@ File locations:
 - Use these exact keywords: "name:", "run:", "steps:", "jobs:"
 - For Docker: use words "docker", "Dockerfile", "container", "image"
 - Keep it simple and practical
-- Example:
-  name: CI Pipeline
-  jobs:
-    build:
-      steps:
-        - run: docker build -t app ."""
+
+EXAMPLE OUTPUT FORMAT:
+"CI/CD pipeline setup:
+
+```yaml
+name: CI Pipeline
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build Docker image
+        run: docker build -t myapp:latest .
+      - name: Run tests
+        run: docker run myapp:latest pytest
+```
+
+**Key components:**
+- Uses official GitHub Actions syntax
+- Docker build for containerization
+- Automated testing on every commit
+
+File locations:
+- .github/workflows/ci.yml:1 - Create GitHub Actions workflow
+- Dockerfile:1 - Add container build instructions
+- docs/DEPLOYMENT.md:55 - Document CI/CD pipeline"
+"""
         }
 
         return hints.get(role, "- Provide clear, specific technical guidance")
