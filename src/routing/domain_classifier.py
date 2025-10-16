@@ -69,6 +69,9 @@ class DomainClassifier:
             r"technical writing", r"knowledge base", r"\brfc\b"
         ],
         "devops": [
+            # HIGH-PRIORITY: Agent task prefix (weight 100)
+            r"^\[devops agent task\]",
+            # Regular devops keywords
             r"\bdevops\b", r"deployment", r"deploy", r"\bci\b", r"\bcd\b",
             r"ci/cd", r"pipeline", r"infrastructure",
             r"\bdocker\b", r"dockerfile", r"kubernetes", r"\bk8s\b",
