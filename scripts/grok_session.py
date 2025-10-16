@@ -351,6 +351,19 @@ class GrokSession:
                 follow_up = await self._api_call_with_retry(**follow_up_kwargs)
                 final_text = follow_up.choices[0].message.content
 
+                # Extract token usage from follow-up (accumulate with initial usage)
+                if hasattr(follow_up, 'usage') and follow_up.usage:
+                    if usage:
+                        usage["prompt_tokens"] += follow_up.usage.prompt_tokens
+                        usage["completion_tokens"] += follow_up.usage.completion_tokens
+                        usage["total_tokens"] += follow_up.usage.total_tokens
+                    else:
+                        usage = {
+                            "prompt_tokens": follow_up.usage.prompt_tokens,
+                            "completion_tokens": follow_up.usage.completion_tokens,
+                            "total_tokens": follow_up.usage.total_tokens
+                        }
+
                 if final_text:
                     response_text = final_text  # Always use final response after tools
                     async with self.async_messages_lock:
