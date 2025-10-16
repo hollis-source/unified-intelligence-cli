@@ -64,6 +64,40 @@ class GrokProviderCreator:
         return GrokAdapter()
 
 
+class GraniteProviderCreator:
+    """
+    Creator for IBM Granite 4.0-H provider (local llama.cpp).
+
+    Features:
+    - Zero-cost local inference
+    - 512K context window
+    - Load balancing across 2 instances (ports 8080, 8081)
+    - Better instruction-following than Grok
+    - OpenAI-compatible API
+    """
+
+    def create(self, config: Optional[Dict[str, Any]] = None) -> ITextGenerator:
+        from src.adapters.llm.granite_adapter_v3 import GraniteAdapterV3
+
+        instances = ["http://localhost:8080", "http://localhost:8081"]
+        enable_rag = False
+        timeout = 300
+
+        if config:
+            if "instances" in config:
+                instances = config["instances"]
+            if "enable_rag" in config:
+                enable_rag = config["enable_rag"]
+            if "timeout" in config:
+                timeout = config["timeout"]
+
+        return GraniteAdapterV3(
+            instances=instances,
+            enable_rag=enable_rag,
+            timeout=timeout
+        )
+
+
 class TongyiProviderCreator:
     """
     Creator for Tongyi-DeepResearch-30B provider (llama.cpp, sync).
