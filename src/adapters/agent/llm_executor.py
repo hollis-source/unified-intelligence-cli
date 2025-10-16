@@ -381,7 +381,22 @@ Provide a clear, professional response based on your expertise."""
             "python": """- Include function/class definitions (def, class keywords)
 - Add type hints where applicable (: str, -> int, etc.)
 - Include docstrings (triple quotes)
-- Consider test cases if relevant (test_, assert)""",
+- Consider test cases if relevant (test_, assert)
+
+EXAMPLE OUTPUT FORMAT:
+"Here's the implementation:
+
+```python
+def process_data(items: List[str]) -> Dict[str, int]:
+    \"\"\"Process items and return counts.\"\"\"
+    return {item: len(item) for item in items}
+```
+
+File locations:
+- src/utils/processor.py:45 - Add process_data function
+- tests/test_processor.py:22 - Add unit test for process_data
+- src/main.py:180 - Import and use processor"
+""",
 
             "test": """- Use test function naming (test_* or def test)
 - Include assertions (assert statements)
