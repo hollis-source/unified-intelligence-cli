@@ -199,6 +199,24 @@ class DomainClassifier:
     # - Category Theory = Mathematical foundation (proofs, verification, laws) → HIGH weights for verification keywords
     # - Shared terms (functor, monad) get LOWER weight in CT, as DSL uses them in implementation context
     DOMAIN_KEYWORD_WEIGHTS: Dict[str, Dict[str, int]] = {
+        # AGENT TASK PREFIXES - HIGHEST PRIORITY (100x weight)
+        # These come from metrics_harness.py line 83: f"[{agent.upper()} AGENT TASK] {prompt}"
+        # Must override all other patterns to ensure correct routing
+        "backend": {
+            r"^\[PYTHON AGENT TASK\]": 100,
+            r"^\[DATABASE AGENT TASK\]": 100,
+            r"^\[BACKEND": 50,
+        },
+        "testing": {
+            r"^\[TEST AGENT TASK\]": 100,
+        },
+        "research": {
+            r"^\[ARCHITECT AGENT TASK\]": 100,
+            r"^\[RESEARCH AGENT TASK\]": 100,
+        },
+        "devops": {
+            r"^\[DEVOPS AGENT TASK\]": 100,
+        },
         "dsl": {
             # EXPLICIT TEAM IDENTIFIERS - CRITICAL for collaborative tasks (25x weight)
             r"^DSL Team": 25,
