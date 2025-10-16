@@ -460,7 +460,7 @@ class AgentFactory(IAgentFactory):
                 specialization="qa"
             ),
 
-            # ===== TIER 3: Specialized Executors (5 agents) =====
+            # ===== TIER 3: Specialized Executors (8 agents) =====
 
             Agent(
                 role="python-specialist",
