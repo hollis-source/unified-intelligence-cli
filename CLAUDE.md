@@ -250,9 +250,42 @@ class TestingTeam(AgentTeam):
         return self.lead_agent  # Default
 ```
 
+**Example - QA Team** (User/Product Quality):
+```python
+class QATeam(AgentTeam):
+    def route_internally(self, task: Task) -> Agent:
+        desc = task.description.lower()
+
+        # Strategy → Lead
+        if 'strategy' in desc or 'planning' in desc:
+            return self.lead_agent
+
+        # BDD/Acceptance → QA Engineer
+        if any(kw in desc for kw in ['bdd', 'gherkin', 'acceptance', 'user journey']):
+            return self.get_agent('qa-engineer')
+
+        # Exploratory → Exploratory Test Engineer
+        if any(kw in desc for kw in ['exploratory', 'manual testing', 'usability']):
+            return self.get_agent('exploratory-test-engineer')
+
+        # Test Planning → Test Case Designer
+        if any(kw in desc for kw in ['test plan', 'test case', 'traceability']):
+            return self.get_agent('test-case-designer')
+
+        return self.lead_agent  # Default
+```
+
+**Testing Team vs QA Team** (Critical Distinction):
+- **Testing Team**: Technical correctness (unit, integration, E2E, performance, security)
+- **QA Team**: User/product quality (acceptance, BDD, exploratory, test planning)
+- **Keywords**: Clear separation prevents routing ambiguity
+  - Testing: "unit", "integration", "pytest", "mock", "selenium"
+  - QA: "acceptance", "bdd", "gherkin", "user journey", "exploratory"
+
 **When to Use**:
 - 8+ agents: Consider team-based routing
 - 12+ agents: Strongly recommended
+- 14+ agents: QA and Testing should be separate teams
 - Agent overlap issues: Teams solve this naturally
 - Adding agents frequently: Teams scale better
 
