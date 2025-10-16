@@ -262,6 +262,12 @@ ULTRATHINK MODE: You MUST think step-by-step through problems before answering.
 - Verify your logic and check for errors
 - Be thorough and rigorous in your analysis
 
+IMPORTANT: When providing responses, include specific file:line references.
+- Format: path/to/file.py:line_number - description
+- Example: "src/adapters/llm/grok_adapter.py:42 - Update return type to GenerationResult"
+- Example: "tests/unit/test_adapter.py:15 - Add test for token usage extraction"
+- Reference actual code locations where changes should be made
+
 Complete the given task using your expertise and deep analytical thinking."""
 
             task_prompt = f"""Task: {task.description}
