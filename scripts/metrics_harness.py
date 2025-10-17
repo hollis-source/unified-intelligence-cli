@@ -368,10 +368,24 @@ def compute_tokens(usage: Dict[str, Any], output: str = "") -> int:
 
 
 def compute_quality(auto_score: float, human_score: Optional[float]) -> float:
-    """Compute quality score: 0.6*auto + 0.4*human."""
+    """
+    Compute quality score.
+
+    When human_score is available: quality = 0.6*auto + 0.4*human
+    When human_score is None: quality = auto (no penalty for missing review)
+
+    This prevents penalizing tasks that haven't been human-reviewed yet,
+    while still incorporating human judgment when available.
+    """
     auto10 = max(0, min(10, auto_score))
-    hum10 = human_score if human_score is not None else 0
-    return 0.6 * auto10 + 0.4 * hum10
+
+    if human_score is None:
+        # No human review yet - use full auto_score
+        return auto10
+    else:
+        # Human review available - blend scores
+        hum10 = max(0, min(10, human_score))
+        return 0.6 * auto10 + 0.4 * hum10
 
 
 def is_completed(agent: str, quality: float, checks_ok: bool, required_checks: str) -> bool:
