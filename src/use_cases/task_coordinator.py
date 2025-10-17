@@ -1,4 +1,7 @@
-"""Task coordinator use case - SRP: Focused on executing planned tasks."""
+"""Task coordinator use case - SRP: Focused on executing planned tasks.
+
+Enhanced with feedback loops (Phase 3) for automatic replanning on failures.
+"""
 
 import asyncio
 import logging
@@ -10,6 +13,7 @@ from src.interface import (
     ITaskPlanner,
     ExecutionPlan
 )
+from src.interface.feedback_handler import IFeedbackHandler
 from src.validators import TaskValidator, ValidationError
 
 
@@ -26,27 +30,64 @@ class TaskCoordinatorUseCase(IAgentCoordinator):
         task_planner: ITaskPlanner,
         agent_executor: IAgentExecutor,
         max_retries: int = 3,
-        logger: Optional[logging.Logger] = None
+        logger: Optional[logging.Logger] = None,
+        feedback_handler: Optional[IFeedbackHandler] = None
     ):
-        """Initialize with injected dependencies."""
+        """Initialize with injected dependencies.
+
+        Args:
+            task_planner: Task planning strategy
+            agent_executor: Agent execution strategy
+            max_retries: Maximum retry attempts (default: 3)
+            logger: Optional logger
+            feedback_handler: Optional feedback handler for replanning (Phase 3)
+        """
         self.task_planner = task_planner
         self.agent_executor = agent_executor
         self.max_retries = max_retries
         self.logger = logger or logging.getLogger(__name__)
+        self.feedback_handler = feedback_handler
 
     async def coordinate(
         self,
         tasks: List[Task],
         agents: List[Agent],
-        context: Optional[ExecutionContext] = None
+        context: Optional[ExecutionContext] = None,
+        enable_feedback: bool = False
     ) -> List[ExecutionResult]:
         """
         Coordinate task execution using injected planner.
 
         Clean Code: Orchestration - delegates to planner and executor.
+
+        Phase 3 Enhancement: Optional feedback loops for automatic replanning.
+
+        Args:
+            tasks: Tasks to execute
+            agents: Available agents
+            context: Optional execution context
+            enable_feedback: Enable feedback loops (default: False)
+
+        Returns:
+            List of execution results
         """
-        self.logger.info(f"Coordinating {len(tasks)} tasks")
+        self.logger.info(f"Coordinating {len(tasks)} tasks (feedback: {enable_feedback})")
         self.logger.debug(f"Available agents: {[a.role for a in agents]}")
+
+        # If feedback disabled or no handler, use simple execution
+        if not enable_feedback or not self.feedback_handler:
+            return await self._execute_simple(tasks, agents, context)
+
+        # Execute with feedback loops
+        return await self._execute_with_feedback(tasks, agents, context)
+
+    async def _execute_simple(
+        self,
+        tasks: List[Task],
+        agents: List[Agent],
+        context: Optional[ExecutionContext]
+    ) -> List[ExecutionResult]:
+        """Execute tasks without feedback loops (original behavior)."""
 
         # Delegate planning to TaskPlannerUseCase
         plan = await self.task_planner.create_plan(tasks, agents, context)
@@ -57,6 +98,112 @@ class TaskCoordinatorUseCase(IAgentCoordinator):
 
         self.logger.info(f"Coordination complete: {len(results)} results")
         return results
+
+    async def _execute_with_feedback(
+        self,
+        tasks: List[Task],
+        agents: List[Agent],
+        context: Optional[ExecutionContext]
+    ) -> List[ExecutionResult]:
+        """Execute tasks with feedback loops for automatic replanning."""
+
+        all_results = []
+        remaining_tasks = tasks.copy()
+        attempt = 0
+
+        while remaining_tasks and attempt < self.max_retries:
+            attempt += 1
+            self.logger.info(f"Execution attempt {attempt}/{self.max_retries}")
+
+            # Execute current batch
+            batch_results = await self._execute_simple(remaining_tasks, agents, context)
+            all_results.extend(batch_results)
+
+            # Check for failures
+            failed = [r for r in batch_results if r.status == ExecutionStatus.FAILURE]
+
+            if not failed:
+                self.logger.info("All tasks succeeded")
+                break
+
+            self.logger.warning(f"{len(failed)} tasks failed")
+
+            # Analyze failures
+            analysis = self.feedback_handler.analyze_failures(failed)
+
+            # Record failures
+            for result in failed:
+                failure_type = analysis["failure_types"].get(
+                    self._classify_failure_type(result), "UNKNOWN"
+                )
+                self.feedback_handler.record_failure(
+                    result.task_id,
+                    failure_type,
+                    result.error or "Unknown error"
+                )
+
+            # Check if we should replan
+            if not self.feedback_handler.should_replan(analysis, attempt):
+                self.logger.warning("Replanning not recommended, aborting")
+                break
+
+            # Create replanning strategy
+            try:
+                replan_context = {
+                    "available_models": ["grok", "granite", "tongyi"],
+                    "current_model": "auto",
+                    "attempt": attempt
+                }
+
+                plan = self.feedback_handler.replan(failed, analysis, replan_context)
+                self.logger.info(f"Replanning with strategy: {plan['strategy']}")
+
+                # Extract tasks to retry
+                remaining_tasks = self._extract_retry_tasks(failed, plan, tasks)
+
+            except ValueError as e:
+                self.logger.error(f"Replanning failed: {e}")
+                break
+
+        return all_results
+
+    def _classify_failure_type(self, result: ExecutionResult) -> str:
+        """Classify failure type from execution result."""
+        if not result.error:
+            return "UNKNOWN"
+
+        error_lower = result.error.lower()
+
+        if "timeout" in error_lower:
+            return "TIMEOUT"
+        elif "dependency" in error_lower or "precondition" in error_lower:
+            return "DEPENDENCY_MISSING"
+        elif "model" in error_lower or "llm" in error_lower:
+            return "MODEL_FAILURE"
+        elif "validation" in error_lower:
+            return "VALIDATION_ERROR"
+        else:
+            return "UNKNOWN"
+
+    def _extract_retry_tasks(
+        self,
+        failed_results: List[ExecutionResult],
+        plan: Dict,
+        original_tasks: List[Task]
+    ) -> List[Task]:
+        """Extract tasks to retry from replanning plan."""
+
+        retry_task_ids = set(plan.get("modified_tasks", []))
+
+        # Find original tasks to retry
+        task_map = {t.task_id: t for t in original_tasks}
+        retry_tasks = [
+            task_map[task_id]
+            for task_id in retry_task_ids
+            if task_id in task_map
+        ]
+
+        return retry_tasks
 
     async def coordinate_task(
         self,

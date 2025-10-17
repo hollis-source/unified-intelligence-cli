@@ -60,6 +60,10 @@ if env_file.exists():
               help="Enable metrics collection for monitoring (Week 13)")
 @click.option("--metrics-dir", type=click.Path(), default="data/metrics",
               help="Directory to store metrics (default: data/metrics)")
+@click.option("--feedback-loops", is_flag=True, default=False,
+              help="Enable feedback loops for automatic replanning on failures (Phase 3)")
+@click.option("--max-replanning-attempts", type=int, default=3,
+              help="Maximum replanning attempts (default: 3)")
 def main(
     goal: str,
     workflow: str,
@@ -78,7 +82,9 @@ def main(
     agents: str,
     routing: str,
     collect_metrics: bool,
-    metrics_dir: str
+    metrics_dir: str,
+    feedback_loops: bool,
+    max_replanning_attempts: int
 ) -> None:
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.
