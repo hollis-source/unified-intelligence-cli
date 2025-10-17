@@ -34,7 +34,15 @@ class ValidationResult:
 
 @dataclass
 class WorkflowExecutionResult:
-    """Complete workflow execution result with lifecycle information."""
+    """Complete workflow execution result with lifecycle information.
+
+    Validates result integrity on construction to prevent silent failures:
+    - Successful executions must have non-None results
+    - Results should be JSON-serializable for API/storage compatibility
+    - Validation failures are logged for diagnostics
+
+    Sprint 5 P1-1: Output Validation Gaps - prevents data corruption and silent failures.
+    """
 
     success: bool
     result: Any
@@ -42,6 +50,50 @@ class WorkflowExecutionResult:
     execution_time: float
     phases_completed: List[str]
     error: Optional[str] = None
+
+    def __post_init__(self):
+        """Validate result integrity after initialization.
+
+        Performs validation checks:
+        1. Successful workflows must have non-None results
+        2. Results should be JSON-serializable (warns if not)
+        3. Logs validation status for diagnostics
+
+        Raises:
+            ValueError: If critical validation fails (success=True with result=None)
+        """
+        # Check 1: Success must have non-None result
+        if self.success and self.result is None:
+            error_msg = (
+                "Result validation failed: successful execution (success=True) "
+                "must have non-None result. This indicates a silent failure in "
+                "workflow execution."
+            )
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        # Check 2: Result should be JSON-serializable (warn only, don't fail)
+        if self.result is not None:
+            try:
+                json.dumps(self.result)
+                logger.debug(
+                    f"Result validation passed: success={self.success}, "
+                    f"result_type={type(self.result).__name__}, "
+                    f"json_serializable=True"
+                )
+            except (TypeError, ValueError) as e:
+                # Warning only - some valid results may not be JSON-serializable
+                logger.warning(
+                    f"Result is not JSON-serializable: {type(self.result).__name__}. "
+                    f"This may cause issues with API responses or storage. "
+                    f"Error: {e}"
+                )
+        else:
+            # Failure case - result is None (expected for failed workflows)
+            logger.debug(
+                f"Result validation: success={self.success}, result=None "
+                f"(expected for failed workflow)"
+            )
 
 
 class LifecycleWorkflowExecutor:
