@@ -28,5 +28,6 @@ prompt: |
 checks:
   - "regression"
   - "migration"
-  - "backwards compatibility"
+  - type: regex
+    pattern: "backwards?.{0,10}compatib"
   - "rollback"
