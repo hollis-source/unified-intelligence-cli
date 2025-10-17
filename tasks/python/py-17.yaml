@@ -1,0 +1,36 @@
+id: py-17
+agent: python
+prompt: |
+  Replace the regex-based parser with a state machine in parsers/token_parser.py while keeping the public API.
+
+  Expected files to reference:
+  - parsers/token_parser.py:15 (class TokenizerState enum)
+  - parsers/token_parser.py:35 (class StateMachine with transition logic)
+  - parsers/token_parser.py:68 (def parse using state machine)
+  - tests/test_token_parser.py:40 (test_state_transitions)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include state machine patterns with enum states, transition table, and character-by-character processing
+
+  Template includes: Before/after comparison, state enum, transition logic, edge case handling
+
+checks:
+  - type: regex
+    pattern: "class .*State"
+    description: Explicit states/classes present
+  - type: regex
+    pattern: "def parse\\(text: str\\) -> list\\[str\\]"
+    description: Public API preserved with typing
+  - type: cmd
+    run: "python -m py_compile parsers/token_parser.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 4200
+  tags: [parsing, state-machine, refactoring, type-hints]

@@ -1,0 +1,36 @@
+id: py-19
+agent: python
+prompt: |
+  Add context managers to manage resource lifecycles in resources/connection.py.
+
+  Expected files to reference:
+  - resources/connection.py:12 (def __enter__ context manager entry)
+  - resources/connection.py:18 (def __exit__ with cleanup logic)
+  - resources/connection.py:35 (with Connection() as conn usage example)
+  - tests/test_connection.py:25 (test_context_manager_cleanup_on_exception)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include context manager patterns with __enter__, __exit__, exception handling, and @contextmanager
+
+  Template includes: Before/after comparison, __enter__/__exit__, exception safety, @contextmanager decorator
+
+checks:
+  - type: regex
+    pattern: "def __enter__\\(self\\)"
+    description: Context manager enter implemented
+  - type: regex
+    pattern: "def __exit__\\(self, exc_type, exc, tb\\)"
+    description: Context manager exit implemented
+  - type: cmd
+    run: "python -m py_compile resources/connection.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 2400
+  tags: [contextmanager, resources, safety, type-hints]

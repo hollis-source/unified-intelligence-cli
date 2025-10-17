@@ -1,0 +1,39 @@
+id: py-20
+agent: python
+prompt: |
+  Fix flaky time-based tests using freezegun and isolate the time source in utils/time.py.
+
+  Expected files to reference:
+  - utils/time.py:8 (def now() centralized time source)
+  - utils/time.py:15 (def now_str() using now() helper)
+  - tests/utils/test_time.py:12 (@freeze_time decorator for deterministic tests)
+  - tests/utils/test_time.py:28 (test_now_str_with_frozen_time)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include time testing patterns with freezegun, centralized time source, and deterministic tests
+
+  Template includes: Before/after comparison, centralized now(), freezegun usage, flaky test fixes
+
+checks:
+  - type: regex
+    pattern: "def now\\(\\) -> datetime"
+    description: Centralized time source defined
+  - type: regex
+    pattern: "from freezegun import freeze_time"
+    description: Tests rely on freezegun to freeze time
+  - type: cmd
+    run: "python -m py_compile utils/time.py"
+    description: Time module compiles
+  - type: cmd
+    run: "python -m py_compile tests/utils/test_time.py"
+    description: Tests compile
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3000
+  tags: [testing, time, freezegun, determinism, type-hints]
