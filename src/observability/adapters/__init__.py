@@ -73,6 +73,10 @@ class InMemoryCostTracker(ICostTracker):
         total = sum(e.cost for e in entries)
         return CostSummary(total_entries=len(entries), total_cost=total)
 
+    def get_total_cost(self, project_id: Optional[str] = None) -> float:
+        return self.get_cost_summary(project_id=project_id).total_cost
+
+
     def get_cost_by_agent(self, project_id: Optional[str] = None) -> Dict[str, float]:
         entries = self.get_costs(project_id=project_id)
         by_agent: Dict[str, float] = defaultdict(float)
@@ -97,6 +101,11 @@ class InMemoryUsageTracker(IUsageTracker):
             result = [e for e in result if e.trace_id == trace_id]
         return list(result)
 
+    def get_total_tokens(self, project_id: Optional[str] = None, trace_id: Optional[str] = None) -> int:
+        entries = self.get_usage(project_id=project_id, trace_id=trace_id)
+        return sum((e.input_tokens or 0) + (e.output_tokens or 0) for e in entries)
+
+
 
 class InMemoryAlertManager(IAlertManager):
     def __init__(self) -> None:
@@ -108,6 +117,11 @@ class InMemoryAlertManager(IAlertManager):
 
     def create_alert(self, alert: Alert) -> None:
         self._alerts.append(alert)
+
+
+    def record_alert(self, alert: Alert) -> None:
+        # Backwards-compatibility alias
+        self.create_alert(alert)
 
     def get_alerts(self, severity=None) -> List[Alert]:
         if severity is None:
