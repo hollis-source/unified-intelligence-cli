@@ -5,8 +5,8 @@ execution results, and executor pool management.
 """
 
 import pytest
-from src.entities.executor import Executor, ExecutorStatus, ExecutionResult
-from src.entities.executor.executor import LocalExecutor, ExecutorPool
+from src.entity.executor import Executor, ExecutorStatus, ExecutionResult
+from src.entity.executor.executor import LocalExecutor, ExecutorPool
 
 
 class MockTask:
