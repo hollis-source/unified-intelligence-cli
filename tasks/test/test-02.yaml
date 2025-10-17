@@ -1,0 +1,157 @@
+id: test-02
+agent: test
+prompt: |
+  Create pytest unit tests for input validation utilities (e.g., email, password strength,
+  username rules). Use parametrized tests to cover valid/invalid cases and edge boundaries.
+
+  Requirements:
+  - High signal test names describing intent
+  - Parametrization for valid/invalid matrices
+  - Property-based sampling for edge inputs (optional)
+
+  Expected files to reference:
+  - tests/validation/test_validators.py (validation test cases)
+  - tests/validation/test_email_validator.py (email validation)
+  - tests/validation/test_password_strength.py (password rules)
+  - tests/validation/conftest.py (validation fixtures)
+
+  Example of proper file:line references:
+  - tests/validation/test_validators.py:8 (@pytest.mark.parametrize for email cases)
+  - tests/validation/test_password_strength.py:15 (def test_password_strength_valid)
+  - tests/validation/test_email_validator.py:22 (parametrized invalid email formats)
+  - tests/validation/conftest.py:5 (@pytest.fixture for sample inputs)
+
+  Deliverables:
+  1. tests/validation/test_validators.py with parametrized cases
+  2. Negative tests demonstrating clear failure reasons
+  - MANDATORY: Your response MUST include at least 3 file:line references to validation test files
+  - MANDATORY: Include @pytest.mark.parametrize with email/password/username validation test cases
+
+  Pytest Validation Template (use this structure):
+  ```python
+  # tests/validation/test_validators.py
+  import pytest
+  from validation.validators import EmailValidator, PasswordValidator, UsernameValidator
+
+  class TestEmailValidator:
+      @pytest.mark.parametrize("email,expected", [
+          ("user@example.com", True),
+          ("test.name+tag@domain.co.uk", True),
+          ("invalid.email", False),
+          ("@no-local-part.com", False),
+          ("no-at-sign.com", False),
+          ("", False),
+          ("user@", False),
+      ])
+      def test_email_validation(self, email, expected):
+          """Test email validator with valid and invalid formats"""
+          validator = EmailValidator()
+          assert validator.is_valid(email) == expected
+
+  class TestPasswordValidator:
+      @pytest.mark.parametrize("password,expected", [
+          ("StrongP@ss123", True),
+          ("Weak", False),  # Too short
+          ("nouppercase123!", False),  # No uppercase
+          ("NOLOWERCASE123!", False),  # No lowercase
+          ("NoNumbers!", False),  # No numbers
+          ("NoSpecialChar123", False),  # No special char
+          ("", False),  # Empty
+      ])
+      def test_password_strength(self, password, expected):
+          """Test password strength validation rules"""
+          validator = PasswordValidator(min_length=8, require_special=True)
+          assert validator.is_valid(password) == expected
+
+      def test_password_validation_custom_rules(self):
+          """Test password validator with custom rules"""
+          validator = PasswordValidator(
+              min_length=12,
+              require_uppercase=True,
+              require_lowercase=True,
+              require_numbers=True,
+              require_special=True
+          )
+          assert validator.is_valid("VeryStrongP@ss123!") is True
+          assert validator.is_valid("Weak123!") is False  # Too short
+
+  class TestUsernameValidator:
+      @pytest.mark.parametrize("username,expected", [
+          ("validuser", True),
+          ("user_123", True),
+          ("user-name", True),
+          ("a", False),  # Too short
+          ("ab", False),  # Too short (min 3)
+          ("user@name", False),  # Invalid char
+          ("user name", False),  # Space not allowed
+          ("user$name", False),  # Invalid char
+          ("", False),  # Empty
+      ])
+      def test_username_validation(self, username, expected):
+          """Test username validator with boundary conditions"""
+          validator = UsernameValidator(min_length=3, max_length=20)
+          assert validator.is_valid(username) == expected
+  ```
+
+  ```python
+  # tests/validation/conftest.py
+  import pytest
+
+  @pytest.fixture
+  def valid_emails():
+      \"\"\"Fixture for valid email samples\"\"\"
+      return [
+          "user@example.com",
+          "test@domain.co.uk",
+          "name+tag@email.org",
+      ]
+
+  @pytest.fixture
+  def invalid_emails():
+      \"\"\"Fixture for invalid email samples\"\"\"
+      return [
+          "notanemail",
+          "@nodomain.com",
+          "user@",
+          "",
+      ]
+
+  @pytest.fixture
+  def password_validator():
+      \"\"\"Fixture for password validator instance\"\"\"
+      from validation.validators import PasswordValidator
+      return PasswordValidator(
+          min_length=8,
+          require_uppercase=True,
+          require_lowercase=True,
+          require_numbers=True,
+          require_special=True
+      )
+  ```
+
+  Expected test coverage:
+  - Email: Valid formats (standard, with tags, subdomains) + Invalid (missing @, empty, malformed)
+  - Password: Strong passwords + Weak (too short, missing requirements, empty)
+  - Username: Valid (alphanumeric, underscores, hyphens) + Invalid (special chars, too short/long)
+
+checks:
+  - type: regex
+    pattern: '\b(pytest|parametrize)\b'
+    description: Uses pytest and parametrization
+  - type: regex
+    pattern: '\b(validation|validator|sanitize)\b'
+    description: Targets validation utilities
+  - type: regex
+    pattern: '\b(unit\s+tests?)\b'
+    description: Emphasizes unit testing scope
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3600
+  tags: [testing, unit, pytest, validation]
+

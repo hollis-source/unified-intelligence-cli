@@ -1,0 +1,243 @@
+id: test-04
+agent: test
+prompt: |
+  Write unit tests demonstrating effective mocking of external dependencies (HTTP clients,
+  message queues, email/SMS providers). Use monkeypatch or mock to isolate units and verify
+  calls/arguments.
+
+  Requirements:
+  - Use pytest monkeypatch or unittest.mock
+  - Assert call counts and arguments
+  - Cover success and failure paths
+
+  Expected files to reference:
+  - tests/utils/test_http_clients.py (HTTP client mocking)
+  - tests/services/test_notifications.py (notification service mocking)
+  - tests/queue/test_message_queue.py (message queue mocking)
+  - tests/conftest.py (mocking fixtures)
+
+  Example of proper file:line references:
+  - tests/utils/test_http_clients.py:8 (@mock.patch for requests.get)
+  - tests/services/test_notifications.py:15 (monkeypatch for send_email)
+  - tests/queue/test_message_queue.py:22 (@mock.patch for RabbitMQ connection)
+  - tests/conftest.py:12 (@pytest.fixture for mock HTTP responses)
+
+  Deliverables:
+  1. tests/utils/test_http_clients.py with mocked responses
+  2. tests/services/test_notifications.py verifying side effects
+  - MANDATORY: Your response MUST include at least 3 file:line references to mocking test files
+  - MANDATORY: Include @mock.patch and monkeypatch examples with call count/argument assertions
+
+  Pytest Mocking Template (use this structure):
+  ```python
+  # tests/utils/test_http_clients.py
+  import pytest
+  from unittest.mock import Mock, patch, MagicMock, call
+  from utils.http_client import HTTPClient
+
+  class TestHTTPClientMocking:
+      @patch('utils.http_client.requests.get')
+      def test_get_request_success(self, mock_get):
+          \"\"\"Test HTTP GET with mocked response\"\"\"
+          # Setup mock response
+          mock_response = Mock()
+          mock_response.status_code = 200
+          mock_response.json.return_value = {"data": "test"}
+          mock_get.return_value = mock_response
+
+          # Execute
+          client = HTTPClient()
+          result = client.get("https://api.example.com/data")
+
+          # Assert
+          assert result == {"data": "test"}
+          mock_get.assert_called_once_with("https://api.example.com/data", headers={})
+
+      @patch('utils.http_client.requests.post')
+      def test_post_request_with_retry(self, mock_post):
+          \"\"\"Test HTTP POST with retry logic and call count\"\"\"
+          # Setup: First 2 calls fail, 3rd succeeds
+          mock_post.side_effect = [
+              Exception("Connection error"),
+              Exception("Timeout"),
+              Mock(status_code=201, json=lambda: {"created": True})
+          ]
+
+          # Execute
+          client = HTTPClient(max_retries=3)
+          result = client.post("https://api.example.com/create", data={"name": "test"})
+
+          # Assert
+          assert result == {"created": True}
+          assert mock_post.call_count == 3  # Verify retry behavior
+
+      @patch('utils.http_client.requests.get')
+      def test_get_request_timeout(self, mock_get):
+          \"\"\"Test HTTP GET handles timeout\"\"\"
+          mock_get.side_effect = TimeoutError("Request timed out")
+
+          client = HTTPClient()
+          with pytest.raises(TimeoutError):
+              client.get("https://api.example.com/slow")
+
+          mock_get.assert_called_once()
+
+  # tests/services/test_notifications.py
+  from unittest.mock import patch, Mock
+  from services.notification_service import NotificationService
+
+  class TestNotificationServiceMocking:
+      @patch('services.notification_service.send_email')
+      def test_send_email_notification(self, mock_send_email):
+          \"\"\"Test email notification with argument verification\"\"\"
+          service = NotificationService()
+          service.notify_user("user@example.com", "Welcome", "Hello!")
+
+          # Assert email was sent with correct arguments
+          mock_send_email.assert_called_once_with(
+              to="user@example.com",
+              subject="Welcome",
+              body="Hello!"
+          )
+
+      @patch('services.notification_service.send_sms')
+      @patch('services.notification_service.send_email')
+      def test_multi_channel_notification(self, mock_email, mock_sms):
+          \"\"\"Test multiple external dependencies mocked\"\"\"
+          service = NotificationService()
+          service.notify_all(
+              email="user@example.com",
+              phone="+1234567890",
+              message="Alert!"
+          )
+
+          # Assert both channels called
+          mock_email.assert_called_once()
+          mock_sms.assert_called_once()
+          assert "Alert!" in str(mock_email.call_args)
+          assert "+1234567890" in str(mock_sms.call_args)
+
+      def test_sms_with_monkeypatch(self, monkeypatch):
+          \"\"\"Test SMS notification using monkeypatch\"\"\"
+          sent_messages = []
+
+          def mock_send_sms(phone, message):
+              sent_messages.append({"phone": phone, "message": message})
+              return True
+
+          # Monkeypatch the SMS sending function
+          monkeypatch.setattr(
+              'services.notification_service.send_sms',
+              mock_send_sms
+          )
+
+          service = NotificationService()
+          service.send_sms_alert("+1234567890", "Test alert")
+
+          # Assert message was "sent"
+          assert len(sent_messages) == 1
+          assert sent_messages[0]["phone"] == "+1234567890"
+          assert sent_messages[0]["message"] == "Test alert"
+
+  # tests/queue/test_message_queue.py
+  from unittest.mock import patch, MagicMock
+  from queue.message_queue import MessageQueue
+
+  class TestMessageQueueMocking:
+      @patch('queue.message_queue.pika.BlockingConnection')
+      def test_publish_message_to_queue(self, mock_connection):
+          \"\"\"Test RabbitMQ message publishing with mocked connection\"\"\"
+          # Setup mock connection and channel
+          mock_channel = MagicMock()
+          mock_connection.return_value.channel.return_value = mock_channel
+
+          # Execute
+          queue = MessageQueue(host='localhost')
+          queue.publish('test_queue', {'event': 'user_created'})
+
+          # Assert
+          mock_channel.basic_publish.assert_called_once()
+          call_args = mock_channel.basic_publish.call_args
+          assert call_args[1]['routing_key'] == 'test_queue'
+
+      @patch('queue.message_queue.pika.BlockingConnection')
+      def test_consume_messages_from_queue(self, mock_connection):
+          \"\"\"Test RabbitMQ message consumption with mocked channel\"\"\"
+          # Setup mock with message
+          mock_channel = MagicMock()
+          mock_channel.consume.return_value = [
+              (None, None, b'{"event": "test"}')
+          ]
+          mock_connection.return_value.channel.return_value = mock_channel
+
+          # Execute
+          queue = MessageQueue(host='localhost')
+          messages = list(queue.consume('test_queue', max_messages=1))
+
+          # Assert
+          assert len(messages) == 1
+          mock_channel.basic_consume.assert_called_once()
+  ```
+
+  ```python
+  # tests/conftest.py
+  import pytest
+  from unittest.mock import Mock
+
+  @pytest.fixture
+  def mock_http_response_success():
+      \"\"\"Fixture for successful HTTP response\"\"\"
+      mock_response = Mock()
+      mock_response.status_code = 200
+      mock_response.json.return_value = {"success": True}
+      return mock_response
+
+  @pytest.fixture
+  def mock_http_response_error():
+      \"\"\"Fixture for HTTP error response\"\"\"
+      mock_response = Mock()
+      mock_response.status_code = 500
+      mock_response.json.return_value = {"error": "Internal server error"}
+      return mock_response
+
+  @pytest.fixture
+  def mock_notification_service(monkeypatch):
+      \"\"\"Fixture for mocked notification service\"\"\"
+      mock_service = Mock()
+      mock_service.send_email.return_value = True
+      mock_service.send_sms.return_value = True
+      monkeypatch.setattr(
+          'services.notification_service.NotificationService',
+          lambda: mock_service
+      )
+      return mock_service
+  ```
+
+  Expected mocking patterns:
+  - @mock.patch: Patch external HTTP/email/SMS calls
+  - monkeypatch: Pytest-native attribute replacement
+  - assert_called_once/assert_called_with: Verify call counts and arguments
+  - side_effect: Simulate failures and retry logic
+  - MagicMock: Complex objects with nested attributes
+
+checks:
+  - type: regex
+    pattern: '\b(mock|monkeypatch|patch)\b'
+    description: Must use mocking/patching tools
+  - type: regex
+    pattern: '\b(external\s+dependenc(y|ies)|HTTP|queue)\b'
+    description: Targets external dependencies like HTTP or queues
+  - type: regex
+    pattern: '\b(unit\s+tests?)\b'
+    description: Stays within unit testing scope
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3600
+  tags: [testing, unit, mocking, pytest]
+
