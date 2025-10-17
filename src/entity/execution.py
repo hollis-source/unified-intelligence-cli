@@ -39,6 +39,16 @@ class ExecutionResult:
     #     "context": {<additional debugging info>}
     # }
 
+    @property
+    def error(self) -> Optional[str]:
+        """Get first error message (backward compatibility for Phase 3 feedback loops)."""
+        return self.errors[0] if self.errors else None
+
+    @property
+    def task_id(self) -> Optional[str]:
+        """Get task ID from metadata (backward compatibility for Phase 3 feedback loops)."""
+        return self.metadata.get("task_id")
+
 
 @dataclass
 class ExecutionContext:
