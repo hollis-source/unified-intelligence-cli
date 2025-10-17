@@ -17,12 +17,28 @@ prompt: |
   4. Document expected behaviors and acceptance criteria
   5. Include usability considerations (mobile vs desktop, accessibility)
   6. MANDATORY: Your response MUST include at least 3 file:line references to existing code
+  7. MANDATORY: Each test charter MUST reference specific implementation files using file:line format
+
+  Test Charter Template (use this format for each charter):
+  ```
+  Charter #X: [Charter Name]
+  - Scope: [What to explore]
+  - Implementation: [file.ext:line references to code being tested]
+  - Test Ideas: [Specific scenarios to try]
+  - Risk Areas: [What could go wrong]
+  - Success Criteria: [How to know if testing was successful]
+  ```
 
   Expected files to reference:
-  - src/pages/CheckoutPage.tsx (checkout UI)
-  - src/components/PaymentForm.tsx (payment component)
-  - src/api/orders.py (order processing API)
+  - src/pages/CheckoutPage.tsx (checkout UI implementation)
+  - src/components/PaymentForm.tsx (payment component logic)
+  - src/api/orders.py (order processing API endpoints)
   - tests/qa/exploratory/checkout_charters.md (test charters document)
+
+  Example of proper file:line references:
+  - src/pages/CheckoutPage.tsx:45 (payment method selector)
+  - src/components/PaymentForm.tsx:120 (validation logic)
+  - src/api/orders.py:78 (order creation endpoint)
 
 checks:
   - "exploratory"
