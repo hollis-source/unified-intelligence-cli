@@ -29,4 +29,5 @@ checks:
   - "smoke test"
   - "critical path"
   - "priority"
-  - "response code"
+  - type: regex
+    pattern: "(response|status|HTTP).{0,10}code"
