@@ -1,7 +1,7 @@
 # Agent Containerization & Scaling Strategy
 
 **Status**: Planning Phase
-**Goal**: Deploy 12-agent unified-intelligence-cli as containerized microservices
+**Goal**: Deploy 12-agent autonomous-task-agent-dev-orchestration as containerized microservices
 **Timeline**: 2-3 week implementation
 **DSL Integration**: Category theory workflows for orchestration
 
@@ -25,7 +25,7 @@ Containerize the 12-agent system (python, frontend, backend, devops, tester, res
 
 ```
 ┌─────────────────────────────────────────────┐
-│   unified-intelligence-cli (single process) │
+│   autonomous-task-agent-dev-orchestration (single process) │
 │   ┌────────────────────────────────────┐   │
 │   │ 12 Agents (in-memory)              │   │
 │   │ - Shared Python process            │   │
