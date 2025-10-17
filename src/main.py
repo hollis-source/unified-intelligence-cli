@@ -64,6 +64,10 @@ if env_file.exists():
               help="Enable feedback loops for automatic replanning on failures (Phase 3)")
 @click.option("--max-replanning-attempts", type=int, default=3,
               help="Maximum replanning attempts (default: 3)")
+@click.option("--state-persistence", type=click.Path(), default=None,
+              help="Enable state persistence with file path (Phase 4)")
+@click.option("--load-state", type=click.Path(exists=True), default=None,
+              help="Load initial state from file (Phase 4)")
 def main(
     goal: str,
     workflow: str,
@@ -84,7 +88,9 @@ def main(
     collect_metrics: bool,
     metrics_dir: str,
     feedback_loops: bool,
-    max_replanning_attempts: int
+    max_replanning_attempts: int,
+    state_persistence: str,
+    load_state: str
 ) -> None:
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.
