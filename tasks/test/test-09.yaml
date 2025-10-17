@@ -1,0 +1,107 @@
+id: test-09
+agent: test
+prompt: |
+  Build reusable test data factories for core entities (User, Product, Order) and refactor
+  existing tests to use them. Ensure factories are ergonomic, override-friendly, and fast.
+
+  Requirements:
+  - Provide sensible defaults with ability to override
+  - Avoid global state; keep deterministic
+  - Improve test readability and performance
+
+  Expected files to reference:
+  - tests/factories/user_factory.py (User factory)
+  - tests/factories/product_factory.py (Product factory)
+  - tests/factories/order_factory.py (Order factory)
+  - tests/factories/__init__.py (factory exports)
+
+  Example of proper file:line references:
+  - tests/factories/user_factory.py:8 (class UserFactory with default email)
+  - tests/factories/product_factory.py:12 (class ProductFactory with price faker)
+  - tests/factories/order_factory.py:15 (class OrderFactory with SubFactory)
+  - tests/test_checkout_refactored.py:22 (UserFactory.create() usage)
+
+  Deliverables:
+  1. tests/factories/*.py with entity factories
+  2. Refactored tests using factories
+  - MANDATORY: Your response MUST include at least 3 file:line references to factory files
+  - MANDATORY: Include FactoryBoy patterns with Factory, SubFactory, Faker, Sequence
+
+  Test Factory Template (use this structure):
+  ```python
+  # tests/factories/user_factory.py
+  import factory
+  from factory import Faker, Sequence
+  from models import User
+
+  class UserFactory(factory.Factory):
+      class Meta:
+          model = User
+
+      email = Sequence(lambda n: f"user{n}@example.com")
+      username = Faker('user_name')
+      password = 'DefaultPassword123!'
+      is_active = True
+
+      @factory.post_generation
+      def password_hash(obj, create, extracted, **kwargs):
+          if create:
+              obj.set_password(obj.password)
+
+  # tests/factories/product_factory.py
+  class ProductFactory(factory.Factory):
+      class Meta:
+          model = Product
+
+      name = Faker('word')
+      price = Faker('pydecimal', left_digits=3, right_digits=2, positive=True)
+      stock = Faker('random_int', min=1, max=100)
+      sku = Sequence(lambda n: f"SKU-{n:05d}")
+
+  # tests/factories/order_factory.py
+  class OrderFactory(factory.Factory):
+      class Meta:
+          model = Order
+
+      user = factory.SubFactory(UserFactory)
+      product = factory.SubFactory(ProductFactory)
+      quantity = Faker('random_int', min=1, max=5)
+      total = factory.LazyAttribute(lambda o: o.product.price * o.quantity)
+
+  # Refactored test using factories
+  def test_checkout_with_factories():
+      user = UserFactory.create(email='test@example.com')
+      product = ProductFactory.create(price=99.99, stock=10)
+      order = OrderFactory.create(user=user, product=product, quantity=2)
+
+      assert order.total == 199.98
+      assert product.stock == 10  # Factory doesn't modify DB
+  ```
+
+  Expected patterns:
+  - FactoryBoy: factory.Factory, Meta.model
+  - Faker: Realistic test data generation
+  - Sequence: Unique values (emails, SKUs)
+  - SubFactory: Relationship handling
+  - LazyAttribute: Computed fields
+
+checks:
+  - type: regex
+    pattern: '\b(factory|factories|factory\s+boy)\b'
+    description: Introduces test factories
+  - type: regex
+    pattern: '\b(User|Product|Order)\b'
+    description: Mentions core entities
+  - type: regex
+    pattern: '\b(refactor|readability|deterministic)\b'
+    description: Focus on refactor and determinism
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3600
+  tags: [testing, factories, unit]

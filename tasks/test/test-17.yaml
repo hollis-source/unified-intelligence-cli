@@ -1,0 +1,289 @@
+id: test-17
+agent: test
+prompt: |
+  Design a performance testing plan for the search endpoint. Include load profiles,
+  SLIs/SLOs, and assertions on latency percentiles and error rates under sustained load.
+  Provide scripts/configs to run locally and in CI (smoke).
+
+  Requirements:
+  - Define SLIs (latency, throughput, error rate) and SLOs
+  - Specify load stages (ramp-up, sustained, spike)
+  - Automate assertions on P95/P99 latency and error budgets
+
+  Expected files to reference:
+  - tests/performance/search_load_test.js (k6 load test script)
+  - tests/performance/config/load_profiles.json (load stage definitions)
+  - .github/workflows/performance_smoke.yml (CI smoke test workflow)
+  - docs/performance_slos.md (SLI/SLO documentation)
+
+  Example of proper file:line references:
+  - tests/performance/search_load_test.js:25 (export default function with search request)
+  - tests/performance/config/load_profiles.json:8 (ramp-up stage configuration)
+  - .github/workflows/performance_smoke.yml:15 (k6 run with reduced load)
+  - docs/performance_slos.md:12 (SLO: P95 latency < 200ms)
+
+  Deliverables:
+  1. Load test script (k6/Locust) with load stages
+  2. CI smoke job with assertions and reduced load
+  - MANDATORY: Your response MUST include at least 3 file:line references to performance test files
+  - MANDATORY: Include k6/Locust patterns with stages, thresholds, and P95/P99 metrics
+
+  Performance Testing Template (use this structure):
+  ```javascript
+  // tests/performance/search_load_test.js (k6 example)
+  import http from 'k6/http';
+  import { check, sleep } from 'k6';
+  import { Rate, Trend } from 'k6/metrics';
+
+  // Custom metrics
+  const errorRate = new Rate('errors');
+  const searchLatency = new Trend('search_latency');
+
+  // Load test configuration
+  export const options = {
+    stages: [
+      { duration: '30s', target: 10 },   // Ramp-up to 10 users
+      { duration: '1m', target: 50 },    // Ramp-up to 50 users
+      { duration: '3m', target: 50 },    // Sustained load at 50 users
+      { duration: '30s', target: 100 },  // Spike to 100 users
+      { duration: '1m', target: 100 },   // Sustained spike
+      { duration: '30s', target: 0 },    // Ramp-down
+    ],
+
+    // Thresholds: SLO enforcement
+    thresholds: {
+      'http_req_duration': ['p(95)<200', 'p(99)<500'],  // P95 < 200ms, P99 < 500ms
+      'http_req_failed': ['rate<0.01'],                 // Error rate < 1%
+      'errors': ['rate<0.01'],                          // Custom error rate < 1%
+      'search_latency': ['p(95)<200', 'p(99)<500'],     // Search-specific latency
+    },
+  };
+
+  // Test data: search queries
+  const searchQueries = [
+    'laptop',
+    'wireless mouse',
+    'mechanical keyboard',
+    'usb-c cable',
+    '4k monitor'
+  ];
+
+  export default function () {
+    // Select random query
+    const query = searchQueries[Math.floor(Math.random() * searchQueries.length)];
+
+    // Make search request
+    const response = http.get(`http://localhost:8000/api/search?q=${query}`);
+
+    // Track custom metric
+    searchLatency.add(response.timings.duration);
+
+    // Assertions
+    const success = check(response, {
+      'status is 200': (r) => r.status === 200,
+      'response time < 500ms': (r) => r.timings.duration < 500,
+      'results array exists': (r) => JSON.parse(r.body).results !== undefined,
+      'results not empty': (r) => JSON.parse(r.body).results.length > 0,
+    });
+
+    // Track errors
+    errorRate.add(!success);
+
+    // Think time between requests
+    sleep(1);
+  }
+
+  // Smoke test configuration (for CI)
+  export const smokeTestOptions = {
+    stages: [
+      { duration: '10s', target: 5 },   // Ramp-up to 5 users
+      { duration: '30s', target: 5 },   // Sustained load
+      { duration: '10s', target: 0 },   // Ramp-down
+    ],
+    thresholds: {
+      'http_req_duration': ['p(95)<300'],  // Relaxed threshold for CI
+      'http_req_failed': ['rate<0.05'],    // 5% error rate acceptable in CI
+    },
+  };
+
+  // tests/performance/config/load_profiles.json
+  {
+    "profiles": {
+      "smoke": {
+        "description": "Quick validation test for CI",
+        "duration": "1m",
+        "target_users": 5,
+        "thresholds": {
+          "p95_latency_ms": 300,
+          "error_rate_percent": 5
+        }
+      },
+      "load": {
+        "description": "Normal load test",
+        "duration": "5m",
+        "target_users": 50,
+        "thresholds": {
+          "p95_latency_ms": 200,
+          "p99_latency_ms": 500,
+          "error_rate_percent": 1
+        }
+      },
+      "stress": {
+        "description": "Stress test to find breaking point",
+        "stages": [
+          { "duration": "2m", "target": 100 },
+          { "duration": "5m", "target": 200 },
+          { "duration": "2m", "target": 300 },
+          { "duration": "5m", "target": 300 }
+        ],
+        "thresholds": {
+          "p95_latency_ms": 1000,
+          "error_rate_percent": 5
+        }
+      },
+      "spike": {
+        "description": "Sudden traffic spike test",
+        "stages": [
+          { "duration": "10s", "target": 10 },
+          { "duration": "10s", "target": 200 },  // Sudden spike
+          { "duration": "3m", "target": 200 },
+          { "duration": "10s", "target": 10 }
+        ],
+        "thresholds": {
+          "p95_latency_ms": 500,
+          "error_rate_percent": 2
+        }
+      }
+    }
+  }
+
+  // .github/workflows/performance_smoke.yml
+  name: Performance Smoke Tests
+
+  on:
+    push:
+      branches: [main]
+    pull_request:
+
+  jobs:
+    smoke-test:
+      runs-on: ubuntu-latest
+
+      steps:
+        - uses: actions/checkout@v3
+
+        - name: Start application
+          run: |
+            docker-compose up -d
+            sleep 10  # Wait for services to be ready
+
+        - name: Install k6
+          run: |
+            sudo gpg -k
+            sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+            echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+            sudo apt-get update
+            sudo apt-get install k6
+
+        - name: Run smoke test
+          run: |
+            k6 run tests/performance/search_load_test.js \
+              --out json=performance_results.json \
+              --summary-export=summary.json
+          env:
+            K6_CLOUD_TOKEN: ${{ secrets.K6_CLOUD_TOKEN }}
+
+        - name: Validate performance thresholds
+          run: |
+            python scripts/validate_performance.py \
+              --results performance_results.json \
+              --thresholds tests/performance/config/load_profiles.json
+
+        - name: Upload results
+          uses: actions/upload-artifact@v3
+          if: always()
+          with:
+            name: performance-results
+            path: |
+              performance_results.json
+              summary.json
+
+  # docs/performance_slos.md
+  # Performance SLOs (Service Level Objectives)
+
+  ## Search Endpoint SLIs/SLOs
+
+  ### Service Level Indicators (SLIs)
+  1. **Latency**: Response time for search requests
+     - Measured: P50, P95, P99 percentiles
+  2. **Throughput**: Requests per second sustained
+     - Measured: req/s during sustained load
+  3. **Error Rate**: Percentage of failed requests
+     - Measured: HTTP 5xx responses / total requests
+
+  ### Service Level Objectives (SLOs)
+  | Metric | SLO Target | Measurement Window |
+  |--------|------------|-------------------|
+  | P95 Latency | < 200ms | Rolling 7 days |
+  | P99 Latency | < 500ms | Rolling 7 days |
+  | Error Rate | < 1% | Rolling 24 hours |
+  | Throughput | > 100 req/s | During load test |
+
+  ### Load Profiles
+  1. **Smoke Test** (CI): 5 users, 1 minute
+     - Purpose: Quick regression detection
+     - Run: Every PR, every push to main
+     - Thresholds: P95 < 300ms, errors < 5%
+
+  2. **Load Test** (Staging): 50 users, 5 minutes
+     - Purpose: Validate under normal load
+     - Run: Nightly, before releases
+     - Thresholds: P95 < 200ms, P99 < 500ms, errors < 1%
+
+  3. **Stress Test** (Staging): 300 users, 10 minutes
+     - Purpose: Find breaking point
+     - Run: Weekly, before major releases
+     - Thresholds: P95 < 1000ms, errors < 5%
+
+  ### Assertions
+  ```javascript
+  // k6 threshold assertions (fail test if violated)
+  thresholds: {
+    'http_req_duration': ['p(95)<200', 'p(99)<500'],
+    'http_req_failed': ['rate<0.01'],
+  }
+  ```
+
+  ### Error Budget
+  - SLO: 99% success rate (1% error budget)
+  - Budget: 7.2 minutes downtime per 30 days
+  - Tracking: Prometheus + Grafana dashboards
+  ```
+
+  Expected patterns:
+  - k6 load testing: stages, thresholds, custom metrics
+  - SLIs/SLOs: P95/P99 latency, error rate, throughput
+  - Load profiles: smoke (CI), load (staging), stress, spike
+  - Assertions: Automated threshold checks in k6 and CI
+  - CI integration: Smoke test on every PR with reduced load
+
+checks:
+  - type: regex
+    pattern: '\b(performance|load|stress)\b'
+    description: Mentions performance/load testing
+  - type: regex
+    pattern: '\b(P95|P99|latency|throughput|SLO|SLI)\b'
+    description: Uses latency/throughput SLIs/SLOs
+  - type: regex
+    pattern: '\b(assert(ion)?|error\s+rate)\b'
+    description: Automates assertions and error rates
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 3600
+  tags: [testing, performance, strategy]

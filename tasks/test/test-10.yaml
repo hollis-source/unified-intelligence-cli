@@ -1,0 +1,154 @@
+id: test-10
+agent: test
+prompt: |
+  Create a CI test matrix to run unit and integration tests across Python versions and OSes.
+  Split fast unit tests from slower integration tests and configure parallelization and
+  caching for speed.
+
+  Requirements:
+  - Separate jobs for unit vs integration
+  - Matrix over Python versions and OS
+  - Cache dependencies and test results where possible
+
+  Expected files to reference:
+  - .github/workflows/test.yml (CI workflow with matrix)
+  - .github/workflows/integration.yml (integration test workflow)
+  - pytest.ini (test markers for unit/integration)
+  - scripts/ci_test.sh (CI test runner script)
+
+  Example of proper file:line references:
+  - .github/workflows/test.yml:12 (strategy: matrix: python-version)
+  - .github/workflows/test.yml:25 (actions/cache@v3 for pip dependencies)
+  - .github/workflows/integration.yml:8 (runs-on: ubuntu-latest, macos-latest, windows-latest)
+  - pytest.ini:5 (markers: unit, integration, slow)
+
+  Deliverables:
+  1. CI workflow file with matrix strategy
+  2. Commands for unit and integration stages
+  - MANDATORY: Your response MUST include at least 3 file:line references to CI workflow files
+  - MANDATORY: Include GitHub Actions matrix with python-version, os, caching, and parallel execution
+
+  CI Test Matrix Template (use this structure):
+  ```yaml
+  # .github/workflows/test.yml
+  name: Unit Tests
+
+  on: [push, pull_request]
+
+  jobs:
+    unit-tests:
+      runs-on: ${{ matrix.os }}
+      strategy:
+        matrix:
+          os: [ubuntu-latest, macos-latest, windows-latest]
+          python-version: ['3.9', '3.10', '3.11', '3.12']
+
+      steps:
+        - uses: actions/checkout@v3
+
+        - name: Set up Python ${{ matrix.python-version }}
+          uses: actions/setup-python@v4
+          with:
+            python-version: ${{ matrix.python-version }}
+
+        - name: Cache pip dependencies
+          uses: actions/cache@v3
+          with:
+            path: ~/.cache/pip
+            key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+            restore-keys: |
+              ${{ runner.os }}-pip-
+
+        - name: Install dependencies
+          run: |
+            pip install -r requirements.txt
+            pip install pytest pytest-cov
+
+        - name: Run unit tests
+          run: pytest tests/ -m "unit" --cov=src --cov-report=xml
+
+        - name: Upload coverage
+          uses: codecov/codecov-action@v3
+          with:
+            files: ./coverage.xml
+
+  # .github/workflows/integration.yml
+  name: Integration Tests
+
+  on:
+    push:
+      branches: [main]
+    pull_request:
+
+  jobs:
+    integration-tests:
+      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          python-version: ['3.10', '3.12']  # Reduced matrix for slower tests
+
+      services:
+        postgres:
+          image: postgres:14
+          env:
+            POSTGRES_PASSWORD: postgres
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+
+      steps:
+        - uses: actions/checkout@v3
+
+        - name: Set up Python ${{ matrix.python-version }}
+          uses: actions/setup-python@v4
+          with:
+            python-version: ${{ matrix.python-version }}
+
+        - name: Install dependencies
+          run: pip install -r requirements.txt
+
+        - name: Run integration tests
+          run: pytest tests/ -m "integration" --maxfail=1
+          env:
+            DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+  ```
+
+  ```ini
+  # pytest.ini
+  [pytest]
+  markers =
+      unit: Fast unit tests with mocks
+      integration: Slower integration tests with real services
+      slow: Very slow tests (>1 minute)
+
+  addopts = --strict-markers -v
+  ```
+
+  Expected patterns:
+  - Matrix strategy: python-version, os
+  - Caching: actions/cache@v3 for pip
+  - Parallel execution: Multiple matrix combinations run concurrently
+  - Test markers: pytest -m "unit" vs pytest -m "integration"
+
+checks:
+  - type: regex
+    pattern: '\b(matrix|CI|workflow)\b'
+    description: Mentions CI matrix/workflow
+  - type: regex
+    pattern: '\b(unit\s+tests?|integration\s+tests?)\b'
+    description: Splits unit and integration stages
+  - type: regex
+    pattern: '\b(cache|parallel|shard)\b'
+    description: Uses caching/parallelization/sharding
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3600
+  tags: [testing, ci, strategy]

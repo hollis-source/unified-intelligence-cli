@@ -1,0 +1,140 @@
+id: test-07
+agent: test
+prompt: |
+  Create database integration tests for transactional operations in checkout. Use a test
+  database with migrations applied, wrap each test in a transaction, and verify consistency
+  on success and rollback on failure.
+
+  Requirements:
+  - Apply migrations in test setup
+  - Use transactions/rollbacks for isolation
+  - Verify invariants (stock, order totals, payment state)
+
+  Expected files to reference:
+  - tests/integration/test_checkout_db.py (checkout transaction tests)
+  - tests/integration/db_helpers.py (migration and seeding helpers)
+  - alembic/versions/*.py (database migrations)
+  - tests/integration/conftest.py (transaction fixtures)
+
+  Example of proper file:line references:
+  - tests/integration/test_checkout_db.py:15 (def test_checkout_success_commits_transaction)
+  - tests/integration/test_checkout_db.py:45 (def test_checkout_failure_rolls_back)
+  - tests/integration/db_helpers.py:8 (def apply_migrations)
+  - tests/integration/conftest.py:22 (@pytest.fixture def db_transaction)
+
+  Deliverables:
+  1. tests/integration/test_checkout_db.py
+  2. Helpers for seeding and teardown
+  - MANDATORY: Your response MUST include at least 3 file:line references to database test files
+  - MANDATORY: Include transaction/rollback patterns with BEGIN/COMMIT/ROLLBACK and stock invariants
+
+  Database Transaction Test Template (use this structure):
+  ```python
+  # tests/integration/test_checkout_db.py
+  import pytest
+  from models import Order, Product, Payment
+  from database import db
+
+  class TestCheckoutTransactions:
+      def test_checkout_success_commits_transaction(self, db_transaction, seed_products):
+          """Test successful checkout commits all changes"""
+          # Arrange
+          product = Product.query.filter_by(name='Laptop').first()
+          initial_stock = product.stock
+
+          # Act
+          order = Order.create(product_id=product.id, quantity=2)
+          payment = Payment.create(order_id=order.id, amount=product.price * 2)
+          payment.process()
+          db.session.commit()
+
+          # Assert - verify all changes persisted
+          assert Order.query.filter_by(id=order.id).first() is not None
+          assert Payment.query.filter_by(id=payment.id).first().status == 'completed'
+          assert Product.query.filter_by(id=product.id).first().stock == initial_stock - 2
+
+      def test_checkout_failure_rolls_back(self, db_transaction, seed_products):
+          """Test failed checkout rolls back all changes"""
+          product = Product.query.filter_by(name='Laptop').first()
+          initial_stock = product.stock
+
+          try:
+              order = Order.create(product_id=product.id, quantity=2)
+              product.stock -= 2
+              # Simulate payment failure
+              raise Exception("Payment gateway error")
+          except Exception:
+              db.session.rollback()
+
+          # Assert - verify rollback
+          assert Product.query.filter_by(id=product.id).first().stock == initial_stock
+          assert Order.query.filter_by(id=order.id).first() is None
+
+      def test_insufficient_stock_prevents_checkout(self, db_transaction, seed_products):
+          """Test insufficient stock constraint prevents checkout"""
+          product = Product.query.filter_by(name='Mouse').first()
+
+          with pytest.raises(ValueError, match="Insufficient stock"):
+              Order.create(product_id=product.id, quantity=1000)  # Exceeds stock
+
+  # tests/integration/db_helpers.py
+  from alembic import command
+  from alembic.config import Config
+
+  def apply_migrations():
+      """Apply all Alembic migrations to test database"""
+      alembic_cfg = Config("alembic.ini")
+      command.upgrade(alembic_cfg, "head")
+
+  def seed_test_data(session):
+      """Seed minimal test data"""
+      products = [
+          Product(name='Laptop', price=999.99, stock=10),
+          Product(name='Mouse', price=29.99, stock=50),
+      ]
+      session.add_all(products)
+      session.commit()
+
+  # tests/integration/conftest.py
+  @pytest.fixture(scope="function")
+  def db_transaction(app):
+      """Wrap each test in a transaction"""
+      connection = db.engine.connect()
+      transaction = connection.begin()
+
+      # Override session to use this connection
+      db.session = db.create_scoped_session(options={"bind": connection})
+
+      yield db.session
+
+      transaction.rollback()
+      connection.close()
+      db.session.remove()
+  ```
+
+  Expected patterns:
+  - Transaction wrapping: BEGIN/COMMIT/ROLLBACK
+  - Invariant verification: stock levels, order totals, payment states
+  - Migration application: Alembic upgrade(head)
+  - Test isolation: Each test gets clean transaction
+
+checks:
+  - type: regex
+    pattern: '\b(database|transaction|rollback)\b'
+    description: Mentions DB transactions and rollbacks
+  - type: regex
+    pattern: '\b(integration\s+tests?)\b'
+    description: Clearly integration scope
+  - type: regex
+    pattern: '\b(migrations?|seed(ing)?)\b'
+    description: Applies migrations and seeding
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3600
+  tags: [testing, integration, database]
