@@ -1,0 +1,211 @@
+id: db-16
+agent: database
+prompt: |
+  Design SurrealDB connection pooling strategy for async RAG operations.
+
+  Context:
+  - Current issue: WebSocket timeout during long LLM inference (181s)
+  - Architecture: Async Python (asyncio) with SurrealDB WebSocket connections
+  - Access pattern: Burst of 7 parallel RAG queries, then idle
+  - Connection lifecycle: Created per query (expensive), should be pooled
+  - Error: "WebSocket connection closed" during synthesis phase
+
+  Current Code (Problematic):
+  ```python
+  # Creates new connection every query
+  async def retrieve_context(query):
+      db = await Surreal()
+      await db.connect("ws://localhost:8000/rpc")
+      await db.signin({"user": "root", "pass": "root"})
+      await db.use("rag", "codebase")
+
+      result = await db.query("SELECT ...")  # Works
+      await db.close()  # Connection dies before LLM finishes
+      return result
+  ```
+
+  Requirements:
+  1. Connection pooling design:
+     - Pool size calculation (based on concurrency)
+     - Connection lifecycle management
+     - Health checks and reconnection logic
+  2. Handle long-running operations:
+     - WebSocket keepalive configuration
+     - Timeout handling
+     - Connection reuse across multiple queries
+  3. Async-safe implementation (one pool per event loop)
+  4. Error handling and retry logic
+  5. Resource cleanup (proper shutdown)
+
+  Expected files to reference:
+  - src/adapters/rag/surrealdb_pool.py (connection pool implementation)
+  - src/adapters/rag/rag_coordinator.py (pool usage in RAG)
+  - tests/adapters/rag/test_surrealdb_pool.py (pool test cases)
+  - docs/surrealdb_connection_config.md (keepalive and timeout settings)
+
+  Example of proper file:line references:
+  - src/adapters/rag/surrealdb_pool.py:14 (asyncio.Queue for pool management)
+  - src/adapters/rag/surrealdb_pool.py:27 (timeout=300 for long LLM operations)
+  - src/adapters/rag/surrealdb_pool.py:56 (keepalive loop with SELECT 1 ping)
+  - tests/adapters/rag/test_surrealdb_pool.py:45 (concurrent access test)
+
+  Deliverables:
+  - Connection pool implementation (Python async)
+  - SurrealDB WebSocket configuration (keepalive, timeout)
+  - Integration code for RAG adapter
+  - Test cases (concurrent queries, long operations, failures)
+  - Monitoring metrics (pool saturation, connection age)
+  - MANDATORY: Your response MUST include at least 3 file:line references to connection pool files
+  - MANDATORY: Include Python async connection pool with asyncio.Queue and websocket keepalive
+
+  SurrealDB Connection Pool Template (use this structure):
+  ```python
+  # src/adapters/rag/surrealdb_pool.py
+  import asyncio
+  from typing import Optional
+  from surrealdb import Surreal
+  import logging
+
+  logger = logging.getLogger(__name__)
+
+  class SurrealDBPool:
+      def __init__(self, url: str, max_size: int = 10, keepalive_interval: int = 30):
+          self.url = url
+          self.max_size = max_size
+          self.keepalive_interval = keepalive_interval
+          self._pool: asyncio.Queue[Surreal] = asyncio.Queue(maxsize=max_size)
+          self._size = 0
+          self._lock = asyncio.Lock()
+          self._keepalive_task: Optional[asyncio.Task] = None
+
+      async def initialize(self):
+          """Pre-create pool connections"""
+          for _ in range(self.max_size):
+              conn = await self._create_connection()
+              await self._pool.put(conn)
+          self._keepalive_task = asyncio.create_task(self._keepalive_loop())
+
+      async def _create_connection(self) -> Surreal:
+          """Create new SurrealDB connection with config"""
+          db = Surreal()
+          await db.connect(self.url, timeout=300)  # 5min timeout for long operations
+          await db.signin({"user": "root", "pass": "root"})
+          await db.use("rag", "codebase")
+          self._size += 1
+          logger.info(f"Created connection ({self._size}/{self.max_size})")
+          return db
+
+      async def acquire(self) -> Surreal:
+          """Get connection from pool"""
+          try:
+              return await asyncio.wait_for(self._pool.get(), timeout=5.0)
+          except asyncio.TimeoutError:
+              if self._size < self.max_size:
+                  async with self._lock:
+                      if self._size < self.max_size:
+                          return await self._create_connection()
+              raise Exception("Connection pool exhausted")
+
+      async def release(self, conn: Surreal):
+          """Return connection to pool"""
+          try:
+              await self._pool.put(conn)
+          except asyncio.QueueFull:
+              await conn.close()
+              self._size -= 1
+
+      async def _keepalive_loop(self):
+          """Send ping to keep WebSocket alive"""
+          while True:
+              await asyncio.sleep(self.keepalive_interval)
+              connections = []
+              while not self._pool.empty():
+                  try:
+                      conn = self._pool.get_nowait()
+                      connections.append(conn)
+                  except asyncio.QueueEmpty:
+                      break
+
+              for conn in connections:
+                  try:
+                      await conn.query("SELECT 1;")  # Keepalive ping
+                  except Exception as e:
+                      logger.error(f"Keepalive failed, recreating connection: {e}")
+                      await conn.close()
+                      conn = await self._create_connection()
+                  finally:
+                      await self._pool.put(conn)
+
+      async def close_all(self):
+          """Shutdown pool"""
+          if self._keepalive_task:
+              self._keepalive_task.cancel()
+          while not self._pool.empty():
+              conn = await self._pool.get()
+              await conn.close()
+  ```
+
+  Usage Example:
+  ```python
+  # src/adapters/rag/rag_coordinator.py
+  pool = SurrealDBPool("ws://localhost:8000/rpc", max_size=10, keepalive_interval=30)
+  await pool.initialize()
+
+  async def retrieve_context(query):
+      conn = await pool.acquire()
+      try:
+          result = await conn.query("SELECT ...", {"query_vector": embedding})
+          return result
+      finally:
+          await pool.release(conn)
+  ```
+
+  Expected files to reference:
+  - src/adapters/rag/surrealdb_pool.py (connection pool implementation)
+  - src/adapters/rag/rag_coordinator.py (pool usage in RAG)
+  - tests/adapters/rag/test_surrealdb_pool.py (pool test cases)
+  - docs/surrealdb_connection_config.md (keepalive and timeout settings)
+
+  Example of proper file:line references:
+  - src/adapters/rag/surrealdb_pool.py:14 (asyncio.Queue for pool management)
+  - src/adapters/rag/surrealdb_pool.py:27 (timeout=300 for long LLM operations)
+  - src/adapters/rag/surrealdb_pool.py:56 (keepalive loop with SELECT 1 ping)
+  - tests/adapters/rag/test_surrealdb_pool.py:45 (concurrent access test)
+
+  Deliverables:
+  1. Python code with asyncio.Queue, acquire(), release(), keepalive patterns
+  2. WebSocket config with timeout=300, keepalive_interval=30 settings
+  3. Test cases with asyncio.gather for concurrent queries
+
+  Expected files to reference:
+  - src/adapters/rag/surrealdb_pool.py (connection pool implementation)
+  - src/adapters/rag/rag_coordinator.py (pool usage in RAG)
+  - tests/adapters/rag/test_surrealdb_pool.py (pool test cases)
+  - docs/surrealdb_connection_config.md (keepalive and timeout settings)
+
+  Example of proper file:line references:
+  - src/adapters/rag/surrealdb_pool.py:14 (asyncio.Queue for pool management)
+  - src/adapters/rag/surrealdb_pool.py:27 (timeout=300 for long LLM operations)
+  - src/adapters/rag/surrealdb_pool.py:56 (keepalive loop with SELECT 1 ping)
+  - tests/adapters/rag/test_surrealdb_pool.py:45 (concurrent access test)
+
+checks:
+  - type: regex
+    pattern: "pool|connection.*pool|max.*connections"
+    description: Must implement connection pooling
+  - type: regex
+    pattern: "keepalive|ping|heartbeat"
+    description: Must address WebSocket keepalive
+  - type: regex
+    pattern: "asyncio|async def|await"
+    description: Must be async-safe
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 5500
+  tags: [multimodel-databases, connection-pooling, surrealdb, async, websocket]

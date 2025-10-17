@@ -1,0 +1,223 @@
+id: db-19
+agent: database
+prompt: |
+  Implement incremental RAG index updates without full re-indexing.
+
+  Context:
+  - Current: Full re-index takes 5 minutes for 50k entities (blocking)
+  - Use case: Developer makes code changes, wants RAG updated within seconds
+  - Challenge: Detect changed files, update embeddings, maintain consistency
+  - Goal: <10 second incremental update for 1-10 file changes
+
+  Requirements:
+  1. Change detection strategy:
+     - File watching (inotify, watchdog)
+     - Git diff-based (compare to last indexed commit)
+     - Hash-based (compare file content hashes)
+  2. Incremental update algorithm:
+     - Identify changed entities (functions, classes)
+     - Delete old embeddings
+     - Generate new embeddings
+     - Insert into SurrealDB
+  3. Consistency guarantees:
+     - No partial updates visible to queries
+     - Handle concurrent updates
+     - Transaction support (if available in SurrealDB)
+  4. Batch processing for efficiency (process 10 files together)
+  5. Monitoring: Track staleness (files indexed vs files on disk)
+
+  Expected files to reference:
+  - src/adapters/rag/incremental_indexer.py (incremental update logic)
+  - db/surrealdb/incremental_update.surql (DELETE/INSERT queries)
+  - scripts/watch_and_index.py (file watcher integration)
+  - .rag_index_state.json (index state tracking)
+
+  Example of proper file:line references:
+  - src/adapters/rag/incremental_indexer.py:16 (detect_changes with hashlib.sha256)
+  - src/adapters/rag/incremental_indexer.py:35 (DELETE FROM entities WHERE file_path)
+  - db/surrealdb/incremental_update.surql:2 (BEGIN TRANSACTION for consistency)
+  - scripts/watch_and_index.py:22 (watchdog file observer setup)
+
+  Deliverables:
+  - Incremental update script (Python)
+  - SurrealDB queries for delete/insert operations
+  - File watcher integration
+  - Consistency mechanism (transaction or lock-based)
+  - Benchmark: Full re-index (5min) vs incremental (10s)
+  - MANDATORY: Your response MUST include at least 3 file:line references to incremental update files
+  - MANDATORY: Include DELETE, INSERT queries and file change detection logic
+
+  Incremental Index Update Template (use this structure):
+  ```python
+  # src/adapters/rag/incremental_indexer.py
+  import hashlib
+  from pathlib import Path
+  from typing import List, Set
+  import asyncio
+
+  class IncrementalIndexer:
+      def __init__(self, db_pool, codebase_path: str):
+          self.db_pool = db_pool
+          self.codebase_path = Path(codebase_path)
+          self.index_state_file = ".rag_index_state.json"
+
+      async def detect_changes(self) -> Set[Path]:
+          """Detect changed files using content hashing"""
+          current_state = {}
+          changed_files = set()
+
+          # Compute hashes for all Python files
+          for py_file in self.codebase_path.rglob("*.py"):
+              content_hash = hashlib.sha256(py_file.read_bytes()).hexdigest()
+              current_state[str(py_file)] = content_hash
+
+          # Compare with last indexed state
+          last_state = self._load_index_state()
+          for file_path, current_hash in current_state.items():
+              if file_path not in last_state or last_state[file_path] != current_hash:
+                  changed_files.add(Path(file_path))
+
+          # Detect deleted files
+          for file_path in last_state:
+              if file_path not in current_state:
+                  changed_files.add(Path(file_path))
+
+          self._save_index_state(current_state)
+          return changed_files
+
+      async def update_file(self, file_path: Path):
+          """Incrementally update embeddings for single file"""
+          conn = await self.db_pool.acquire()
+          try:
+              # Step 1: Delete old entities for this file
+              await conn.query("""
+                  BEGIN TRANSACTION;
+
+                  DELETE FROM entities
+                  WHERE file_path = $file_path;
+
+                  COMMIT TRANSACTION;
+              """, {"file_path": str(file_path)})
+
+              # Step 2: Parse file and extract entities
+              entities = self._parse_file(file_path)
+
+              # Step 3: Generate embeddings
+              embeddings = await self._generate_embeddings([e['content'] for e in entities])
+
+              # Step 4: Insert new entities
+              for entity, embedding in zip(entities, embeddings):
+                  await conn.query("""
+                      INSERT INTO entities {
+                          entity_id: $entity_id,
+                          entity_type: $entity_type,
+                          file_path: $file_path,
+                          content: $content,
+                          embedding: $embedding,
+                          indexed_at: time::now()
+                      };
+                  """, {
+                      "entity_id": entity['id'],
+                      "entity_type": entity['type'],
+                      "file_path": str(file_path),
+                      "content": entity['content'],
+                      "embedding": embedding
+                  })
+
+          finally:
+              await self.db_pool.release(conn)
+
+      async def batch_update(self, changed_files: Set[Path]):
+          """Update multiple files in parallel"""
+          tasks = [self.update_file(f) for f in changed_files]
+          await asyncio.gather(*tasks)
+
+      def _load_index_state(self) -> dict:
+          """Load last indexed state from disk"""
+          import json
+          try:
+              with open(self.index_state_file) as f:
+                  return json.load(f)
+          except FileNotFoundError:
+              return {}
+
+      def _save_index_state(self, state: dict):
+          """Save index state to disk"""
+          import json
+          with open(self.index_state_file, 'w') as f:
+              json.dump(state, f, indent=2)
+  ```
+
+  ```surql
+  -- db/surrealdb/incremental_update.surql
+  -- Delete entities for changed file (within transaction)
+  BEGIN TRANSACTION;
+
+  DELETE FROM entities
+  WHERE file_path = $file_path;
+
+  COMMIT TRANSACTION;
+
+  -- Insert new entities (batch)
+  INSERT INTO entities [
+      {
+          entity_id: "func_123",
+          entity_type: "function",
+          file_path: "src/main.py",
+          content: "def example(): pass",
+          embedding: [0.1, 0.2, ...],
+          indexed_at: time::now()
+      },
+      ...
+  ];
+  ```
+
+  Expected files to reference:
+  - src/adapters/rag/incremental_indexer.py (incremental update logic)
+  - db/surrealdb/incremental_update.surql (DELETE/INSERT queries)
+  - scripts/watch_and_index.py (file watcher integration)
+  - .rag_index_state.json (index state tracking)
+
+  Example of proper file:line references:
+  - src/adapters/rag/incremental_indexer.py:16 (detect_changes with hashlib.sha256)
+  - src/adapters/rag/incremental_indexer.py:35 (DELETE FROM entities WHERE file_path)
+  - db/surrealdb/incremental_update.surql:2 (BEGIN TRANSACTION for consistency)
+  - scripts/watch_and_index.py:22 (watchdog file observer setup)
+
+  Deliverables:
+  1. Python code with hashlib.sha256, DELETE FROM, INSERT INTO, BEGIN TRANSACTION patterns
+  2. SurrealDB queries with transaction support for consistency
+  3. Benchmark (Full: 5min for 50k entities, Incremental: 8s for 10 files)
+
+  Expected files to reference:
+  - src/adapters/rag/incremental_indexer.py (incremental update logic)
+  - db/surrealdb/incremental_update.surql (DELETE/INSERT queries)
+  - scripts/watch_and_index.py (file watcher integration)
+  - .rag_index_state.json (index state tracking)
+
+  Example of proper file:line references:
+  - src/adapters/rag/incremental_indexer.py:16 (detect_changes with hashlib.sha256)
+  - src/adapters/rag/incremental_indexer.py:35 (DELETE FROM entities WHERE file_path)
+  - db/surrealdb/incremental_update.surql:2 (BEGIN TRANSACTION for consistency)
+  - scripts/watch_and_index.py:22 (watchdog file observer setup)
+
+checks:
+  - type: regex
+    pattern: "DELETE FROM.*WHERE|UPDATE.*SET|incremental"
+    description: Must implement incremental updates
+  - type: regex
+    pattern: "hash|sha256|git.*diff|watchdog"
+    description: Must detect file changes
+  - type: regex
+    pattern: "transaction|BEGIN.*TRANSACTION|consistency"
+    description: Must address consistency
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 5500
+  tags: [multimodel-databases, rag, incremental-indexing, surrealdb, consistency]

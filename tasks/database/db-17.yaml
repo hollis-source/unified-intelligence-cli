@@ -1,0 +1,200 @@
+id: db-17
+agent: database
+prompt: |
+  Analyze and optimize embedding dimensionality for storage and query performance.
+
+  Context:
+  - Current: nomic-embed-text (768 dimensions)
+  - Storage per entity: 768 floats × 4 bytes = 3KB per embedding
+  - Total storage: 50,000 entities × 3KB = 150MB (just embeddings)
+  - Query time: 800ms (includes vector distance computation)
+  - Question: Can we reduce dimensions without losing accuracy?
+
+  Requirements:
+  1. Dimensionality reduction techniques:
+     - PCA (Principal Component Analysis)
+     - t-SNE (not suitable for high-dim, explain why)
+     - Random projection
+     - Model-specific compression (if available)
+  2. Accuracy vs dimension trade-off analysis:
+     - Test 768, 512, 384, 256, 128 dimensions
+     - Measure recall@10 for each
+     - Measure query latency for each
+  3. Storage savings calculation
+  4. Implementation strategy:
+     - Offline reduction (during indexing)
+     - Online reduction (during query)
+     - When to use each
+  5. Production recommendation
+
+  Expected files to reference:
+  - src/adapters/rag/embedding_reducer.py (PCA implementation)
+  - scripts/benchmark_dimensionality.py (benchmark script)
+  - benchmarks/dimensionality_reduction.md (results table)
+  - models/pca_768_to_512.pkl (trained PCA model)
+
+  Example of proper file:line references:
+  - src/adapters/rag/embedding_reducer.py:10 (PCA n_components=target_dims)
+  - scripts/benchmark_dimensionality.py:15 (benchmark loop across dimensions)
+  - benchmarks/dimensionality_reduction.md:8 (512 dims recommended row)
+  - src/adapters/rag/embedding_reducer.py:18 (explained_variance_ratio calculation)
+
+  Deliverables:
+  - Dimensionality reduction implementation (Python/sklearn)
+  - Benchmark results table (dims vs recall vs latency vs storage)
+  - Decision matrix: When is reduction worth it?
+  - Code integration for RAG pipeline
+  - Visualization of accuracy degradation curve
+  - MANDATORY: Your response MUST include at least 3 file:line references to dimensionality reduction files
+  - MANDATORY: Include sklearn PCA implementation and benchmark comparison table
+
+  Dimensionality Reduction Template (use this structure):
+  ```python
+  # src/adapters/rag/embedding_reducer.py
+  from sklearn.decomposition import PCA
+  import numpy as np
+  import pickle
+
+  class EmbeddingReducer:
+      def __init__(self, target_dims: int = 384):
+          self.target_dims = target_dims
+          self.pca: Optional[PCA] = None
+
+      def fit(self, embeddings: np.ndarray):
+          """Fit PCA on training embeddings (768 → target_dims)"""
+          self.pca = PCA(n_components=self.target_dims, random_state=42)
+          self.pca.fit(embeddings)
+
+          explained_var = sum(self.pca.explained_variance_ratio_)
+          print(f"Reduced to {self.target_dims} dims, retained {explained_var:.1%} variance")
+
+      def transform(self, embedding: np.ndarray) -> np.ndarray:
+          """Reduce single embedding"""
+          if self.pca is None:
+              raise ValueError("Must call fit() first")
+          return self.pca.transform([embedding])[0]
+
+      def save(self, path: str):
+          """Save PCA model"""
+          with open(path, 'wb') as f:
+              pickle.dump(self.pca, f)
+
+      @classmethod
+      def load(cls, path: str, target_dims: int):
+          """Load pre-trained PCA"""
+          reducer = cls(target_dims)
+          with open(path, 'rb') as f:
+              reducer.pca = pickle.load(f)
+          return reducer
+
+  # scripts/benchmark_dimensionality.py
+  from sklearn.metrics import recall_score
+  import time
+
+  def benchmark_dimension(embeddings_full, queries, k=10):
+      """Benchmark different dimensions"""
+      results = []
+
+      for dims in [768, 512, 384, 256, 128]:
+          # Reduce embeddings
+          if dims < 768:
+              reducer = EmbeddingReducer(dims)
+              reducer.fit(embeddings_full)
+              embeddings = np.array([reducer.transform(e) for e in embeddings_full])
+              queries_reduced = np.array([reducer.transform(q) for q in queries])
+          else:
+              embeddings = embeddings_full
+              queries_reduced = queries
+
+          # Measure latency
+          start = time.time()
+          for query in queries_reduced:
+              similarities = cosine_similarity([query], embeddings)[0]
+              top_k = np.argsort(similarities)[-k:][::-1]
+          latency = (time.time() - start) / len(queries)
+
+          # Measure recall@10
+          # (compare top-k results vs full-dimension baseline)
+
+          # Storage calculation
+          storage_mb = len(embeddings) * dims * 4 / (1024 * 1024)
+
+          results.append({
+              'dims': dims,
+              'latency_ms': latency * 1000,
+              'recall@10': 0.985,  # Calculate actual recall
+              'storage_mb': storage_mb,
+              'variance_retained': 1.0 if dims == 768 else reducer.pca.explained_variance_ratio_.sum()
+          })
+
+      return results
+  ```
+
+  Benchmark Results Table:
+  ```markdown
+  ## benchmarks/dimensionality_reduction.md
+
+  | Dimensions | Latency (ms) | Recall@10 | Storage (MB) | Variance Retained | Recommendation |
+  |------------|--------------|-----------|--------------|-------------------|----------------|
+  | 768 (baseline) | 800 | 100.0% | 150 MB | 100% | High accuracy needed |
+  | 512 | 550 | 98.5% | 100 MB | 95% | **RECOMMENDED** (best trade-off) |
+  | 384 | 420 | 96.2% | 75 MB | 90% | Storage-constrained |
+  | 256 | 320 | 92.8% | 50 MB | 85% | Fast queries, lower accuracy OK |
+  | 128 | 180 | 85.1% | 25 MB | 75% | Not recommended (too much loss) |
+
+  **Recommendation**: Use 512 dimensions
+  - 31% faster (800ms → 550ms)
+  - 33% storage savings (150MB → 100MB)
+  - Only 1.5% recall loss (acceptable for most RAG use cases)
+  - Retains 95% of variance
+  ```
+
+  Expected files to reference:
+  - src/adapters/rag/embedding_reducer.py (PCA implementation)
+  - scripts/benchmark_dimensionality.py (benchmark script)
+  - benchmarks/dimensionality_reduction.md (results table)
+  - models/pca_768_to_512.pkl (trained PCA model)
+
+  Example of proper file:line references:
+  - src/adapters/rag/embedding_reducer.py:10 (PCA n_components=target_dims)
+  - scripts/benchmark_dimensionality.py:15 (benchmark loop across dimensions)
+  - benchmarks/dimensionality_reduction.md:8 (512 dims recommended row)
+  - src/adapters/rag/embedding_reducer.py:18 (explained_variance_ratio calculation)
+
+  Deliverables:
+  1. Python code with sklearn.decomposition.PCA, fit(), transform() patterns
+  2. Benchmark table with 768/512/384/256/128 dimension comparisons
+  3. Recommendation (512 dims: 98.5% recall, 33% storage savings)
+
+  Expected files to reference:
+  - src/adapters/rag/embedding_reducer.py (PCA implementation)
+  - scripts/benchmark_dimensionality.py (benchmark script)
+  - benchmarks/dimensionality_reduction.md (results table)
+  - models/pca_768_to_512.pkl (trained PCA model)
+
+  Example of proper file:line references:
+  - src/adapters/rag/embedding_reducer.py:10 (PCA n_components=target_dims)
+  - scripts/benchmark_dimensionality.py:15 (benchmark loop across dimensions)
+  - benchmarks/dimensionality_reduction.md:8 (512 dims recommended row)
+  - src/adapters/rag/embedding_reducer.py:18 (explained_variance_ratio calculation)
+
+checks:
+  - type: regex
+    pattern: "PCA|dimensionality.*reduction|sklearn"
+    description: Must implement dimensionality reduction
+  - type: regex
+    pattern: "recall|accuracy|precision"
+    description: Must measure accuracy impact
+  - type: regex
+    pattern: "768|512|384|256|128"
+    description: Must test multiple dimension sizes
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5000
+  tags: [multimodel-databases, embeddings, dimensionality-reduction, optimization, storage]

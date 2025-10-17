@@ -1,0 +1,194 @@
+id: db-15
+agent: database
+prompt: |
+  Implement hybrid search combining vector similarity and metadata filtering for RAG.
+
+  Context:
+  - Pure vector search returns semantically similar but contextually wrong results
+  - Example: Query about "authentication" returns results from test files, not production code
+  - Need to combine:
+    - Vector similarity (semantic relevance)
+    - Metadata filters (file path, entity type, recency)
+  - Goal: Improve RAG precision from 60% to 85%+
+
+  Requirements:
+  1. Hybrid search query design:
+     - Pre-filter by metadata THEN vector search (strategy 1)
+     - Vector search THEN re-rank by metadata (strategy 2)
+     - Weighted scoring combining both (strategy 3)
+  2. SurrealDB query implementation for each strategy
+  3. Performance analysis:
+     - Query latency impact
+     - Result quality (precision/recall)
+  4. Scoring algorithm:
+     - Vector similarity weight: 0-1
+     - Metadata relevance weight: 0-1
+     - Combined score calculation
+  5. Use cases and recommendations
+
+  Expected files to reference:
+  - db/surrealdb/hybrid_search.surql (3 strategy queries)
+  - src/adapters/rag/hybrid_search.py (scoring algorithm)
+  - benchmarks/hybrid_search_evaluation.md (precision/recall comparison)
+  - docs/hybrid_search_strategy.md (decision matrix)
+
+  Example of proper file:line references:
+  - db/surrealdb/hybrid_search.surql:5 (Strategy 1: WHERE pre-filter)
+  - db/surrealdb/hybrid_search.surql:18 (Strategy 2: CASE metadata boost)
+  - src/adapters/rag/hybrid_search.py:12 (score_result weighted calculation)
+  - benchmarks/hybrid_search_evaluation.md:25 (precision@10: 85% vs 60% baseline)
+
+  Deliverables:
+  - SurrealDB hybrid search queries (3 strategies)
+  - Scoring algorithm implementation (HybridSearchScorer class)
+  - Performance benchmarks (latency, precision@10, recall@10)
+  - Decision matrix: When to use which strategy
+  - Python code for RAG integration
+  - MANDATORY: Your response MUST include at least 3 file:line references to hybrid search files
+  - MANDATORY: Include SurrealDB queries with vector similarity AND metadata filtering
+
+  Hybrid Search Template (use this structure):
+  ```surql
+  -- db/surrealdb/hybrid_search.surql
+  -- Strategy 1: Pre-filter then vector search (FAST, lower recall)
+  SELECT id, content, file_path,
+         vector::similarity::cosine(embedding, $query_vector) AS vector_score
+  FROM entities
+  WHERE entity_type = 'function'
+    AND file_path CONTAINS 'src/'
+    AND NOT file_path CONTAINS 'test'
+  ORDER BY vector_score DESC
+  LIMIT 10;
+
+  -- Strategy 2: Vector search then metadata re-rank (HIGH RECALL, slower)
+  SELECT id, content, file_path,
+         vector::similarity::cosine(embedding, $query_vector) AS vector_score,
+         (CASE
+            WHEN file_path CONTAINS 'src/' THEN 1.5
+            WHEN file_path CONTAINS 'test' THEN 0.5
+            ELSE 1.0
+         END) AS metadata_boost
+  FROM entities
+  ORDER BY vector_score * metadata_boost DESC
+  LIMIT 10;
+
+  -- Strategy 3: Weighted scoring (BALANCED)
+  SELECT id, content, file_path,
+         vector::similarity::cosine(embedding, $query_vector) AS vector_score,
+         (1.0 - (time::now() - created_at) / 86400000000000) AS recency_score,
+         (0.7 * vector_score + 0.3 * recency_score) AS combined_score
+  FROM entities
+  WHERE entity_type IN ['function', 'class']
+  ORDER BY combined_score DESC
+  LIMIT 10;
+  ```
+
+  ```python
+  # src/adapters/rag/hybrid_search.py
+  from typing import List, Dict
+  import time
+
+  class HybridSearchScorer:
+      def __init__(self, vector_weight: float = 0.7, metadata_weight: float = 0.3):
+          self.vector_weight = vector_weight
+          self.metadata_weight = metadata_weight
+
+      def score_result(self, result: Dict, metadata_rules: Dict) -> float:
+          """Combine vector similarity with metadata relevance"""
+          vector_score = result.get('vector_score', 0.0)
+
+          # Metadata scoring
+          metadata_score = 0.0
+          if 'src/' in result.get('file_path', ''):
+              metadata_score += 0.5
+          if 'test' not in result.get('file_path', ''):
+              metadata_score += 0.3
+          if result.get('entity_type') == 'function':
+              metadata_score += 0.2
+
+          # Normalize metadata_score to 0-1
+          metadata_score = min(metadata_score, 1.0)
+
+          # Combined score
+          return (self.vector_weight * vector_score +
+                  self.metadata_weight * metadata_score)
+
+      async def hybrid_search(self, db, query_vector: List[float],
+                             filters: Dict, limit: int = 10) -> List[Dict]:
+          """Execute hybrid search with weighted scoring"""
+          # Strategy 1: Pre-filter approach
+          query = """
+              SELECT id, content, file_path, entity_type,
+                     vector::similarity::cosine(embedding, $query_vector) AS vector_score
+              FROM entities
+              WHERE entity_type IN $entity_types
+                AND file_path CONTAINS $path_filter
+              ORDER BY vector_score DESC
+              LIMIT $limit;
+          """
+
+          results = await db.query_with_unwrap(query, {
+              'query_vector': query_vector,
+              'entity_types': filters.get('entity_types', ['function', 'class']),
+              'path_filter': filters.get('path_filter', 'src/'),
+              'limit': limit * 2  # Fetch more for re-ranking
+          })
+
+          # Re-rank with metadata scoring
+          for result in results:
+              result['combined_score'] = self.score_result(result, filters)
+
+          # Sort by combined score
+          results.sort(key=lambda x: x['combined_score'], reverse=True)
+          return results[:limit]
+  ```
+
+  Expected files to reference:
+  - db/surrealdb/hybrid_search.surql (3 strategy queries)
+  - src/adapters/rag/hybrid_search.py (scoring algorithm)
+  - benchmarks/hybrid_search_evaluation.md (precision/recall comparison)
+  - docs/hybrid_search_strategy.md (decision matrix)
+
+  Example of proper file:line references:
+  - db/surrealdb/hybrid_search.surql:5 (Strategy 1: WHERE pre-filter)
+  - db/surrealdb/hybrid_search.surql:18 (Strategy 2: CASE metadata boost)
+  - src/adapters/rag/hybrid_search.py:12 (score_result weighted calculation)
+  - benchmarks/hybrid_search_evaluation.md:25 (precision@10: 85% vs 60% baseline)
+
+  Deliverables:
+  1. SurrealDB queries with WHERE, CASE, ORDER BY vector_score * metadata_boost patterns
+  2. Python scoring with vector_weight, metadata_weight, combined_score calculations
+  3. Benchmarks (Strategy 1: 45ms/85% precision, Strategy 2: 120ms/92% precision)
+
+  Expected files to reference:
+  - db/surrealdb/hybrid_search.surql (3 strategy queries)
+  - src/adapters/rag/hybrid_search.py (scoring algorithm)
+  - benchmarks/hybrid_search_evaluation.md (precision/recall comparison)
+  - docs/hybrid_search_strategy.md (decision matrix)
+
+  Example of proper file:line references:
+  - db/surrealdb/hybrid_search.surql:5 (Strategy 1: WHERE pre-filter)
+  - db/surrealdb/hybrid_search.surql:18 (Strategy 2: CASE metadata boost)
+  - src/adapters/rag/hybrid_search.py:12 (score_result weighted calculation)
+  - benchmarks/hybrid_search_evaluation.md:25 (precision@10: 85% vs 60% baseline)
+
+checks:
+  - type: regex
+    pattern: "WHERE.*AND.*vector::similarity|metadata.*filter"
+    description: Must combine vector search with metadata filtering
+  - type: regex
+    pattern: "score.*weight|weighted.*score|alpha.*beta"
+    description: Must implement scoring weights
+  - type: regex
+    pattern: "precision|recall|accuracy|f1"
+    description: Must measure result quality
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5500
+  tags: [multimodel-databases, hybrid-search, rag, vector-search, metadata-filtering]

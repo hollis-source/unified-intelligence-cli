@@ -1,0 +1,211 @@
+id: db-18
+agent: database
+prompt: |
+  Optimize RAG context window retrieval strategy for LLM token limits.
+
+  Context:
+  - LLM context limit: 128k tokens (Granite 3.1 8B)
+  - Retrieved context: k=10 entities, ~15k tokens average (leaves 113k for task)
+  - Problem: Sometimes k=10 is too much (noisy), sometimes too little (missing context)
+  - Goal: Dynamic k selection based on relevance scores
+
+  Current Strategy (Fixed k=10):
+  ```python
+  # Always retrieves exactly 10 entities, regardless of relevance
+  results = await db.query(
+      "SELECT * FROM entities ORDER BY similarity DESC LIMIT 10"
+  )
+  ```
+
+  Requirements:
+  1. Dynamic k selection strategies:
+     - Threshold-based (similarity > 0.7)
+     - Token-budget-based (fit within N tokens)
+     - Diversity-based (maximize coverage, minimize redundancy)
+  2. Re-ranking algorithms:
+     - MMR (Maximal Marginal Relevance) for diversity
+     - LLM-based re-ranking (expensive but accurate)
+     - Metadata boosting (recency, file path relevance)
+  3. Context compression techniques:
+     - Extract only relevant code lines (not entire function)
+     - Summarization for large entities
+     - Deduplication
+  4. Query optimization: Retrieve more (k=20), re-rank, select top subset
+
+  Expected files to reference:
+  - src/adapters/rag/dynamic_context.py (dynamic k and MMR implementation)
+  - benchmarks/dynamic_k_evaluation.md (precision@k comparison)
+  - granite_adapter_v3.py (integration point)
+  - docs/mmr_algorithm.md (MMR explanation and tuning)
+
+  Example of proper file:line references:
+  - src/adapters/rag/dynamic_context.py:12 (select_by_threshold filtering)
+  - src/adapters/rag/dynamic_context.py:28 (mmr_rerank algorithm)
+  - benchmarks/dynamic_k_evaluation.md:10 (Combined strategy 88% precision)
+  - granite_adapter_v3.py:285 (integration with retrieve_optimized)
+
+  Deliverables:
+  - Dynamic k selection algorithm (Python)
+  - MMR re-ranking implementation
+  - Context compression functions
+  - Benchmark: Precision@k for different k values
+  - Integration with granite_adapter_v3.py
+  - MANDATORY: Your response MUST include at least 3 file:line references to context optimization files
+  - MANDATORY: Include MMR algorithm and dynamic k threshold logic
+
+  Dynamic Context Retrieval Template (use this structure):
+  ```python
+  # src/adapters/rag/dynamic_context.py
+  import tiktoken
+  from typing import List, Dict
+
+  class DynamicContextRetriever:
+      def __init__(self, token_budget: int = 15000, similarity_threshold: float = 0.7):
+          self.token_budget = token_budget
+          self.similarity_threshold = similarity_threshold
+          self.tokenizer = tiktoken.encoding_for_model("gpt-4")
+
+      def select_by_threshold(self, results: List[Dict]) -> List[Dict]:
+          """Select results above similarity threshold"""
+          return [r for r in results if r['score'] >= self.similarity_threshold]
+
+      def select_by_token_budget(self, results: List[Dict]) -> List[Dict]:
+          """Select results that fit within token budget"""
+          selected = []
+          total_tokens = 0
+
+          for result in sorted(results, key=lambda x: x['score'], reverse=True):
+              tokens = len(self.tokenizer.encode(result['content']))
+              if total_tokens + tokens <= self.token_budget:
+                  selected.append(result)
+                  total_tokens += tokens
+              else:
+                  break
+
+          return selected
+
+      def mmr_rerank(self, results: List[Dict], lambda_param: float = 0.7, k: int = 10) -> List[Dict]:
+          """Maximal Marginal Relevance: balance relevance and diversity"""
+          selected = []
+          remaining = results.copy()
+
+          # Select first result (highest similarity)
+          selected.append(remaining.pop(0))
+
+          while len(selected) < k and remaining:
+              best_score = -float('inf')
+              best_idx = 0
+
+              for idx, candidate in enumerate(remaining):
+                  # Relevance score
+                  relevance = candidate['score']
+
+                  # Diversity: max similarity to any already selected
+                  max_sim_to_selected = max(
+                      self._cosine_sim(candidate['embedding'], s['embedding'])
+                      for s in selected
+                  )
+
+                  # MMR score: balance relevance and diversity
+                  mmr_score = lambda_param * relevance - (1 - lambda_param) * max_sim_to_selected
+
+                  if mmr_score > best_score:
+                      best_score = mmr_score
+                      best_idx = idx
+
+              selected.append(remaining.pop(best_idx))
+
+          return selected
+
+      def _cosine_sim(self, vec1, vec2) -> float:
+          """Compute cosine similarity"""
+          import numpy as np
+          return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+
+      async def retrieve_optimized(self, db, query_vector, k_max: int = 20) -> List[Dict]:
+          """Retrieve with dynamic k and MMR re-ranking"""
+          # Step 1: Retrieve more than needed
+          raw_results = await db.query_with_unwrap(
+              "SELECT * FROM entities ORDER BY embedding <|$k|> $query_vector LIMIT $k",
+              {"query_vector": query_vector, "k": k_max}
+          )
+
+          # Step 2: Apply similarity threshold
+          filtered = self.select_by_threshold(raw_results)
+
+          # Step 3: MMR re-ranking for diversity
+          reranked = self.mmr_rerank(filtered, lambda_param=0.7, k=15)
+
+          # Step 4: Fit within token budget
+          final = self.select_by_token_budget(reranked)
+
+          return final
+  ```
+
+  Benchmark Results:
+  ```markdown
+  ## benchmarks/dynamic_k_evaluation.md
+
+  | Strategy | Avg k | Precision@k | Recall@k | Tokens Used | Latency |
+  |----------|-------|-------------|----------|-------------|---------|
+  | Fixed k=10 | 10 | 72% | 68% | 15000 | 45ms |
+  | Threshold (>0.7) | 8.2 | 85% | 71% | 12300 | 45ms |
+  | MMR (λ=0.7) | 10 | 78% | 82% | 15000 | 68ms |
+  | Token Budget (15k) | 9.5 | 81% | 75% | 14800 | 52ms |
+  | **Combined** | 8.7 | **88%** | **79%** | 13000 | 62ms |
+
+  **Recommendation**: Use combined strategy (threshold + MMR + token budget)
+  - 16% higher precision than fixed k=10
+  - 13% fewer tokens (more room for task context)
+  - Slight latency increase (+17ms) is acceptable
+  ```
+
+  Expected files to reference:
+  - src/adapters/rag/dynamic_context.py (dynamic k and MMR implementation)
+  - benchmarks/dynamic_k_evaluation.md (precision@k comparison)
+  - granite_adapter_v3.py (integration point)
+  - docs/mmr_algorithm.md (MMR explanation and tuning)
+
+  Example of proper file:line references:
+  - src/adapters/rag/dynamic_context.py:12 (select_by_threshold filtering)
+  - src/adapters/rag/dynamic_context.py:28 (mmr_rerank algorithm)
+  - benchmarks/dynamic_k_evaluation.md:10 (Combined strategy 88% precision)
+  - granite_adapter_v3.py:285 (integration with retrieve_optimized)
+
+  Deliverables:
+  1. Python code with mmr_rerank, cosine_sim, token_budget calculations
+  2. Benchmark table comparing fixed k vs threshold vs MMR vs combined
+  3. Recommendation (Combined: 88% precision, 13% token savings)
+
+  Expected files to reference:
+  - src/adapters/rag/dynamic_context.py (dynamic k and MMR implementation)
+  - benchmarks/dynamic_k_evaluation.md (precision@k comparison)
+  - granite_adapter_v3.py (integration point)
+  - docs/mmr_algorithm.md (MMR explanation and tuning)
+
+  Example of proper file:line references:
+  - src/adapters/rag/dynamic_context.py:12 (select_by_threshold filtering)
+  - src/adapters/rag/dynamic_context.py:28 (mmr_rerank algorithm)
+  - benchmarks/dynamic_k_evaluation.md:10 (Combined strategy 88% precision)
+  - granite_adapter_v3.py:285 (integration with retrieve_optimized)
+
+checks:
+  - type: regex
+    pattern: "threshold|similarity.*>|dynamic.*k"
+    description: Must implement dynamic k selection
+  - type: regex
+    pattern: "MMR|maximal.*marginal.*relevance|diversity"
+    description: Must implement diversity-based re-ranking
+  - type: regex
+    pattern: "token.*count|token.*limit|truncate"
+    description: Must handle token limits
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5500
+  tags: [multimodel-databases, rag, context-retrieval, re-ranking, optimization]
