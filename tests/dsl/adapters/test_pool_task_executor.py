@@ -11,8 +11,9 @@ Tests cover:
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 from src.dsl.adapters.pool_task_executor import AgentExecutor, PoolTaskExecutor
-from src.entities import Agent, Task, ExecutionResult as AgentExecutionResult, ExecutionStatus
-from src.entities.executor import ExecutionResult, ExecutorStatus
+from src.entity import Agent, Task
+from src.entity.execution import ExecutionResult as AgentExecutionResult, ExecutionStatus
+from src.entity.executor import ExecutionResult, ExecutorStatus
 from src.factories.agent_factory import AgentFactory
 
 
