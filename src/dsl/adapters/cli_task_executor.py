@@ -73,7 +73,10 @@ class CLITaskExecutor:
     def __init__(
         self,
         task_coordinator = None,
-        task_mapping: Optional[Dict[str, str]] = None
+        task_mapping: Optional[Dict[str, str]] = None,
+        router_facade: Optional[object] = None,
+        agent_factory: Optional[object] = None,
+        lifecycle: Optional[object] = None,
     ):
         """
         Initialize CLI task executor.
@@ -81,9 +84,15 @@ class CLITaskExecutor:
         Args:
             task_coordinator: Existing task coordinator (optional, for future integration)
             task_mapping: Custom task-to-agent mapping (optional, uses defaults)
+            router_facade: Optional RouterFacade for production routing decisions
+            agent_factory: Optional AgentFactory to provide agent roster to router
+            lifecycle: Optional lifecycle callbacks with on_before_task/on_after_task/on_error
         """
         self.task_coordinator = task_coordinator
         self.task_to_agent_map = task_mapping or self.DEFAULT_TASK_MAPPING.copy()
+        self.router_facade = router_facade
+        self.agent_factory = agent_factory
+        self.lifecycle = lifecycle
 
     def _get_agent_for_task(self, task_name: str) -> str:
         """
@@ -126,6 +135,13 @@ class CLITaskExecutor:
         Example:
             result = await executor.execute_task("build")
         """
+        # Lifecycle: before task hook
+        if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_before_task"):
+            try:
+                self.lifecycle.on_before_task(task_name, input_data)
+            except Exception:
+                pass
+
         # Try to import and execute real task implementation
         try:
             # Try all task modules
@@ -147,89 +163,171 @@ class CLITaskExecutor:
             if hasattr(implementation_tasks, task_name):
                 task_func = getattr(implementation_tasks, task_name)
                 result = await task_func(input_data)
+                if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_after_task"):
+                    try:
+                        self.lifecycle.on_after_task(task_name, result)
+                    except Exception:
+                        pass
                 return result
 
             # Check Phase 1 design tasks (active development)
             if hasattr(phase1_tasks, task_name):
                 task_func = getattr(phase1_tasks, task_name)
                 result = await task_func(input_data)
+                if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_after_task"):
+                    try:
+                        self.lifecycle.on_after_task(task_name, result)
+                    except Exception:
+                        pass
                 return result
 
             # Check next task analysis (immediate priority determination)
             if hasattr(next_task_tasks, task_name):
                 task_func = getattr(next_task_tasks, task_name)
                 result = await task_func(input_data)
+                if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_after_task"):
+                    try:
+                        self.lifecycle.on_after_task(task_name, result)
+                    except Exception:
+                        pass
                 return result
 
             # Check priorities analysis tasks (DSL runtime dogfooding)
             if hasattr(priorities_analysis_tasks, task_name):
                 task_func = getattr(priorities_analysis_tasks, task_name)
                 result = await task_func(input_data)
+                if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_after_task"):
+                    try:
+                        self.lifecycle.on_after_task(task_name, result)
+                    except Exception:
+                        pass
                 return result
 
             # Check code review tasks (broadcast composition demo)
             if hasattr(code_review_tasks, task_name):
                 task_func = getattr(code_review_tasks, task_name)
                 result = await task_func(input_data)
+                if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_after_task"):
+                    try:
+                        self.lifecycle.on_after_task(task_name, result)
+                    except Exception:
+                        pass
                 return result
 
             # Check GPU integration tasks
             if hasattr(gpu_integration_tasks, task_name):
                 task_func = getattr(gpu_integration_tasks, task_name)
                 result = await task_func(input_data)
+                if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_after_task"):
+                    try:
+                        self.lifecycle.on_after_task(task_name, result)
+                    except Exception:
+                        pass
                 return result
 
             # Check git operations tasks
             if hasattr(git_operations_tasks, task_name):
                 task_func = getattr(git_operations_tasks, task_name)
                 result = await task_func(input_data)
+                if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_after_task"):
+                    try:
+                        self.lifecycle.on_after_task(task_name, result)
+                    except Exception:
+                        pass
                 return result
 
             # Check refactoring tasks
             if hasattr(refactoring_tasks, task_name):
                 task_func = getattr(refactoring_tasks, task_name)
                 result = await task_func(input_data)
+                if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_after_task"):
+                    try:
+                        self.lifecycle.on_after_task(task_name, result)
+                    except Exception:
+                        pass
                 return result
 
             # Check Grok analysis tasks
             if hasattr(grok_analysis_tasks, task_name):
                 task_func = getattr(grok_analysis_tasks, task_name)
                 result = await task_func(input_data)
+                if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_after_task"):
+                    try:
+                        self.lifecycle.on_after_task(task_name, result)
+                    except Exception:
+                        pass
                 return result
 
             # Check system analysis tasks
             if hasattr(system_analysis_tasks, task_name):
                 task_func = getattr(system_analysis_tasks, task_name)
                 result = await task_func(input_data)
+                if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_after_task"):
+                    try:
+                        self.lifecycle.on_after_task(task_name, result)
+                    except Exception:
+                        pass
                 return result
 
             # Check HF Spaces analysis tasks
             if hasattr(hf_spaces_analysis_tasks, task_name):
                 task_func = getattr(hf_spaces_analysis_tasks, task_name)
                 result = await task_func(input_data)
+                if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_after_task"):
+                    try:
+                        self.lifecycle.on_after_task(task_name, result)
+                    except Exception:
+                        pass
                 return result
 
         except (ImportError, AttributeError):
             pass
 
-        # Fallback to mock result (for tasks without implementations)
-        agent_name = self._get_agent_for_task(task_name)
+        # Fallback: routed selection (if facade+factory available), else heuristic map
+        routing_info: Dict[str, Any] = {}
+        agent_name = None
 
-        if input_data:
-            description = f"Execute {task_name} with input: {input_data}"
+        if getattr(self, "router_facade", None) and getattr(self, "agent_factory", None):
+            try:
+                # Prefer extended roster for hierarchical routing; fallback to default
+                get_agents = getattr(self.agent_factory, "create_extended_agents", None) or getattr(self.agent_factory, "create_default_agents", None)
+                agents = get_agents() if callable(get_agents) else []
+                task_obj = {"name": task_name, "description": str(input_data) if input_data is not None else task_name}
+                decision = self.router_facade.route(task_obj, agents)
+                agent_name = getattr(decision.selected_agent, "role", None) or self._get_agent_for_task(task_name)
+                routing_info = {
+                    "domain": decision.domain,
+                    "tier": decision.tier,
+                    "mode": decision.mode,
+                    "scores": decision.scores,
+                    "top_candidates": [getattr(a, "role", str(a)) for a in (decision.top_candidates or [])],
+                }
+            except Exception:
+                agent_name = self._get_agent_for_task(task_name)
         else:
-            description = f"Execute {task_name}"
+            agent_name = self._get_agent_for_task(task_name)
+
+        description = f"Execute {task_name} with input: {input_data}" if input_data else f"Execute {task_name}"
 
         result = {
             "task": task_name,
             "agent": agent_name,
             "description": description,
             "status": "success",
-            "output": f"Completed {task_name} via {agent_name}"
+            "output": f"Completed {task_name} via {agent_name}",
         }
+        if routing_info:
+            result["routing"] = routing_info
 
         # Simulate async execution
         await asyncio.sleep(0.01)
+
+        # Lifecycle: after task hook (fallback path)
+        if getattr(self, "lifecycle", None) and hasattr(self.lifecycle, "on_after_task"):
+            try:
+                self.lifecycle.on_after_task(task_name, result)
+            except Exception:
+                pass
 
         return result
 

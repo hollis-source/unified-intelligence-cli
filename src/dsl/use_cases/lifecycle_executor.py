@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 
-from src.entity.lifecycle import Lifecycle, LifecycleState
+from src.entities.lifecycle import Lifecycle, LifecycleState
 from src.dsl.adapters.parser import Parser
 from src.dsl.use_cases.interpreter import Interpreter, TaskExecutor
 from src.dsl.adapters.cli_task_executor import CLITaskExecutor
