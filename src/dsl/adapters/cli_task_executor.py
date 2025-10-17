@@ -1,5 +1,17 @@
 """CLI Task Executor - Connects DSL to autonomous-task-agent-dev-orchestration.
 
+⚠️ DEPRECATED (Phase 5): This executor is deprecated in favor of PoolTaskExecutor.
+Use PoolTaskExecutor for new code. CLITaskExecutor will be removed in Phase 7.
+
+Migration Guide:
+    # Old (deprecated):
+    from src.dsl.adapters.cli_task_executor import CLITaskExecutor
+    executor = CLITaskExecutor()
+
+    # New (recommended):
+    from src.dsl.adapters.pool_task_executor import PoolTaskExecutor
+    executor = PoolTaskExecutor()
+
 Clean Architecture: Adapter layer (external system integration).
 SOLID: SRP - only executes tasks via CLI, DIP - implements TaskExecutor interface.
 """
@@ -81,6 +93,8 @@ class CLITaskExecutor:
         """
         Initialize CLI task executor.
 
+        ⚠️ DEPRECATED: Use PoolTaskExecutor instead.
+
         Args:
             task_coordinator: Existing task coordinator (optional, for future integration)
             task_mapping: Custom task-to-agent mapping (optional, uses defaults)
@@ -88,6 +102,14 @@ class CLITaskExecutor:
             agent_factory: Optional AgentFactory to provide agent roster to router
             lifecycle: Optional lifecycle callbacks with on_before_task/on_after_task/on_error
         """
+        import warnings
+        warnings.warn(
+            "CLITaskExecutor is deprecated and will be removed in Phase 7. "
+            "Use PoolTaskExecutor instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
+
         self.task_coordinator = task_coordinator
         self.task_to_agent_map = task_mapping or self.DEFAULT_TASK_MAPPING.copy()
         self.router_facade = router_facade
