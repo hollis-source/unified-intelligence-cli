@@ -435,7 +435,7 @@ def execute_task(task_path: Path, verbose: bool = False) -> Dict[str, Any]:
 
     # Create record
     record = {
-        "timestamp": datetime.now(datetime.UTC).isoformat() if hasattr(datetime, 'UTC') else datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "task_id": task_id,
         "agent": agent,
         "ok": result["ok"],
@@ -472,7 +472,7 @@ def execute_suite(task_paths: List[Path], output_path: Path, verbose: bool = Fal
         except Exception as e:
             print(f"✗ ERROR: {e}")
             records.append({
-                "timestamp": datetime.now(datetime.UTC).isoformat() if hasattr(datetime, 'UTC') else datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "task_id": task_path.stem,
                 "agent": "unknown",
                 "ok": False,
