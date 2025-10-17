@@ -1,0 +1,86 @@
+id: devops-13
+agent: devops
+prompt: |
+  Optimize CI build times using dependency caching, Docker layer caching, and artifact reuse across jobs.
+
+  Requirements:
+  1. Add cache keys for dependencies and enable Docker layer caching
+  2. Store/reuse build artifacts between jobs
+  3. Provide baseline vs optimized timing comparison
+  4. MANDATORY: Your response MUST include at least 3 file:line references to CI configuration files
+  5. MANDATORY: Include CI YAML with caching and artifact steps
+
+  CI Caching Template (use this structure):
+  ```yaml
+  name: Optimized CI
+
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Cache dependencies
+          uses: actions/cache@v3
+          with:
+            path: ~/.cache/pip
+            key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+        - name: Build Docker with cache
+          uses: docker/build-push-action@v4
+          with:
+            cache-from: type=gha
+            cache-to: type=gha,mode=max
+
+        - name: Upload build artifacts
+          uses: actions/upload-artifact@v3
+          with:
+            name: dist
+            path: dist/
+
+    test:
+      needs: build
+      steps:
+        - name: Download artifacts
+          uses: actions/download-artifact@v3
+          with:
+            name: dist
+  ```
+
+  Expected files to reference:
+  - .github/workflows/ci-optimized.yml (optimized CI workflow)
+  - .github/workflows/ci-baseline.yml (baseline workflow for comparison)
+  - docker-compose.cache.yml (Docker BuildKit cache configuration)
+  - docs/ci-optimization-report.md (timing comparison)
+
+  Example of proper file:line references:
+  - .github/workflows/ci-optimized.yml:12 (dependency cache configuration)
+  - .github/workflows/ci-optimized.yml:22 (Docker cache-from/cache-to settings)
+  - .github/workflows/ci-optimized.yml:28 (artifact upload step)
+  - docs/ci-optimization-report.md:15 (baseline vs optimized timing table)
+
+  Deliverables:
+  1. CI YAML with name:, jobs:, steps: keywords showing cache@v3, artifact upload/download steps with file:line refs
+  2. Docker build caching with uses: docker/build-push-action@v4 and cache-from/cache-to keywords
+  3. Timing comparison report showing baseline (e.g., 8min) vs optimized (e.g., 3min) with file references
+
+checks:
+  - type: regex
+    pattern: '\b(cache|caching|artifact|artifacts)\b'
+    description: Must include caching and artifacts
+  - type: regex
+    pattern: '\b(Docker|buildx|layers?)\b'
+    description: Should reference Docker layer caching
+  - type: regex
+    pattern: '\b(timing|speed|optimi[sz]e)\b'
+    description: Must mention performance improvement
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5900
+  tags: [devops, ci, performance, caching]
+
+

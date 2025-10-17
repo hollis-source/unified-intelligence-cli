@@ -1,0 +1,79 @@
+id: devops-12
+agent: devops
+prompt: |
+  Configure autoscaling for a web service using Kubernetes HPA/VPA based on CPU/memory and custom metrics.
+
+  Requirements:
+  1. Enable HPA with target utilization and minimum/maximum replicas
+  2. Optionally configure VPA recommendations
+  3. Document scale up/down policies and stabilization windows
+  4. MANDATORY: Your response MUST include at least 3 file:line references to autoscaling configuration files
+  5. MANDATORY: Include HPA YAML manifest with proper resource structure
+
+  HPA Configuration Template (use this structure):
+  ```yaml
+  apiVersion: autoscaling/v2
+  kind: HorizontalPodAutoscaler
+  metadata:
+    name: [app-name]-hpa
+  spec:
+    scaleTargetRef:
+      apiVersion: apps/v1
+      kind: Deployment
+      name: [app-name]
+    minReplicas: 2
+    maxReplicas: 10
+    metrics:
+      - type: Resource
+        resource:
+          name: cpu
+          target:
+            type: Utilization
+            averageUtilization: 70
+      - type: Resource
+        resource:
+          name: memory
+          target:
+            type: Utilization
+            averageUtilization: 80
+  ```
+
+  Expected files to reference:
+  - k8s/hpa.yaml (HorizontalPodAutoscaler manifest)
+  - k8s/vpa.yaml (VerticalPodAutoscaler manifest, optional)
+  - k8s/deployment.yaml (target deployment with resource requests)
+  - docs/autoscaling-runbook.md (scaling test procedures)
+
+  Example of proper file:line references:
+  - k8s/hpa.yaml:12 (minReplicas and maxReplicas configuration)
+  - k8s/hpa.yaml:18 (CPU utilization target threshold)
+  - k8s/deployment.yaml:28 (container resource requests for HPA)
+  - k8s/vpa.yaml:8 (VPA updateMode configuration)
+
+  Deliverables:
+  1. HPA YAML with kind:, spec:, metrics:, minReplicas:, maxReplicas: keywords and file:line refs
+  2. Optional VPA YAML configuration with updateMode: and resourcePolicy: sections
+  3. Runbook with kubectl scale, kubectl get hpa commands and file references
+
+checks:
+  - type: regex
+    pattern: '\b(HPA|VPA|autoscal(e|ing))\b'
+    description: Must include autoscaling via HPA/VPA
+  - type: regex
+    pattern: '\b(cpu|memory|metrics?)\b'
+    description: Should reference CPU/memory or metrics-based scaling
+  - type: regex
+    pattern: '\b(replicas?|thresholds?|polic(y|ies))\b'
+    description: Must mention replicas, thresholds, or policies
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5900
+  tags: [devops, kubernetes, autoscaling, performance]
+
+
