@@ -1,0 +1,75 @@
+id: devops-10
+agent: devops
+prompt: |
+  Integrate container and code security scanning into CI with fail gates for high-severity findings.
+
+  Requirements:
+  1. Run SAST/DAST or container image scans (e.g., Trivy/Grype) in pipeline
+  2. Break build on high severity issues and publish reports
+  3. Document allowlists and remediation workflow
+  4. MANDATORY: Your response MUST include at least 3 file:line references to CI configuration files
+  5. MANDATORY: Include CI pipeline YAML with security scanning steps
+
+  CI Security Scanning Template (use this structure):
+  ```yaml
+  name: Security Scan
+
+  jobs:
+    security-scan:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v3
+
+        - name: Run Trivy container scan
+          run: |
+            trivy image --severity HIGH,CRITICAL \
+              --exit-code 1 \
+              myapp:latest
+
+        - name: Upload scan results
+          uses: actions/upload-artifact@v3
+          with:
+            name: trivy-report
+            path: trivy-results.json
+  ```
+
+  Expected files to reference:
+  - .github/workflows/security-scan.yml (security scanning workflow)
+  - .trivyignore or .grype.yaml (allowlist configuration)
+  - .github/workflows/ci.yml (main CI workflow with security job)
+  - config/security-thresholds.yaml (fail gate thresholds)
+
+  Example of proper file:line references:
+  - .github/workflows/security-scan.yml:12 (Trivy scan step with severity thresholds)
+  - .github/workflows/security-scan.yml:18 (artifact upload for scan results)
+  - .trivyignore:5 (CVE allowlist entry)
+  - .github/workflows/ci.yml:45 (security scan job integration)
+
+  Deliverables:
+  1. CI YAML with name:, jobs:, steps:, run: keywords showing scanner invocation and file:line refs
+  2. Threshold/fail gate configuration with --severity, --exit-code flags and allowlist files
+  3. Security report publishing using artifact upload steps with file references
+
+checks:
+  - type: regex
+    pattern: '\b(SAST|DAST|scan|Trivy|Grype)\b'
+    description: Must include security scanning in CI
+  - type: regex
+    pattern: '\b(pipeline|CI|fail\s+gate|threshold)\b'
+    description: Should describe pipeline gates/thresholds
+  - type: regex
+    pattern: '\b(severity|report|artifact)\b'
+    description: Must mention severity or reports/artifacts
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5900
+  tags: [devops, security, ci, containers]
+
+
