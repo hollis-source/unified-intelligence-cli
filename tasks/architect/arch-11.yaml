@@ -1,0 +1,36 @@
+id: arch-11
+agent: architect
+prompt: |
+  Design data partitioning, sharding, and replication strategy for high-scale transactional workload.
+
+  Expected files to reference:
+  - docs/data/sharding_plan.md:18 (sharding key selection: user_id hash with 256 shards)
+  - infrastructure/database/replication_topology.yaml:25 (leader-follower replication with async replication)
+  - scripts/operations/reshard_procedure.md:35 (resharding playbook with dual-write migration)
+  - monitoring/database/partition_health_alerts.yaml:12 (alerts for hotspot detection and replication lag)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include sharding patterns with key selection (range/hash/hybrid), replication topology, consistency model, resharding/rebalancing procedures, hotspot mitigation, and operational monitoring
+
+  Template includes: Sharding plan with rationale, replication topology and consistency trade-offs, resharding/rebalancing procedures, monitoring for partition/replication health
+
+checks:
+  - type: regex
+    pattern: '\b(shard|sharding|partitioning)\b'
+    description: Must cover sharding/partitioning
+  - type: regex
+    pattern: '\b(replication|leader|follower|consistency)\b'
+    description: Must specify replication and consistency
+  - type: regex
+    pattern: '\b(reshard|rebalanc|hotspot)\b'
+    description: Must include reshard/rebalance/hotspot handling
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5600
+  tags: [data, scalability, consistency, performance]

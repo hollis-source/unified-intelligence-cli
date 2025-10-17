@@ -1,0 +1,36 @@
+id: arch-10
+agent: architect
+prompt: |
+  Architect comprehensive observability stack covering logs, metrics, traces, and profiling for distributed system.
+
+  Expected files to reference:
+  - docs/observability/reference_architecture.md:20 (telemetry data flow: services → OTel Collector → backends)
+  - infrastructure/otel/collector_config.yaml:35 (OpenTelemetry Collector with correlation ID propagation)
+  - monitoring/slos/api_latency_slo.yaml:12 (SLO definition: 99th percentile API latency < 200ms)
+  - docs/runbooks/incident_investigation.md:45 (using traces/logs/metrics to debug production issues)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include observability patterns with telemetry standards (correlation IDs, span attributes, log schema), OpenTelemetry SDK/Collector, SLOs/SLIs, alerting with noise controls, and sampling/retention policies
+
+  Template includes: Reference architecture diagram, telemetry conventions, SLO/SLI definitions with alerts, runbook for incident investigation, sampling strategies, cost management
+
+checks:
+  - type: regex
+    pattern: '\b(tracing|OpenTelemetry|metrics?|logging)\b'
+    description: Must reference tracing/logging/metrics/OTel
+  - type: regex
+    pattern: '\b(SLO|SLA|SLI)\b'
+    description: Must define service level objectives/indicators
+  - type: regex
+    pattern: '\b(correlation\s+id|sampling|retention)\b'
+    description: Must address correlation IDs and data policies
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5900
+  tags: [observability, reliability, operations, performance]

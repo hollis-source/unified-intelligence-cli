@@ -1,0 +1,36 @@
+id: arch-08
+agent: architect
+prompt: |
+  Define domain-driven design (DDD) bounded contexts for fintech platform (payments, ledger, risk, KYC) with integration patterns.
+
+  Expected files to reference:
+  - docs/architecture/ddd_context_map.md:18 (context map showing bounded contexts and relationships)
+  - src/domains/payments/payment_aggregate.py:25 (Payment aggregate with invariants)
+  - src/domains/ledger/anti_corruption_layer.py:35 (ACL translating payment events to ledger domain)
+  - src/domains/ubiquitous_language.md:12 (domain terminology glossary per context)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include DDD patterns with bounded contexts, ubiquitous language, context maps, aggregates/entities/value objects, ACL for integration, and transactional boundaries
+
+  Template includes: Context map with relationships (partnership/shared kernel/upstream-downstream), aggregate design with invariants per context, integration via ACL/events/APIs, consistency strategy across contexts
+
+checks:
+  - type: regex
+    pattern: '\b(bounded\s+context|ubiquitous\s+language|context\s+map)\b'
+    description: Must reference core DDD context concepts
+  - type: regex
+    pattern: '\b(anti\-corruption\s+layer|ACL)\b'
+    description: Must include ACL/anti-corruption layer
+  - type: regex
+    pattern: '\b(aggregate|entity|value\s+object)\b'
+    description: Must define aggregates/entities/value objects
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5800
+  tags: [ddd, domain-modeling, integration, system-design]

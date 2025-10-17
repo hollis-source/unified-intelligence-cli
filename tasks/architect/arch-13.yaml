@@ -1,0 +1,36 @@
+id: arch-13
+agent: architect
+prompt: |
+  Architect multi-tenant SaaS platform with strong tenant isolation and shared infrastructure efficiency.
+
+  Expected files to reference:
+  - docs/architecture/tenant_isolation_model.md:20 (isolation levels: pool model with RLS for data, silo for premium)
+  - infrastructure/routing/tenant_routing.yaml:25 (request routing with tenant_id extraction and service selection)
+  - src/middleware/tenant_quota_enforcer.py:35 (rate limits and resource quotas per tenant)
+  - monitoring/tenants/per_tenant_slos.yaml:12 (SLO tracking and alerting per tenant)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include multi-tenancy patterns with isolation levels (network/authz/data), isolation models (pool/bridge/silo), routing, noisy-neighbor protections, resource quotas, and per-tenant observability
+
+  Template includes: Tenant isolation model and routing design, data isolation (schema-per-tenant/RLS), quota and rate limit policies, per-tenant observability and billing/chargeback
+
+checks:
+  - type: regex
+    pattern: '\b(multi\-tenant|tenant\s+isolation)\b'
+    description: Must address multi-tenancy and isolation
+  - type: regex
+    pattern: '\b(schema\s+per\s+tenant|row\-level\s+security|RLS)\b'
+    description: Must include a concrete data isolation approach
+  - type: regex
+    pattern: '\b(quota|noisy\s+neighbor|rate\s+limit)\b'
+    description: Must include protections against noisy neighbors
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5700
+  tags: [saas, multi-tenancy, isolation, scalability]
