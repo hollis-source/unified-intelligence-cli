@@ -314,6 +314,18 @@ def compute_auto_checks(agent: str, output: str, task_dir: Path) -> float:
         ])
         score += min(qa_coverage_count * 0.5, 2.0)  # 0.5 pts each, max 2 pts
 
+        # Comprehensive accessibility testing bonus (1.0 pt)
+        # Recognizes deep accessibility coverage (compensates for lack of BDD patterns in accessibility tasks)
+        accessibility_indicators = sum([
+            "WCAG" in output,
+            "accessibility" in output.lower(),
+            "screen reader" in output.lower(),
+            "ARIA" in output,
+            "keyboard" in output.lower(),
+        ])
+        if accessibility_indicators >= 3:
+            score += 1.0  # Comprehensive accessibility coverage
+
     return min(score, 10.0)
 
 
