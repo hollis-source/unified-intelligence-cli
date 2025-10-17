@@ -32,7 +32,7 @@ class ExecutionResult:
     metadata: Dict[str, Any] = field(default_factory=dict)
 
 
-from src.entities.task_model.task_model import TaskStatus
+from src.entity.task_model.task_model import TaskStatus
 
 
 from .llm_provider import ITextGenerator, IToolSupportedProvider, LLMConfig

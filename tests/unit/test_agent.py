@@ -1,7 +1,7 @@
 """Unit tests for Agent and Task entities - TDD first approach."""
 
 import pytest
-from src.entities import Agent, Task
+from src.entity import Agent, Task
 
 
 class TestTask:

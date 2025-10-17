@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from src.entities.htn.htn_node import HTNNode
+from src.entity.htn.htn_node import HTNNode
 from src.interfaces import LLMConfig
 
 

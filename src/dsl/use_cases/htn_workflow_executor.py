@@ -20,7 +20,7 @@ from src.dsl.use_cases.lifecycle_executor import (
 from src.dsl.adapters.htn_compiler import HTNCompiler
 from src.dsl.use_cases.interpreter import Interpreter
 from src.dsl.use_cases.graph_workflow_executor import GraphWorkflowExecutor
-from src.entities.lifecycle import Lifecycle
+from src.entity.lifecycle import Lifecycle
 
 
 class HTNWorkflowExecutor(LifecycleWorkflowExecutor):

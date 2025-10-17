@@ -1,0 +1,29 @@
+refactor: Phase 2C-1 - Add directory compatibility shims
+
+Created singular-named directories with compatibility shims for zero breaking changes:
+
+New Directories (source of truth):
+- src/entity (copied from src/entities)
+- src/interface (copied from src/interfaces)
+- src/core/entity (empty placeholder)
+- src/core/port (empty placeholder)
+
+Compatibility Shims:
+- src/entities/__init__.py: Added deprecation warning, re-exports from src.entity
+- src/interfaces/__init__.py: Added deprecation warning, re-exports from src.interface
+
+Both import paths now work:
+- Old: from src.entities import Agent (with deprecation warning)
+- New: from src.entity import Agent (clean)
+
+Testing Results:
+✅ All 6 import path tests pass
+✅ Deep imports work (src.entities.graph.graph.Graph)
+✅ Deprecation warnings display correctly
+✅ Zero breaking changes
+
+Next: Phase 2C-2 will update ~61 files to use new import paths
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>

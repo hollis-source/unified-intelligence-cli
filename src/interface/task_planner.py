@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from dataclasses import dataclass, field
-from src.entities import Agent, Task, ExecutionContext
+from src.entity import Agent, Task, ExecutionContext
 
 
 @dataclass

@@ -28,6 +28,8 @@ if env_file.exists():
 
 
 @click.command()
+@click.option("--goal", "-g", type=str,
+              help="Natural language goal for decomposition (goal mode)")
 @click.option("--workflow", "-w", type=click.Path(exists=True),
               help="Execute .ct workflow file (DSL mode)")
 @click.option("--task", "-t", "task_descriptions", multiple=True,
@@ -59,6 +61,7 @@ if env_file.exists():
 @click.option("--metrics-dir", type=click.Path(), default="data/metrics",
               help="Directory to store metrics (default: data/metrics)")
 def main(
+    goal: str,
     workflow: str,
     task_descriptions: tuple,
     provider: str,
@@ -80,23 +83,26 @@ def main(
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.
 
-    Supports two execution modes:
-    1. Workflow mode (--workflow): Execute .ct DSL workflow files with lifecycle
-    2. Direct mode (--task): Direct multi-agent task execution
+    Supports three execution modes:
+    1. Goal mode (--goal): LLM-driven goal decomposition into HTN
+    2. Workflow mode (--workflow): Execute .ct DSL workflow files with lifecycle
+    3. Direct mode (--task): Direct multi-agent task execution
 
     Clean Architecture: Main only handles CLI concerns.
     Composition logic is delegated to compose_dependencies.
     """
-    # Validate: Must provide either workflow or task (but not both)
-    if not workflow and not task_descriptions:
-        click.echo("Error: Must provide either --workflow or --task", err=True)
+    # Validate: Must provide exactly one mode
+    modes = [bool(goal), bool(workflow), bool(task_descriptions)]
+    if sum(modes) == 0:
+        click.echo("Error: Must provide one of --goal, --workflow, or --task", err=True)
         click.echo("\nExamples:")
+        click.echo("  Goal mode:     python -m src.main --goal 'Build a REST API with authentication'")
         click.echo("  Workflow mode: python -m src.main --workflow examples/workflows/ci_pipeline.ct")
         click.echo("  Direct mode:   python -m src.main --task 'analyze code'")
         raise click.Abort()
 
-    if workflow and task_descriptions:
-        click.echo("Warning: Both --workflow and --task provided. Using workflow mode.", err=True)
+    if sum(modes) > 1:
+        click.echo("Warning: Multiple modes provided. Priority: goal > workflow > task", err=True)
 
     # Load configuration
     app_config = load_config(
@@ -113,6 +119,11 @@ def main(
     claude_output_settings: ClaudeOutputSettings = load_claude_settings(claude_settings)
 
     try:
+        # GOAL MODE: LLM-driven goal decomposition into HTN
+        if goal:
+            execute_goal_mode(goal, app_config, logger, claude_output_settings, correlation_id)
+            return
+
         # WORKFLOW MODE: Execute DSL workflow with lifecycle
         if workflow:
             execute_workflow_mode(workflow, app_config, logger)
@@ -289,6 +300,130 @@ def execute_workflow_mode(workflow_file: str, app_config: Config, logger) -> Non
         click.echo(f"Failed at: {result.lifecycle.get_state().name}")
         click.echo(f"{'='*70}")
         raise click.Abort()
+
+
+def execute_goal_mode(goal: str, app_config: Config, logger, claude_output_settings, correlation_id: str) -> None:
+    """Execute goal decomposition mode.
+
+    Args:
+        goal: Natural language goal description
+        app_config: Application configuration
+        logger: Logger instance
+        claude_output_settings: Claude output settings
+        correlation_id: Correlation ID for tracking
+
+    Clean Architecture: Orchestrates goal decomposition and HTN execution.
+    """
+    from src.use_cases.goal_decomposer import GoalDecomposerUseCase
+    from src.factories import ProviderFactory
+    from src.dsl.use_cases.htn_workflow_executor import HTNWorkflowExecutor
+    from src.dsl.adapters.cli_task_executor import CLITaskExecutor
+    from src.adapters.cli import ResultFormatter
+
+    if logger:
+        logger.info(f"Goal mode: Decomposing goal '{goal}'")
+
+    click.echo(f"\n{'='*70}")
+    click.echo(click.style("🎯 Goal Decomposition Mode", fg="cyan", bold=True))
+    click.echo(f"{'='*70}")
+    click.echo(f"Goal: {goal}")
+    click.echo(f"Provider: {app_config.provider}")
+    click.echo(f"{'='*70}\n")
+
+    try:
+        # Create LLM provider
+        provider_factory = ProviderFactory()
+        llm_provider = provider_factory.create_provider(app_config.provider)
+
+        # Create goal decomposer
+        decomposer = GoalDecomposerUseCase(
+            llm_provider=llm_provider,
+            max_retries=3,
+            logger=logger
+        )
+
+        # Decompose goal into HTN
+        click.echo("🔄 Decomposing goal into task hierarchy...")
+        htn = asyncio.run(decomposer.decompose_goal(goal))
+
+        click.echo(click.style("✓ Goal decomposed successfully!", fg="green"))
+        click.echo(f"  - Top-level tasks: {len(htn.subtasks)}")
+        click.echo(f"  - Total depth: {htn.get_depth()}")
+        click.echo(f"  - Root task: {htn.task_id}\n")
+
+        # Display HTN structure
+        click.echo("📋 Task Hierarchy:")
+        _print_htn_structure(htn, indent=2)
+        click.echo()
+
+        # Execute HTN via workflow executor
+        click.echo("🚀 Executing task hierarchy...")
+        task_executor = CLITaskExecutor()
+        workflow_executor = HTNWorkflowExecutor(task_executor=task_executor)
+
+        result = asyncio.run(workflow_executor.execute_htn(
+            htn=htn,
+            verbose=app_config.verbose
+        ))
+
+        # Display results
+        if result.success:
+            click.echo(f"\n{'='*70}")
+            click.echo(click.style("✓ Goal Completed Successfully", fg="green", bold=True))
+            click.echo(f"{'='*70}")
+            click.echo(f"Execution time: {result.execution_time:.2f}s")
+            click.echo(f"Tasks executed: {len(htn.subtasks)}")
+            click.echo(f"{'='*70}")
+        else:
+            click.echo(f"\n{'='*70}")
+            click.echo(click.style("✗ Goal Execution Failed", fg="red", bold=True))
+            click.echo(f"{'='*70}")
+            click.echo(f"Error: {result.error}")
+            click.echo(f"Execution time: {result.execution_time:.2f}s")
+            click.echo(f"{'='*70}")
+            raise click.Abort()
+
+    except ValueError as e:
+        formatter = ResultFormatter()
+        formatter.format_error(str(e), "Goal Decomposition Error")
+        raise click.Abort()
+    except Exception as e:
+        logger.error(f"Goal mode error: {e}")
+        formatter = ResultFormatter(verbose=app_config.verbose)
+        if app_config.verbose:
+            raise
+        else:
+            formatter.format_error(str(e))
+            raise click.Abort()
+
+
+def _print_htn_structure(node, indent: int = 0, prefix: str = ""):
+    """Print HTN structure recursively.
+
+    Args:
+        node: HTN node to print
+        indent: Indentation level
+        prefix: Prefix for tree structure
+    """
+    indent_str = " " * indent
+
+    # Print current node
+    task_type = "🔹" if node.is_primitive() else "📦"
+    click.echo(f"{indent_str}{prefix}{task_type} {node.task_id}: {node.description}")
+
+    # Print preconditions if any
+    if node.preconditions:
+        click.echo(f"{indent_str}  ⚙️  Preconditions: {node.preconditions}")
+
+    # Print effects if any
+    if node.effects:
+        click.echo(f"{indent_str}  ✨ Effects: {node.effects}")
+
+    # Print subtasks recursively
+    for i, subtask in enumerate(node.subtasks):
+        is_last = i == len(node.subtasks) - 1
+        subtask_prefix = "└─ " if is_last else "├─ "
+        _print_htn_structure(subtask, indent + 2, subtask_prefix)
 
 
 def _print_workflow_result(result, indent: int = 0):

@@ -114,9 +114,11 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "--strict-markers --tb=short"
+asyncio_mode = "auto"
 markers = [
     "slow: marks tests as slow",
-    "integration: marks tests as integration tests"
+    "integration: marks tests as integration tests",
+    "asyncio: marks tests as async"
 ]
 
 [tool.coverage.run]

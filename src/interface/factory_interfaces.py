@@ -2,8 +2,8 @@
 
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
-from src.entities import Agent
-from src.interfaces.llm_provider import ITextGenerator
+from src.entity import Agent
+from src.interface.llm_provider import ITextGenerator
 
 
 class IAgentFactory(ABC):

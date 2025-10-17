@@ -11,8 +11,8 @@ SOLID: OCP (extensible without modification), DIP (depends on abstractions)
 
 from typing import Any, Dict, Optional
 import asyncio
-from src.entities.executor import Executor, ExecutorPool, ExecutionResult, ExecutorStatus
-from src.entities import Agent, Task, ExecutionStatus
+from src.entity.executor import Executor, ExecutorPool, ExecutionResult, ExecutorStatus
+from src.entity import Agent, Task, ExecutionStatus
 from src.factories.agent_factory import AgentFactory
 from src.adapters.agent.llm_executor import LLMAgentExecutor
 from src.interface import ITextGenerator
