@@ -1,0 +1,94 @@
+id: db-02
+agent: database
+prompt: |
+  Optimize this slow query on the orders table:
+
+  ```sql
+  SELECT o.id, o.created_at, o.total_amount, u.email, u.name
+  FROM orders o
+  JOIN users u ON o.user_id = u.id
+  WHERE o.status = 'pending'
+    AND o.created_at > NOW() - INTERVAL '30 days'
+  ORDER BY o.created_at DESC
+  LIMIT 100;
+  ```
+
+  Context:
+  - orders table has 10M rows
+  - Query currently takes 5 seconds
+  - Target: <100ms
+  - Database: PostgreSQL 15
+
+  Requirements:
+  1. EXPLAIN ANALYZE output analysis
+  2. Index recommendations with CREATE INDEX statements
+  3. Query rewrite if beneficial
+  4. Estimated improvement and reasoning
+  5. MANDATORY: Your response MUST include at least 3 file:line references to optimization files
+  6. MANDATORY: Include CREATE INDEX DDL and EXPLAIN output examples
+
+  Query Optimization Template (use this structure):
+  ```sql
+  -- db/analysis/explain_before.sql
+  EXPLAIN (ANALYZE, BUFFERS)
+  SELECT o.id, o.created_at, o.total_amount, u.email, u.name
+  FROM orders o
+  JOIN users u ON o.user_id = u.id
+  WHERE o.status = 'pending'
+    AND o.created_at > NOW() - INTERVAL '30 days'
+  ORDER BY o.created_at DESC
+  LIMIT 100;
+
+  -- db/indexes/orders_performance.sql
+  CREATE INDEX CONCURRENTLY idx_orders_status_created_at
+    ON orders(status, created_at DESC)
+    WHERE status = 'pending';
+
+  CREATE INDEX CONCURRENTLY idx_orders_user_lookup
+    ON orders(user_id)
+    INCLUDE (id, created_at, total_amount);
+
+  -- db/queries/orders_optimized.sql
+  SELECT o.id, o.created_at, o.total_amount, u.email, u.name
+  FROM orders o
+  JOIN users u ON o.user_id = u.id
+  WHERE o.status = 'pending'
+    AND o.created_at > NOW() - INTERVAL '30 days'
+  ORDER BY o.created_at DESC
+  LIMIT 100;
+  ```
+
+  Expected files to reference:
+  - db/analysis/explain_before.sql (EXPLAIN ANALYZE output showing bottleneck)
+  - db/indexes/orders_performance.sql (composite index recommendations)
+  - db/queries/orders_optimized.sql (rewritten query if needed)
+  - db/docs/optimization_report.md (performance improvement estimates)
+
+  Example of proper file:line references:
+  - db/analysis/explain_before.sql:5 (Seq Scan showing performance issue)
+  - db/indexes/orders_performance.sql:2 (composite index on status + created_at)
+  - db/indexes/orders_performance.sql:6 (covering index with INCLUDE clause)
+  - db/docs/optimization_report.md:12 (5000ms → 80ms improvement estimate)
+
+  Deliverables:
+  1. EXPLAIN ANALYZE with Seq Scan, Index Scan, cost keywords and file:line refs
+  2. CREATE INDEX statements with CONCURRENTLY, WHERE, INCLUDE keywords
+  3. Performance estimates (before/after timings) with file references
+
+checks:
+  - type: regex
+    pattern: "CREATE INDEX.*orders.*\\(status, created_at\\)|\\(created_at.*status\\)"
+    description: Must recommend composite index on status and created_at
+  - type: regex
+    pattern: "EXPLAIN|explain"
+    description: Must reference EXPLAIN ANALYZE
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 4000
+  tags: [query-optimization, indexing, performance]

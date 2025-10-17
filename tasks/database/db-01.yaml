@@ -1,0 +1,119 @@
+id: db-01
+agent: database
+prompt: |
+  Design a normalized database schema for a multi-tenant SaaS application with proper tenant isolation.
+
+  Requirements:
+  1. Support for multiple tenants (companies)
+  2. Each tenant has users, projects, and tasks
+  3. Ensure complete data isolation between tenants
+  4. Users can belong to multiple tenants with different roles
+  5. Include audit trail for all data changes
+  6. MANDATORY: Your response MUST include at least 3 file:line references to schema files
+  7. MANDATORY: Include complete SQL DDL with CREATE TABLE, PRIMARY KEY, FOREIGN KEY, INDEX statements
+
+  Multi-Tenant Schema Template (use this structure):
+  ```sql
+  -- db/schema/tenants.sql
+  CREATE TABLE tenants (
+      tenant_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name VARCHAR(255) NOT NULL,
+      subdomain VARCHAR(100) UNIQUE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      is_active BOOLEAN DEFAULT true
+  );
+
+  CREATE INDEX idx_tenants_subdomain ON tenants(subdomain);
+
+  -- db/schema/users.sql
+  CREATE TABLE users (
+      user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      email VARCHAR(255) NOT NULL UNIQUE,
+      password_hash VARCHAR(255) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+  -- db/schema/tenant_users.sql
+  CREATE TABLE tenant_users (
+      tenant_user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      tenant_id UUID NOT NULL,
+      user_id UUID NOT NULL,
+      role VARCHAR(50) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+      UNIQUE(tenant_id, user_id)
+  );
+
+  CREATE INDEX idx_tenant_users_tenant ON tenant_users(tenant_id);
+  CREATE INDEX idx_tenant_users_user ON tenant_users(user_id);
+
+  -- db/schema/projects.sql
+  CREATE TABLE projects (
+      project_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      tenant_id UUID NOT NULL,
+      name VARCHAR(255) NOT NULL,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX idx_projects_tenant ON projects(tenant_id);
+
+  -- db/schema/audit_log.sql
+  CREATE TABLE audit_log (
+      audit_id BIGSERIAL PRIMARY KEY,
+      tenant_id UUID NOT NULL,
+      table_name VARCHAR(100) NOT NULL,
+      record_id UUID NOT NULL,
+      action VARCHAR(20) NOT NULL, -- INSERT, UPDATE, DELETE
+      changed_by UUID NOT NULL,
+      changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      old_values JSONB,
+      new_values JSONB,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX idx_audit_tenant_table ON audit_log(tenant_id, table_name);
+  CREATE INDEX idx_audit_record ON audit_log(record_id);
+  ```
+
+  Expected files to reference:
+  - db/schema/tenants.sql (core tenants table with isolation strategy)
+  - db/schema/tenant_users.sql (multi-tenant user associations)
+  - db/schema/projects.sql (tenant-scoped data example)
+  - db/schema/audit_log.sql (audit trail implementation)
+  - db/queries/tenant_isolation.sql (sample isolation queries)
+
+  Example of proper file:line references:
+  - db/schema/tenants.sql:3 (tenant_id PRIMARY KEY definition)
+  - db/schema/tenant_users.sql:8 (tenant_id FOREIGN KEY constraint)
+  - db/schema/projects.sql:6 (tenant isolation via FOREIGN KEY)
+  - db/schema/audit_log.sql:12 (audit trail composite index)
+
+  Deliverables:
+  1. ER diagram (text-based or tool reference) with tenant_id propagation
+  2. SQL DDL with CREATE TABLE, PRIMARY KEY, FOREIGN KEY, INDEX keywords and file:line refs
+  3. Tenant isolation explanation (row-level security with tenant_id in every table)
+  4. Sample queries with tenant_id filtering demonstrating isolation
+
+checks:
+  - type: regex
+    pattern: "CREATE TABLE.*tenants?"
+    description: Must include tenants table
+  - type: regex
+    pattern: "tenant_id.*FOREIGN KEY|REFERENCES"
+    description: Must have tenant_id foreign key constraints
+  - type: regex
+    pattern: "CREATE INDEX"
+    description: Must include appropriate indexes
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5000
+  tags: [schema-design, multi-tenancy, normalization]

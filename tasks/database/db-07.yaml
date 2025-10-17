@@ -1,0 +1,144 @@
+id: db-07
+agent: database
+prompt: |
+  Design a connection pooling strategy for a Django application with PostgreSQL.
+
+  Context:
+  - Django 4.2 application
+  - 10 web servers (gunicorn, 4 workers each = 40 processes)
+  - Database: PostgreSQL 15 (max_connections = 100)
+  - Traffic: 200 req/s average, 500 req/s peak
+  - Connection leak history (need better management)
+
+  Problem:
+  - Current: Each Django worker opens 2 connections = 80 total
+  - Peak traffic causes "too many connections" errors
+  - Idle connections waste resources
+
+  Requirements:
+  1. Evaluate pgbouncer vs Django builtin vs Pgpool-II
+  2. Provide configuration for chosen solution
+  3. Connection pool sizing calculation
+  4. Deployment architecture diagram
+  5. Monitoring strategy (pool saturation, wait times)
+
+  Deliverables:
+  - pgbouncer.ini configuration (if recommended)
+  - Django settings.py updates
+  - Deployment guide
+  - Monitoring queries/dashboard
+  - MANDATORY: Your response MUST include at least 3 file:line references to configuration files
+  - MANDATORY: Include pgbouncer.ini with pool_mode, max_client_conn, default_pool_size settings
+
+  Connection Pooling Template (use this structure):
+  ```ini
+  # config/pgbouncer.ini
+  [databases]
+  myapp_db = host=postgres-primary port=5432 dbname=myapp user=myapp_user password=***
+
+  [pgbouncer]
+  # Pool mode: transaction (recommended for Django)
+  pool_mode = transaction
+
+  # Connection limits
+  max_client_conn = 1000
+  default_pool_size = 25
+  reserve_pool_size = 5
+  reserve_pool_timeout = 3
+
+  # Server connections
+  max_db_connections = 100
+  max_user_connections = 100
+
+  # Timeouts
+  server_idle_timeout = 600
+  server_lifetime = 3600
+
+  # Logging
+  log_connections = 1
+  log_disconnections = 1
+  log_pooler_errors = 1
+
+  # Listen
+  listen_addr = 0.0.0.0
+  listen_port = 6432
+
+  [users]
+  myapp_user = ***
+  ```
+
+  ```python
+  # myapp/settings.py
+  DATABASES = {
+      'default': {
+          'ENGINE': 'django.db.backends.postgresql',
+          'NAME': 'myapp',
+          'USER': 'myapp_user',
+          'PASSWORD': os.environ.get('DB_PASSWORD'),
+          'HOST': 'pgbouncer',  # Changed from direct postgres connection
+          'PORT': '6432',  # pgbouncer port
+          'CONN_MAX_AGE': 0,  # Disable persistent connections with transaction pooling
+          'OPTIONS': {
+              'connect_timeout': 5,
+              'options': '-c statement_timeout=30000'
+          }
+      }
+  }
+  ```
+
+  Pool Sizing Calculation:
+  ```
+  # config/pool_sizing.md
+
+  Application:
+  - 10 web servers × 4 gunicorn workers = 40 processes
+  - Peak traffic: 500 req/s
+  - Average query time: 50ms
+  - Concurrent queries: 500 req/s × 0.05s = 25 queries
+
+  pgbouncer Configuration:
+  - default_pool_size = 25 (matches concurrent queries)
+  - reserve_pool_size = 5 (20% buffer for spikes)
+  - max_db_connections = 100 (Postgres limit)
+  - max_client_conn = 1000 (40 workers × 25 connections/worker)
+
+  Result: 40 app processes → 25 DB connections (62% reduction)
+  ```
+
+  Expected files to reference:
+  - config/pgbouncer.ini (pool configuration with transaction mode)
+  - myapp/settings.py (Django database settings with CONN_MAX_AGE=0)
+  - docs/pool_sizing.md (connection pool calculations)
+  - monitoring/pool_stats.sql (pgbouncer stats queries)
+
+  Example of proper file:line references:
+  - config/pgbouncer.ini:7 (pool_mode = transaction for Django)
+  - config/pgbouncer.ini:11 (default_pool_size = 25 calculation)
+  - myapp/settings.py:9 (CONN_MAX_AGE = 0 for transaction pooling)
+  - docs/pool_sizing.md:12 (concurrent query calculation)
+
+  Deliverables:
+  1. pgbouncer.ini with pool_mode, default_pool_size, max_client_conn keywords and file:line refs
+  2. Django settings with CONN_MAX_AGE=0, HOST pointing to pgbouncer
+  3. Pool sizing calculation (app processes → concurrent queries → pool size)
+
+checks:
+  - type: regex
+    pattern: "pgbouncer|Pgpool|connection.pool"
+    description: Must evaluate connection pooling solutions
+  - type: regex
+    pattern: "pool_size|max_connections|pool_mode"
+    description: Must specify pool sizing parameters
+  - type: regex
+    pattern: "transaction|session|statement"
+    description: Must explain pool mode choice
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 4500
+  tags: [connection-pooling, performance, django]

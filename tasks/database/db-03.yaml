@@ -1,0 +1,94 @@
+id: db-03
+agent: database
+prompt: |
+  Create a migration strategy to add soft-delete functionality to the users table without downtime.
+
+  Context:
+  - Table has 5M rows
+  - High read/write traffic (500 qps)
+  - Need to maintain backward compatibility during rollout
+  - Database: PostgreSQL 15
+
+  Requirements:
+  1. Migration SQL (add deleted_at column, index)
+  2. Dual-write strategy explanation
+  3. Application code migration path (3 phases)
+  4. Rollback plan
+  5. Testing strategy for data consistency
+  6. MANDATORY: Your response MUST include at least 3 file:line references to migration files
+  7. MANDATORY: Include ALTER TABLE, CREATE INDEX, and transaction control statements
+
+  Zero-Downtime Migration Template (use this structure):
+  ```sql
+  -- db/migrations/001_add_soft_delete.sql
+  BEGIN;
+
+  -- Phase 1: Add nullable column (fast, no locks)
+  ALTER TABLE users
+    ADD COLUMN deleted_at TIMESTAMP DEFAULT NULL;
+
+  -- Phase 2: Create partial index (only indexes deleted rows)
+  CREATE INDEX CONCURRENTLY idx_users_deleted_at
+    ON users(deleted_at)
+    WHERE deleted_at IS NOT NULL;
+
+  -- Phase 3: Create index for active users query
+  CREATE INDEX CONCURRENTLY idx_users_active
+    ON users(id)
+    WHERE deleted_at IS NULL;
+
+  COMMIT;
+
+  -- db/migrations/rollback_001.sql
+  BEGIN;
+  DROP INDEX IF EXISTS idx_users_active;
+  DROP INDEX IF EXISTS idx_users_deleted_at;
+  ALTER TABLE users DROP COLUMN IF EXISTS deleted_at;
+  COMMIT;
+
+  -- db/queries/validation.sql
+  -- Verify no data loss
+  SELECT
+    COUNT(*) as total_users,
+    COUNT(*) FILTER (WHERE deleted_at IS NULL) as active_users,
+    COUNT(*) FILTER (WHERE deleted_at IS NOT NULL) as deleted_users
+  FROM users;
+  ```
+
+  Expected files to reference:
+  - db/migrations/001_add_soft_delete.sql (ALTER TABLE with soft-delete column)
+  - db/migrations/rollback_001.sql (rollback procedure)
+  - db/queries/validation.sql (data consistency checks)
+  - docs/deployment_plan.md (3-phase deployment strategy)
+
+  Example of proper file:line references:
+  - db/migrations/001_add_soft_delete.sql:5 (ALTER TABLE ADD COLUMN statement)
+  - db/migrations/001_add_soft_delete.sql:9 (CREATE INDEX CONCURRENTLY for zero-downtime)
+  - db/queries/validation.sql:3 (validation query with FILTER clause)
+  - docs/deployment_plan.md:15 (dual-write phase explanation)
+
+  Deliverables:
+  1. Migration SQL with BEGIN, ALTER TABLE, CREATE INDEX CONCURRENTLY, COMMIT keywords and file:line refs
+  2. Deployment sequence with 3 phases (add column, dual-write, switch reads)
+  3. Validation queries with COUNT, FILTER, WHERE deleted_at IS NULL patterns
+
+checks:
+  - type: regex
+    pattern: "ALTER TABLE.*ADD COLUMN.*deleted_at"
+    description: Must add deleted_at column
+  - type: regex
+    pattern: "CREATE INDEX.*deleted_at"
+    description: Must create index for soft-delete queries
+  - type: regex
+    pattern: "dual[- ]write|backward compatibility"
+    description: Must explain dual-write strategy
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 4500
+  tags: [migration, zero-downtime, soft-delete]
