@@ -1,0 +1,167 @@
+id: db-13
+agent: database
+prompt: |
+  Fix SurrealDB result unwrapping bug causing 57% RAG query failure rate.
+
+  Bug Context:
+  - Location: granite_adapter_v3.py line 218
+  - Symptom: RAG context retrieval fails with "list index out of range"
+  - Root cause: SurrealDB wraps results in metadata structure, code assumes flat list
+  - Current failure rate: 4/7 agents (57%)
+  - Impact: RAG system returns empty context despite having relevant data
+
+  Current Code (Buggy):
+  ```python
+  result = await db.query(
+      "SELECT * FROM entities WHERE ...",
+      {"query_vector": embedding}
+  )
+
+  # Bug: Assumes result is flat list, but SurrealDB returns:
+  # [{"status": "OK", "time": "...", "result": [actual_data]}]
+
+  if result and len(result) > 0:
+      context = result[:5]  # FAILS: result[0] is metadata dict, not entity
+  ```
+
+  Requirements:
+  1. Analyze SurrealDB response structure (with examples)
+  2. Implement robust unwrapping logic:
+     - Handle single query results
+     - Handle multiple query results (batch)
+     - Handle empty results
+     - Handle errors
+  3. Add error handling and logging
+  4. Write test cases covering all response types
+  5. Explain why unwrapping is needed (SurrealDB design choice)
+
+  Deliverables:
+  - Fixed Python code with unwrapping logic
+  - Unit tests for all response types
+  - Documentation explaining SurrealDB response format
+  - Validation: 0% failure rate on 7-agent test suite
+  - MANDATORY: Your response MUST include at least 3 file:line references to code/test files
+  - MANDATORY: Include result unwrapping logic and test cases
+
+  SurrealDB Result Unwrapping Template (use this structure):
+  ```python
+  # src/adapters/rag/surrealdb_client.py
+  async def query_with_unwrap(self, query: str, params: dict = None) -> list:
+      """Execute query and unwrap SurrealDB response metadata"""
+      result = await self.db.query(query, params or {})
+
+      # SurrealDB returns: [{"status": "OK", "time": "...", "result": [actual_data]}]
+      if not result or len(result) == 0:
+          return []
+
+      # Unwrap first query result
+      first_result = result[0]
+
+      # Check status
+      if isinstance(first_result, dict):
+          if first_result.get('status') != 'OK':
+              error = first_result.get('result', 'Unknown error')
+              raise Exception(f"SurrealDB query failed: {error}")
+
+          # Unwrap actual data
+          return first_result.get('result', [])
+
+      # Fallback: assume already unwrapped (older SDK versions)
+      return result
+
+  async def get_rag_context(self, embedding: list[float], limit: int = 5) -> list:
+      """Get RAG context with proper result unwrapping"""
+      query = """
+          SELECT id, content, file_path,
+                 vector::similarity::cosine(embedding, $query_vector) AS score
+          FROM entities
+          ORDER BY score DESC
+          LIMIT $limit;
+      """
+
+      # Use unwrap helper
+      results = await self.query_with_unwrap(
+          query,
+          {"query_vector": embedding, "limit": limit}
+      )
+
+      return results
+
+  # tests/adapters/rag/test_surrealdb_unwrap.py
+  import pytest
+  from unittest.mock import AsyncMock
+
+  @pytest.mark.asyncio
+  async def test_unwrap_single_query_success():
+      """Test unwrapping successful single query"""
+      client = SurrealDBClient()
+      client.db.query = AsyncMock(return_value=[
+          {"status": "OK", "time": "123ms", "result": [
+              {"id": "entity:1", "content": "test"}
+          ]}
+      ])
+
+      result = await client.query_with_unwrap("SELECT * FROM entities")
+      assert len(result) == 1
+      assert result[0]["id"] == "entity:1"
+
+  @pytest.mark.asyncio
+  async def test_unwrap_empty_result():
+      """Test unwrapping empty result"""
+      client = SurrealDBClient()
+      client.db.query = AsyncMock(return_value=[
+          {"status": "OK", "time": "50ms", "result": []}
+      ])
+
+      result = await client.query_with_unwrap("SELECT * FROM entities WHERE false")
+      assert result == []
+
+  @pytest.mark.asyncio
+  async def test_unwrap_error_status():
+      """Test unwrapping error response"""
+      client = SurrealDBClient()
+      client.db.query = AsyncMock(return_value=[
+          {"status": "ERR", "result": "Parse error: unexpected token"}
+      ])
+
+      with pytest.raises(Exception, match="SurrealDB query failed"):
+          await client.query_with_unwrap("INVALID QUERY")
+  ```
+
+  Expected files to reference:
+  - src/adapters/rag/surrealdb_client.py (unwrapping logic)
+  - tests/adapters/rag/test_surrealdb_unwrap.py (test cases)
+  - docs/surrealdb_response_format.md (response structure documentation)
+  - granite_adapter_v3.py (original buggy location to fix)
+
+  Example of proper file:line references:
+  - src/adapters/rag/surrealdb_client.py:8 (result[0] metadata dict access)
+  - src/adapters/rag/surrealdb_client.py:13 (status check before unwrapping)
+  - tests/adapters/rag/test_surrealdb_unwrap.py:12 (test_unwrap_single_query_success)
+  - granite_adapter_v3.py:218 (original bug location needing fix)
+
+  Deliverables:
+  1. Python code with result[0]['result'], isinstance, status check patterns and file:line refs
+  2. pytest test cases with AsyncMock, @pytest.mark.asyncio, assert patterns
+  3. Fix validation (0% failure rate vs original 57% failure)
+
+checks:
+  - type: regex
+    pattern: "result\\[0\\]\\['result'\\]|unwrap.*result|status.*OK"
+    description: Must unwrap SurrealDB response metadata
+  - type: regex
+    pattern: "isinstance.*dict|status|result"
+    description: Must check response structure
+  - type: regex
+    pattern: "test.*unwrap|test.*response"
+    description: Must include test cases
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 4000
+  tags: [multimodel-databases, bug-fix, surrealdb, rag, error-handling]

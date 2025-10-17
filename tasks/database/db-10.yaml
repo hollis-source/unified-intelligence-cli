@@ -1,0 +1,124 @@
+id: db-10
+agent: database
+prompt: |
+  Design a sharding strategy for horizontal scaling of a user database.
+
+  Context:
+  - Current: Single PostgreSQL database (1TB, 100M users)
+  - Growth: 5M new users/month
+  - Access pattern: 95% queries by user_id, 5% by email/username
+  - Read/write: 70/30 split
+  - Goal: Scale to 500M users over 2 years
+  - Tech stack: Python/Django application
+
+  Requirements:
+  1. Sharding key selection (user_id? tenant_id? hash?)
+  2. Shard count and sizing strategy
+  3. Consistent hashing analysis (vs range-based)
+  4. Routing layer architecture (app-level vs proxy)
+  5. Cross-shard query handling (5% case)
+  6. Rebalancing strategy (adding new shards)
+  7. Migration path from single database
+
+  Deliverables:
+  - Sharding key decision with justification
+  - Shard topology diagram
+  - Routing algorithm pseudocode
+  - Migration plan (phase 1: dual-write, phase 2: cutover)
+  - Operational complexity assessment
+  - MANDATORY: Your response MUST include at least 3 file:line references to sharding implementation files
+  - MANDATORY: Include routing algorithm code and shard configuration
+
+  Sharding Strategy Template (use this structure):
+  ```python
+  # src/db/shard_router.py
+  import hashlib
+  from typing import Optional
+
+  class ShardRouter:
+      def __init__(self, shard_config: dict):
+          """
+          shard_config = {
+              'shard_0': {'host': 'db-shard-0', 'user_id_range': (0, 100_000_000)},
+              'shard_1': {'host': 'db-shard-1', 'user_id_range': (100_000_000, 200_000_000)},
+              'shard_2': {'host': 'db-shard-2', 'user_id_range': (200_000_000, 300_000_000)},
+              'shard_3': {'host': 'db-shard-3', 'user_id_range': (300_000_000, 400_000_000)},
+          }
+          """
+          self.shards = shard_config
+          self.shard_count = len(shard_config)
+
+      def get_shard_for_user(self, user_id: int) -> str:
+          """Route by user_id using consistent hashing"""
+          # Option 1: Range-based (simple, but rebalancing is hard)
+          for shard_name, config in self.shards.items():
+              start, end = config['user_id_range']
+              if start <= user_id < end:
+                  return shard_name
+
+          # Option 2: Consistent hashing (better for rebalancing)
+          shard_index = int(hashlib.md5(str(user_id).encode()).hexdigest(), 16) % self.shard_count
+          return f'shard_{shard_index}'
+
+      def get_shard_for_query(self, email: str) -> list[str]:
+          """Cross-shard query - must query all shards"""
+          return list(self.shards.keys())
+
+  # config/shards.yaml
+  shards:
+    shard_0:
+      host: postgres-shard-0.example.com
+      port: 5432
+      database: users_shard_0
+      user_id_range: [0, 100000000]
+      replicas:
+        - postgres-shard-0-replica-1
+        - postgres-shard-0-replica-2
+
+    shard_1:
+      host: postgres-shard-1.example.com
+      port: 5432
+      database: users_shard_1
+      user_id_range: [100000000, 200000000]
+      replicas:
+        - postgres-shard-1-replica-1
+        - postgres-shard-1-replica-2
+  ```
+
+  Expected files to reference:
+  - src/db/shard_router.py (routing algorithm implementation)
+  - config/shards.yaml (shard topology and connection config)
+  - docs/sharding_design.md (sharding key decision and justification)
+  - docs/migration_plan.md (dual-write and cutover phases)
+
+  Example of proper file:line references:
+  - src/db/shard_router.py:18 (get_shard_for_user routing logic)
+  - src/db/shard_router.py:26 (consistent hashing with hashlib.md5)
+  - config/shards.yaml:3 (shard_0 configuration with user_id_range)
+  - docs/sharding_design.md:45 (sharding key = user_id justification: 95% queries)
+
+  Deliverables:
+  1. Routing code with hashlib, user_id_range, shard_count keywords and file:line refs
+  2. Shard config YAML with host, database, user_id_range, replicas structure
+  3. Migration plan with dual-write phase (write to old + new shards for 7 days)
+
+checks:
+  - type: regex
+    pattern: "shard.*key|sharding key|partition key"
+    description: Must specify sharding key
+  - type: regex
+    pattern: "consistent hash|hash ring|hash function"
+    description: Must discuss hashing strategy
+  - type: regex
+    pattern: "routing|shard router|query router"
+    description: Must explain routing mechanism
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 6000
+  tags: [sharding, horizontal-scaling, distributed-systems]

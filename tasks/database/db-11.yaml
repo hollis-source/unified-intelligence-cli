@@ -1,0 +1,133 @@
+id: db-11
+agent: database
+prompt: |
+  Evaluate multimodel databases for RAG (Retrieval-Augmented Generation) codebase indexing.
+
+  Context:
+  - Purpose: Store code entities (functions, classes, modules) with vector embeddings
+  - Embedding model: nomic-embed-text (768 dimensions)
+  - Access patterns:
+    - Vector similarity search (find similar code by embedding) - PRIMARY
+    - Metadata filtering (file path, entity type, language) - SECONDARY
+    - Graph traversal (function calls, class inheritance) - OPTIONAL
+  - Scale: 50,000 entities per codebase
+  - Current implementation: SurrealDB (multimodel: graph + vector + document)
+  - Question: What's the optimal multimodel database for RAG with graph capabilities?
+
+  Requirements:
+  1. Evaluate multimodel databases supporting vectors + graphs + documents:
+     - SurrealDB (current: graph + vector + document + key-value)
+     - ArangoDB (graph + document + vector search plugin)
+     - FaunaDB (document + graph + temporal, vector coming)
+     - OrientDB (graph + document, limited vector support)
+     - PostgreSQL + extensions (pgvector + age graph extension)
+  2. Comparison dimensions:
+     - Multimodel flexibility (how well do models integrate?)
+     - Vector search performance (latency, index types)
+     - Graph traversal capability (native vs extension)
+     - Python async client maturity
+     - Operational complexity (setup, scaling, maintenance)
+     - Open source vs commercial
+  3. Provide recommendation with decision matrix
+  4. Schema design for recommended database (showing multimodel usage)
+  5. Migration path from SurrealDB if changing
+
+  Deliverables:
+  - Comparison table with scoring (multimodel databases only)
+  - Recommendation with justification
+  - Schema DDL for recommended database (entities + relationships + vectors)
+  - Sample queries demonstrating multimodel features
+  - Explanation: Why multimodel matters for RAG
+  - MANDATORY: Your response MUST include at least 3 file:line references to comparison/schema files
+  - MANDATORY: Include multimodel schema DDL showing vector, graph, and document features
+
+  Multimodel RAG Database Template (use this structure):
+  ```markdown
+  ## docs/multimodel_comparison.md
+
+  | Database | Vector Search | Graph Traversal | Document | Python Async | Operational | Score |
+  |----------|--------------|-----------------|----------|--------------|-------------|-------|
+  | SurrealDB | Native MTREE | Native (RELATE) | Native | ✅ surrealdb.py | Medium | 8.5/10 |
+  | ArangoDB | Plugin (ArangoSearch) | Native (edges) | Native | ✅ aioarangodb | Medium | 8.0/10 |
+  | PostgreSQL+ext | pgvector | age extension | JSONB | ✅ asyncpg | Low | 7.5/10 |
+  | OrientDB | Limited | Native | Native | ⚠️ pyorient (sync) | High | 6.0/10 |
+
+  **Recommendation: SurrealDB**
+  - Native multimodel (no plugins needed)
+  - MTREE vector index (fast similarity search)
+  - RELATE for graph traversal (function call chains)
+  - Mature Python async client
+  ```
+
+  ```surql
+  -- db/surrealdb/schema.surql
+  -- Define entities table with vector embedding
+  DEFINE TABLE entities SCHEMAFULL;
+  DEFINE FIELD entity_id ON entities TYPE string;
+  DEFINE FIELD entity_type ON entities TYPE string;
+  DEFINE FIELD file_path ON entities TYPE string;
+  DEFINE FIELD content ON entities TYPE string;
+  DEFINE FIELD embedding ON entities TYPE array;
+  DEFINE FIELD metadata ON entities TYPE object;
+
+  -- Define vector index (MTREE for similarity search)
+  DEFINE INDEX embedding_mtree ON entities FIELDS embedding MTREE DIMENSION 768 DIST COSINE;
+
+  -- Define relationships table (graph)
+  DEFINE TABLE calls SCHEMAFULL TYPE RELATION IN entities OUT entities;
+  DEFINE FIELD call_type ON calls TYPE string;
+  DEFINE FIELD line_number ON calls TYPE int;
+
+  -- db/surrealdb/queries.surql
+  -- Query 1: Vector similarity search (document model + vector)
+  SELECT id, content, file_path,
+         vector::similarity::cosine(embedding, $query_vector) AS score
+  FROM entities
+  WHERE entity_type = 'function'
+  ORDER BY score DESC
+  LIMIT 10;
+
+  -- Query 2: Graph traversal (find call chain)
+  SELECT *
+  FROM entities:my_function
+  ->calls->entities
+  ->calls->entities;
+  ```
+
+  Expected files to reference:
+  - docs/multimodel_comparison.md (comparison table with scoring)
+  - db/surrealdb/schema.surql (multimodel schema with vector index)
+  - db/surrealdb/queries.surql (queries demonstrating vector + graph)
+  - docs/why_multimodel_for_rag.md (design rationale)
+
+  Example of proper file:line references:
+  - docs/multimodel_comparison.md:8 (SurrealDB 8.5/10 score with justification)
+  - db/surrealdb/schema.surql:10 (DEFINE INDEX MTREE for vector search)
+  - db/surrealdb/queries.surql:5 (vector::similarity::cosine query)
+  - db/surrealdb/queries.surql:13 (->calls-> graph traversal syntax)
+
+  Deliverables:
+  1. Comparison table with SurrealDB, ArangoDB, PostgreSQL+ext evaluations
+  2. Schema with DEFINE TABLE, DEFINE INDEX MTREE, TYPE RELATION keywords
+  3. Queries with vector::similarity::cosine, ->calls-> graph syntax
+
+checks:
+  - type: regex
+    pattern: "SurrealDB|ArangoDB|FaunaDB|OrientDB|PostgreSQL.*age"
+    description: Must evaluate multimodel database options
+  - type: regex
+    pattern: "multimodel|multi-model|graph.*vector|document.*vector"
+    description: Must discuss multimodel aspects
+  - type: regex
+    pattern: "recommendation|recommend"
+    description: Must provide clear recommendation
+
+acceptance:
+  auto_min: 6
+  human_min: 7
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 6000
+  tags: [rag, multimodel-databases, vector-search, graph-databases]
