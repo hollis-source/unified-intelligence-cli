@@ -29,5 +29,5 @@ checks:
   - "regression"
   - "migration"
   - type: regex
-    pattern: "backwards?.{0,10}compatib"
+    pattern: "(?i)backwards?.{0,10}compatib"
   - "rollback"
