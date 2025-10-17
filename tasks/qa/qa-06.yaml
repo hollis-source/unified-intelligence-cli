@@ -1,38 +1,18 @@
 id: qa-06
 agent: qa
 prompt: |
-  Create a UAT (User Acceptance Testing) checklist for a mobile e-commerce app release.
-
-  Release: v2.5.0 - Enhanced Checkout Experience
-
-  Key Features:
-  - One-tap checkout with saved payment methods
-  - Apple Pay / Google Pay integration
-  - Order tracking with real-time updates
-  - Push notifications for order status
-  - In-app customer support chat
-  - Product recommendations based on browsing history
-
-  User Personas:
-  1. First-time buyer (no account, guest checkout)
-  2. Returning customer (saved preferences and payment)
-  3. Power user (frequent purchases, multiple addresses)
-  4. Senior user (accessibility needs, large fonts)
-
-  Requirements:
-  1. Create UAT scenarios for each persona (3-4 scenarios per persona)
-  2. Define clear pass/fail criteria for each scenario
-  3. Include usability checks (intuitiveness, error messages, loading states)
-  4. Specify device/OS coverage (iOS 16+, Android 12+)
-  5. Identify critical user journeys that must work flawlessly
-  6. Estimate UAT session duration per persona
-  7. MANDATORY: Your response MUST include at least 3 file:line references to existing code
+  Create UAT checklist for mobile e-commerce app v2.5.0 enhanced checkout release.
 
   Expected files to reference:
-  - tests/uat/checkout_v2.5_uat_checklist.md (UAT checklist document)
-  - src/mobile/screens/CheckoutScreen.tsx (checkout UI)
-  - src/mobile/services/PaymentService.ts (payment integration)
-  - docs/uat/persona_profiles.md (user persona definitions)
+  - tests/uat/checkout_v2.5_uat_checklist.md:10 (Persona 1: First-time buyer scenarios)
+  - src/mobile/screens/CheckoutScreen.tsx:85 (one-tap checkout component with saved payments)
+  - src/mobile/services/PaymentService.ts:120 (Apple Pay/Google Pay integration)
+  - docs/uat/persona_profiles.md:15 (returning customer persona definition)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include UAT patterns with persona-based scenarios (first-time/returning/power/senior users), pass/fail criteria, usability checks, and critical user journeys
+
+  Template includes: 4 user personas with 3-4 scenarios each, one-tap checkout, Apple/Google Pay, order tracking, push notifications, in-app support, device/OS coverage (iOS 16+, Android 12+)
 
 checks:
   - "uat"
@@ -42,4 +22,11 @@ checks:
     pattern: "(?i)(pass.{0,20}fail|acceptance|success).{0,10}criteria"
 
 acceptance:
-  required_checks: none  # Checks are informational only; quality score determines pass/fail
+  auto_min: 6
+  human_min: 6
+  required_checks: none
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3600
+  tags: [uat, user-acceptance-testing, personas, mobile-testing]
