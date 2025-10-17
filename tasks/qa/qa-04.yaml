@@ -30,4 +30,4 @@ checks:
   - "critical path"
   - "priority"
   - type: regex
-    pattern: "(response|status|HTTP).{0,10}code"
+    pattern: "(?i)(response|status|HTTP).{0,10}code"
