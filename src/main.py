@@ -68,6 +68,10 @@ if env_file.exists():
               help="Enable state persistence with file path (Phase 4)")
 @click.option("--load-state", type=click.Path(exists=True), default=None,
               help="Load initial state from file (Phase 4)")
+@click.option("--enable-cache", is_flag=True, default=False,
+              help="Enable workflow result caching (Phase 6)")
+@click.option("--cache-ttl", type=int, default=3600,
+              help="Cache TTL in seconds (default: 3600)")
 def main(
     goal: str,
     workflow: str,
@@ -90,7 +94,9 @@ def main(
     feedback_loops: bool,
     max_replanning_attempts: int,
     state_persistence: str,
-    load_state: str
+    load_state: str,
+    enable_cache: bool,
+    cache_ttl: int
 ) -> None:
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.
