@@ -39,4 +39,4 @@ checks:
   - "user acceptance"
   - "persona"
   - type: regex
-    pattern: "(pass.{0,20}fail|acceptance|success).{0,10}criteria"
+    pattern: "(?i)(pass.{0,20}fail|acceptance|success).{0,10}criteria"
