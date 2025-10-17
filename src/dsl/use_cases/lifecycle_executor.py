@@ -8,14 +8,19 @@ SOLID: SRP - handles DSL workflow execution with lifecycle phases.
 """
 
 import asyncio
+import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 
-from src.entities.lifecycle import Lifecycle, LifecycleState
+from src.entity.lifecycle import Lifecycle, LifecycleState
 from src.dsl.adapters.parser import Parser
 from src.dsl.use_cases.interpreter import Interpreter, TaskExecutor
 from src.dsl.adapters.cli_task_executor import CLITaskExecutor
+
+# Configure logger for result validation
+logger = logging.getLogger(__name__)
 
 
 @dataclass
