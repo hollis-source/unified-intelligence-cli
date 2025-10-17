@@ -38,4 +38,5 @@ checks:
   - "uat"
   - "user acceptance"
   - "persona"
-  - "pass/fail criteria"
+  - type: regex
+    pattern: "(pass.{0,20}fail|acceptance|success).{0,10}criteria"
