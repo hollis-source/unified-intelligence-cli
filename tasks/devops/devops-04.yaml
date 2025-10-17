@@ -1,0 +1,67 @@
+id: devops-04
+agent: devops
+prompt: |
+  Set up centralized log aggregation for applications and infrastructure with structured logging and retention policies.
+
+  Requirements:
+  1. Collect logs from containers and services with labels/metadata
+  2. Provide search/filters and dashboards
+  3. Define retention and privacy controls
+  4. MANDATORY: Your response MUST include at least 3 file:line references to configuration files
+  5. MANDATORY: Include YAML configuration examples for log collector
+
+  Log Collector Configuration Template (use this structure):
+  ```yaml
+  # Fluent Bit configuration
+  [SERVICE]
+      Flush: 1
+      Log_Level: info
+
+  [INPUT]
+      Name: tail
+      Path: /var/log/*.log
+
+  [OUTPUT]
+      Name: [destination]
+      Match: *
+  ```
+
+  Expected files to reference:
+  - config/fluent-bit.conf or fluent-bit.yaml (log collector config)
+  - config/loki-config.yaml (log storage configuration)
+  - docker-compose.yml (service definitions for logging stack)
+  - config/grafana-datasources.yaml (Grafana log datasource)
+
+  Example of proper file:line references:
+  - config/fluent-bit.yaml:15 (input configuration for container logs)
+  - config/loki-config.yaml:28 (retention policy settings)
+  - docker-compose.yml:42 (logging stack service definitions)
+  - config/grafana-datasources.yaml:12 (Loki datasource configuration)
+
+  Deliverables:
+  1. Log collector/forwarder YAML configuration with file:line references
+  2. Indexing/storage setup and dashboard example with configuration snippets
+  3. Retention policy YAML config and access controls with specific file references
+
+checks:
+  - type: regex
+    pattern: '\b(logging|logs?|aggregation|centralized)\b'
+    description: Must reference centralized logging/aggregation
+  - type: regex
+    pattern: '\b(Fluent(Bit|d)|ELK|Loki)\b'
+    description: Should mention a common logging stack or collector
+  - type: regex
+    pattern: '\b(retention|dashboard|search)\b'
+    description: Must include retention, dashboards, or search capabilities
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3600
+  tags: [devops, logging, observability]
+
+

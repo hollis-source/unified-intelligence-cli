@@ -1,0 +1,67 @@
+id: devops-01
+agent: devops
+prompt: |
+  Set up a GitHub Actions CI pipeline that runs lint, tests, and builds a Docker image on pull requests and main branch pushes.
+
+  Requirements:
+  1. Define workflows, jobs, and triggers (push/PR) with appropriate runners
+  2. Use caching for dependencies and store build artifacts
+  3. Build and optionally push Docker images with tags
+  4. Fail fast with clear logs and statuses
+  5. MANDATORY: Your response MUST include at least 3 file:line references to configuration files
+  6. MANDATORY: Output must include a complete YAML workflow example with proper structure
+
+  GitHub Actions Workflow Template (use this structure in your response):
+  ```yaml
+  name: [Pipeline Name]
+
+  on:
+    [triggers]
+
+  jobs:
+    [job-name]:
+      runs-on: [runner]
+      steps:
+        - name: [Step name]
+          run: [commands]
+  ```
+
+  Expected files to reference:
+  - .github/workflows/ci.yml (main CI workflow)
+  - .github/workflows/build.yml (build workflow if separate)
+  - Dockerfile (if building images)
+  - .dockerignore (if optimizing builds)
+
+  Example of proper file:line references:
+  - .github/workflows/ci.yml:15 (lint job definition)
+  - .github/workflows/ci.yml:32 (test job with matrix)
+  - .github/workflows/ci.yml:48 (Docker build step)
+  - Dockerfile:8 (multi-stage build configuration)
+
+  Deliverables:
+  1. Complete .github/workflows/ci.yml YAML with name:, jobs:, steps:, and run: keywords
+  2. Cache strategy (actions/cache) and artifact uploads
+  3. Documentation on triggers and environment variables with file:line references
+
+checks:
+  - type: regex
+    pattern: '\b(GitHub\s+Actions|workflow|CI)\b'
+    description: Must reference GitHub Actions workflows for CI
+  - type: regex
+    pattern: '\b(jobs?|runners?|matrix)\b'
+    description: Must describe jobs/runners and optional matrix builds
+  - type: regex
+    pattern: '\b(cache|artifact|triggers?)\b'
+    description: Must include caching, artifacts, or triggers
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3600
+  tags: [devops, ci, github-actions, docker]
+
+

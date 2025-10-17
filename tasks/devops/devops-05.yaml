@@ -1,0 +1,67 @@
+id: devops-05
+agent: devops
+prompt: |
+  Set up monitoring and alerting with Prometheus and Grafana for service-level metrics.
+
+  Requirements:
+  1. Expose application metrics and scrape with Prometheus
+  2. Create useful Grafana dashboards
+  3. Configure Alertmanager routes and basic SLO alerts
+  4. MANDATORY: Your response MUST include at least 3 file:line references to configuration files
+  5. MANDATORY: Include YAML configuration examples for Prometheus and alert rules
+
+  Prometheus Configuration Template (use this structure):
+  ```yaml
+  # prometheus.yml
+  global:
+    scrape_interval: 15s
+
+  scrape_configs:
+    - job_name: '[service-name]'
+      static_configs:
+        - targets: ['[host:port]']
+
+  # Alert rules
+  groups:
+    - name: [group-name]
+      rules:
+        - alert: [AlertName]
+          expr: [PromQL expression]
+  ```
+
+  Expected files to reference:
+  - config/prometheus.yml (Prometheus scrape configuration)
+  - config/alert-rules.yml (alert rule definitions)
+  - config/alertmanager.yml (Alertmanager routing)
+  - docker-compose.yml (monitoring stack services)
+
+  Example of proper file:line references:
+  - config/prometheus.yml:15 (scrape config for application metrics)
+  - config/alert-rules.yml:8 (high latency alert definition)
+  - config/alertmanager.yml:22 (alert routing configuration)
+  - docker-compose.yml:35 (Prometheus service definition)
+
+  Deliverables:
+  1. Prometheus scrape YAML config with job_name:, targets:, and file:line references
+  2. Grafana dashboard JSON with panel configurations and data source references
+  3. Alertmanager YAML routing and alert rules with groups:, rules:, alert: keywords
+
+checks:
+  - type: regex
+    pattern: '\b(Prometheus|Grafana|metrics?)\b'
+    description: Must reference Prometheus/Grafana and metrics
+  - type: regex
+    pattern: '\b(alerts?|Alertmanager|SLO)\b'
+    description: Should include alerting or SLOs
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3600
+  tags: [devops, monitoring, observability, prometheus]
+
+
