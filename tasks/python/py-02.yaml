@@ -1,0 +1,289 @@
+id: py-02
+agent: python
+prompt: |
+  Replace inheritance with composition in services/payment/processor.py.
+
+  Current code (example):
+
+  ```python
+  # services/payment/processor.py
+  class BaseProcessor:
+      def process(self, amount: int) -> bool:
+          raise NotImplementedError
+
+  class CreditCardProcessor(BaseProcessor):  # remove this inheritance
+      def process(self, amount: int) -> bool:
+          # ... complex logic and network calls ...
+          return True
+  ```
+
+  Refactor to composition:
+  - Introduce a PaymentGateway collaborator injected via __init__
+  - Keep the external API stable: a class exposing process(amount: int) -> bool
+  - Move logic previously in the subclass into the collaborator
+  - Avoid super() and inheritance; prefer small, testable collaborators
+  - Add type hints and docstrings
+
+  Expected files to reference:
+  - services/payment/processor.py (refactored with composition)
+  - services/payment/gateways.py (PaymentGateway protocol/implementations)
+  - tests/test_payment_processor.py (unit tests with mock gateways)
+  - docs/composition_over_inheritance.md (design rationale)
+
+  Example of proper file:line references:
+  - services/payment/processor.py:15 (def __init__(self, gateway: PaymentGateway))
+  - services/payment/processor.py:25 (self.gateway.charge delegation)
+  - services/payment/gateways.py:8 (class PaymentGateway protocol)
+  - tests/test_payment_processor.py:18 (MockGateway for testing)
+
+  Deliverables:
+  - Updated services/payment/processor.py using composition
+  - Optional: a minimal PaymentGateway protocol/class collocated or imported
+  - MANDATORY: Your response MUST include at least 3 file:line references
+  - MANDATORY: Include Protocol/ABC patterns, dependency injection, and testability examples
+
+  Requirements:
+  - No subclassing for the processing behavior
+  - Constructor injection (e.g., def __init__(self, gateway: PaymentGateway): ...)
+  - Maintain method name and return type: process(amount: int) -> bool
+  - Add unit-test-friendly seams (dependency passed in)
+
+  Composition Pattern Template (use this structure):
+  ```python
+  # services/payment/processor.py (BEFORE - inheritance)
+  class BaseProcessor:
+      def process(self, amount: int) -> bool:
+          raise NotImplementedError
+
+  class CreditCardProcessor(BaseProcessor):
+      def __init__(self, api_key: str):
+          self.api_key = api_key
+
+      def process(self, amount: int) -> bool:
+          # Complex logic mixed with network calls
+          response = requests.post(
+              'https://payment-api.com/charge',
+              json={'amount': amount, 'key': self.api_key}
+          )
+          return response.status_code == 200
+
+  # services/payment/gateways.py (NEW - collaborator)
+  from typing import Protocol
+  import requests
+
+  class PaymentGateway(Protocol):
+      """Protocol for payment gateway implementations."""
+
+      def charge(self, amount: int) -> dict:
+          """
+          Charge the specified amount.
+
+          Args:
+              amount: Amount in cents
+
+          Returns:
+              Response dictionary with status and transaction ID
+
+          Raises:
+              PaymentError: If charge fails
+          """
+          ...
+
+  class CreditCardGateway:
+      """Concrete payment gateway for credit cards."""
+
+      def __init__(self, api_key: str, endpoint: str):
+          self.api_key = api_key
+          self.endpoint = endpoint
+
+      def charge(self, amount: int) -> dict:
+          """Charge via credit card API."""
+          response = requests.post(
+              f'{self.endpoint}/charge',
+              json={'amount': amount, 'key': self.api_key},
+              timeout=30
+          )
+          response.raise_for_status()
+          return response.json()
+
+  class PayPalGateway:
+      """Concrete payment gateway for PayPal."""
+
+      def __init__(self, client_id: str, secret: str):
+          self.client_id = client_id
+          self.secret = secret
+
+      def charge(self, amount: int) -> dict:
+          """Charge via PayPal API."""
+          # PayPal-specific implementation
+          return {'status': 'success', 'transaction_id': 'pp_123'}
+
+  # services/payment/processor.py (AFTER - composition)
+  from typing import Optional
+  from services.payment.gateways import PaymentGateway
+
+  class PaymentError(Exception):
+      """Raised when payment processing fails."""
+      pass
+
+  class PaymentProcessor:
+      """
+      Payment processor using composition pattern.
+
+      Delegates actual payment processing to injected gateway.
+      """
+
+      def __init__(self, gateway: PaymentGateway):
+          """
+          Initialize processor with payment gateway.
+
+          Args:
+              gateway: Payment gateway implementation
+          """
+          self.gateway = gateway
+
+      def process(self, amount: int) -> bool:
+          """
+          Process payment for the specified amount.
+
+          Args:
+              amount: Amount to charge in cents
+
+          Returns:
+              True if payment succeeded, False otherwise
+
+          Raises:
+              ValueError: If amount is invalid
+              PaymentError: If payment processing fails
+          """
+          if amount <= 0:
+              raise ValueError(f"Amount must be positive, got {amount}")
+
+          try:
+              result = self.gateway.charge(amount)
+              return result.get('status') == 'success'
+          except Exception as e:
+              raise PaymentError(f"Payment failed: {str(e)}") from e
+
+      def process_with_retry(
+          self,
+          amount: int,
+          max_retries: int = 3
+      ) -> bool:
+          """
+          Process payment with automatic retries.
+
+          Args:
+              amount: Amount to charge in cents
+              max_retries: Maximum retry attempts
+
+          Returns:
+              True if payment succeeded
+          """
+          for attempt in range(max_retries):
+              try:
+                  return self.process(amount)
+              except PaymentError:
+                  if attempt == max_retries - 1:
+                      raise
+                  continue
+          return False
+
+  # tests/test_payment_processor.py
+  import pytest
+  from services.payment.processor import PaymentProcessor, PaymentError
+  from services.payment.gateways import PaymentGateway
+
+  class MockGateway:
+      """Mock gateway for testing."""
+
+      def __init__(self, should_succeed: bool = True):
+          self.should_succeed = should_succeed
+          self.call_count = 0
+          self.last_amount = None
+
+      def charge(self, amount: int) -> dict:
+          """Mock charge implementation."""
+          self.call_count += 1
+          self.last_amount = amount
+
+          if self.should_succeed:
+              return {'status': 'success', 'transaction_id': 'mock_123'}
+          else:
+              raise Exception("Payment gateway error")
+
+  def test_process_success():
+      """Test successful payment processing."""
+      gateway = MockGateway(should_succeed=True)
+      processor = PaymentProcessor(gateway)
+
+      result = processor.process(1000)
+
+      assert result is True
+      assert gateway.call_count == 1
+      assert gateway.last_amount == 1000
+
+  def test_process_failure():
+      """Test payment processing failure."""
+      gateway = MockGateway(should_succeed=False)
+      processor = PaymentProcessor(gateway)
+
+      with pytest.raises(PaymentError) as exc_info:
+          processor.process(1000)
+
+      assert "Payment failed" in str(exc_info.value)
+      assert gateway.call_count == 1
+
+  def test_process_invalid_amount():
+      """Test validation of invalid amount."""
+      gateway = MockGateway()
+      processor = PaymentProcessor(gateway)
+
+      with pytest.raises(ValueError) as exc_info:
+          processor.process(-100)
+
+      assert "Amount must be positive" in str(exc_info.value)
+      assert gateway.call_count == 0  # Not called
+
+  def test_gateway_swapping():
+      """Test that different gateways can be injected."""
+      # Can easily swap gateway implementations
+      gateway1 = MockGateway(should_succeed=True)
+      processor1 = PaymentProcessor(gateway1)
+
+      gateway2 = MockGateway(should_succeed=False)
+      processor2 = PaymentProcessor(gateway2)
+
+      assert processor1.process(100) is True
+      with pytest.raises(PaymentError):
+          processor2.process(100)
+  ```
+
+  Expected patterns:
+  - Composition: def __init__(self, gateway: PaymentGateway)
+  - Protocol/ABC: class PaymentGateway(Protocol)
+  - Delegation: self.gateway.charge(amount)
+  - Dependency injection: Constructor injection for testability
+  - Mock testing: MockGateway for unit tests
+  - Type hints: All function signatures typed
+
+checks:
+  - type: regex
+    pattern: "def __init__\\(.*gateway"
+    description: Uses constructor injection of a gateway collaborator
+  - type: regex
+    pattern: "self\\.gateway"
+    description: Composition via held collaborator field
+  - type: cmd
+    run: "python -m py_compile services/payment/processor.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3200
+  tags: [refactoring, composition, design-patterns, type-hints]

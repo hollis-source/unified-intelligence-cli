@@ -1,0 +1,49 @@
+id: py-03
+agent: python
+prompt: |
+  Extract a Repository pattern from dao/*.py into repositories/ with a clean interface.
+
+  Current code (example):
+
+  ```python
+  # dao/user_dao.py
+  import sqlite3
+
+  def get_user(conn: sqlite3.Connection, user_id: int) -> dict:
+      cur = conn.execute("SELECT id, email FROM users WHERE id=?", (user_id,))
+      row = cur.fetchone()
+      return {"id": row[0], "email": row[1]} if row else None
+  ```
+
+  Expected files to reference:
+  - repositories/user_repository.py:8 (class UserRepository)
+  - repositories/user_repository.py:15 (def get method with type hints)
+  - dao/user_dao.py:12 (delegation to repository.get)
+  - tests/test_user_repository.py:22 (test_get_user_success)
+
+  Deliverables:
+  - Repository implementation with CRUD operations
+  - Domain models (User class)
+  - Unit tests with in-memory database
+  - MANDATORY: Include at least 3 file:line references in response
+
+checks:
+  - type: regex
+    pattern: "class .*Repository"
+    description: Must introduce a Repository class
+  - type: cmd
+    run: "python -m py_compile repositories/__init__.py"
+    description: repositories/ package must be importable
+  - type: cmd
+    run: "python -m py_compile repositories/user_repository.py"
+    description: User repository must compile
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3500
+  tags: [refactoring, repositories, architecture, type-hints]

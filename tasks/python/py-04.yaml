@@ -1,0 +1,47 @@
+id: py-04
+agent: python
+prompt: |
+  Reduce cyclomatic complexity of handlers/order_handler.py to below 10 by extracting helpers and simplifying control flow.
+
+  Current code (example):
+
+  ```python
+  # handlers/order_handler.py
+  def handle_order(order):
+      # deeply nested conditionals, loops, and early returns
+      # ...
+      pass
+  ```
+
+  Refactor:
+  - Extract validation, pricing, inventory check, and persistence into separate functions
+  - Replace nested conditionals with guard clauses and strategy/lookup tables where appropriate
+  - Maintain the public function name/signature: handle_order(order) -> dict
+  - Add type hints and docstrings
+
+  Requirements:
+  - Maximum function complexity target < 10 (by structure; no need for a tool here)
+  - Private helpers prefixed with _ (e.g., _validate(order))
+  - Preserve behavior (same return schema)
+
+checks:
+  - type: regex
+    pattern: "def handle_order\\(order\\)"
+    description: Public entry remains handle_order(order)
+  - type: regex
+    pattern: "def _[a-zA-Z_]+\\(order"
+    description: Extracted helper(s) present
+  - type: cmd
+    run: "python -m py_compile handlers/order_handler.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 4200
+  tags: [refactoring, complexity, clean-code, type-hints]
+

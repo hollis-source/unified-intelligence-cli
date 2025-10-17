@@ -1,0 +1,48 @@
+id: py-06
+agent: python
+prompt: |
+  Optimize JSON parsing in loaders/bulk_import.py using streaming to reduce memory usage.
+
+  Current code (example):
+
+  ```python
+  # loaders/bulk_import.py
+  import json
+
+  def load_all(path: str) -> list[dict]:
+      with open(path, 'r', encoding='utf-8') as f:
+          return json.load(f)  # large file, loads entire content into memory
+  ```
+
+  Refactor:
+  - Support newline-delimited JSON (NDJSON) or large arrays by streaming
+  - Implement a generator function load_iter(path: str) -> Iterator[dict]
+  - Keep load_all by composing from load_iter (e.g., list(load_iter(path)))
+  - Add type hints and docstrings
+
+  Requirements:
+  - Avoid reading the entire file into memory at once
+  - Use incremental parsing (e.g., per-line json.loads(line))
+  - Ensure UTF-8 handling
+
+checks:
+  - type: regex
+    pattern: "def load_iter\\(path: str\\)"
+    description: Streaming generator is introduced
+  - type: regex
+    pattern: "yield"
+    description: Must yield items instead of building entire list
+  - type: cmd
+    run: "python -m py_compile loaders/bulk_import.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3000
+  tags: [performance, io, json, streaming, type-hints]
+

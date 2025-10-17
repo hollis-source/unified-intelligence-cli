@@ -1,0 +1,53 @@
+id: py-05
+agent: python
+prompt: |
+  Introduce dataclasses in models/customer.py while keeping serialization stable.
+
+  Current code (example):
+
+  ```python
+  # models/customer.py
+  class Customer:
+      def __init__(self, id, email, active=True):
+          self.id = id
+          self.email = email
+          self.active = active
+
+      def to_dict(self):
+          return {"id": self.id, "email": self.email, "active": self.active}
+  ```
+
+  Refactor:
+  - Use @dataclass for Customer with type hints
+  - Ensure to_dict() returns the same keys/values as before
+  - Provide __repr__/__eq__ via dataclasses (default)
+  - Keep API stable (constructor args and to_dict still available)
+
+  Requirements:
+  - Use dataclasses.asdict or a custom to_dict to preserve key order and names
+  - Add docstrings and type hints
+
+checks:
+  - type: regex
+    pattern: "from dataclasses import dataclass"
+    description: Must use dataclasses
+  - type: regex
+    pattern: "@dataclass"
+    description: Customer defined as a dataclass
+  - type: regex
+    pattern: "def to_dict\\(self\\)"
+    description: Serialization method preserved
+  - type: cmd
+    run: "python -m py_compile models/customer.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 2800
+  tags: [refactoring, dataclasses, serialization, type-hints]
+
