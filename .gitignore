@@ -90,3 +90,6 @@ logs/
 tmp/
 temp/data/metrics/
 data/metrics/session_*.json
+
+# Auggie MCP temporary files
+.auggie_*.txt
