@@ -1,0 +1,36 @@
+id: arch-16
+agent: architect
+prompt: |
+  Architect multi-region active-active deployment with low RTO/RPO handling partial failures and network partitions.
+
+  Expected files to reference:
+  - docs/architecture/global_architecture.md:25 (multi-region topology with data/control planes and routing)
+  - infrastructure/replication/conflict_resolution.yaml:35 (CRDT-based conflict resolution for product catalog)
+  - infrastructure/routing/global_load_balancer.yaml:18 (anycast routing with health-based failover)
+  - docs/runbooks/region_evacuation.md:45 (automated region evacuation procedure with verification)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include multi-region patterns with data replication, conflict resolution (CRDTs/LWW/custom), consistency models, global routing/failover, clock skew/quorum/split-brain mitigation, and disaster recovery drills
+
+  Template includes: Global architecture diagram, data consistency plan (CRDTs, last-write-wins), failover and recovery runbooks, automated health checks, partition tolerance testing, chaos drills
+
+checks:
+  - type: regex
+    pattern: '\b(active\-active|multi\-region|cross\-region)\b'
+    description: Must explicitly cover multi-region/active-active
+  - type: regex
+    pattern: '\b(conflict\s+resolution|clock\s+skew|quorum)\b'
+    description: Must include conflict and time/consensus concerns
+  - type: regex
+    pattern: '\b(failover|evacuation|routing)\b'
+    description: Must describe failover and global routing
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 6800
+  tags: [high-availability, multi-region, consistency, reliability]

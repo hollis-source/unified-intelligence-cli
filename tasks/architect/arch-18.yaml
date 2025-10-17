@@ -1,0 +1,36 @@
+id: arch-18
+agent: architect
+prompt: |
+  Define zero-downtime deployment and migration strategy supporting blue-green and canary releases with backward-compatible schema changes.
+
+  Expected files to reference:
+  - docs/deployments/deployment_playbooks.md:20 (blue-green and canary deployment procedures with gates)
+  - infrastructure/database/expand_contract_migrations.sql:35 (expand/contract pattern for backward-compatible schema changes)
+  - infrastructure/feature_flags/gradual_rollout.yaml:25 (feature flag configs for phased rollouts with automatic rollback)
+  - docs/operations/health_check_verification.md:45 (health check gates and automated rollback triggers)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include deployment patterns with blue-green/canary/rolling strategies, backward/forward compatible APIs/databases, expand/contract migrations, feature flags for phased rollouts, and automated rollback/verification
+
+  Template includes: Deployment playbooks with traffic shifting gates, backward-compatible DB migration patterns (expand/contract), feature flag integration, rollback procedures, health check verification
+
+checks:
+  - type: regex
+    pattern: '\b(blue\-green|canary|rolling)\b'
+    description: Must include deployment strategies
+  - type: regex
+    pattern: '\b(migration|backward\s+compatible|expand\/?contract)\b'
+    description: Must address backward-compatible migrations
+  - type: regex
+    pattern: '\b(feature\s+flag|rollback|health\s+check)\b'
+    description: Must include flags, rollback, and health checks
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 6200
+  tags: [deployments, migrations, reliability, operations]

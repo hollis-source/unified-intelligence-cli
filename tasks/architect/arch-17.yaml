@@ -1,0 +1,36 @@
+id: arch-17
+agent: architect
+prompt: |
+  Design Event Sourcing and CQRS architecture for core domain with migration from CRUD system.
+
+  Expected files to reference:
+  - docs/architecture/event_sourcing_design.md:20 (event model with schemas and versioning strategy)
+  - src/domain/events/event_upcasters.py:35 (upcasters for event schema evolution)
+  - src/query/projections/order_summary_projection.py:25 (read projection builder from event stream)
+  - docs/migrations/crud_to_eventsourcing_plan.md:45 (phased migration with dual-write and verification)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include event sourcing/CQRS patterns with event model/versioning/upcasters, command/query separation, read projections, rebuilds/snapshots/backfills, exactly-once semantics, and CRUD migration strategy
+
+  Template includes: Event schemas and evolution, command handling and projection pipelines, snapshotting and rebuild procedures, operational playbooks, migration plan from CRUD with verification and rollback
+
+checks:
+  - type: regex
+    pattern: '\b(event\s+sourcing|CQRS)\b'
+    description: Must reference Event Sourcing and/or CQRS
+  - type: regex
+    pattern: '\b(command|query|projection)\b'
+    description: Must separate command/query paths and projections
+  - type: regex
+    pattern: '\b(snapshot|upcaster|migration)\b'
+    description: Must include snapshots/upcasters/migration topics
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 6500
+  tags: [cqrs, event-sourcing, migrations, scalability]
