@@ -1,0 +1,70 @@
+id: devops-15
+agent: devops
+prompt: |
+  Implement disaster recovery for Kubernetes workloads with scheduled backups and tested restore procedures.
+
+  Requirements:
+  1. Back up cluster resources and persistent volumes regularly
+  2. Store backups securely with retention policies
+  3. Test restore for critical namespaces and document RPO/RTO
+  4. MANDATORY: Your response MUST include at least 3 file:line references to backup configuration files
+  5. MANDATORY: Include Velero backup schedule YAML examples
+
+  Velero Backup Template (use this structure):
+  ```yaml
+  apiVersion: velero.io/v1
+  kind: Schedule
+  metadata:
+    name: daily-backup
+    namespace: velero
+  spec:
+    schedule: "0 2 * * *"  # 2 AM daily
+    template:
+      includedNamespaces:
+        - production
+        - staging
+      storageLocation: aws-s3
+      volumeSnapshotLocations:
+        - aws-ebs
+      ttl: 720h  # 30 days retention
+  ```
+
+  Expected files to reference:
+  - velero/schedules/daily-backup.yaml (daily backup schedule)
+  - velero/schedules/weekly-backup.yaml (weekly backup schedule)
+  - velero/storage-location.yaml (S3/cloud storage configuration)
+  - docs/dr-runbook.md (disaster recovery procedures)
+
+  Example of proper file:line references:
+  - velero/schedules/daily-backup.yaml:8 (backup schedule cron expression)
+  - velero/schedules/daily-backup.yaml:12 (included namespaces list)
+  - velero/storage-location.yaml:10 (S3 bucket and prefix configuration)
+  - docs/dr-runbook.md:45 (restore procedure step-by-step)
+
+  Deliverables:
+  1. Velero Schedule YAML with apiVersion:, kind:, schedule:, includedNamespaces:, ttl: keywords and file:line refs
+  2. Restore runbook with velero restore create commands and namespace recovery steps
+  3. RPO/RTO targets (e.g., RPO=24h, RTO=4h) with verification procedures and file references
+
+checks:
+  - type: regex
+    pattern: '\b(backup|restore|DR|disaster)\b'
+    description: Must include backup/restore for DR
+  - type: regex
+    pattern: '\b(Velero|snapshots?|retention)\b'
+    description: Should reference tools/policies like Velero or retention
+  - type: regex
+    pattern: '\b(RPO|RTO|recovery)\b'
+    description: Must mention RPO/RTO or recovery targets
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5900
+  tags: [devops, reliability, backup, kubernetes]
+
+

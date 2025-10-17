@@ -1,0 +1,105 @@
+id: devops-19
+agent: devops
+prompt: |
+  Secure the software supply chain with SBOM generation, artifact signing, and provenance attestation.
+
+  Requirements:
+  1. Generate SBOMs for builds and publish as artifacts
+  2. Sign images/binaries and verify signatures in deployment
+  3. Produce provenance attestations and enforce policy
+  4. MANDATORY: Your response MUST include at least 3 file:line references to supply chain security files
+  5. MANDATORY: Include SBOM generation, Cosign/Sigstore signing examples, and verification steps
+
+  Supply Chain Security Template (use this structure):
+  ```yaml
+  # .github/workflows/secure-build.yml
+  name: Secure Build & Sign
+
+  jobs:
+    build-and-sign:
+      runs-on: ubuntu-latest
+      permissions:
+        id-token: write
+        packages: write
+      steps:
+        - name: Generate SBOM
+          run: |
+            syft . -o spdx-json=sbom.spdx.json
+            syft . -o cyclonedx-json=sbom.cdx.json
+
+        - name: Build and push image
+          run: |
+            docker build -t ghcr.io/${{ github.repository }}:${{ github.sha }} .
+            docker push ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+        - name: Sign image with Cosign
+          run: |
+            cosign sign --yes ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+        - name: Attest SBOM
+          run: |
+            cosign attest --yes --predicate sbom.spdx.json \
+              --type spdxjson \
+              ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+        - name: Generate SLSA provenance
+          uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v1.9.0
+  ```
+
+  Verification Policy Template (Sigstore Policy Controller):
+  ```yaml
+  # k8s/policy-controller/verify-signatures.yaml
+  apiVersion: policy.sigstore.dev/v1beta1
+  kind: ClusterImagePolicy
+  metadata:
+    name: signed-images-only
+  spec:
+    images:
+      - glob: "ghcr.io/myorg/**"
+    authorities:
+      - keyless:
+          url: https://fulcio.sigstore.dev
+          identities:
+            - issuer: https://token.actions.githubusercontent.com
+              subject: "https://github.com/myorg/*"
+  ```
+
+  Expected files to reference:
+  - .github/workflows/secure-build.yml (SBOM generation and signing pipeline)
+  - k8s/policy-controller/verify-signatures.yaml (signature verification policy)
+  - cosign.pub (public key for signature verification, if using key-based signing)
+  - docs/supply-chain-trust-model.md (provenance and trust documentation)
+
+  Example of proper file:line references:
+  - .github/workflows/secure-build.yml:12 (Syft SBOM generation step)
+  - .github/workflows/secure-build.yml:22 (Cosign image signing step)
+  - .github/workflows/secure-build.yml:26 (SBOM attestation with predicate)
+  - k8s/policy-controller/verify-signatures.yaml:8 (image signature verification policy)
+
+  Deliverables:
+  1. CI workflow with syft, cosign sign, cosign attest commands showing SBOM and signing steps with file:line refs
+  2. Verification policy YAML with apiVersion: policy.sigstore.dev, authorities:, keyless: keywords
+  3. Trust model documentation with SLSA provenance, attestation verification procedures, and file references
+
+checks:
+  - type: regex
+    pattern: '\b(SBOM|SLSA|provenance|attestations?)\b'
+    description: Must include SBOM or provenance/attestation
+  - type: regex
+    pattern: '\b(sign(ing)?|Cosign|Sigstore)\b'
+    description: Should reference artifact signing and verification
+  - type: regex
+    pattern: '\b(verify|admission|policy)\b'
+    description: Must include verification or admission policy
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 7000
+  tags: [devops, security, supply-chain, sbom]
+
+

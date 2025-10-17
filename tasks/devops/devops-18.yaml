@@ -1,0 +1,93 @@
+id: devops-18
+agent: devops
+prompt: |
+  Implement policy-as-code for infrastructure and Kubernetes with automated compliance checks in CI/CD.
+
+  Requirements:
+  1. Write OPA/Conftest policies for security and compliance
+  2. Enforce checks in PRs/pipelines with clear feedback
+  3. Provide exception handling and documentation
+  4. MANDATORY: Your response MUST include at least 3 file:line references to policy files
+  5. MANDATORY: Include OPA/Rego policy examples and CI workflow integration
+
+  OPA/Rego Policy Template (use this structure):
+  ```rego
+  # policies/kubernetes.rego
+  package kubernetes.admission
+
+  deny[msg] {
+    input.request.kind.kind == "Deployment"
+    not input.request.object.spec.template.spec.securityContext
+    msg := "Containers must define securityContext"
+  }
+
+  deny[msg] {
+    input.request.kind.kind == "Deployment"
+    container := input.request.object.spec.template.spec.containers[_]
+    not container.resources.limits
+    msg := sprintf("Container %v must define resource limits", [container.name])
+  }
+  ```
+
+  Conftest CI Integration Template:
+  ```yaml
+  name: Policy Checks
+
+  jobs:
+    policy-check:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Install Conftest
+          run: |
+            curl -L -o conftest.tar.gz https://github.com/open-policy-agent/conftest/releases/download/v0.45.0/conftest_0.45.0_Linux_x86_64.tar.gz
+            tar xzf conftest.tar.gz
+
+        - name: Validate Kubernetes manifests
+          run: conftest test k8s/*.yaml --policy policies/
+
+        - name: Validate Terraform plans
+          run: |
+            terraform plan -out=tfplan.binary
+            terraform show -json tfplan.binary > tfplan.json
+            conftest test tfplan.json --policy policies/terraform/
+  ```
+
+  Expected files to reference:
+  - policies/kubernetes.rego (Kubernetes admission control policies)
+  - policies/terraform/main.rego (Terraform compliance policies)
+  - .github/workflows/policy-check.yml (CI pipeline for policy enforcement)
+  - docs/policy-exceptions.md (exception handling procedures)
+
+  Example of proper file:line references:
+  - policies/kubernetes.rego:8 (securityContext requirement policy)
+  - policies/kubernetes.rego:15 (resource limits enforcement policy)
+  - policies/terraform/main.rego:12 (encryption at rest policy)
+  - .github/workflows/policy-check.yml:18 (Conftest validation step)
+
+  Deliverables:
+  1. Policy files with package, deny[], msg keywords showing Rego syntax with file:line refs
+  2. CI workflow YAML with conftest test commands and --policy flag usage
+  3. Exception handling documentation with policy bypass procedures and file references
+
+checks:
+  - type: regex
+    pattern: '\b(OPA|Open\s+Policy\s+Agent|Conftest|policy)\b'
+    description: Must mention policy-as-code tooling
+  - type: regex
+    pattern: '\b(compliance|admission|gate|validate)\b'
+    description: Should include compliance/admission gates
+  - type: regex
+    pattern: '\b(pipeline|PR|pull\s+request)\b'
+    description: Must enforce in PRs/pipelines
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 7000
+  tags: [devops, security, policy-as-code, compliance]
+
+

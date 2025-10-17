@@ -1,0 +1,124 @@
+id: devops-20
+agent: devops
+prompt: |
+  Establish cost monitoring and governance for cloud infrastructure with budgets, alerts, and tag-based reporting.
+
+  Requirements:
+  1. Apply cost allocation tags/labels and enforce via policy
+  2. Set budgets with alert thresholds and notifications
+  3. Produce periodic cost reports and anomaly detection
+  4. MANDATORY: Your response MUST include at least 3 file:line references to cost governance files
+  5. MANDATORY: Include cloud budget configuration, tagging policies, and cost alert examples
+
+  Cloud Cost Governance Template (use this structure):
+  ```yaml
+  # terraform/aws-budgets.tf
+  resource "aws_budgets_budget" "monthly_cost" {
+    name              = "monthly-infrastructure-budget"
+    budget_type       = "COST"
+    limit_amount      = "5000"
+    limit_unit        = "USD"
+    time_period_start = "2025-01-01_00:00"
+    time_unit         = "MONTHLY"
+
+    notification {
+      comparison_operator        = "GREATER_THAN"
+      threshold                  = 80
+      threshold_type             = "PERCENTAGE"
+      notification_type          = "ACTUAL"
+      subscriber_email_addresses = ["finops-team@example.com"]
+    }
+
+    notification {
+      comparison_operator        = "GREATER_THAN"
+      threshold                  = 100
+      threshold_type             = "PERCENTAGE"
+      notification_type          = "FORECASTED"
+      subscriber_email_addresses = ["finops-team@example.com", "engineering-leads@example.com"]
+    }
+
+    cost_filter {
+      name   = "TagKeyValue"
+      values = ["Environment$Production"]
+    }
+  }
+  ```
+
+  Tagging Policy Template (OPA/AWS Config):
+  ```rego
+  # policies/tagging.rego
+  package terraform.cost_allocation
+
+  required_tags := ["Environment", "Owner", "CostCenter", "Project"]
+
+  deny[msg] {
+    resource := input.resource_changes[_]
+    resource.type == "aws_instance"
+    existing_tags := object.keys(resource.change.after.tags)
+    missing := required_tags[_]
+    not missing in existing_tags
+    msg := sprintf("Resource %v missing required tag: %v", [resource.address, missing])
+  }
+  ```
+
+  Cost Anomaly Detection Template:
+  ```python
+  # scripts/cost-anomaly-detector.py
+  import boto3
+  from datetime import datetime, timedelta
+
+  ce = boto3.client('ce')
+
+  response = ce.get_anomalies(
+      DateInterval={
+          'StartDate': (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d'),
+          'EndDate': datetime.now().strftime('%Y-%m-%d')
+      },
+      MonitorArn='arn:aws:ce::123456789012:anomalymonitor/example-monitor'
+  )
+
+  for anomaly in response['Anomalies']:
+      if anomaly['Impact']['TotalImpact'] > 100:
+          print(f"ALERT: Anomaly detected in {anomaly['RootCauses'][0]['Service']}")
+          print(f"Impact: ${anomaly['Impact']['TotalImpact']}")
+  ```
+
+  Expected files to reference:
+  - terraform/aws-budgets.tf (monthly budget configuration with alerts)
+  - policies/tagging.rego (required tag enforcement policy)
+  - scripts/cost-anomaly-detector.py (anomaly detection automation)
+  - dashboards/cost-allocation.json (Grafana/CloudWatch cost dashboard)
+
+  Example of proper file:line references:
+  - terraform/aws-budgets.tf:8 (budget threshold configuration)
+  - terraform/aws-budgets.tf:15 (80% budget alert notification)
+  - policies/tagging.rego:5 (required cost allocation tags list)
+  - scripts/cost-anomaly-detector.py:12 (anomaly detection threshold logic)
+
+  Deliverables:
+  1. Budget configuration with resource "aws_budgets_budget", limit_amount, notification blocks with file:line refs
+  2. Tagging policy with required_tags, deny[], sprintf keywords enforcing cost allocation labels
+  3. Cost dashboard JSON and anomaly detection script with threshold logic and file references
+
+checks:
+  - type: regex
+    pattern: '\b(cost|budget|FinOps|cost\s+alerts?)\b'
+    description: Must reference cost governance and budgets/alerts
+  - type: regex
+    pattern: '\b(tags?|labels?|report(s|ing)?)\b'
+    description: Should include tags/labels and reporting
+  - type: regex
+    pattern: '\b(analy(s|z)is|anomal(y|ies))\b'
+    description: Must mention analysis/anomaly detection
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 7000
+  tags: [devops, finops, governance, cloud]
+
+
