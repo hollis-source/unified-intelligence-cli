@@ -1,0 +1,36 @@
+id: py-11
+agent: python
+prompt: |
+  Replace custom logger usage with structlog while keeping format compatibility.
+
+  Expected files to reference:
+  - logging/logger.py:8 (import structlog and configure_logging function)
+  - logging/logger.py:25 (structlog.get_logger() initialization)
+  - logging/logger.py:45 (JSON renderer configuration with processors)
+  - tests/test_logger.py:30 (test structured logging output format)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include structlog patterns with processors, JSONRenderer, and context binding
+
+  Template includes: Before/after comparison, processor chain, JSON output, context management
+
+checks:
+  - type: regex
+    pattern: "import structlog"
+    description: Must use structlog
+  - type: regex
+    pattern: "structlog\\.get_logger\\(\\)"
+    description: Structlog logger instantiated
+  - type: cmd
+    run: "python -m py_compile logging/logger.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3600
+  tags: [logging, structlog, compatibility, type-hints]

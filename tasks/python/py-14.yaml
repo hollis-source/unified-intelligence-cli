@@ -1,0 +1,36 @@
+id: py-14
+agent: python
+prompt: |
+  Introduce Pydantic models for request validation in api/v1/schemas.py.
+
+  Expected files to reference:
+  - api/v1/schemas.py:8 (class UserCreate(BaseModel) with field validators)
+  - api/v1/schemas.py:25 (@field_validator for custom validation logic)
+  - api/v1/schemas.py:45 (model_validate for parsing and validation)
+  - tests/test_schemas.py:30 (test_user_create_validation_errors)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include Pydantic patterns with BaseModel, Field, field_validator, and ValidationError
+
+  Template includes: Before/after comparison, Pydantic models, custom validators, error handling
+
+checks:
+  - type: regex
+    pattern: "from pydantic import BaseModel"
+    description: Pydantic BaseModel is used
+  - type: regex
+    pattern: "class .*\\(BaseModel\\)"
+    description: At least one Pydantic model defined
+  - type: cmd
+    run: "python -m py_compile api/v1/schemas.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3100
+  tags: [validation, pydantic, api, type-hints]

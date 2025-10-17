@@ -1,0 +1,36 @@
+id: py-08
+agent: python
+prompt: |
+  Replace manual retry loops with tenacity in clients/http_client.py.
+
+  Expected files to reference:
+  - clients/http_client.py:12 (from tenacity import retry, stop_after_attempt)
+  - clients/http_client.py:25 (@retry decorator with exponential backoff)
+  - clients/retry_policy.py:8 (centralized retry configuration)
+  - tests/test_http_client.py:35 (test retry behavior with mock failures)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include tenacity patterns with @retry, stop, wait, and retry_if_exception_type
+
+  Template includes: Before/after comparison, exponential backoff, exception filtering, logging callbacks
+
+checks:
+  - type: regex
+    pattern: "from tenacity import retry"
+    description: Must import tenacity retry
+  - type: regex
+    pattern: "@retry\\(.*stop_.*wait_"
+    description: tenacity @retry decorator configured
+  - type: cmd
+    run: "python -m py_compile clients/http_client.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 2600
+  tags: [reliability, retries, tenacity, http, type-hints]
