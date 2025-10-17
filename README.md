@@ -25,6 +25,8 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 ✅ **95% Test Coverage**: 670 tests (all passing, including 61 Sprint 3 tests)
 
 ## Quick Start
+For the fastest path, see docs/quickstart.md. For caching controls, see docs/developer/caching.md.
+
 
 ### Installation
 
@@ -391,6 +393,8 @@ GitHub Actions workflows automatically run on push/PR:
 - **Coverage**: Generate and upload coverage reports
 - **Linting**: Check code style with flake8
 - **Security**: Scan with bandit and safety
+- See docs/claude_output_hooks.md for configuration-driven control of assistant output (redaction, verbosity, routing trace, code wrapping).
+
 
 See [.github/workflows/tests.yml](.github/workflows/tests.yml) for configuration.
 

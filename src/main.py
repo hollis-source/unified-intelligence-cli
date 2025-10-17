@@ -6,6 +6,8 @@ Clean Architecture: Composition root with minimal responsibilities.
 import click
 import asyncio
 import logging
+import os
+import uuid
 from pathlib import Path
 from typing import List, Any, Coroutine
 from dotenv import load_dotenv
@@ -14,6 +16,7 @@ from src.entity import Task
 from src.composition import compose_dependencies
 from src.factories import AgentFactory, ProviderFactory, TeamFactory
 from src.adapters.cli import ResultFormatter
+from src.adapters.cli.claude_settings import load_claude_settings, ClaudeOutputSettings
 from src.config import Config
 
 # Load environment variables from .env file
@@ -33,6 +36,8 @@ if env_file.exists():
               help="LLM provider to use (granite: local IBM Granite 4.0, auto: intelligent selection, qwen3_zerogpu: ZeroGPU inference)")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.option("--debug", is_flag=True, help="Enable debug output (LLM calls, tool details)")
+@click.option("--no-cache", is_flag=True, help="Disable LLM response cache (env ATADO_CACHE=0)")
+@click.option("--claude-settings", type=click.Path(), help="Path to claude_settings.json to control output hooks")
 @click.option("--parallel/--sequential", default=True,
               help="Enable/disable parallel execution")
 @click.option("--config", type=click.Path(exists=True),
@@ -59,9 +64,11 @@ def main(
     provider: str,
     verbose: bool,
     debug: bool,
+    no_cache: bool,
     parallel: bool,
     config: str,
     timeout: int,
+    claude_settings: str,
     orchestrator: str,
     collect_data: bool,
     data_dir: str,
@@ -93,13 +100,17 @@ def main(
 
     # Load configuration
     app_config = load_config(
-        config, provider, verbose, debug, parallel, timeout,
+        config, provider, verbose, debug, no_cache, parallel, timeout,
         orchestrator, collect_data, data_dir, agents, routing,
         collect_metrics, metrics_dir
     )
 
-    # Setup logging based on verbosity
-    logger = setup_logging(app_config.verbose, app_config.debug)
+    # Generate correlation ID and set up logging
+    correlation_id = os.getenv("ATADO_CORRELATION_ID", str(uuid.uuid4()))
+    logger = setup_logging(app_config.verbose, app_config.debug, correlation_id)
+
+    # Load Claude/Auggie output settings with precedence
+    claude_output_settings: ClaudeOutputSettings = load_claude_settings(claude_settings)
 
     try:
         # WORKFLOW MODE: Execute DSL workflow with lifecycle
@@ -158,6 +169,10 @@ def main(
         logger.info(f"Created {len(tasks)} tasks")
 
         # Compose dependencies (Week 7: orchestrator mode, Week 9: data collection, Week 12: team routing, Week 13: metrics)
+        # Phase 1: Cache namespace defaulting
+        env_name = os.getenv("ATADO_ENV", "dev")
+        cache_namespace = app_config.cache_namespace or f"atado:{env_name}:llm:response:"
+
         coordinator, metrics_collector = compose_dependencies(
             llm_provider=llm_provider,
             agents=agents,
@@ -169,7 +184,10 @@ def main(
             routing_mode=app_config.routing_mode,
             teams=teams,
             collect_metrics=app_config.collect_metrics,
-            metrics_dir=app_config.metrics_dir
+            metrics_dir=app_config.metrics_dir,
+            cache_enabled=app_config.cache_enabled,
+            cache_ttl_seconds=app_config.cache_ttl_seconds,
+            cache_namespace=cache_namespace
         )
 
         # Execute with timeout
@@ -201,7 +219,7 @@ def main(
             print(json.dumps(usage), file=sys.stderr)
 
         # Display results (Clean Architecture: Use CLI adapter)
-        formatter = ResultFormatter(verbose=app_config.verbose)
+        formatter = ResultFormatter(verbose=app_config.verbose, settings=claude_output_settings, correlation_id=correlation_id)
         formatter.format_results(results)
 
     except asyncio.TimeoutError:
@@ -306,6 +324,7 @@ def load_config(
     provider: str,
     verbose: bool,
     debug: bool,
+    no_cache: bool,
     parallel: bool,
     timeout: int,
     orchestrator: str = "simple",
@@ -352,11 +371,12 @@ def load_config(
             agent_mode=agent_mode,
             routing_mode=routing_mode,
             collect_metrics=collect_metrics,
-            metrics_dir=metrics_dir
+            metrics_dir=metrics_dir,
+            cache_enabled=False if no_cache else None
         )
     else:
-        # Use CLI args only
-        return Config(
+        # Use CLI args only and merge with env-based cache defaults
+        base = Config(
             provider=provider,
             verbose=verbose,
             debug=debug,
@@ -370,27 +390,40 @@ def load_config(
             collect_metrics=collect_metrics,
             metrics_dir=metrics_dir
         )
+        return base.merge_cli_args(cache_enabled=False if no_cache else None)
 
 
-def setup_logging(verbose: bool, debug: bool) -> logging.Logger:
+def setup_logging(verbose: bool, debug: bool, correlation_id: str) -> logging.Logger:
     """
-    Configure logging based on verbosity.
+    Configure logging based on verbosity and inject correlation_id.
 
     Week 3: Three-level logging (WARNING/INFO/DEBUG).
-    Clean Code: Extract method for clarity.
+    Phase 1: Add correlation_id to all logs for traceability.
     """
     if debug:
         level = logging.DEBUG
-        log_format = "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - cid=%(correlation_id)s - [%(filename)s:%(lineno)d] - %(message)s"
     elif verbose:
         level = logging.INFO
-        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - cid=%(correlation_id)s - %(message)s"
     else:
         level = logging.WARNING
-        log_format = "%(levelname)s - %(message)s"
+        log_format = "%(levelname)s - cid=%(correlation_id)s - %(message)s"
 
-    # Week 4: force=True ensures reconfiguration works
+    # Configure root logger
     logging.basicConfig(level=level, format=log_format, force=True)
+
+    # Inject correlation_id via filter on all handlers
+    class CorrelationIdFilter(logging.Filter):
+        def filter(self, record: logging.LogRecord) -> bool:
+            if not hasattr(record, "correlation_id"):
+                record.correlation_id = correlation_id
+            return True
+
+    root = logging.getLogger()
+    for handler in root.handlers:
+        handler.addFilter(CorrelationIdFilter())
+
     return logging.getLogger(__name__)
 
 

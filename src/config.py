@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
+import os
 
 
 @dataclass
@@ -43,6 +44,11 @@ class Config:
     # Metrics settings (Week 13: Monitoring & metrics)
     collect_metrics: bool = False  # Enable metrics collection for monitoring
     metrics_dir: str = "data/metrics"  # Directory to store metrics
+
+    # Cache settings (Phase 1: Cache control)
+    cache_enabled: bool = True
+    cache_ttl_seconds: int = 14400  # 4 hours default
+    cache_namespace: str = ""
 
     @classmethod
     def from_file(cls, file_path: str) -> "Config":
@@ -83,7 +89,10 @@ class Config:
             custom_agents=data.get("custom_agents", []),
             routing_mode=data.get("routing_mode", "individual"),
             collect_metrics=data.get("collect_metrics", False),
-            metrics_dir=data.get("metrics_dir", "data/metrics")
+            metrics_dir=data.get("metrics_dir", "data/metrics"),
+            cache_enabled=data.get("cache_enabled", True),
+            cache_ttl_seconds=data.get("cache_ttl_seconds", int(os.getenv("ATADO_CACHE_TTL_SECONDS", 14400))),
+            cache_namespace=data.get("cache_namespace", os.getenv("ATADO_CACHE_NAMESPACE", ""))
         )
 
     def merge_cli_args(
@@ -99,7 +108,10 @@ class Config:
         agent_mode: Optional[str] = None,
         routing_mode: Optional[str] = None,
         collect_metrics: Optional[bool] = None,
-        metrics_dir: Optional[str] = None
+        metrics_dir: Optional[str] = None,
+        cache_enabled: Optional[bool] = None,
+        cache_ttl_seconds: Optional[int] = None,
+        cache_namespace: Optional[str] = None
     ) -> "Config":
         """
         Merge CLI arguments with config file settings.
@@ -119,10 +131,35 @@ class Config:
             routing_mode: CLI routing mode (Week 12)
             collect_metrics: CLI metrics collection flag (Week 13)
             metrics_dir: CLI metrics directory (Week 13)
+            cache_enabled: Enable/disable cache (Phase 1)
+            cache_ttl_seconds: Cache TTL seconds (Phase 1)
+            cache_namespace: Cache key namespace/prefix (Phase 1)
 
         Returns:
             New Config with merged values
         """
+        # Resolve env defaults for cache if not provided
+        env_cache_enabled = os.getenv("ATADO_CACHE")
+        env_cache_ttl = os.getenv("ATADO_CACHE_TTL_SECONDS")
+        env_cache_ns = os.getenv("ATADO_CACHE_NAMESPACE")
+        # Default: disable cache in prod unless explicitly enabled
+        atado_env = os.getenv("ATADO_ENV", "dev")
+        resolved_cache_enabled = (
+            cache_enabled if cache_enabled is not None
+            else (
+                (False if atado_env == "prod" and env_cache_enabled is None else self.cache_enabled)
+                if env_cache_enabled is None else env_cache_enabled not in ["0", "false", "False"]
+            )
+        )
+        resolved_cache_ttl = int(
+            cache_ttl_seconds if cache_ttl_seconds is not None
+            else (self.cache_ttl_seconds if env_cache_ttl is None else int(env_cache_ttl))
+        )
+        resolved_cache_ns = (
+            cache_namespace if cache_namespace is not None
+            else (self.cache_namespace if env_cache_ns is None else env_cache_ns)
+        )
+
         return Config(
             provider=provider if provider is not None else self.provider,
             provider_config=self.provider_config,
@@ -137,7 +174,10 @@ class Config:
             custom_agents=self.custom_agents,
             routing_mode=routing_mode if routing_mode is not None else self.routing_mode,
             collect_metrics=collect_metrics if collect_metrics is not None else self.collect_metrics,
-            metrics_dir=metrics_dir if metrics_dir is not None else self.metrics_dir
+            metrics_dir=metrics_dir if metrics_dir is not None else self.metrics_dir,
+            cache_enabled=resolved_cache_enabled,
+            cache_ttl_seconds=resolved_cache_ttl,
+            cache_namespace=resolved_cache_ns
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -160,5 +200,8 @@ class Config:
             "custom_agents": self.custom_agents,
             "routing_mode": self.routing_mode,
             "collect_metrics": self.collect_metrics,
-            "metrics_dir": self.metrics_dir
+            "metrics_dir": self.metrics_dir,
+            "cache_enabled": self.cache_enabled,
+            "cache_ttl_seconds": self.cache_ttl_seconds,
+            "cache_namespace": self.cache_namespace
         }

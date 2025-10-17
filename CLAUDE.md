@@ -268,6 +268,8 @@ class QATeam(AgentTeam):
         if any(kw in desc for kw in ['exploratory', 'manual testing', 'usability']):
             return self.get_agent('exploratory-test-engineer')
 
+- Auggie output behavior is governed by config/claude_settings.json (overridable via --claude-settings or CLAUDE_SETTINGS_PATH). See docs/claude_output_hooks.md.
+
         # Test Planning → Test Case Designer
         if any(kw in desc for kw in ['test plan', 'test case', 'traceability']):
             return self.get_agent('test-case-designer')

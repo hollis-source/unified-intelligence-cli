@@ -8,6 +8,7 @@ from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 from src.adapters.agent.capability_selector import CapabilityBasedSelector
 from src.adapters.agent.team_selector import TeamBasedSelector
 from src.adapters.agent.llm_executor import LLMAgentExecutor
+from src.adapters.agent.llm_cache import CacheConfig
 from src.interface import ITextGenerator, IAgentCoordinator
 from src.factories.provider_factory import ProviderFactory
 from src.factories.agent_factory import AgentFactory
@@ -28,7 +29,10 @@ def compose_dependencies(
     routing_mode: str = "individual",
     teams: Optional[List[AgentTeam]] = None,
     collect_metrics: bool = False,
-    metrics_dir: str = "data/metrics"
+    metrics_dir: str = "data/metrics",
+    cache_enabled: bool = True,
+    cache_ttl_seconds: int = 14400,
+    cache_namespace: str = ""
 ) -> tuple[IAgentCoordinator, Optional[MetricsCollector]]:
     """
     Compose dependencies for the coordinator use case.
@@ -68,11 +72,20 @@ def compose_dependencies(
             logger.info(f"Metrics collection enabled: {metrics_dir}")
 
     # Create adapters
+    # Phase 1: Cache configuration
+    cache_config = CacheConfig(
+        enabled=cache_enabled,
+        ttl_seconds=cache_ttl_seconds,
+        key_prefix=(cache_namespace or "llm_cache:")
+    )
+
     agent_executor = LLMAgentExecutor(
         llm_provider,
         data_collector=data_collector,
         provider_name=provider_name,
-        orchestrator=orchestrator_mode
+        orchestrator=orchestrator_mode,
+        cache_config=cache_config,
+        enable_cache=cache_enabled
     )
 
     # Week 12/13: Create agent selector based on routing mode (with metrics integration)
