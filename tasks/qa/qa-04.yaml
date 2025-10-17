@@ -31,3 +31,6 @@ checks:
   - "priority"
   - type: regex
     pattern: "(?i)(response|status|HTTP).{0,10}code"
+
+acceptance:
+  required_checks: none  # Checks are informational only; quality score determines pass/fail

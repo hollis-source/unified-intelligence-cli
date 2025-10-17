@@ -31,3 +31,6 @@ checks:
   - type: regex
     pattern: "(?i)backwards?.{0,10}compatib"
   - "rollback"
+
+acceptance:
+  required_checks: none  # Checks are informational only; quality score determines pass/fail

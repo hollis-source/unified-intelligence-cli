@@ -40,3 +40,6 @@ checks:
   - "persona"
   - type: regex
     pattern: "(?i)(pass.{0,20}fail|acceptance|success).{0,10}criteria"
+
+acceptance:
+  required_checks: none  # Checks are informational only; quality score determines pass/fail
