@@ -380,8 +380,10 @@ def is_completed(agent: str, quality: float, checks_ok: bool, required_checks: s
         return False
 
     auto_min, human_min = ACCEPTANCE_THRESHOLDS.get(agent, (6, 6))
-    # For now, use quality score as proxy (proper split would need separate human rating)
-    return quality >= max(auto_min, human_min)
+    # Without human scores, use auto_min threshold (quality = 0.6 * AutoScore)
+    # To meet auto_min with quality formula: quality >= auto_min requires AutoScore >= auto_min/0.6
+    # But quality already incorporates the 0.6 weighting, so compare directly
+    return quality >= auto_min
 
 
 # ============================================================================
