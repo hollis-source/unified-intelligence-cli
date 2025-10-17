@@ -6,6 +6,8 @@ correctness guarantees via category theory laws.
 
 Clean Architecture: Use Case layer (orchestrates morphism transformations).
 SOLID: OCP - extends HTN executor without modification, LSP - fully substitutable.
+
+Sprint 5 P1-2: Refactored to use IWorkflowEnvironment for dependency injection.
 """
 
 import asyncio
@@ -18,6 +20,7 @@ from src.dsl.use_cases.htn_workflow_executor import (
     WorkflowExecutionResult
 )
 from src.dsl.use_cases.interpreter import Interpreter
+from src.dsl.interface.workflow_environment import IWorkflowEnvironment
 from src.entity.category_theory import Morphism
 from src.entity.category_theory.workflow_morphism import WorkflowMorphism
 from src.entity.htn import HTNNode
@@ -51,6 +54,7 @@ class MorphismWorkflowExecutor(HTNWorkflowExecutor):
 
     def __init__(
         self,
+        environment: Optional[IWorkflowEnvironment] = None,
         task_executor=None,
         parser=None,
         transformations: Optional[List[Morphism]] = None
@@ -58,11 +62,27 @@ class MorphismWorkflowExecutor(HTNWorkflowExecutor):
         """Initialize morphism workflow executor.
 
         Args:
-            task_executor: Task executor implementation (defaults to CLITaskExecutor)
-            parser: DSL parser (defaults to Parser())
+            environment: Workflow environment providing dependencies (recommended)
+            task_executor: DEPRECATED - Task executor implementation (for backward compatibility)
+            parser: DEPRECATED - DSL parser (for backward compatibility)
             transformations: List of morphism transformations to apply (optional)
+
+        Recommended Usage:
+            env = ConfiguredWorkflowEnvironment(...)
+            executor = MorphismWorkflowExecutor(
+                environment=env,
+                transformations=[WorkflowMorphism.htn_flatten(), ...]
+            )
+
+        Backward Compatible Usage:
+            executor = MorphismWorkflowExecutor(
+                task_executor=executor,
+                parser=parser,
+                transformations=[...]
+            )
         """
-        super().__init__(task_executor, parser)
+        # Sprint 5 P1-2: Pass environment to parent
+        super().__init__(environment=environment, task_executor=task_executor, parser=parser)
         self.transformations = transformations or []
 
     async def execute_workflow(

@@ -5,6 +5,8 @@ from unified architecture baseline.
 
 Clean Architecture: Use Case layer (orchestrates entities).
 SOLID: SRP - handles DSL workflow execution with lifecycle phases.
+
+Sprint 5 P1-2: Refactored to use IWorkflowEnvironment for dependency injection.
 """
 
 import asyncio
@@ -15,9 +17,11 @@ from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 
 from src.entity.lifecycle import Lifecycle, LifecycleState
-from src.dsl.adapters.parser import Parser
 from src.dsl.use_cases.interpreter import Interpreter, TaskExecutor
-from src.dsl.adapters.cli_task_executor import CLITaskExecutor
+from src.dsl.interface.workflow_environment import (
+    IWorkflowEnvironment,
+    DefaultWorkflowEnvironment
+)
 
 # Configure logger for result validation
 logger = logging.getLogger(__name__)
@@ -115,17 +119,40 @@ class LifecycleWorkflowExecutor:
 
     def __init__(
         self,
+        environment: Optional[IWorkflowEnvironment] = None,
         task_executor: Optional[TaskExecutor] = None,
-        parser: Optional[Parser] = None
+        parser: Optional = None
     ):
         """Initialize lifecycle executor.
 
         Args:
-            task_executor: Task executor implementation (defaults to CLITaskExecutor)
-            parser: DSL parser (defaults to Parser())
+            environment: Workflow environment providing dependencies (recommended)
+            task_executor: DEPRECATED - Task executor implementation (for backward compatibility)
+            parser: DEPRECATED - DSL parser (for backward compatibility)
+
+        Recommended Usage:
+            env = ConfiguredWorkflowEnvironment(task_executor=configured_executor)
+            executor = LifecycleWorkflowExecutor(environment=env)
+
+        Backward Compatible Usage:
+            executor = LifecycleWorkflowExecutor(task_executor=executor, parser=parser)
         """
-        self.task_executor = task_executor or CLITaskExecutor()
-        self.parser = parser or Parser()
+        # Sprint 5 P1-2: Use environment for dependency injection
+        if environment is None:
+            # Backward compatibility: create environment from legacy params
+            if task_executor is not None or parser is not None:
+                from src.dsl.interface.workflow_environment import ConfiguredWorkflowEnvironment
+                environment = ConfiguredWorkflowEnvironment(
+                    task_executor=task_executor,
+                    parser=parser
+                )
+            else:
+                # No params: use defaults
+                environment = DefaultWorkflowEnvironment()
+
+        self.environment = environment
+        self.task_executor = environment.get_task_executor()
+        self.parser = environment.get_parser()
 
     async def execute_workflow(
         self,
