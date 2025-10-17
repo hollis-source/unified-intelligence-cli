@@ -1,0 +1,36 @@
+id: arch-02
+agent: architect
+prompt: |
+  Apply SOLID principles to refactor legacy monolith with tangled dependencies and god objects.
+
+  Expected files to reference:
+  - docs/refactoring/solid_gap_analysis.md:20 (SRP violations in OrderProcessor god class)
+  - src/domain/orders/order_service.py:65 (before: OrderService with mixed responsibilities)
+  - src/domain/orders/refactored/order_validator.py:15 (after: Single-purpose OrderValidator interface)
+  - tests/characterization/order_service_tests.py:35 (characterization tests preserving behavior)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include SOLID refactoring patterns with before/after boundaries, dependency inversion via interfaces, composition over inheritance, and incremental testable steps
+
+  Template includes: SOLID gap analysis (SRP/OCP/LSP/ISP/DIP violations), refactoring plan, code sketches showing improved design, characterization tests, risk assessment, rollout strategy
+
+checks:
+  - type: regex
+    pattern: '\bSOLID\b'
+    description: Must explicitly reference SOLID
+  - type: regex
+    pattern: '\b(Single\s+Responsibility|Open\-Closed|Liskov|Interface\s+Segregation|Dependency\s+Inversion)\b'
+    description: Must reference at least two SOLID principles by name
+  - type: regex
+    pattern: '\b(interface|abstraction|composition|dependency\s+inversion)\b'
+    description: Must outline interface-based inversion/composition strategies
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5200
+  tags: [SOLID, refactoring, design-patterns, maintainability]

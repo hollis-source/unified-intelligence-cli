@@ -1,0 +1,36 @@
+id: arch-05
+agent: architect
+prompt: |
+  Design multi-layer caching strategy for high-traffic API integrating CDN, application cache, and database cache.
+
+  Expected files to reference:
+  - docs/architecture/caching_layers.md:15 (caching layers diagram: CDN, edge, app, DB)
+  - infrastructure/cdn/cache_rules.yaml:25 (CDN cache key and TTL policies per resource)
+  - services/api/cache_middleware.py:45 (cache-aside pattern with stampede protection)
+  - monitoring/cache_slos.yaml:12 (hit ratio and latency SLOs per cache layer)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include caching patterns with multi-layer strategy (CDN/app/DB), cache key design, TTL/invalidation policies, cache-aside/write-through/write-behind patterns, and stampede protection
+
+  Template includes: Caching layers diagram, key design and TTL matrix, invalidation strategies, consistency and fallback for cache misses, negative caching, monitoring with hit ratio and latency SLOs
+
+checks:
+  - type: regex
+    pattern: '\b(cache|caching|CDN)\b'
+    description: Must reference caching and CDN
+  - type: regex
+    pattern: '\b(invalidation|TTL|stale\-while\-revalidate)\b'
+    description: Must include invalidation/TTL/SWR strategies
+  - type: regex
+    pattern: '\b(cache\-aside|write\-through|write\-behind)\b'
+    description: Must describe cache patterns
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3800
+  tags: [caching, performance, scalability, system-design]

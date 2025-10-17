@@ -1,0 +1,36 @@
+id: arch-03
+agent: architect
+prompt: |
+  Design event-driven architecture using message queues and pub/sub for order processing, inventory, and notifications.
+
+  Expected files to reference:
+  - docs/architecture/event_catalog.md:12 (OrderPlaced event schema with ownership)
+  - infrastructure/messaging/topic_topology.yaml:25 (Kafka topic configuration and consumer groups)
+  - services/order/saga_coordinator.py:45 (saga orchestration with compensation handlers)
+  - services/order/outbox_publisher.py:18 (outbox pattern for reliable event publishing)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include event-driven patterns with event catalog, delivery semantics (at-least-once/exactly-once), idempotency, saga orchestration/choreography, and dead-letter handling
+
+  Template includes: Event schemas, topic/queue topology, consumer groups, idempotency strategies, retry logic, dead-letter queues, saga design with compensation, outbox pattern for transactional guarantees
+
+checks:
+  - type: regex
+    pattern: '\b(event\-driven|message\s+queue|pub\/?sub)\b'
+    description: Must address message queues or pub/sub
+  - type: regex
+    pattern: '\b(idempotent|at\-least\-once|exactly\-once)\b'
+    description: Must specify delivery semantics and idempotency
+  - type: regex
+    pattern: '\b(saga|outbox|compensation)\b'
+    description: Must include saga/outbox/compensation strategy
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5400
+  tags: [event-driven, messaging, reliability, system-design]

@@ -1,0 +1,36 @@
+id: arch-04
+agent: architect
+prompt: |
+  Implement hexagonal (ports and adapters) architecture for core domain service migrating from layered monolith.
+
+  Expected files to reference:
+  - docs/architecture/hexagonal_design.md:18 (ports and adapters diagram with domain boundaries)
+  - src/domain/ports/order_repository_port.py:10 (outbound port interface for persistence)
+  - src/adapters/inbound/http_order_handler.py:25 (HTTP adapter implementing inbound port)
+  - tests/unit/domain/order_service_tests.py:35 (domain tests with mocked ports)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include hexagonal architecture patterns with port/adapter separation, domain isolation from frameworks, inbound/outbound ports, and testing strategy using port mocks
+
+  Template includes: Architecture diagram showing ports/adapters/domain, interface contracts for ports, HTTP/gRPC/DB/message bus adapters, refactoring plan for framework independence, test strategy leveraging ports
+
+checks:
+  - type: regex
+    pattern: '\b(hexagonal|ports?\s+and\s+adapters|clean\s+architecture)\b'
+    description: Must reference hexagonal/ports and adapters
+  - type: regex
+    pattern: '\bport\b|\badapter\b'
+    description: Must define ports and adapters explicitly
+  - type: regex
+    pattern: '\bdomain\b|\binfrastructure\b|\bapplication\b'
+    description: Must separate domain/application/infrastructure layers
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5000
+  tags: [hexagonal, ports-adapters, clean-architecture, testing]
