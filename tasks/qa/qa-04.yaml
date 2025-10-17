@@ -1,29 +1,18 @@
 id: qa-04
 agent: qa
 prompt: |
-  Design a smoke testing suite for the REST API endpoints of a social media application.
-
-  API Context:
-  - User management: /api/users (GET, POST, PUT, DELETE)
-  - Posts: /api/posts (GET, POST, PUT, DELETE)
-  - Comments: /api/posts/{id}/comments (GET, POST, DELETE)
-  - Authentication: /api/auth/login, /api/auth/logout, /api/auth/refresh
-  - Media uploads: /api/media (POST multipart/form-data)
-  - Search: /api/search?q={query}&type={user|post}
-
-  Requirements:
-  1. Define critical path smoke tests (10-15 test cases)
-  2. Prioritize tests by business impact (P0 = critical, P1 = important, P2 = nice-to-have)
-  3. Include happy path tests for core workflows
-  4. Specify expected response codes and validation criteria
-  5. Estimate total smoke test execution time
-  6. MANDATORY: Your response MUST include at least 3 file:line references to existing code
+  Design smoke testing suite for REST API endpoints of social media application.
 
   Expected files to reference:
-  - tests/smoke/api_smoke_tests.py (smoke test implementation)
-  - src/api/routes/users.py (user API routes)
-  - src/api/routes/posts.py (posts API routes)
-  - tests/fixtures/api_data.json (test data)
+  - tests/smoke/api_smoke_tests.py:15 (test_critical_path_auth_and_post_creation P0 test)
+  - src/api/routes/users.py:35 (GET /api/users endpoint handler)
+  - src/api/routes/posts.py:58 (POST /api/posts create post logic)
+  - tests/fixtures/api_data.json:8 (valid_user_payload test data)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include smoke testing patterns with critical path identification, priority levels (P0/P1/P2), response code validation, and execution time estimates
+
+  Template includes: 10-15 critical smoke tests covering auth (login/logout/refresh), user CRUD, posts CRUD, comments, media uploads, search endpoints
 
 checks:
   - "smoke test"
@@ -33,4 +22,11 @@ checks:
     pattern: "(?i)(response|status|HTTP).{0,10}code"
 
 acceptance:
-  required_checks: none  # Checks are informational only; quality score determines pass/fail
+  auto_min: 6
+  human_min: 6
+  required_checks: none
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 2900
+  tags: [smoke-testing, api-testing, critical-path, rest-api]

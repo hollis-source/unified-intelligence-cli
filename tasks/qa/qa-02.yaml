@@ -1,47 +1,31 @@
 id: qa-02
 agent: qa
 prompt: |
-  Design an exploratory testing session for the new checkout flow feature.
-
-  Feature Context:
-  - E-commerce checkout with multiple payment methods (credit card, PayPal, cryptocurrency)
-  - Guest checkout option vs. logged-in user checkout
-  - Coupon code application
-  - Shipping address validation
-  - Order summary and confirmation
-
-  Requirements:
-  1. Identify key areas to explore (happy paths, edge cases, error conditions)
-  2. Design test charters for 3-4 exploratory testing sessions (30-45 min each)
-  3. List potential risk areas and high-priority scenarios
-  4. Document expected behaviors and acceptance criteria
-  5. Include usability considerations (mobile vs desktop, accessibility)
-  6. MANDATORY: Your response MUST include at least 3 file:line references to existing code
-  7. MANDATORY: Each test charter MUST reference specific implementation files using file:line format
-
-  Test Charter Template (use this format for each charter):
-  ```
-  Charter #X: [Charter Name]
-  - Scope: [What to explore]
-  - Implementation: [file.ext:line references to code being tested]
-  - Test Ideas: [Specific scenarios to try]
-  - Risk Areas: [What could go wrong]
-  - Success Criteria: [How to know if testing was successful]
-  ```
+  Design exploratory testing session for the checkout flow with test charters.
 
   Expected files to reference:
-  - src/pages/CheckoutPage.tsx (checkout UI implementation)
-  - src/components/PaymentForm.tsx (payment component logic)
-  - src/api/orders.py (order processing API endpoints)
-  - tests/qa/exploratory/checkout_charters.md (test charters document)
+  - tests/qa/exploratory/checkout_charters.md:8 (Charter #1: Payment method exploration)
+  - src/pages/CheckoutPage.tsx:45 (payment method selector component)
+  - src/components/PaymentForm.tsx:120 (payment validation logic)
+  - src/api/orders.py:78 (POST /api/orders order creation endpoint)
 
-  Example of proper file:line references:
-  - src/pages/CheckoutPage.tsx:45 (payment method selector)
-  - src/components/PaymentForm.tsx:120 (validation logic)
-  - src/api/orders.py:78 (order creation endpoint)
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include exploratory testing patterns with test charters (30-45 min sessions), risk areas, and usability considerations
+
+  Template includes: Test charter format with scope/implementation/test ideas/risk areas/success criteria, multiple payment methods (credit card, PayPal, crypto), guest vs logged-in checkout, coupon codes, shipping validation
 
 checks:
   - "exploratory"
   - "test charter"
   - "edge case"
   - "risk"
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3500
+  tags: [exploratory-testing, test-charters, checkout, risk-analysis]

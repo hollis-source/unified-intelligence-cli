@@ -1,39 +1,31 @@
 id: qa-03
 agent: qa
 prompt: |
-  Create a comprehensive test plan for validating the user profile feature meets all acceptance criteria.
-
-  Feature: User Profile Management
-  - Users can view and edit profile information (name, email, avatar, bio)
-  - Email change requires verification
-  - Password change requires current password
-  - Profile changes are audited
-  - Avatar upload with size/format validation
-
-  Acceptance Criteria:
-  1. Profile data persists correctly to database
-  2. Validation errors display inline with specific messages
-  3. Email verification flow works end-to-end
-  4. Audit log captures all profile changes with timestamps
-  5. Avatar upload respects 2MB size limit and PNG/JPG formats only
-  6. Changes are reflected immediately in UI after save
-
-  Requirements:
-  1. Design test scenarios covering all acceptance criteria
-  2. Map each test scenario to specific requirements
-  3. Include test data requirements and prerequisites
-  4. Define pass/fail criteria for each scenario
-  5. Estimate test execution time
-  6. MANDATORY: Your response MUST include at least 3 file:line references to existing code
+  Create comprehensive test plan for user profile feature validation.
 
   Expected files to reference:
-  - tests/qa/test_plans/user_profile_test_plan.md (test plan document)
-  - src/models/user_profile.py (data model)
-  - src/components/ProfileForm.tsx (profile UI)
-  - tests/fixtures/profile_data.py (test data)
+  - tests/qa/test_plans/user_profile_test_plan.md:10 (Test Scenario #1: Profile data persistence)
+  - src/models/user_profile.py:25 (UserProfile model with audit fields)
+  - src/components/ProfileForm.tsx:68 (avatar upload validation logic)
+  - tests/fixtures/profile_data.py:15 (valid_profile_data fixture)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include test planning patterns with scenario mapping, acceptance criteria traceability, pass/fail criteria, and time estimates
+
+  Template includes: Test scenarios for profile edit, email verification flow, password change, audit logging, avatar upload (2MB/PNG/JPG), inline validation errors
 
 checks:
   - "test plan"
   - "test scenario"
   - "acceptance criteria"
   - "pass/fail"
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3200
+  tags: [test-planning, acceptance-criteria, user-profile, traceability]
