@@ -6,7 +6,7 @@ Tests the full flow from use cases through adapters with real async execution.
 
 import pytest
 import asyncio
-from src.entities import Agent, Task, ExecutionStatus, ExecutionContext
+from src.entity import Agent, Task, ExecutionStatus, ExecutionContext
 from src.use_cases.task_planner import TaskPlannerUseCase
 from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 from src.adapters.llm.mock_provider import MockLLMProvider

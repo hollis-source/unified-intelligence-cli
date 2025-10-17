@@ -6,7 +6,7 @@ parallelization detection via precondition/effect analysis.
 
 import pytest
 from src.project_builder.htn_dsl.translator import HTNDSLTranslator
-from src.entities.htn.htn_node import HTNNode
+from src.entity.htn.htn_node import HTNNode
 from src.dsl.entities.literal import Literal
 from src.dsl.entities.composition import Composition
 from src.dsl.entities.product import Product

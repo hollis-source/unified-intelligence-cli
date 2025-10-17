@@ -1,5 +1,5 @@
 from src.routing.hierarchical_router import HierarchicalRouter
-from src.entities import Agent, Task
+from src.entity import Agent, Task
 
 
 def make_backend_agent(role: str):

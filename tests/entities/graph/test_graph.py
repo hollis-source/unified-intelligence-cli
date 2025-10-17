@@ -5,7 +5,7 @@ cycle detection, and topological sorting.
 """
 
 import pytest
-from src.entities.graph import Graph, GraphNode
+from src.entity.graph import Graph, GraphNode
 
 
 class TestGraphNodeCreation:

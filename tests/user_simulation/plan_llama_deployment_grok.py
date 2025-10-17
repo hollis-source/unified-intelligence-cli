@@ -12,7 +12,7 @@ import os
 # Add src to path
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 
-from src.entities import Task
+from src.entity import Task
 from src.composition import create_coordinator
 
 

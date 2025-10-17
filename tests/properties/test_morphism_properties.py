@@ -13,9 +13,9 @@ Properties verified:
 import pytest
 from hypothesis import given, strategies as st, assume, example
 from hypothesis import settings, HealthCheck
-from src.entities.category_theory import Morphism
-from src.entities.category_theory.workflow_morphism import WorkflowMorphism
-from src.entities.htn import HTNNode
+from src.entity.category_theory import Morphism
+from src.entity.category_theory.workflow_morphism import WorkflowMorphism
+from src.entity.htn import HTNNode
 
 
 # ============================================================================
@@ -316,7 +316,7 @@ def test_compose_chain_correctness(f, g, h):
 
     compose_chain(f, g, h) should be equivalent to h ∘ g ∘ f
     """
-    from src.entities.category_theory.morphism import compose_chain
+    from src.entity.category_theory.morphism import compose_chain
 
     chained = compose_chain(f, g, h)
 
@@ -336,7 +336,7 @@ def test_single_morphism_chain(morphism):
 
     compose_chain(f) = f
     """
-    from src.entities.category_theory.morphism import compose_chain
+    from src.entity.category_theory.morphism import compose_chain
 
     chained = compose_chain(morphism)
 

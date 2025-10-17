@@ -17,7 +17,7 @@ from src.project_builder.feedback.handler import (
     ReplanningStrategy
 )
 from src.interfaces import ProjectState, ExecutionResult, TaskStatus
-from src.entities.htn.htn_node import HTNNode
+from src.entity.htn.htn_node import HTNNode
 
 
 # ============================================================================

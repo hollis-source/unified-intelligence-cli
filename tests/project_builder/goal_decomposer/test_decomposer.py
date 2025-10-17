@@ -13,7 +13,7 @@ from unittest.mock import Mock, AsyncMock, patch
 import json
 
 from src.project_builder.goal_decomposer.decomposer import GoalDecomposer
-from src.entities.htn.htn_node import HTNNode
+from src.entity.htn.htn_node import HTNNode
 from src.interfaces import LLMConfig
 
 

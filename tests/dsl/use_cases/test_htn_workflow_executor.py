@@ -11,9 +11,9 @@ import pytest
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from pathlib import Path
 from src.dsl.use_cases.htn_workflow_executor import HTNWorkflowExecutor
-from src.entities.htn import HTNNode
-from src.entities.graph import Graph
-from src.entities.lifecycle import LifecycleState
+from src.entity.htn import HTNNode
+from src.entity.graph import Graph
+from src.entity.lifecycle import LifecycleState
 
 
 @pytest.fixture

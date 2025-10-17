@@ -5,7 +5,7 @@ effect application, and recursive decomposition.
 """
 
 import pytest
-from src.entities.htn import HTNNode
+from src.entity.htn import HTNNode
 
 
 class TestHTNNodeInstantiation:

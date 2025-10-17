@@ -12,8 +12,8 @@ from unittest.mock import Mock, AsyncMock, MagicMock
 from pathlib import Path
 
 from src.dsl.use_cases.morphism_workflow_executor import MorphismWorkflowExecutor
-from src.entities.category_theory.workflow_morphism import WorkflowMorphism
-from src.entities.htn import HTNNode
+from src.entity.category_theory.workflow_morphism import WorkflowMorphism
+from src.entity.htn import HTNNode
 from src.dsl.adapters.parser import Parser
 
 
@@ -143,7 +143,7 @@ class TestTransformationApplication:
         assert "DECOMPOSE" in result.phases_completed
 
         # Check lifecycle tracking
-        from src.entities.lifecycle.lifecycle import LifecycleState
+        from src.entity.lifecycle.lifecycle import LifecycleState
         decompose_data = result.lifecycle.state_data.get(LifecycleState.DECOMPOSE, {})
         assert decompose_data.get("transformations_applied") == 3
 
@@ -159,7 +159,7 @@ class TestTransformationApplication:
         )
 
         assert result.success is True
-        from src.entities.lifecycle.lifecycle import LifecycleState
+        from src.entity.lifecycle.lifecycle import LifecycleState
         decompose_data = result.lifecycle.state_data.get(LifecycleState.DECOMPOSE, {})
 
         # HTN should be decomposed successfully
@@ -476,7 +476,7 @@ class TestIntegration:
         result = await executor.execute_workflow(str(workflow))
 
         assert result.success is True
-        from src.entities.lifecycle.lifecycle import LifecycleState
+        from src.entity.lifecycle.lifecycle import LifecycleState
         decompose_data = result.lifecycle.state_data.get(LifecycleState.DECOMPOSE, {})
         assert decompose_data.get("transformations_applied") == 1
 
@@ -487,7 +487,7 @@ class TestIntegration:
         tmp_path
     ):
         """Custom transformation pipeline."""
-        from src.entities.category_theory.workflow_morphism import create_transformation_pipeline
+        from src.entity.category_theory.workflow_morphism import create_transformation_pipeline
 
         workflow = tmp_path / "custom.ct"
         workflow.write_text("""

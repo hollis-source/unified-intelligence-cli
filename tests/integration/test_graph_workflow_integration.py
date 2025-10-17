@@ -15,7 +15,7 @@ from src.dsl.use_cases.htn_workflow_executor import HTNWorkflowExecutor
 from src.dsl.use_cases.graph_workflow_executor import GraphWorkflowExecutor
 from src.dsl.adapters.pool_task_executor import PoolTaskExecutor
 from src.factories.agent_factory import AgentFactory
-from src.entities.lifecycle import LifecycleState
+from src.entity.lifecycle import LifecycleState
 
 
 @pytest.fixture
@@ -145,7 +145,7 @@ class TestCycleDetection:
 
         # Mock the graph executor to return a graph with cycle
         with patch.object(htn_executor.graph_executor, 'htn_to_graph') as mock_htn_to_graph:
-            from src.entities.graph import Graph
+            from src.entity.graph import Graph
 
             # Create graph with cycle
             cyclic_graph = Graph()
@@ -172,7 +172,7 @@ class TestCycleDetection:
 
         # Mock graph with longer cycle
         with patch.object(htn_executor.graph_executor, 'htn_to_graph') as mock_htn_to_graph:
-            from src.entities.graph import Graph
+            from src.entity.graph import Graph
 
             # Create graph with longer cycle
             cyclic_graph = Graph()
@@ -340,7 +340,7 @@ class TestVerboseOutput:
 
         # Mock cyclic graph
         with patch.object(htn_executor.graph_executor, 'htn_to_graph') as mock_htn_to_graph:
-            from src.entities.graph import Graph
+            from src.entity.graph import Graph
 
             cyclic_graph = Graph()
             cyclic_graph.add_node("A")

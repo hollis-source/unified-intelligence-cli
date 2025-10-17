@@ -16,7 +16,7 @@ from typing import Dict, List, Any
 from dataclasses import dataclass
 from datetime import datetime
 
-from src.entities import Task, Agent, AgentTeam, ExecutionContext, ExecutionStatus
+from src.entity import Task, Agent, AgentTeam, ExecutionContext, ExecutionStatus
 from src.composition import compose_dependencies
 from src.adapters.llm.mock_provider import MockLLMProvider
 

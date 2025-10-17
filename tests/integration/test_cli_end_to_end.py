@@ -12,7 +12,7 @@ from click.testing import CliRunner
 from src.main import main
 from src.config import Config
 from src.composition import compose_dependencies
-from src.entities import Agent, Task
+from src.entity import Agent, Task
 from src.adapters.llm.mock_provider import MockLLMProvider
 
 
