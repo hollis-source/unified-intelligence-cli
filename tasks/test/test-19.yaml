@@ -1,0 +1,37 @@
+id: test-19
+agent: test
+prompt: |
+  Implement service virtualization for unstable dependencies in integration tests (e.g.,
+  payments sandbox outages). Provide lightweight fakes that emulate critical behaviors and
+  error cases to keep tests reliable.
+
+  Requirements:
+  - Replace fragile dependencies with fakes in tests
+  - Cover happy path and representative failures
+  - Document limitations vs production behavior
+
+  Deliverables:
+  1. tests/fakes/* with service fakes
+  2. Integration tests wired to use fakes
+
+checks:
+  - type: regex
+    pattern: '\b(fake|stub|virtualization)\b'
+    description: Uses fakes/stubs/virtualization
+  - type: regex
+    pattern: '\b(integration\s+tests?|dependency)\b'
+    description: Applies to integration tests and dependencies
+  - type: regex
+    pattern: '\b(failure|error|outage)\b'
+    description: Covers failure/error scenarios
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 3600
+  tags: [testing, integration, fakes]
+

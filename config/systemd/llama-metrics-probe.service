@@ -1,0 +1,13 @@
+[Unit]
+Description=Prometheus textfile metrics probe for llama-server
+After=network.target
+
+[Service]
+Type=oneshot
+User=node_exporter
+Group=node_exporter
+ExecStart=/usr/bin/env python3 /home/ui-cli_jake/unified-intelligence-cli/scripts/llama_metrics_probe.py --url http://127.0.0.1:${LLAMA_PORT:-8080} --out /var/lib/node_exporter/textfile_collector/llama.prom
+
+[Install]
+WantedBy=multi-user.target
+

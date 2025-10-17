@@ -1,0 +1,37 @@
+id: test-20
+agent: test
+prompt: |
+  Define an end-to-end testing strategy for the entire checkout journey including cross-device
+  coverage. Specify core scenarios, test data management, environment parity, and observability
+  for troubleshooting failures.
+
+  Requirements:
+  - Prioritized core user flows
+  - Stable, reusable test data and environments
+  - Traces/logs/screenshots for debugging
+
+  Deliverables:
+  1. Strategy doc and E2E test plan
+  2. Initial specs for critical paths
+
+checks:
+  - type: regex
+    pattern: '\b(E2E|end\s*to\s*end|journey)\b'
+    description: Focuses on end-to-end journeys
+  - type: regex
+    pattern: '\b(device|mobile|desktop|cross\s*platform)\b'
+    description: Mentions cross-device/platform coverage
+  - type: regex
+    pattern: '\b(observability|trace|screenshot|logs?)\b'
+    description: Includes observability for debugging
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 3600
+  tags: [testing, e2e, strategy]
+

@@ -1,0 +1,35 @@
+[Unit]
+Description=llama.cpp CPU llama-server
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/llama/llama.env
+# Optionally override with: EnvironmentFile=-/etc/llama/overrides.env
+# Increase memlock for mlock
+LimitMEMLOCK=infinity
+# Restart on failure
+Restart=on-failure
+RestartSec=2
+# Nice and CPU scheduling can be adjusted
+Nice=-5
+
+# ExecStart uses env flags; assumes /usr/local/bin/llama-server exists
+# NUMA binding recommended via env LLAMA_NUMA: single|interleave|node:<id>
+ExecStartPre=/usr/bin/mkdir -p /var/log/llama
+ExecStart=/bin/bash -lc '\
+  CMD="/usr/local/bin/llama-server -m ${LLAMA_MODEL} -t ${LLAMA_THREADS} --threads-batch ${LLAMA_THREADS_BATCH} --parallel ${LLAMA_PARALLEL} -c ${LLAMA_CTX} -b ${LLAMA_BATCH} --ubatch ${LLAMA_UBATCH} --host 0.0.0.0 --port ${LLAMA_PORT} ${LLAMA_EXTRA}"; \
+  if [[ "${LLAMA_NUMA}" == interleave ]]; then \
+    exec numactl --interleave=all $CMD; \
+  elif [[ "${LLAMA_NUMA}" == node:* ]]; then \
+    NODE=${LLAMA_NUMA#node:}; exec numactl --cpunodebind=$NODE --membind=$NODE $CMD; \
+  else \
+    exec $CMD; \
+  fi'
+
+StandardOutput=append:/var/log/llama/server.log
+StandardError=append:/var/log/llama/server.err
+
+[Install]
+WantedBy=multi-user.target
+
