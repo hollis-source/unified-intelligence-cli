@@ -270,16 +270,17 @@ class AgentFactory(IAgentFactory):
 
     def create_scaled_agents(self) -> List[Agent]:
         """
-        Create scaled agent team with full 3-tier hierarchy (130 agents - Phase 2 Aggressive Scaling).
+        Create scaled agent team with full 3-tier hierarchy (134 agents - Phase 2 Aggressive Scaling).
 
         Week 11 Phase 2: Agent scaling expansion (12 agents).
         Week 13: Added Category Theory & DSL specialization (4 agents).
-        Phase 2 (Aggressive): Scaled to 130 agents for massive parallelism on 96-core EPYC + ZeroGPU H200.
+        Week 14: Added QA team specialization (4 agents).
+        Phase 2 (Aggressive): Scaled to 134 agents for massive parallelism on 96-core EPYC + ZeroGPU H200.
 
         Architecture:
             Tier 1 (2 agents): Orchestration & Quality Assurance
-            Tier 2 (7 agents): Domain Leads (Frontend, Backend, Testing, Research, DevOps, Category Theory, DSL)
-            Tier 3 (121 agents): Specialized Executors across all domains
+            Tier 2 (8 agents): Domain Leads (Frontend, Backend, Testing, Research, DevOps, QA, Category Theory, DSL)
+            Tier 3 (124 agents): Specialized Executors across all domains
                 - Frontend: 19 specialists (React, Vue, Angular, Svelte, CSS, Tailwind, etc.)
                 - Backend: 21 specialists (Django, Flask, FastAPI, PostgreSQL, Redis, etc.)
                 - Testing: 20 specialists (Unit, Integration, Performance, Security, etc.)
@@ -294,7 +295,7 @@ class AgentFactory(IAgentFactory):
             - Hardware: 96 CPU cores + 1TB RAM + ZeroGPU H200 80GB VRAM
 
         Returns:
-            List of 130 agents with complete tier metadata
+            List of 134 agents with complete tier metadata
         """
         return [
             # ===== TIER 1: Planning & Coordination (2 agents) =====
