@@ -1,8 +1,11 @@
 from __future__ import annotations
 
-from typing import Awaitable, Callable, Dict, Any, List
+from typing import Awaitable, Callable, Dict, Any, List, Optional
 
 from aiohttp import web
+
+from src.adapters.web.rag_metrics_server import add_rag_routes
+from src.adapters.rag.surrealdb_store import SurrealDBStore
 
 # Type alias for dependency injection (Clean Architecture)
 TaskRunner = Callable[[List[str]], Awaitable[Dict[str, Any]]]
@@ -28,7 +31,7 @@ async def _parse_tasks(req: web.Request) -> List[str] | web.Response:
     return tasks
 
 
-def create_app(task_runner: TaskRunner) -> web.Application:
+def create_app(task_runner: TaskRunner, db_store: Optional[SurrealDBStore] = None, enable_rag_metrics: bool = True) -> web.Application:
     app = web.Application()
 
     async def handle_tasks(req: web.Request) -> web.Response:
@@ -45,9 +48,14 @@ def create_app(task_runner: TaskRunner) -> web.Application:
         web.get("/health", _handle_health),
         web.post("/api/v1/tasks", handle_tasks),
     ])
+
+    # Add RAG metrics routes if enabled
+    if enable_rag_metrics:
+        add_rag_routes(app, db_store=db_store)
+
     return app
 
 
-def run_server(task_runner: TaskRunner, host: str = "0.0.0.0", port: int = 8080) -> None:
-    web.run_app(create_app(task_runner), host=host, port=port)
+def run_server(task_runner: TaskRunner, host: str = "0.0.0.0", port: int = 8080, db_store: Optional[SurrealDBStore] = None, enable_rag_metrics: bool = True) -> None:
+    web.run_app(create_app(task_runner, db_store=db_store, enable_rag_metrics=enable_rag_metrics), host=host, port=port)
 
