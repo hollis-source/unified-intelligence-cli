@@ -37,20 +37,20 @@ class DriftDetector:
         
     async def get_task_distribution(self, limit: int = None) -> Dict[str, int]:
         """Get distribution of tasks by domain.
-        
+
         Args:
             limit: Maximum number of recent tasks to analyze
-            
+
         Returns:
             Dictionary mapping domain to task count
         """
         # Get recent execution logs
-        sql = "SELECT task_domain FROM execution_log ORDER BY id DESC"
+        sql = "SELECT task_domain, id FROM execution_log ORDER BY id DESC"
         if limit:
             sql += f" LIMIT {limit};"
         else:
             sql += ";"
-        
+
         result = await self.db_store.query(sql)
         
         distribution = defaultdict(int)
@@ -167,29 +167,27 @@ class DriftDetector:
     
     async def monitor_domain_shifts(self) -> Dict[str, Any]:
         """Monitor shifts in domain distribution over time.
-        
+
         Returns:
             Dictionary with domain shift analysis
         """
         # Get recent distribution
         recent_dist = await self.get_task_distribution(limit=self.window_size)
-        
-        # Get older distribution (previous window)
-        sql = f"""
-        SELECT task_domain FROM execution_log 
-        ORDER BY id DESC 
-        LIMIT {self.window_size} 
-        OFFSET {self.window_size};
-        """
-        
+
+        # Get all tasks and manually skip the first window_size
+        sql = f"SELECT task_domain, id FROM execution_log ORDER BY id DESC LIMIT {self.window_size * 2};"
+
         result = await self.db_store.query(sql)
-        
+
         older_dist = defaultdict(int)
         if result and isinstance(result, list):
-            for item in result:
+            # Skip first window_size items (recent), use next window_size (older)
+            for i, item in enumerate(result):
+                if i < self.window_size:
+                    continue  # Skip recent window
                 domain = item.get("task_domain", "unknown")
                 older_dist[domain] += 1
-        
+
         older_dist = dict(older_dist)
         
         # Calculate shift
