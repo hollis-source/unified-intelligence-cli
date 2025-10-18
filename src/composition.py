@@ -32,7 +32,8 @@ def compose_dependencies(
     metrics_dir: str = "data/metrics",
     cache_enabled: bool = True,
     cache_ttl_seconds: int = 14400,
-    cache_namespace: str = ""
+    cache_namespace: str = "",
+    enable_rag: bool = False
 ) -> tuple[IAgentCoordinator, Optional[MetricsCollector]]:
     """
     Compose dependencies for the coordinator use case.
@@ -89,12 +90,74 @@ def compose_dependencies(
     )
 
     # Week 12/13: Create agent selector based on routing mode (with metrics integration)
+    # Phase 2: Use RAG-enhanced routing if enabled
     if routing_mode == "team" and teams:
         # Create domain classifier with metrics integration
         domain_classifier = DomainClassifier(metrics_collector=metrics_collector)
-        team_router = TeamRouter(domain_classifier=domain_classifier)
+
+        # Use RAG-enhanced router if RAG is enabled and components are available
+        if enable_rag:
+            try:
+                from src.routing.rag_team_router import RAGTeamRouter
+                from src.adapters.rag.surrealdb_store import SurrealDBStore
+                from src.adapters.rag.embedding_pipeline import EmbeddingPipeline
+                from src.adapters.llm.rag_config import RAGConfig
+
+                # Get RAG components (will be created later if not exists)
+                rag_config = RAGConfig()
+
+                # Use environment variable or localhost for DB URL
+                import os
+                db_url = os.getenv("SURREALDB_URL", rag_config.db_url)
+                if "project-builder-db" in db_url:
+                    db_url = "ws://localhost:8000"
+
+                # Create RAG components for routing
+                db_store = SurrealDBStore(
+                    url=db_url,
+                    namespace=rag_config.db_namespace,
+                    database=rag_config.db_database,
+                    user=rag_config.db_user,
+                    password=rag_config.db_password
+                )
+
+                # Connect to DB (async)
+                import asyncio
+                try:
+                    asyncio.get_event_loop().run_until_complete(db_store.connect())
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(db_store.connect())
+
+                # Create embedding pipeline
+                embedder = EmbeddingPipeline(
+                    provider=rag_config.embedding_provider,
+                    model=rag_config.embedding_model
+                )
+
+                # Create RAG-enhanced router
+                team_router = RAGTeamRouter(
+                    domain_classifier=domain_classifier,
+                    db_store=db_store,
+                    embedding_pipeline=embedder,
+                    top_k=rag_config.top_k,
+                    similarity_threshold=rag_config.similarity_threshold,
+                    use_rag=True
+                )
+
+                if logger:
+                    logger.info(f"Using RAG-enhanced team routing with {len(teams)} teams")
+
+            except Exception as e:
+                if logger:
+                    logger.warning(f"Failed to enable RAG routing: {e}. Using base TeamRouter.")
+                team_router = TeamRouter(domain_classifier=domain_classifier)
+        else:
+            team_router = TeamRouter(domain_classifier=domain_classifier)
+
         agent_selector = TeamBasedSelector(teams, team_router=team_router)
-        if logger:
+        if logger and not enable_rag:
             logger.info(f"Using team-based routing with {len(teams)} teams")
     else:
         agent_selector = CapabilityBasedSelector()
@@ -117,6 +180,62 @@ def compose_dependencies(
         agents=agents,
         logger_instance=logger
     )
+
+    # RAG Integration: Wrap coordinator with RAGTaskCoordinator if enabled
+    if enable_rag:
+        try:
+            from src.use_cases.rag_task_coordinator import RAGTaskCoordinator
+            from src.adapters.rag.surrealdb_store import SurrealDBStore
+            from src.adapters.rag.embedding_pipeline import EmbeddingPipeline
+            from src.adapters.llm.rag_config import RAGConfig
+            import asyncio
+
+            # Create RAG components
+            rag_config = RAGConfig()
+
+            # Use environment variable or localhost for DB URL (handles both host and container)
+            import os
+            db_url = os.getenv("SURREALDB_URL", rag_config.db_url)
+            # If using Docker container name, try localhost first (for host execution)
+            if "project-builder-db" in db_url:
+                db_url = "ws://localhost:8000"
+
+            db_store = SurrealDBStore(
+                url=db_url,
+                namespace=rag_config.db_namespace,
+                database=rag_config.db_database,
+                user=rag_config.db_user,
+                password=rag_config.db_password
+            )
+
+            # Connect to SurrealDB (async)
+            try:
+                asyncio.get_event_loop().run_until_complete(db_store.connect())
+            except RuntimeError:
+                # If no event loop, create one
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(db_store.connect())
+
+            embedder = EmbeddingPipeline(
+                provider=rag_config.embedding_provider,
+                model=rag_config.embedding_model
+            )
+
+            # Wrap coordinator with RAG
+            coordinator = RAGTaskCoordinator(
+                task_planner=task_planner,
+                agent_executor=agent_executor,
+                db_store=db_store,
+                embedding_pipeline=embedder,
+                logger=logger
+            )
+
+            if logger:
+                logger.info(f"RAG enabled: {rag_config}")
+        except Exception as e:
+            if logger:
+                logger.warning(f"Failed to enable RAG: {e}. Continuing without RAG.")
 
     return coordinator, metrics_collector
 
