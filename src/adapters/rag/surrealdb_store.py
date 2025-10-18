@@ -203,20 +203,29 @@ class SurrealDBStore:
         Returns:
             List of similar execution patterns with similarity scores
         """
+        # Note: SurrealDB vector search <|k|> operator requires literal number, not parameter
         sql = (
-            "SELECT id, task_description, agent_role, team_id, task_domain, "
-            "success, latency_seconds, "
-            "vector::similarity::cosine(embedding, $e) AS similarity FROM execution_log "
-            "WHERE embedding <|$k|> $e "
+            f"SELECT id, task_description, agent_role, team_id, task_domain, "
+            f"success, latency_seconds, "
+            f"vector::similarity::cosine(embedding, $e) AS similarity FROM execution_log "
+            f"WHERE embedding <|{top_k}|> $e "
         )
         if success_only:
             sql += "AND success = true "
         if domain:
             sql += "AND task_domain = $domain "
-        sql += "ORDER BY similarity DESC LIMIT $k;"
-        res = await self.query(sql, {"e": query_embedding.tolist(), "k": top_k, "domain": domain})
+        sql += f"ORDER BY similarity DESC LIMIT {top_k};"
+        res = await self.query(sql, {"e": query_embedding.tolist(), "domain": domain})
         try:
-            return res[0]["result"]
+            # Handle different result formats
+            if res and isinstance(res, list):
+                if isinstance(res[0], dict) and "task_description" in res[0]:
+                    # Direct result format
+                    return res
+                elif hasattr(res[0], 'get') and res[0].get("result"):
+                    # Nested result format
+                    return res[0]["result"]
+            return []
         except Exception:
             return []
 
