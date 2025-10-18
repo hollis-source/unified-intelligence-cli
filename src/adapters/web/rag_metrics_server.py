@@ -14,6 +14,7 @@ from src.routing.weight_optimizer import WeightOptimizer
 from src.routing.drift_detector import DriftDetector
 from src.routing.performance_feedback import PerformanceFeedback
 from src.routing.ab_testing import ABTest
+from src.monitoring.rag_alerting import RAGAlerting
 from src.adapters.rag.surrealdb_store import SurrealDBStore
 from src.adapters.llm.rag_config import RAGConfig
 
@@ -271,12 +272,12 @@ class RAGMetricsServer:
         """GET /api/rag/weights - Weight optimization status."""
         try:
             await self._ensure_initialized()
-            
+
             optimizer = WeightOptimizer(db_store=self.db_store)
-            
+
             # Run optimization cycle
             results = await optimizer.run_optimization_cycle()
-            
+
             return web.json_response({
                 "status": "ok",
                 "optimization": {
@@ -286,7 +287,28 @@ class RAGMetricsServer:
                     "recommendations": results.get("recommendations", {}).get("recommendations", [])
                 }
             })
-            
+
+        except Exception as e:
+            return web.json_response({
+                "status": "error",
+                "error": str(e)
+            }, status=500)
+
+    async def handle_alerts(self, request: web.Request) -> web.Response:
+        """GET /api/rag/alerts - Get current alerts."""
+        try:
+            await self._ensure_initialized()
+
+            alerting = RAGAlerting(db_store=self.db_store)
+
+            # Get alert summary
+            summary = await alerting.get_alert_summary()
+
+            return web.json_response({
+                "status": "ok",
+                "alerts": summary
+            })
+
         except Exception as e:
             return web.json_response({
                 "status": "error",
@@ -296,13 +318,13 @@ class RAGMetricsServer:
 
 def add_rag_routes(app: web.Application, db_store: Optional[SurrealDBStore] = None) -> None:
     """Add RAG metrics routes to an existing aiohttp application.
-    
+
     Args:
         app: aiohttp Application instance
         db_store: Optional SurrealDBStore instance
     """
     server = RAGMetricsServer(db_store=db_store)
-    
+
     app.router.add_get("/api/rag/metrics", server.handle_metrics_overview)
     app.router.add_get("/api/rag/patterns", server.handle_pattern_metrics)
     app.router.add_get("/api/rag/routing/accuracy", server.handle_routing_accuracy)
@@ -310,4 +332,5 @@ def add_rag_routes(app: web.Application, db_store: Optional[SurrealDBStore] = No
     app.router.add_get("/api/rag/drift", server.handle_drift_detection)
     app.router.add_get("/api/rag/ab-test", server.handle_ab_test)
     app.router.add_get("/api/rag/weights", server.handle_weight_optimization)
+    app.router.add_get("/api/rag/alerts", server.handle_alerts)
 
