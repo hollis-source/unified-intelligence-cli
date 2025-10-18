@@ -143,6 +143,7 @@ class SurrealDBStore:
         task_description: str,
         task_domain: Optional[str],
         agent_role: Optional[str],
+        team_id: Optional[str] = None,
         success: bool,
         status: str,
         latency_seconds: float,
@@ -157,6 +158,7 @@ class SurrealDBStore:
             task_description = $task_description,
             task_domain = $task_domain,
             agent_role = $agent_role,
+            team_id = $team_id,
             success = $success,
             status = $status,
             latency_seconds = $latency,
@@ -172,6 +174,7 @@ class SurrealDBStore:
                 "task_description": task_description,
                 "task_domain": task_domain,
                 "agent_role": agent_role,
+                "team_id": team_id,
                 "success": success,
                 "status": status,
                 "latency": latency_seconds,
@@ -182,12 +185,32 @@ class SurrealDBStore:
             },
         )
 
-    async def search_similar_execution(self, query_embedding: np.ndarray, top_k: int = 5, domain: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def search_similar_execution(
+        self,
+        query_embedding: np.ndarray,
+        top_k: int = 5,
+        domain: Optional[str] = None,
+        success_only: bool = True
+    ) -> List[Dict[str, Any]]:
+        """Search for similar execution patterns.
+
+        Args:
+            query_embedding: Query embedding vector
+            top_k: Number of results to return
+            domain: Optional domain filter
+            success_only: Only return successful executions (default: True)
+
+        Returns:
+            List of similar execution patterns with similarity scores
+        """
         sql = (
-            "SELECT id, task_description, agent_role, success, latency_seconds, "
+            "SELECT id, task_description, agent_role, team_id, task_domain, "
+            "success, latency_seconds, "
             "vector::similarity::cosine(embedding, $e) AS similarity FROM execution_log "
-            "WHERE success = true AND embedding <|$k|> $e "
+            "WHERE embedding <|$k|> $e "
         )
+        if success_only:
+            sql += "AND success = true "
         if domain:
             sql += "AND task_domain = $domain "
         sql += "ORDER BY similarity DESC LIMIT $k;"
@@ -279,6 +302,163 @@ class SurrealDBStore:
         res = await self.query(sql, {"e": query_embedding.tolist(), "k": top_k, "domain": domain})
         try:
             return res[0]["result"]
+        except Exception:
+            return []
+
+    # =============================
+    # Agent Performance Methods
+    # =============================
+
+    async def update_agent_performance(
+        self,
+        agent_role: str,
+        total_tasks: int,
+        successful_tasks: int,
+        failed_tasks: int,
+        avg_latency_ms: float
+    ) -> None:
+        """Update or create agent performance record."""
+        success_rate = (successful_tasks / total_tasks * 100) if total_tasks > 0 else 0.0
+
+        sql = """
+        CREATE agent_performance SET
+            agent_role = $agent_role,
+            total_tasks = $total_tasks,
+            successful_tasks = $successful_tasks,
+            failed_tasks = $failed_tasks,
+            avg_latency_ms = $avg_latency_ms,
+            success_rate = $success_rate;
+        """
+
+        await self.query(
+            sql,
+            {
+                "agent_role": agent_role,
+                "total_tasks": total_tasks,
+                "successful_tasks": successful_tasks,
+                "failed_tasks": failed_tasks,
+                "avg_latency_ms": avg_latency_ms,
+                "success_rate": success_rate,
+            },
+        )
+
+    async def get_agent_performance(self, agent_role: str) -> Optional[Dict[str, Any]]:
+        """Get performance metrics for a specific agent."""
+        sql = "SELECT * FROM agent_performance WHERE agent_role = $role LIMIT 1;"
+        res = await self.query(sql, {"role": agent_role})
+        try:
+            results = res[0]["result"]
+            return results[0] if results else None
+        except Exception:
+            return None
+
+    async def get_top_performing_agents(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get top performing agents by success rate."""
+        sql = "SELECT * FROM agent_performance ORDER BY success_rate DESC LIMIT $limit;"
+        res = await self.query(sql, {"limit": limit})
+        try:
+            return res[0]["result"]
+        except Exception:
+            return []
+
+    # =============================
+    # Routing Decisions Methods
+    # =============================
+
+    async def store_routing_decision(
+        self,
+        task_id: str,
+        task_description: str,
+        task_domain: str,
+        selected_agent: str,
+        selected_team: Optional[str],
+        routing_strategy: str,
+        confidence: float,
+        success: Optional[bool],
+        actual_agent: Optional[str] = None,
+        fallback_used: bool = False,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> None:
+        """Store a routing decision for feedback learning."""
+        import uuid
+
+        sql = """
+        CREATE routing_decisions SET
+            id = $id,
+            task_id = $task_id,
+            task_description = $task_description,
+            task_domain = $task_domain,
+            selected_agent = $selected_agent,
+            selected_team = $selected_team,
+            routing_strategy = $routing_strategy,
+            confidence = $confidence,
+            success = $success,
+            actual_agent = $actual_agent,
+            fallback_used = $fallback_used,
+            metadata = $metadata;
+        """
+
+        await self.query(
+            sql,
+            {
+                "id": str(uuid.uuid4()),
+                "task_id": task_id,
+                "task_description": task_description,
+                "task_domain": task_domain,
+                "selected_agent": selected_agent,
+                "selected_team": selected_team,
+                "routing_strategy": routing_strategy,
+                "confidence": confidence,
+                "success": success,
+                "actual_agent": actual_agent or selected_agent,
+                "fallback_used": fallback_used,
+                "metadata": metadata or {},
+            },
+        )
+
+    async def get_routing_accuracy(self, strategy: Optional[str] = None, limit: int = 100) -> float:
+        """Calculate routing accuracy for a given strategy."""
+        sql = "SELECT success FROM routing_decisions "
+        if strategy:
+            sql += "WHERE routing_strategy = $strategy "
+        sql += "LIMIT $limit;"
+
+        res = await self.query(sql, {"strategy": strategy, "limit": limit})
+        try:
+            # Handle different result formats
+            results = None
+            if res and isinstance(res, list):
+                if isinstance(res[0], dict) and "success" in res[0]:
+                    results = res
+                elif hasattr(res[0], 'get') and res[0].get("result"):
+                    results = res[0]["result"]
+
+            if not results:
+                return 0.0
+
+            # Filter out None values (tasks not yet completed)
+            completed = [r for r in results if r.get("success") is not None]
+            if not completed:
+                return 0.0
+
+            successful = sum(1 for r in completed if r.get("success"))
+            return (successful / len(completed)) * 100
+        except Exception as e:
+            print(f"Error calculating routing accuracy: {e}")
+            return 0.0
+
+    async def get_recent_routing_decisions(self, limit: int = 50) -> List[Dict[str, Any]]:
+        """Get recent routing decisions for analysis."""
+        sql = "SELECT * FROM routing_decisions LIMIT $limit;"
+        res = await self.query(sql, {"limit": limit})
+        try:
+            # Handle different result formats
+            if res and isinstance(res, list):
+                if isinstance(res[0], dict) and "task_id" in res[0]:
+                    return res
+                elif hasattr(res[0], 'get') and res[0].get("result"):
+                    return res[0]["result"]
+            return []
         except Exception:
             return []
 

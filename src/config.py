@@ -50,6 +50,9 @@ class Config:
     cache_ttl_seconds: int = 14400  # 4 hours default
     cache_namespace: str = ""
 
+    # RAG settings (RAG Integration)
+    enable_rag: bool = False  # Enable RAG for pattern learning and adaptive routing
+
     @classmethod
     def from_file(cls, file_path: str) -> "Config":
         """
@@ -92,7 +95,8 @@ class Config:
             metrics_dir=data.get("metrics_dir", "data/metrics"),
             cache_enabled=data.get("cache_enabled", True),
             cache_ttl_seconds=data.get("cache_ttl_seconds", int(os.getenv("ATADO_CACHE_TTL_SECONDS", 14400))),
-            cache_namespace=data.get("cache_namespace", os.getenv("ATADO_CACHE_NAMESPACE", ""))
+            cache_namespace=data.get("cache_namespace", os.getenv("ATADO_CACHE_NAMESPACE", "")),
+            enable_rag=data.get("enable_rag", False)
         )
 
     def merge_cli_args(
@@ -111,7 +115,8 @@ class Config:
         metrics_dir: Optional[str] = None,
         cache_enabled: Optional[bool] = None,
         cache_ttl_seconds: Optional[int] = None,
-        cache_namespace: Optional[str] = None
+        cache_namespace: Optional[str] = None,
+        enable_rag: Optional[bool] = None
     ) -> "Config":
         """
         Merge CLI arguments with config file settings.
@@ -177,7 +182,8 @@ class Config:
             metrics_dir=metrics_dir if metrics_dir is not None else self.metrics_dir,
             cache_enabled=resolved_cache_enabled,
             cache_ttl_seconds=resolved_cache_ttl,
-            cache_namespace=resolved_cache_ns
+            cache_namespace=resolved_cache_ns,
+            enable_rag=enable_rag if enable_rag is not None else self.enable_rag
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -203,5 +209,6 @@ class Config:
             "metrics_dir": self.metrics_dir,
             "cache_enabled": self.cache_enabled,
             "cache_ttl_seconds": self.cache_ttl_seconds,
-            "cache_namespace": self.cache_namespace
+            "cache_namespace": self.cache_namespace,
+            "enable_rag": self.enable_rag
         }

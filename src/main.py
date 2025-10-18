@@ -53,7 +53,7 @@ if env_file.exists():
 @click.option("--data-dir", type=click.Path(), default="data/training",
               help="Directory to store collected training data (default: data/training)")
 @click.option("--agents", type=click.Choice(["default", "extended", "scaled"]), default="default",
-              help="Agent configuration: default (5 agents), extended (8 agents), scaled (16 agents with Category Theory & DSL teams)")
+              help="Agent configuration: default (5 agents), extended (8 agents), scaled (134 agents across 9 teams including QA, Category Theory & DSL)")
 @click.option("--routing", type=click.Choice(["individual", "team"]), default="individual",
               help="Routing mode: individual (agent-based), team (team-based, recommended for scaled)")
 @click.option("--collect-metrics", is_flag=True,
@@ -72,6 +72,8 @@ if env_file.exists():
               help="Enable workflow result caching (Phase 6)")
 @click.option("--cache-ttl", type=int, default=3600,
               help="Cache TTL in seconds (default: 3600)")
+@click.option("--enable-rag", is_flag=True, default=False,
+              help="Enable RAG (Retrieval-Augmented Generation) for pattern learning and adaptive routing")
 def main(
     goal: str,
     workflow: str,
@@ -96,7 +98,8 @@ def main(
     state_persistence: str,
     load_state: str,
     enable_cache: bool,
-    cache_ttl: int
+    cache_ttl: int,
+    enable_rag: bool
 ) -> None:
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.
@@ -126,7 +129,7 @@ def main(
     app_config = load_config(
         config, provider, verbose, debug, no_cache, parallel, timeout,
         orchestrator, collect_data, data_dir, agents, routing,
-        collect_metrics, metrics_dir
+        collect_metrics, metrics_dir, enable_rag
     )
 
     # Generate correlation ID and set up logging
@@ -158,7 +161,7 @@ def main(
             # Team-based routing (Week 12/13)
             if app_config.agent_mode == "scaled":
                 teams = team_factory.create_scaled_teams()
-                logger.info(f"Created {len(teams)} teams (scaled mode: 16 agents across 9 teams including Category Theory & DSL)")
+                logger.info(f"Created {len(teams)} teams (scaled mode: 134 agents across 9 teams including QA, Category Theory & DSL)")
             elif app_config.agent_mode == "extended":
                 teams = team_factory.create_extended_teams()
                 logger.info(f"Created {len(teams)} teams (extended mode: 8 agents across teams)")
@@ -173,7 +176,7 @@ def main(
             teams = None
             if app_config.agent_mode == "scaled":
                 agents = agent_factory.create_scaled_agents()
-                logger.info(f"Created {len(agents)} agents (scaled mode: 16 agents including Category Theory & DSL, individual routing)")
+                logger.info(f"Created {len(agents)} agents (scaled mode: 134 agents across 9 teams including QA, Category Theory & DSL, individual routing)")
             elif app_config.agent_mode == "extended":
                 agents = agent_factory.create_extended_agents()
                 logger.info(f"Created {len(agents)} agents (extended mode: 8 agents, individual routing)")
@@ -216,7 +219,8 @@ def main(
             metrics_dir=app_config.metrics_dir,
             cache_enabled=app_config.cache_enabled,
             cache_ttl_seconds=app_config.cache_ttl_seconds,
-            cache_namespace=cache_namespace
+            cache_namespace=cache_namespace,
+            enable_rag=app_config.enable_rag
         )
 
         # Execute with timeout
@@ -486,7 +490,8 @@ def load_config(
     agent_mode: str = "default",
     routing_mode: str = "individual",
     collect_metrics: bool = False,
-    metrics_dir: str = "data/metrics"
+    metrics_dir: str = "data/metrics",
+    enable_rag: bool = False
 ) -> Config:
     """
     Load configuration from file and merge with CLI arguments.
@@ -525,7 +530,8 @@ def load_config(
             routing_mode=routing_mode,
             collect_metrics=collect_metrics,
             metrics_dir=metrics_dir,
-            cache_enabled=False if no_cache else None
+            cache_enabled=False if no_cache else None,
+            enable_rag=enable_rag
         )
     else:
         # Use CLI args only and merge with env-based cache defaults
@@ -543,7 +549,10 @@ def load_config(
             collect_metrics=collect_metrics,
             metrics_dir=metrics_dir
         )
-        return base.merge_cli_args(cache_enabled=False if no_cache else None)
+        return base.merge_cli_args(
+            cache_enabled=False if no_cache else None,
+            enable_rag=enable_rag
+        )
 
 
 def setup_logging(verbose: bool, debug: bool, correlation_id: str) -> logging.Logger:
