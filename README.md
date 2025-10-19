@@ -6,6 +6,12 @@ See docs/ab_artifacts_guide.md for fields, interpretation tips, and jq one-liner
 - Advanced metrics: see docs/advanced_metrics.md and run scripts/advanced_metrics_report.py to generate drift/performance/cross-domain insights.
 
 
+- Monitoring: see docs/monitoring.md; CI workflow .github/workflows/metrics_daily.yml generates snapshots
+- Philosophy: see docs/philosophy_alignment.md
+- Success criteria status: generated via scripts/success_criteria_check.py
+
+- Weekly success criteria snapshot: generated automatically in A/B weekly workflow; artifacts logs/success_criteria_*.{md,json}
+
 ![Tests](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/workflows/Tests/badge.svg)
 [![Smoke Tests](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions/workflows/smoke.yml/badge.svg)](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions/workflows/smoke.yml)
 

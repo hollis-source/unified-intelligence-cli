@@ -1,0 +1,44 @@
+name: Metrics Daily
+
+on:
+  schedule:
+    - cron: '35 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate trend snapshot
+        run: |
+          PYTHONPATH=. python scripts/ab_trend_report.py || true
+
+      - name: Generate advanced metrics (light)
+        run: |
+          PYTHONPATH=. python scripts/advanced_metrics_report.py --limit 300 || true
+
+      - name: Upload metrics artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: metrics-daily-artifacts
+          path: |
+            logs/ab_trends_*.md
+            logs/ab_trends_*.json
+            logs/advanced_metrics_*.md
+            logs/advanced_metrics_*.json
+          if-no-files-found: ignore
+          retention-days: 7
+
