@@ -16,6 +16,7 @@ from src.factories.provider_creators import (
     TongyiLocalProviderCreator,
     ReplicateProviderCreator,
     Qwen3ProviderCreator,
+    Qwen3NextProviderCreator,
     QwenAgentProviderCreator,
     OrchestratorProviderCreator
 )
@@ -57,6 +58,7 @@ class ProviderFactory(IProviderFactory):
         self._creators["tongyi-local"] = TongyiLocalProviderCreator()
         self._creators["replicate"] = ReplicateProviderCreator()
         self._creators["qwen3_zerogpu"] = Qwen3ProviderCreator()
+        self._creators["qwen3"] = Qwen3NextProviderCreator()  # Qwen3-Next-80B via HF Inference API
         self._creators["qwen-agent"] = QwenAgentProviderCreator()
 
         # Orchestrator needs factory reference (circular dependency handled via lazy import)
