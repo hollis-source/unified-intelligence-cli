@@ -99,7 +99,7 @@ class PatternCollector:
         self,
         tasks_dir: Path,
         target_count: int = 50,
-        parallel: int = 1,
+        parallel: int = 6,
         dry_run: bool = False,
         provider: str = 'qwen3'
     ):
@@ -348,8 +348,8 @@ async def main():
     parser.add_argument(
         '--parallel',
         type=int,
-        default=1,
-        help='Number of parallel executions (default: 1)'
+        default=6,
+        help='Number of parallel executions (default: 6)'
     )
     parser.add_argument(
         '--domain',

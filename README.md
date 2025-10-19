@@ -98,6 +98,31 @@ python3 src/main.py \
   --verbose
 ```
 
+
+### Week 2 Pattern Collection Defaults (qwen3, RAG)
+
+For Week 2 RAG pattern collection using scripts/build_rag_patterns.py:
+- Default provider: qwen3 (Qwen/Qwen3-Next-80B-A3B-Instruct via HF Inference API)
+- Default parallelism: P=6 (locked in as the standard for reliability)
+- RAG: Enabled for each task invocation; embeddings stored with sentence-transformers/all-mpnet-base-v2
+
+Quick start:
+```bash
+# In repo root (requires venv + HF token)
+source venv/bin/activate
+export HF_TOKEN=...  # or HUGGINGFACE_TOKEN
+
+# Collect 25 patterns (defaults to --parallel 6)
+python scripts/build_rag_patterns.py --target 25
+
+# Override parallelism if needed (temporary):
+python scripts/build_rag_patterns.py --target 25 --parallel 6
+```
+
+Notes:
+- SurrealDB execution_log is used for storage; verify with the SurrealDB CLI if needed
+- Keep domain-balanced selection (the script auto-balances across architecture, backend, devops, qa, testing)
+
 ### With Timeout and Parallel Execution
 
 ```bash
