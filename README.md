@@ -1,6 +1,8 @@
 # Autonomous Task-Agent Dev Orchestration (ATADO)
 
 ![Tests](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/workflows/Tests/badge.svg)
+[![Smoke Tests](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions/workflows/smoke.yml/badge.svg)](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions/workflows/smoke.yml)
+
 ![Python](https://img.shields.io/badge/python-3.12+-blue)
 ![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen)
 
@@ -370,6 +372,56 @@ PYTHONPATH=. pytest tests/ -v
 ```bash
 PYTHONPATH=. pytest tests/ --cov=src --cov-report=term-missing
 ```
+
+### Test Profiles
+
+Fast/dry-run suite (excludes non-dry-run smoke tests):
+```bash
+source venv/bin/activate
+PYTHONPATH=. pytest tests/ -v -k "not build_rag_patterns_smoke"
+```
+
+Non-dry-run smoke tests (minimal end-to-end):
+```bash
+source venv/bin/activate
+PYTHONPATH=. pytest tests/integration/test_build_rag_patterns_smoke.py -v
+```
+
+### CI Workflows
+
+- Default Tests workflow runs the fast suite and coverage (excludes non-dry-run smoke)
+- Smoke Tests (Non-Dry-Run) workflow runs the minimal end-to-end smokes
+  - Triggers: Manual (workflow_dispatch) and daily schedule (06:00 UTC)
+  - Requires HF_TOKEN/HUGGINGFACE_TOKEN secrets if your provider uses HF
+
+See:
+- .github/workflows/tests.yml (fast suite)
+### A/B Routing Evaluation
+
+Run a small A/B evaluation (baseline vs RAG) and save a JSON report under logs/:
+```bash
+source venv/bin/activate
+PYTHONPATH=. python scripts/ab_routing_eval.py --domains frontend research backend --per-domain 2 --provider qwen3
+```
+
+Summarize recent routing decisions (grouped by rag_used) to Markdown and JSON:
+```bash
+PYTHONPATH=. python scripts/routing_decisions_summary.py --limit 100
+```
+Notes:
+- Proportions use both normal and Wilson score 95% CIs; difference in proportions uses Newcombe (1998) Wilson-based method.
+- CSV includes per-condition aggregates and a diff row with both normal and Newcombe CIs for the difference.
+
+- A separate diff CSV is also saved: logs/ab_eval_diff_<timestamp>.csv
+
+
+CI:
+- .github/workflows/ab_evaluation.yml runs a nightly small-N A/B evaluation and uploads the report as an artifact.
+
+- .github/workflows/ab_evaluation.yml runs a daily small-N A/B and a weekly larger-N A/B (with CSV and routing summary artifacts)
+
+- .github/workflows/smoke.yml (non-dry-run smokes)
+
 
 ### Add New Agent Type
 

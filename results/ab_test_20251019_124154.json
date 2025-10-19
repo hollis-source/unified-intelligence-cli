@@ -1,0 +1,56 @@
+/home/ui-cli_jake/unified-intelligence-cli/scripts/ab_routing_eval.py:192: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+{
+  "domains": [
+    "frontend",
+    "devops",
+    "qa",
+    "research",
+    "test"
+  ],
+  "per_domain": 3,
+  "n_baseline": 12,
+  "n_rag": 15,
+  "baseline_hits": 0,
+  "rag_hits": 0,
+  "p_a": 0.0,
+  "p_b": 0.0,
+  "p_a_ci95": [
+    0.0,
+    0.0
+  ],
+  "p_b_ci95": [
+    0.0,
+    0.0
+  ],
+  "p_a_ci95_wilson": [
+    0.0,
+    0.2425007574992425
+  ],
+  "p_b_ci95_wilson": [
+    0.0,
+    0.20388926630434784
+  ],
+  "diff_p_b_minus_p_a": 0.0,
+  "diff_ci95": [
+    0.0,
+    0.0
+  ],
+  "diff_ci95_wilson_newcombe": [
+    -0.2425007574992425,
+    0.20388926630434784
+  ],
+  "z": 0.0,
+  "p_value": 1.0,
+  "baseline_avg_latency_s": 38.044,
+  "baseline_p50_s": 42.097,
+  "baseline_p95_s": 48.925,
+  "rag_avg_latency_s": 20.195,
+  "rag_p50_s": 17.757,
+  "rag_p95_s": 33.756,
+  "baseline_cost_proxy": 38.044,
+  "rag_cost_proxy": 20.195,
+  "saved_report_json": "logs/ab_eval_20251019_105756.json",
+  "saved_report_csv": "logs/ab_eval_20251019_105756.csv",
+  "timestamp_utc": "20251019_105756"
+}
