@@ -45,6 +45,45 @@ jobs:
             logs/ab_eval_diff_*.csv
           if-no-files-found: ignore
 
+      - name: Job summary (A/B stats daily)
+        if: always()
+        run: |
+          python - <<'PY'
+          import glob, json, os
+          paths = sorted(glob.glob('logs/ab_eval_*.json'))
+          if not paths:
+              raise SystemExit(0)
+          p = paths[-1]
+          data = json.load(open(p))
+          lines = [
+              "# A/B evaluator (daily summary)",
+              f"Report: {os.path.basename(p)}",
+          ]
+          for k in ("p_baseline","p_rag","diff_p_rag_minus_baseline","baseline_avg_latency_s","rag_avg_latency_s"):
+              if k in data:
+                  lines.append(f"{k}: {data[k]}")
+          with open(os.environ.get("GITHUB_STEP_SUMMARY","/tmp/summary.txt"),"a") as f:
+              f.write("\n".join(lines)+"\n")
+          PY
+
+
+      - name: Generate A/B trend snapshot (daily)
+        if: always()
+        run: |
+          PYTHONPATH=. python scripts/ab_trend_report.py || true
+
+      - name: Upload trend snapshot (daily)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ab-trends-daily
+          path: |
+            logs/ab_trends_*.md
+            logs/ab_trends_*.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+
       - name: Routing decisions summary (last 200)
         if: always()
         run: |
@@ -87,6 +126,60 @@ jobs:
           else
             PYTHONPATH=. python scripts/ab_routing_eval.py --domains frontend research backend --per-domain 10 --provider qwen3;
           fi
+
+      - name: Generate A/B trend snapshot (weekly)
+        if: always()
+        run: |
+          PYTHONPATH=. python scripts/ab_trend_report.py || true
+
+      - name: Job summary (A/B stats weekly)
+        if: always()
+        run: |
+          python - <<'PY'
+          import glob, json, os
+          paths = sorted(glob.glob('logs/ab_eval_*.json'))
+          if not paths:
+              raise SystemExit(0)
+          p = paths[-1]
+          data = json.load(open(p))
+          lines = [
+              "# A/B evaluator (weekly summary)",
+              f"Report: {os.path.basename(p)}",
+          ]
+          for k in ("p_baseline","p_rag","diff_p_rag_minus_baseline","baseline_avg_latency_s","rag_avg_latency_s"):
+              if k in data:
+                  lines.append(f"{k}: {data[k]}")
+          with open(os.environ.get("GITHUB_STEP_SUMMARY","/tmp/summary.txt"),"a") as f:
+              f.write("\n".join(lines)+"\n")
+          PY
+
+      - name: Generate advanced metrics (weekly)
+        if: always()
+        run: |
+          PYTHONPATH=. python scripts/advanced_metrics_report.py --limit 1000 || true
+
+      - name: Upload advanced metrics (weekly)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: advanced-metrics-weekly
+          path: |
+            logs/advanced_metrics_*.md
+            logs/advanced_metrics_*.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+
+      - name: Upload trend snapshot (weekly)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ab-trends-weekly
+          path: |
+            logs/ab_trends_*.md
+            logs/ab_trends_*.json
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload A/B report artifacts (weekly)
         if: always()

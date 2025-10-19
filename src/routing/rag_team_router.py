@@ -73,36 +73,66 @@ class RAGTeamRouter(TeamRouter):
     async def route_with_rag(self, task: Task, teams: List[AgentTeam]) -> Agent:
         """
         Route task using RAG-enhanced decision making.
-        
+
         Strategy:
             1. Generate embedding for task description
             2. Retrieve top-K similar successful patterns
             3. Analyze patterns to inform routing
             4. Make routing decision (RAG-informed or fallback)
             5. Track decision for feedback
-        
+
         Args:
             task: Task to route
             teams: Available teams
-            
+
         Returns:
             Selected agent
         """
         if not self.use_rag:
             # RAG disabled, use base routing
-            return self.route(task, teams)
+            agent = self.route(task, teams)
+
+            # Feature flag: Track baseline routing decisions
+            # Enables A/B test source count analysis when RAG is disabled
+            import os
+            if os.getenv("RAG_BASELINE_TRACK_DECISIONS") == "1":
+                try:
+                    await self._track_routing_decision(
+                        task=task,
+                        selected_agent=agent,
+                        patterns_used=[],
+                        routing_hints={},
+                        strategy="baseline",
+                        fallback_used=False
+                    )
+                except Exception as e:
+                    logger.debug(f"Baseline tracking failed (non-critical): {e}")
+
+            return agent
         
         try:
             # Step 1: Retrieve similar patterns
             patterns = await self._retrieve_similar_patterns(task)
-            
+
             if not patterns:
-                logger.debug("No similar patterns found, using base routing")
-                return self.route(task, teams)
-            
+                logger.debug("No similar patterns found, using base routing and tracking decision")
+                agent = self.route(task, teams)
+                try:
+                    await self._track_routing_decision(
+                        task=task,
+                        selected_agent=agent,
+                        patterns_used=[],
+                        routing_hints={},
+                        strategy="fallback",
+                        fallback_used=True,
+                    )
+                except Exception:
+                    pass
+                return agent
+
             # Step 2: Analyze patterns for routing hints
             routing_hints = self._analyze_patterns(patterns)
-            
+
             # Step 3: Make RAG-informed routing decision
             agent = self._route_with_hints(task, teams, routing_hints)
             
@@ -318,7 +348,7 @@ class RAGTeamRouter(TeamRouter):
                 actual_agent=selected_agent.role,
                 fallback_used=fallback_used,
                 metadata={
-                    'rag_used': True,
+                    'rag_used': (strategy == 'rag'),
                     'pattern_count': len(patterns_used),
                     'routing_hints': routing_hints,
                     'top_patterns': [

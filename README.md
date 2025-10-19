@@ -1,4 +1,10 @@
+
+## A/B Artifacts Quickstart
+See docs/ab_artifacts_guide.md for fields, interpretation tips, and jq one-liners.
+
 # Autonomous Task-Agent Dev Orchestration (ATADO)
+- Advanced metrics: see docs/advanced_metrics.md and run scripts/advanced_metrics_report.py to generate drift/performance/cross-domain insights.
+
 
 ![Tests](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/workflows/Tests/badge.svg)
 [![Smoke Tests](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions/workflows/smoke.yml/badge.svg)](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions/workflows/smoke.yml)
@@ -419,6 +425,9 @@ CI:
 - .github/workflows/ab_evaluation.yml runs a nightly small-N A/B evaluation and uploads the report as an artifact.
 
 - .github/workflows/ab_evaluation.yml runs a daily small-N A/B and a weekly larger-N A/B (with CSV and routing summary artifacts)
+
+For methodology, troubleshooting sparse routing_decisions, domain normalization rules, and interpreting CIs, see docs/ab_rag_vs_baseline.md.
+
 
 - .github/workflows/smoke.yml (non-dry-run smokes)
 

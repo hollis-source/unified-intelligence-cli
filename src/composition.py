@@ -154,7 +154,34 @@ def compose_dependencies(
                     logger.warning(f"Failed to enable RAG routing: {e}. Using base TeamRouter.")
                 team_router = TeamRouter(domain_classifier=domain_classifier)
         else:
-            team_router = TeamRouter(domain_classifier=domain_classifier)
+            # Optional: track baseline routing decisions behind env flag
+            import os
+            if os.getenv("RAG_BASELINE_TRACK_DECISIONS", "0") in ("1", "true", "TRUE", "yes", "on"):
+                try:
+                    from src.adapters.llm.rag_config import RAGConfig
+                    from src.adapters.rag.surrealdb_store import SurrealDBStore
+                    from src.routing.tracking_router import TrackingTeamRouter
+                    rag_config = RAGConfig()
+                    db_url = os.getenv("SURREALDB_URL", rag_config.db_url)
+                    if "project-builder-db" in db_url:
+                        db_url = "ws://localhost:8000"
+                    db_store = SurrealDBStore(
+                        url=db_url,
+                        namespace=rag_config.db_namespace,
+                        database=rag_config.db_database,
+                        user=rag_config.db_user,
+                        password=rag_config.db_password
+                    )
+                    # Lazy connect inside store methods to avoid event loop conflicts
+                    team_router = TrackingTeamRouter(domain_classifier=domain_classifier, db_store=db_store)
+                    if logger:
+                        logger.info("Using TeamRouter with baseline decision tracking (flag enabled)")
+                except Exception as e:
+                    if logger:
+                        logger.warning(f"Baseline tracking flag set but initialization failed: {e}. Using base TeamRouter.")
+                    team_router = TeamRouter(domain_classifier=domain_classifier)
+            else:
+                team_router = TeamRouter(domain_classifier=domain_classifier)
 
         agent_selector = TeamBasedSelector(teams, team_router=team_router)
         if logger and not enable_rag:

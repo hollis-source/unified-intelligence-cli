@@ -324,28 +324,168 @@ async def test_rag_disabled_uses_base_routing_no_tracking(
     mock_db_store,
     mock_embedding_pipeline,
     sample_task,
-    sample_teams
+    sample_teams,
+    monkeypatch
 ):
     """
     Test that when use_rag=False, base routing is used without tracking.
-    
+
     Scenario:
     - RAG disabled (use_rag=False)
+    - RAG_BASELINE_TRACK_DECISIONS not set
     - Should use base TeamRouter.route() directly
     - Should NOT call store_routing_decision
     """
+    # Ensure flag is not set
+    monkeypatch.delenv("RAG_BASELINE_TRACK_DECISIONS", raising=False)
+
     router = RAGTeamRouter(
         domain_classifier=DomainClassifier(),
         db_store=mock_db_store,
         embedding_pipeline=mock_embedding_pipeline,
         use_rag=False  # RAG disabled
     )
-    
+
     # Route task
     agent = await router.route_with_rag(sample_task, sample_teams)
-    
+
     # Verify routing completed
     assert agent is not None
-    
-    # Verify NO tracking occurred (RAG disabled)
+
+    # Verify NO tracking occurred (RAG disabled, flag not set)
     assert not mock_db_store.store_routing_decision.called
+
+
+@pytest.mark.anyio
+async def test_baseline_tracking_with_flag_enabled(
+    mock_db_store,
+    mock_embedding_pipeline,
+    sample_task,
+    sample_teams,
+    monkeypatch
+):
+    """
+    Test baseline routing decision tracking when flag is enabled.
+
+    Scenario:
+    - RAG disabled (use_rag=False)
+    - RAG_BASELINE_TRACK_DECISIONS=1 set
+    - Should use base routing
+    - Should track decision with strategy="baseline" and rag_used=False
+
+    Critical for A/B testing:
+    - Enables baseline decision observability in routing_decisions table
+    - Allows source count analysis (baseline vs RAG condition)
+    - Documents baseline routing strategy for comparison
+    """
+    # Enable baseline tracking flag
+    monkeypatch.setenv("RAG_BASELINE_TRACK_DECISIONS", "1")
+
+    router = RAGTeamRouter(
+        domain_classifier=DomainClassifier(),
+        db_store=mock_db_store,
+        embedding_pipeline=mock_embedding_pipeline,
+        use_rag=False  # RAG disabled (baseline condition)
+    )
+
+    # Route task
+    agent = await router.route_with_rag(sample_task, sample_teams)
+
+    # Verify routing completed
+    assert agent is not None
+    assert isinstance(agent, Agent)
+
+    # Verify tracking occurred (flag enabled)
+    assert mock_db_store.store_routing_decision.called
+    call_kwargs = mock_db_store.store_routing_decision.call_args[1]
+
+    # Verify strategy="baseline"
+    assert call_kwargs["routing_strategy"] == "baseline"
+
+    # Verify fallback_used=False (not a fallback, this is baseline)
+    assert call_kwargs["fallback_used"] is False
+
+    # Verify metadata.rag_used=False (baseline condition)
+    metadata = call_kwargs["metadata"]
+    assert metadata["rag_used"] is False
+
+    # Verify pattern_count=0 (no patterns used in baseline)
+    assert metadata["pattern_count"] == 0
+
+    # Verify routing_hints is empty (no RAG hints)
+    assert metadata["routing_hints"] == {}
+
+
+@pytest.mark.anyio
+async def test_baseline_tracking_flag_requires_exact_value(
+    mock_db_store,
+    mock_embedding_pipeline,
+    sample_task,
+    sample_teams,
+    monkeypatch
+):
+    """
+    Test that baseline tracking flag requires exact value "1".
+
+    Scenario:
+    - RAG disabled (use_rag=False)
+    - RAG_BASELINE_TRACK_DECISIONS="true" (not "1")
+    - Should NOT track (flag requires exact "1")
+    """
+    # Set flag to non-"1" value
+    monkeypatch.setenv("RAG_BASELINE_TRACK_DECISIONS", "true")
+
+    router = RAGTeamRouter(
+        domain_classifier=DomainClassifier(),
+        db_store=mock_db_store,
+        embedding_pipeline=mock_embedding_pipeline,
+        use_rag=False
+    )
+
+    # Route task
+    agent = await router.route_with_rag(sample_task, sample_teams)
+
+    # Verify routing completed
+    assert agent is not None
+
+    # Verify NO tracking (flag value not "1")
+    assert not mock_db_store.store_routing_decision.called
+
+
+@pytest.mark.anyio
+async def test_baseline_tracking_resilient_to_errors(
+    mock_embedding_pipeline,
+    sample_task,
+    sample_teams,
+    monkeypatch
+):
+    """
+    Test that baseline tracking errors don't break routing.
+
+    Scenario:
+    - RAG disabled with baseline tracking enabled
+    - store_routing_decision raises exception
+    - Routing should complete successfully (tracking is non-critical)
+    """
+    # Enable baseline tracking
+    monkeypatch.setenv("RAG_BASELINE_TRACK_DECISIONS", "1")
+
+    # Mock db_store that raises on tracking
+    mock_db_store = AsyncMock()
+    mock_db_store.store_routing_decision = AsyncMock(
+        side_effect=Exception("Database write failed")
+    )
+
+    router = RAGTeamRouter(
+        domain_classifier=DomainClassifier(),
+        db_store=mock_db_store,
+        embedding_pipeline=mock_embedding_pipeline,
+        use_rag=False
+    )
+
+    # Route task (should not raise despite tracking failure)
+    agent = await router.route_with_rag(sample_task, sample_teams)
+
+    # Verify routing completed successfully
+    assert agent is not None
+    assert isinstance(agent, Agent)
