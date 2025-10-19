@@ -1,0 +1,17 @@
+id: frontend-02
+agent: frontend-engineer
+prompt: |
+  Implement a reusable controlled Form component in React with client-side validation.
+  Requirements:
+  - Validate email and password fields (inline error messages)
+  - Submit disabled until form valid
+  - Expose onSubmit callback
+checks:
+  - "Invalid email shows error and prevents submit"
+  - "Submit enabled only when all fields valid"
+  - "onSubmit receives form data object"
+metadata:
+  tags: ["frontend", "react", "forms"]
+  difficulty: "medium"
+  est_runtime_s: 18
+

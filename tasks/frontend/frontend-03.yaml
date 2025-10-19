@@ -1,0 +1,17 @@
+id: frontend-03
+agent: frontend-engineer
+prompt: |
+  Add a responsive CSS layout for a 3-card marketing section.
+  Requirements:
+  - 1 column on mobile (<640px), 2 columns on tablet, 3 on desktop
+  - Use CSS Grid or Flexbox
+  - Include prefers-reduced-motion tweak for hover effects
+checks:
+  - "Layout collapses to 1/2/3 columns at breakpoints"
+  - "Cards maintain equal height and spacing"
+  - "Reduced motion respected when enabled"
+metadata:
+  tags: ["frontend", "css", "responsive"]
+  difficulty: "easy"
+  est_runtime_s: 12
+

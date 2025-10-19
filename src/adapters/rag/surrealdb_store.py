@@ -174,6 +174,40 @@ class SurrealDBStore:
             routing_confidence = $routing_confidence,
             routing_domain = $routing_domain;
         """
+        # Fill routing_domain from routing_decisions if missing
+        routing_domain_val = (metadata.get("routing_domain") if metadata and metadata.get("routing_domain") else (task_domain or ""))
+        routing_conf_val = float(metadata.get("routing_confidence", 0.0) if metadata else 0.0)
+        if (not routing_domain_val) and metadata and metadata.get("task_id"):
+            try:
+                res = await self.query(
+                    "SELECT task_domain, confidence FROM routing_decisions WHERE task_id = $task_id ORDER BY timestamp DESC LIMIT 1;",
+                    {"task_id": metadata["task_id"]},
+                )
+                row = None
+                if res and isinstance(res, list):
+                    if isinstance(res[0], dict) and "task_domain" in res[0]:
+                        row = res[0]
+                    elif hasattr(res[0], 'get') and res[0].get("result"):
+                        r0 = res[0].get("result")
+                        row = r0[0] if r0 else None
+                if row:
+                    routing_domain_val = row.get("task_domain") or routing_domain_val
+                    try:
+                        routing_conf_val = float(row.get("confidence", routing_conf_val))
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+        # Final fallback: classify domain from description if still empty
+        if not routing_domain_val and task_description:
+            try:
+                from src.routing.domain_classifier import DomainClassifier
+                from src.entity import Task as CoreTask
+                routing_domain_val = DomainClassifier().classify(CoreTask(description=task_description)) or routing_domain_val
+            except Exception:
+                pass
+
+
         await self.query(
             sql,
             {
@@ -192,8 +226,8 @@ class SurrealDBStore:
                 "embedding_model": embedding_model or "",
                 "metadata": metadata or {},
                 "error_message": (metadata.get("error_message") if metadata and metadata.get("error_message") else ""),
-                "routing_confidence": float(metadata.get("routing_confidence", 0.0) if metadata else 0.0),
-                "routing_domain": (metadata.get("routing_domain") if metadata and metadata.get("routing_domain") else ""),
+                "routing_confidence": routing_conf_val,
+                "routing_domain": routing_domain_val,
             },
         )
 

@@ -318,6 +318,7 @@ class RAGTeamRouter(TeamRouter):
                 actual_agent=selected_agent.role,
                 fallback_used=fallback_used,
                 metadata={
+                    'rag_used': True,
                     'pattern_count': len(patterns_used),
                     'routing_hints': routing_hints,
                     'top_patterns': [

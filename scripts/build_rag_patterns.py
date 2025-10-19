@@ -47,21 +47,24 @@ class TaskTemplate:
     def _infer_domain(self) -> str:
         """Infer domain from file path or metadata."""
         # From file path
-        if 'qa' in str(self.file_path):
+        path_str = str(self.file_path).lower()
+        if 'qa' in path_str:
             return 'qa'
-        elif 'test' in str(self.file_path):
+        elif 'test' in path_str:
             return 'testing'
-        elif 'devops' in str(self.file_path):
+        elif 'devops' in path_str:
             return 'devops'
-        elif 'database' in str(self.file_path):
+        elif 'database' in path_str or 'python' in path_str:
             return 'backend'
-        elif 'python' in str(self.file_path):
-            return 'backend'
-        elif 'architect' in str(self.file_path):
+        elif 'architect' in path_str:
             return 'architecture'
-        
+        elif 'frontend' in path_str:
+            return 'frontend'
+        elif 'research' in path_str:
+            return 'research'
+
         # From metadata tags
-        tags = self.metadata.get('tags', [])
+        tags = [str(t).lower() for t in self.metadata.get('tags', [])]
         if 'frontend' in tags or 'react' in tags or 'ui' in tags:
             return 'frontend'
         elif 'backend' in tags or 'api' in tags or 'database' in tags:
@@ -72,9 +75,13 @@ class TaskTemplate:
             return 'testing'
         elif 'devops' in tags or 'ci' in tags or 'deployment' in tags:
             return 'devops'
-        
+        elif 'research' in tags or 'adr' in tags or 'benchmarking' in tags:
+            return 'research'
+        elif 'architecture' in tags:
+            return 'architecture'
+
         return 'unknown'
-    
+
     def to_command(self, provider: str = 'qwen3') -> List[str]:
         """Convert to command line arguments.
 
@@ -165,22 +172,25 @@ class PatternCollector:
             if task.domain not in by_domain:
                 by_domain[task.domain] = []
             by_domain[task.domain].append(task)
-        
+
         # Calculate per-domain allocation
         num_domains = len(by_domain)
+        if num_domains == 0:
+            print("\u26a0\ufe0f No tasks available for the selected domain(s).")
+            return []
         per_domain = count // num_domains
         remainder = count % num_domains
-        
+
         selected = []
         for i, (domain, domain_tasks) in enumerate(sorted(by_domain.items())):
             # Add extra task to first domains for remainder
             domain_count = per_domain + (1 if i < remainder else 0)
             domain_count = min(domain_count, len(domain_tasks))
-            
+
             selected.extend(domain_tasks[:domain_count])
-        
+
         return selected[:count]
-    
+
     async def execute_task(
         self,
         task: TaskTemplate,
@@ -397,15 +407,19 @@ async def main():
     print("Loading tasks...")
     all_tasks = collector.load_tasks(domain=args.domain)
     print(f"✅ Loaded {len(all_tasks)} tasks")
-    
+
     print("Selecting balanced task set...")
     selected_tasks = collector.select_balanced_tasks(all_tasks, args.target)
     print(f"✅ Selected {len(selected_tasks)} tasks")
-    
+
+    if not selected_tasks:
+        print("Nothing to execute. Exiting.")
+        return
+
     # Execute
     print(f"\nStarting execution...")
     results = await collector.execute_batch(selected_tasks)
-    
+
     # Summary
     collector.print_summary(results)
 

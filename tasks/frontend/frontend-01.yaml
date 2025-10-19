@@ -1,0 +1,18 @@
+id: frontend-01
+agent: frontend-engineer
+prompt: |
+  Build an accessible React user profile card component.
+  Requirements:
+  - Keyboard navigation (Tab/Shift+Tab)
+  - ARIA labels for interactive elements
+  - Responsive layout (mobile-first)
+  - Unit test file included
+checks:
+  - "Component renders with default props without warnings"
+  - "Keyboard navigation cycles through interactive elements"
+  - "ARIA labels present for buttons and links"
+metadata:
+  tags: ["frontend", "react", "accessibility"]
+  difficulty: "medium"
+  est_runtime_s: 20
+
