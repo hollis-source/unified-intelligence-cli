@@ -208,14 +208,9 @@ def compose_dependencies(
                 password=rag_config.db_password
             )
 
-            # Connect to SurrealDB (async)
-            try:
-                asyncio.get_event_loop().run_until_complete(db_store.connect())
-            except RuntimeError:
-                # If no event loop, create one
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-                loop.run_until_complete(db_store.connect())
+            # NOTE: Do NOT connect here! Connection will be established lazily
+            # inside the async context to avoid event loop conflicts.
+            # The db_store.connect() will be called automatically on first use.
 
             embedder = EmbeddingPipeline(
                 provider=rag_config.embedding_provider,

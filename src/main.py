@@ -34,8 +34,8 @@ if env_file.exists():
               help="Execute .ct workflow file (DSL mode)")
 @click.option("--task", "-t", "task_descriptions", multiple=True,
               help="Task description (can be specified multiple times, direct mode)")
-@click.option("--provider", type=click.Choice(["mock", "grok", "granite", "tongyi", "tongyi-local", "replicate", "qwen3_zerogpu", "auto"]), default="mock",
-              help="LLM provider to use (granite: local IBM Granite 4.0, auto: intelligent selection, qwen3_zerogpu: ZeroGPU inference)")
+@click.option("--provider", type=click.Choice(["mock", "grok", "granite", "tongyi", "tongyi-local", "replicate", "qwen3_zerogpu", "qwen3", "auto"]), default="mock",
+              help="LLM provider to use (granite: local IBM Granite 4.0, qwen3: Qwen3-Next-80B via HF Inference API [47-95x faster], auto: intelligent selection, qwen3_zerogpu: ZeroGPU inference)")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.option("--debug", is_flag=True, help="Enable debug output (LLM calls, tool details)")
 @click.option("--no-cache", is_flag=True, help="Disable LLM response cache (env ATADO_CACHE=0)")
@@ -223,16 +223,27 @@ def main(
             enable_rag=app_config.enable_rag
         )
 
-        # Execute with timeout
-        results = asyncio.run(
-            execute_with_timeout(
-                coordinator.coordinate(
-                    tasks=tasks,
-                    agents=agents
-                ),
-                app_config.timeout
-            )
-        )
+        # Execute with timeout and cleanup
+        async def execute_and_cleanup():
+            try:
+                results = await execute_with_timeout(
+                    coordinator.coordinate(
+                        tasks=tasks,
+                        agents=agents
+                    ),
+                    app_config.timeout
+                )
+                return results
+            finally:
+                # Cleanup RAG resources if enabled
+                if app_config.enable_rag and hasattr(coordinator, 'db'):
+                    try:
+                        await coordinator.db.close()
+                    except Exception as e:
+                        if logger:
+                            logger.warning(f"Failed to close RAG database connection: {e}")
+
+        results = asyncio.run(execute_and_cleanup())
 
         # Save metrics if enabled (Week 13)
         if metrics_collector:

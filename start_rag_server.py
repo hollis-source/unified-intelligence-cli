@@ -21,8 +21,8 @@ async def dummy_task_runner(tasks):
 def main():
     """Main entry point."""
     import asyncio
-    
-    async def init_and_run():
+
+    async def init_db():
         config = RAGConfig()
         db_store = SurrealDBStore(
             url='ws://localhost:8000',
@@ -31,37 +31,42 @@ def main():
             user=config.db_user,
             password=config.db_password
         )
-        
+
         try:
             await db_store.connect()
             print('✅ Connected to SurrealDB')
+            return db_store
         except Exception as e:
             print(f'❌ Failed to connect: {e}')
             sys.exit(1)
-        
-        app = create_app(dummy_task_runner, db_store=db_store, enable_rag_metrics=True)
-        
-        print('=' * 80)
-        print('RAG METRICS SERVER')
-        print('=' * 80)
-        print(f'Server: http://0.0.0.0:8888')
-        print(f'External: http://157.90.66.183:8888')
-        print()
-        print('Endpoints:')
-        print('  • GET  /health')
-        print('  • GET  /api/rag/metrics')
-        print('  • GET  /api/rag/patterns')
-        print('  • GET  /api/rag/routing/accuracy')
-        print('  • GET  /api/rag/performance')
-        print('  • GET  /api/rag/drift')
-        print('  • GET  /api/rag/ab-test')
-        print('  • GET  /api/rag/weights')
-        print('=' * 80)
-        print()
-        
-        web.run_app(app, host='0.0.0.0', port=8888)
-    
-    asyncio.run(init_and_run())
+
+    # Initialize database connection
+    db_store = asyncio.run(init_db())
+
+    # Create app
+    app = create_app(dummy_task_runner, db_store=db_store, enable_rag_metrics=True)
+
+    print('=' * 80)
+    print('RAG METRICS SERVER')
+    print('=' * 80)
+    print(f'Server: http://0.0.0.0:8888')
+    print(f'External: http://157.90.66.183:8888')
+    print()
+    print('Endpoints:')
+    print('  • GET  /health')
+    print('  • GET  /api/rag/metrics')
+    print('  • GET  /api/rag/patterns')
+    print('  • GET  /api/rag/routing/accuracy')
+    print('  • GET  /api/rag/performance')
+    print('  • GET  /api/rag/drift')
+    print('  • GET  /api/rag/ab-test')
+    print('  • GET  /api/rag/weights')
+    print('  • GET  /api/rag/alerts')
+    print('=' * 80)
+    print()
+
+    # Run app (this creates its own event loop)
+    web.run_app(app, host='0.0.0.0', port=8888)
 
 
 if __name__ == '__main__':

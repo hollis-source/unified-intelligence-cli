@@ -53,7 +53,9 @@ class SurrealDBStore:
     # Low-level query
     # -------------------------
     async def query(self, sql: str, vars: Optional[Dict[str, Any]] = None) -> Any:
-        assert self.db is not None, "Not connected"
+        # Lazy connection: connect on first use to avoid event loop conflicts
+        if self.db is None:
+            await self.connect()
         return await self.db.query(sql, vars or {})
 
     # -------------------------
@@ -155,6 +157,8 @@ class SurrealDBStore:
         sql = """
         CREATE execution_log SET
             id = $id,
+            task_id = $task_id,
+            agent_id = $agent_id,
             task_description = $task_description,
             task_domain = $task_domain,
             agent_role = $agent_role,
@@ -165,23 +169,31 @@ class SurrealDBStore:
             output_excerpt = $excerpt,
             embedding = $embedding,
             embedding_model = $embedding_model,
-            metadata = $metadata;
+            metadata = $metadata,
+            error_message = $error_message,
+            routing_confidence = $routing_confidence,
+            routing_domain = $routing_domain;
         """
         await self.query(
             sql,
             {
                 "id": execution_id,
-                "task_description": task_description,
-                "task_domain": task_domain,
-                "agent_role": agent_role,
-                "team_id": team_id,
-                "success": success,
-                "status": status,
-                "latency": latency_seconds,
-                "excerpt": output_excerpt,
+                "task_id": metadata.get("task_id", "") if metadata else "",
+                "agent_id": (metadata.get("agent_id") if metadata and metadata.get("agent_id") else (agent_role or "unknown")),
+                "task_description": task_description or "",
+                "task_domain": task_domain or "",
+                "agent_role": agent_role or "",
+                "team_id": team_id or "",
+                "success": bool(success),
+                "status": status or "",
+                "latency": float(latency_seconds or 0.0),
+                "excerpt": output_excerpt or "",
                 "embedding": embedding.tolist() if isinstance(embedding, np.ndarray) else None,
-                "embedding_model": embedding_model,
+                "embedding_model": embedding_model or "",
                 "metadata": metadata or {},
+                "error_message": (metadata.get("error_message") if metadata and metadata.get("error_message") else ""),
+                "routing_confidence": float(metadata.get("routing_confidence", 0.0) if metadata else 0.0),
+                "routing_domain": (metadata.get("routing_domain") if metadata and metadata.get("routing_domain") else ""),
             },
         )
 
