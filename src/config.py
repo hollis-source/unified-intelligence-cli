@@ -67,6 +67,9 @@ class Config:
     # RAG settings (RAG Integration)
     enable_rag: bool = False  # Enable RAG for pattern learning and adaptive routing
 
+    # Output validation settings (Week 14: P2.2)
+    validate_outputs: bool = False  # Enable post-execution output validation
+
     @classmethod
     def from_file(cls, file_path: str) -> "Config":
         """
@@ -120,7 +123,8 @@ class Config:
             cache_enabled=data.get("cache_enabled", True),
             cache_ttl_seconds=data.get("cache_ttl_seconds", int(os.getenv("ATADO_CACHE_TTL_SECONDS", 14400))),
             cache_namespace=data.get("cache_namespace", os.getenv("ATADO_CACHE_NAMESPACE", "")),
-            enable_rag=data.get("enable_rag", False)
+            enable_rag=data.get("enable_rag", False),
+            validate_outputs=data.get("validate_outputs", False)
         )
 
     def merge_cli_args(
@@ -150,7 +154,8 @@ class Config:
         cache_enabled: Optional[bool] = None,
         cache_ttl_seconds: Optional[int] = None,
         cache_namespace: Optional[str] = None,
-        enable_rag: Optional[bool] = None
+        enable_rag: Optional[bool] = None,
+        validate_outputs: Optional[bool] = None
     ) -> "Config":
 
         """
@@ -234,7 +239,8 @@ class Config:
             cache_enabled=resolved_cache_enabled,
             cache_ttl_seconds=resolved_cache_ttl,
             cache_namespace=resolved_cache_ns,
-            enable_rag=enable_rag if enable_rag is not None else self.enable_rag
+            enable_rag=enable_rag if enable_rag is not None else self.enable_rag,
+            validate_outputs=validate_outputs if validate_outputs is not None else self.validate_outputs
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -271,5 +277,6 @@ class Config:
             "cache_enabled": self.cache_enabled,
             "cache_ttl_seconds": self.cache_ttl_seconds,
             "cache_namespace": self.cache_namespace,
-            "enable_rag": self.enable_rag
+            "enable_rag": self.enable_rag,
+            "validate_outputs": self.validate_outputs
         }

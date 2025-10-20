@@ -95,6 +95,8 @@ if env_file.exists():
               help="Cache TTL in seconds (default: 3600)")
 @click.option("--enable-rag", is_flag=True, default=False,
               help="Enable RAG (Retrieval-Augmented Generation) for pattern learning and adaptive routing")
+@click.option("--validate-outputs", is_flag=True, default=False,
+              help="Enable post-execution output validation (Week 14: P2.2)")
 def main(
     goal: str,
     workflow: str,
@@ -121,6 +123,7 @@ def main(
     enable_cache: bool,
     cache_ttl: int,
     enable_rag: bool,
+    validate_outputs: bool,
     validate_prompts: bool,
     prompt_min_score: float,
     use_prompt_templates: bool,
@@ -160,7 +163,7 @@ def main(
     app_config = load_config(
         config, provider, verbose, debug, no_cache, parallel, timeout,
         orchestrator, collect_data, data_dir, agents, routing,
-        collect_metrics, metrics_dir, enable_rag,
+        collect_metrics, metrics_dir, enable_rag, validate_outputs,
         validate_prompts, use_prompt_templates, prompt_min_score,
         collect_prompt_metrics, prompt_metrics_store,
         surreal_url, surreal_namespace, surreal_database, surreal_user, surreal_pass
@@ -266,6 +269,8 @@ def main(
             surreal_database=app_config.surreal_database,
             surreal_user=app_config.surreal_user,
             surreal_pass=app_config.surreal_pass,
+            # Week 14: P2.2 - Output validation
+            enable_output_validation=app_config.validate_outputs,
         )
 
         # Execute with timeout and cleanup
@@ -548,6 +553,7 @@ def load_config(
     collect_metrics: bool = False,
     metrics_dir: str = "data/metrics",
     enable_rag: bool = False,
+    validate_outputs: bool = False,
     validate_prompts: bool = False,
     use_prompt_templates: bool = False,
     prompt_min_score: float = 60.0,
@@ -607,7 +613,8 @@ def load_config(
             surreal_user=surreal_user,
             surreal_pass=surreal_pass,
             cache_enabled=False if no_cache else None,
-            enable_rag=enable_rag
+            enable_rag=enable_rag,
+            validate_outputs=validate_outputs
         )
     else:
         # Use CLI args only and merge with env-based cache defaults
@@ -634,6 +641,7 @@ def load_config(
             surreal_database=surreal_database,
             surreal_user=surreal_user,
             surreal_pass=surreal_pass,
+            validate_outputs=validate_outputs,
         )
         return base.merge_cli_args(
             cache_enabled=False if no_cache else None,

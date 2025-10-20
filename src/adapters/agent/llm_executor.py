@@ -42,6 +42,9 @@ class LLMAgentExecutor(IAgentExecutor):
         template_loader: Optional[Any] = None,
         template_merger: Optional[Any] = None,
         metrics_store: Optional["IPromptMetricsStore"] = None,
+        output_validator: Optional[Any] = None,  # Week 14: P2.2 - OutputValidator for validation
+        enable_output_validation: bool = False,  # Week 14: P2.2 - Enable output validation
+        metrics_collector: Optional[Any] = None,  # Week 14: P2.2 - For recording validation metrics
     ):
         """
         Initialize with LLM provider.
@@ -61,6 +64,9 @@ class LLMAgentExecutor(IAgentExecutor):
             template_loader: Optional TemplateLoader instance (Phase 3)
             template_merger: Optional PromptTemplateMerger instance (Phase 3)
             metrics_store: Optional IPromptMetricsStore to persist validation metrics (Phase 4)
+            output_validator: Optional OutputValidator for post-execution validation (Week 14: P2.2)
+            enable_output_validation: Enable output validation after LLM response (Week 14: P2.2)
+            metrics_collector: Optional MetricsCollector for recording validation metrics (Week 14: P2.2)
         """
         self.llm_provider = llm_provider
         self.is_async_provider = isinstance(llm_provider, IAsyncTextGenerator)
@@ -88,6 +94,11 @@ class LLMAgentExecutor(IAgentExecutor):
         self.template_merger = template_merger
         # Phase 4: Metrics store (optional)
         self.metrics_store = metrics_store
+
+        # Week 14: P2.2 - Output validation integration
+        self.output_validator = output_validator
+        self.enable_output_validation = enable_output_validation and output_validator is not None
+        self.metrics_collector = metrics_collector
 
     async def execute(
         self,
@@ -195,6 +206,39 @@ class LLMAgentExecutor(IAgentExecutor):
                     context_history_length=len(context.history) if context else 0
                 )
 
+            # Week 14: P2.2 - Output validation (optional, non-blocking)
+            validation_result = None
+            if self.enable_output_validation and self.output_validator:
+                try:
+                    validation_result = self.output_validator.validate(response_text)
+
+                    # Log validation results
+                    if not validation_result.passed:
+                        logging.warning(
+                            f"Output validation failed for {agent.role}: {validation_result.error_message}"
+                        )
+                    elif validation_result.warnings:
+                        logging.info(
+                            f"Output validation passed with {len(validation_result.warnings)} warnings"
+                        )
+
+                    # Record validation metrics if collector available
+                    if self.metrics_collector:
+                        self.metrics_collector.record_output_validation(
+                            task_description=task.description,
+                            agent=agent.role,
+                            validation_type=validation_result.validation_type.value,
+                            passed=validation_result.passed,
+                            error_message=validation_result.error_message,
+                            error_line=validation_result.error_line,
+                            error_column=validation_result.error_column,
+                            warning_count=len(validation_result.warnings),
+                            output_length=len(response_text)
+                        )
+                except Exception as e:
+                    # Validation errors should never fail execution
+                    logging.error(f"Output validation error (non-blocking): {e}")
+
             return ExecutionResult(
                 status=ExecutionStatus.SUCCESS,
                 output=response_text,
@@ -204,7 +248,8 @@ class LLMAgentExecutor(IAgentExecutor):
                     "task_id": task.task_id,
                     "cache_hit": cache_hit,  # SYD2 FIX: Track cache performance
                     "duration_ms": duration_ms,
-                    "usage": usage  # Phase 2: Actual token usage from LLM
+                    "usage": usage,  # Phase 2: Actual token usage from LLM
+                    "validation_result": validation_result.to_dict() if validation_result else None  # Week 14: P2.2
                 }
             )
 

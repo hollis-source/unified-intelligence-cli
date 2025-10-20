@@ -45,6 +45,8 @@ def compose_dependencies(
     surreal_database: str = "",
     surreal_user: str = "",
     surreal_pass: str = "",
+    # Week 14: P2.2 - Output validation
+    enable_output_validation: bool = False,
 ) -> tuple[IAgentCoordinator, Optional[MetricsCollector]]:
     """
     Compose dependencies for the coordinator use case.
@@ -132,6 +134,19 @@ def compose_dependencies(
                 logger.warning(f"Failed to initialize prompt metrics store: {e}")
             metrics_store = None
 
+    # Week 14: P2.2 - Create output validator if enabled
+    output_validator = None
+    if enable_output_validation:
+        try:
+            from src.validation import OutputValidator
+            output_validator = OutputValidator()
+            if logger:
+                logger.info("Output validation enabled")
+        except Exception as e:
+            if logger:
+                logger.warning(f"Output validation unavailable: {e}")
+            output_validator = None
+
     agent_executor = LLMAgentExecutor(
         llm_provider,
         data_collector=data_collector,
@@ -143,6 +158,9 @@ def compose_dependencies(
         validate_prompts=bool(prompt_validator) and validate_prompts,
         use_prompt_strategy=use_prompt_strategy,
         metrics_store=metrics_store,
+        output_validator=output_validator,  # Week 14: P2.2
+        enable_output_validation=bool(output_validator) and enable_output_validation,  # Week 14: P2.2
+        metrics_collector=metrics_collector,  # Week 14: P2.2
     )
 
     # Week 12/13: Create agent selector based on routing mode (with metrics integration)
