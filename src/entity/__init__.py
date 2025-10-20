@@ -20,6 +20,7 @@ from .metrics import (
     ModelSelectionMetric,
     TeamUtilizationMetric
 )
+from .prompt_strategy import PromptStrategy
 
 __all__ = [
     "Agent",
@@ -40,5 +41,6 @@ __all__ = [
     "MetricsCollector",
     "RoutingMetric",
     "ModelSelectionMetric",
-    "TeamUtilizationMetric"
+    "TeamUtilizationMetric",
+    "PromptStrategy"
 ]

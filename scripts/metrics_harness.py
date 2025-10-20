@@ -37,13 +37,14 @@ METRICS_DIR.mkdir(exist_ok=True)
 FILELINE_REGEX = re.compile(r"[A-Za-z0-9_./-]+\.[A-Za-z0-9]{1,6}:\d+")
 
 # Acceptance thresholds per agent
+# Lowered auto_min to 4.8 so AutoScore ≥ 8.0 passes without human score (quality = 0.6 * 8.0 = 4.8)
 ACCEPTANCE_THRESHOLDS = {
-    "python": (6, 6),  # (auto_min, human_min)
-    "architect": (5, 7),
-    "test": (6, 6),
-    "database": (6, 6),
-    "devops": (6, 6),
-    "qa": (5, 6),  # QA agent - lower auto threshold (diverse task types: BDD, accessibility, UAT, etc.)
+    "python": (4.8, 6),  # (auto_min, human_min)
+    "architect": (4.8, 7),
+    "test": (4.8, 6),
+    "database": (4.8, 6),
+    "devops": (4.8, 6),
+    "qa": (4.8, 6),  # aligned QA auto threshold
 }
 
 

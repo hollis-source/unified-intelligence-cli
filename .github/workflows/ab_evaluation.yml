@@ -205,6 +205,23 @@ jobs:
           PY
 
 
+      - name: Promotion proposal (guarded)
+        if: always()
+        run: |
+          PYTHONPATH=. python scripts/auto_promotion_proposal.py || true
+
+      - name: Upload promotion proposal artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: promotion-proposal-weekly
+          path: |
+            logs/promotion_proposal_*.md
+            logs/promotion_proposal_*.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+
 
       - name: Upload trend snapshot (weekly)
         if: always()

@@ -4,13 +4,17 @@ LLM-powered agent executor - Adapter layer implementation.
 Week 1: Enhanced with error_details propagation for better debugging.
 Week 9: Added passive data collection for model training pipeline.
 SYD2 Fix: Added LLM response caching to reduce latency for expensive ULTRATHINK tasks.
+Phase 2: Added prompt strategy integration with validation support.
 """
 
 import time
+import logging
 from typing import Optional, Any, Union
 from src.entity import Agent, Task, ExecutionResult, ExecutionStatus, ExecutionContext
+from src.entity.prompt_strategy import PromptStrategy
 from src.interface import IAgentExecutor, ITextGenerator, LLMConfig
 from src.interface.async_text_generator import IAsyncTextGenerator
+from src.interface.prompt_validator import IPromptValidator, ValidationResult
 from src.exceptions import ToolExecutionError
 from src.adapters.agent.llm_cache import LLMResponseCache, CacheConfig
 
@@ -31,7 +35,13 @@ class LLMAgentExecutor(IAgentExecutor):
         orchestrator: str = "simple",
         cache_config: Optional[CacheConfig] = None,
         enable_cache: bool = True,
-        enable_ultrathink: bool = True
+        enable_ultrathink: bool = True,
+        prompt_validator: Optional[IPromptValidator] = None,
+        validate_prompts: bool = False,
+        use_prompt_strategy: bool = False,
+        template_loader: Optional[Any] = None,
+        template_merger: Optional[Any] = None,
+        metrics_store: Optional["IPromptMetricsStore"] = None,
     ):
         """
         Initialize with LLM provider.
@@ -45,6 +55,12 @@ class LLMAgentExecutor(IAgentExecutor):
             cache_config: Optional cache configuration (SYD2 fix)
             enable_cache: Enable response caching (SYD2 fix)
             enable_ultrathink: Enable ULTRATHINK prompts (Phase 4B: disable for Granite)
+            prompt_validator: Optional prompt validator for quality validation (Phase 2)
+            validate_prompts: Enable prompt validation before LLM calls (Phase 2)
+            use_prompt_strategy: Use PromptStrategy entity for prompt building (Phase 2)
+            template_loader: Optional TemplateLoader instance (Phase 3)
+            template_merger: Optional PromptTemplateMerger instance (Phase 3)
+            metrics_store: Optional IPromptMetricsStore to persist validation metrics (Phase 4)
         """
         self.llm_provider = llm_provider
         self.is_async_provider = isinstance(llm_provider, IAsyncTextGenerator)
@@ -62,6 +78,16 @@ class LLMAgentExecutor(IAgentExecutor):
             self.cache = LLMResponseCache(cache_config)
         else:
             self.cache = None
+
+        # Phase 2: Prompt validation integration
+        self.prompt_validator = prompt_validator
+        self.validate_prompts = validate_prompts and prompt_validator is not None
+        self.use_prompt_strategy = use_prompt_strategy
+        # Phase 3: Template integration (optional)
+        self.template_loader = template_loader
+        self.template_merger = template_merger
+        # Phase 4: Metrics store (optional)
+        self.metrics_store = metrics_store
 
     async def execute(
         self,
@@ -248,7 +274,58 @@ class LLMAgentExecutor(IAgentExecutor):
         SRP: Message construction logic.
         Week 13: Added chain-of-thought prompting for deeper analysis.
         Phase 4B: Made ULTRATHINK optional (disable for models with language issues).
+        Phase 2: Added prompt strategy support with optional validation.
         """
+        # Phase 2: Use PromptStrategy if enabled
+        if self.use_prompt_strategy:
+            # Build structured prompt strategy
+            strategy = self._build_prompt_strategy(agent, task, context)
+
+            # Validate if enabled
+            if self.validate_prompts and self.prompt_validator:
+                validation = self.prompt_validator.validate_strategy(strategy)
+
+                if not validation.passed:
+                    # Log validation failure
+                    logging.warning(
+                        f"Prompt validation failed (score: {validation.score:.1f}): "
+                        f"{', '.join(validation.suggestions)}"
+                    )
+
+                # Phase 4: Persist metrics if store available (non-blocking)
+                try:
+                    if self.metrics_store:
+                        from src.interface.prompt_metrics_store import PromptMetrics  # local import to avoid cycles
+                        template_used = False
+                        try:
+                            domain = getattr(strategy, 'domain', self._infer_domain(agent.role))
+                            loader = getattr(self, 'template_loader', None)
+                            template_used = bool(loader and loader.has_template(domain))
+                        except Exception:
+                            template_used = False
+                        metrics = PromptMetrics(
+                            timestamp=PromptMetrics.now_iso(),
+                            domain=getattr(strategy, 'domain', self._infer_domain(agent.role)),
+                            agent_type=agent.role,
+                            template_used=template_used,
+                            validation_score=validation.score,
+                            specificity=validation.specificity,
+                            clarity=validation.clarity,
+                            completeness=validation.completeness,
+                            task_success=None,
+                            metadata={
+                                "suggestions": validation.suggestions[:5] if validation.suggestions else [],
+                                "provider": self.provider_name,
+                            },
+                        )
+                        self.metrics_store.log(metrics)
+                except Exception as e:
+                    logging.warning(f"Metrics logging failed (non-blocking): {e}")
+
+            # Convert strategy to messages
+            return self._strategy_to_messages(strategy, context)
+
+        # Legacy path: Original message building (backward compatibility)
         messages = []
 
         if self.enable_ultrathink:
@@ -769,3 +846,212 @@ File locations:
         }
 
         return hints.get(role, "- Provide clear, specific technical guidance")
+
+    def _build_prompt_strategy(
+        self,
+        agent: Agent,
+        task: Task,
+        context: Optional[ExecutionContext]
+    ) -> PromptStrategy:
+        """
+        Build PromptStrategy from agent and task.
+
+        Phase 2: Structured prompt building using PromptStrategy entity.
+        Phase 3: Prefer template-based strategy when available.
+
+        Args:
+            agent: Agent to execute
+            task: Task to complete
+            context: Optional execution context
+
+        Returns:
+            PromptStrategy entity
+        """
+        domain = self._infer_domain(agent.role)
+
+        # Phase 3: Try template-based strategy first
+        try:
+            loader = getattr(self, "template_loader", None)
+            if loader is None:
+                # Lazy import to avoid hard dependency
+                try:
+                    from src.adapters.prompt.template_loader import TemplateLoader  # type: ignore
+                    loader = TemplateLoader()
+                    self.template_loader = loader
+                except Exception as _e:
+                    loader = None
+            template = loader.load_template(domain) if loader else None
+            if template is not None:
+                # Build context text and merge
+                context_text = self._build_context_text(agent, task, context)
+                merger = getattr(self, "template_merger", None)
+                if merger is None:
+                    try:
+                        from src.use_cases.prompt_template_merger import PromptTemplateMerger  # type: ignore
+                        merger = PromptTemplateMerger()
+                        self.template_merger = merger
+                    except Exception:
+                        merger = None
+                if merger is not None:
+                    strategy = merger.merge(template, agent, task, context_text)
+                    return strategy
+        except Exception as e:
+            logging.warning(f"Template-based prompt strategy failed; falling back. Reason: {e}")
+
+        # Fallback: Persona: Agent role + capabilities
+        persona = f"{agent.role} agent with capabilities: {', '.join(agent.capabilities)}"
+        if agent.tier:
+            persona += f" (Tier {agent.tier})"
+
+        # Goal: Extract from task or use default
+        goal = self._extract_goal(task)
+
+        # Task: Task description
+        task_text = task.description
+
+        # Context: Build from execution context
+        context_text = self._build_context_text(agent, task, context)
+
+        return PromptStrategy(
+            persona=persona,
+            goal=goal,
+            task=task_text,
+            context=context_text,
+            agent_type=agent.role,
+            domain=domain,
+        )
+
+    def _extract_goal(self, task: Task) -> str:
+        """
+        Extract measurable goal from task.
+
+        Phase 2: Simple heuristic to identify goals in task descriptions.
+
+        Args:
+            task: Task entity
+
+        Returns:
+            Goal statement
+        """
+        desc = task.description.lower()
+
+        # Look for goal keywords
+        goal_keywords = [
+            "reduce", "improve", "optimize", "increase", "decrease",
+            "achieve", "implement", "create", "build", "design",
+            "refactor", "fix", "resolve", "enhance", "upgrade"
+        ]
+
+        # If task contains goal keywords, use it as-is
+        if any(keyword in desc for keyword in goal_keywords):
+            return task.description
+
+        # Otherwise, wrap in goal statement
+        return f"Successfully complete: {task.description}"
+
+    def _build_context_text(
+        self,
+        agent: Agent,
+        task: Task,
+        context: Optional[ExecutionContext]
+    ) -> str:
+        """
+        Build context section from execution context.
+
+        Phase 2: Gather relevant context information.
+
+        Args:
+            agent: Agent entity
+            task: Task entity
+            context: Optional execution context
+
+        Returns:
+            Context text
+        """
+        parts = []
+
+        # Add agent tier information
+        if agent.tier:
+            parts.append(f"Agent Tier: {agent.tier}")
+
+        # Add context history if available
+        if context and context.history:
+            parts.append(f"Previous interactions: {len(context.history)}")
+
+        # Add ULTRATHINK mode info
+        if self.enable_ultrathink:
+            parts.append("Mode: ULTRATHINK (step-by-step reasoning required)")
+
+        # Add task priority if high
+        if hasattr(task, 'priority') and task.priority and task.priority <= 2:
+            parts.append(f"Priority: {task.priority} (High)")
+
+        return "\n".join(parts) if parts else "Standard execution context"
+
+    def _infer_domain(self, role: str) -> str:
+        """
+        Infer domain from agent role.
+
+        Phase 2: Map agent roles to domains for template selection.
+
+        Args:
+            role: Agent role string
+
+        Returns:
+            Domain classification
+        """
+        role_lower = role.lower()
+
+        # Domain mapping based on role keywords
+        domain_map = {
+            "frontend": "frontend",
+            "backend": "backend",
+            "database": "database",
+            "test": "testing",
+            "qa": "qa",
+            "devops": "devops",
+            "architect": "architecture",
+            "research": "research",
+            "python": "python",
+            "data": "data"
+        }
+
+        # Find matching domain
+        for key, domain in domain_map.items():
+            if key in role_lower:
+                return domain
+
+        return "general"
+
+    def _strategy_to_messages(
+        self,
+        strategy: PromptStrategy,
+        context: Optional[ExecutionContext]
+    ) -> list:
+        """
+        Convert PromptStrategy to LLM message format.
+
+        Phase 2: Transform structured strategy into messages.
+
+        Args:
+            strategy: PromptStrategy entity
+            context: Optional execution context
+
+        Returns:
+            List of message dictionaries
+        """
+        messages = []
+
+        # System message from strategy
+        system_prompt = strategy.to_system_prompt(include_ultrathink=self.enable_ultrathink)
+        messages.append({"role": "system", "content": system_prompt})
+
+        # Add context history if available
+        if context and context.history:
+            messages.extend(context.history[-5:])  # Last 5 messages for context
+
+        # User message from strategy
+        user_prompt = strategy.to_user_prompt()
+        messages.append({"role": "user", "content": user_prompt})
+
+        return messages

@@ -9,10 +9,13 @@ Clean Architecture: Decorator pattern over TeamRouter.
 
 import logging
 import json
+import os
+import asyncio
 from typing import List, Optional, Dict, Any
 from src.entity import Task, Agent, AgentTeam
 from src.routing.team_router import TeamRouter
 from src.routing.domain_classifier import DomainClassifier
+from src.routing.pattern_quality import PatternQualityManager
 
 
 logger = logging.getLogger(__name__)
@@ -21,55 +24,167 @@ logger = logging.getLogger(__name__)
 class RAGTeamRouter(TeamRouter):
     """
     RAG-enhanced team router that uses historical patterns for better routing.
-    
+
     Enhancement Strategy:
         1. Retrieve similar successful patterns from SurrealDB
         2. Use patterns to inform routing decision
         3. Fallback to base TeamRouter if no patterns or RAG unavailable
         4. Track routing decisions for feedback loop
-    
+
     Benefits:
         - Learn from historical successes
         - Adapt routing based on actual outcomes
         - Improve accuracy over time
         - Maintain compatibility with base router
-    
+
     Clean Code: Decorator pattern - extends TeamRouter without modifying it.
     """
-    
+
     def __init__(
         self,
         domain_classifier: Optional[DomainClassifier] = None,
         db_store: Optional[Any] = None,
         embedding_pipeline: Optional[Any] = None,
-        top_k: int = 3,
+        top_k: int = 10,
         similarity_threshold: float = 0.5,
-        use_rag: bool = True
+        use_rag: bool = True,
+        enable_pattern_quality: bool = True
     ):
         """
         Initialize RAG-enhanced team router.
-        
+
         Args:
             domain_classifier: Classifier for domain detection
             db_store: SurrealDBStore for pattern retrieval
             embedding_pipeline: EmbeddingPipeline for query embeddings
-            top_k: Number of similar patterns to retrieve
+            top_k: Number of similar patterns to retrieve (default: 10)
             similarity_threshold: Minimum similarity score (0-1)
             use_rag: Enable/disable RAG (for A/B testing)
+            enable_pattern_quality: Enable pattern quality management (dedup, scoring, filtering)
         """
         super().__init__(domain_classifier)
-        
+
         self.db_store = db_store
         self.embedding_pipeline = embedding_pipeline
         self.top_k = top_k
         self.similarity_threshold = similarity_threshold
         self.use_rag = use_rag and db_store is not None and embedding_pipeline is not None
-        
+
+        # Pattern quality management
+        self.enable_pattern_quality = enable_pattern_quality
+        if enable_pattern_quality:
+            self.pattern_quality_manager = PatternQualityManager(
+                dedup_threshold=0.95,
+                min_confidence=0.5,
+                top_k=top_k
+            )
+        else:
+            self.pattern_quality_manager = None
+
         if self.use_rag:
-            logger.info(f"RAGTeamRouter initialized (top_k={top_k}, threshold={similarity_threshold})")
+            logger.info(f"RAGTeamRouter initialized (top_k={top_k}, threshold={similarity_threshold}, pattern_quality={enable_pattern_quality})")
         else:
             logger.info("RAGTeamRouter initialized (RAG disabled, using base routing)")
-    
+    # Override base route() to leverage RAG in a sync context
+    def route(self, task: Task, teams: List[AgentTeam]) -> Agent:
+        """
+        Synchronous route method that leverages RAG when enabled.
+
+        Because TeamBasedSelector.select_agent() is synchronous and is invoked
+        from within async flows, we cannot directly await here. To safely use
+        the async RAG retrieval without interfering with the main event loop,
+        we create a short-lived event loop to run RAG retrieval using
+        fresh, loop-local RAG components. On any failure, we fall back to
+        base TeamRouter.route().
+        """
+        # If RAG disabled, use base routing
+        if not self.use_rag:
+            return super().route(task, teams)
+
+        try:
+            async def _rag_route_once() -> Agent:
+                # Lazy imports to avoid circulars at module import time
+                from src.adapters.llm.rag_config import RAGConfig
+                from src.adapters.rag.embedding_pipeline import EmbeddingPipeline
+                from src.adapters.rag.surrealdb_store import SurrealDBStore
+
+                # Build loop-local RAG components to avoid cross-loop issues
+                rag_config = RAGConfig()
+                db_url = os.getenv("SURREALDB_URL", rag_config.db_url)
+                if "project-builder-db" in db_url:
+                    db_url = "ws://localhost:8000"
+
+                embedder = EmbeddingPipeline(
+                    provider=rag_config.embedding_provider,
+                    model=rag_config.embedding_model
+                )
+                db_store = SurrealDBStore(
+                    url=db_url,
+                    namespace=rag_config.db_namespace,
+                    database=rag_config.db_database,
+                    user=rag_config.db_user,
+                    password=rag_config.db_password
+                )
+
+                # Connect, retrieve patterns, close
+                await db_store.connect()
+                try:
+                    # Generate query embedding
+                    query_text = f"Task: {task.description}"
+                    query_embedding = await embedder.embed_text(query_text)
+
+                    # Retrieve similar successful executions
+                    raw_patterns = await db_store.search_similar_execution(
+                        query_embedding=query_embedding,
+                        top_k=self.top_k,
+                        domain=None,
+                        success_only=True
+                    )
+
+                    # Threshold filter
+                    filtered = [
+                        p for p in (raw_patterns or [])
+                        if p.get("similarity", 0) >= self.similarity_threshold
+                    ]
+
+                finally:
+                    try:
+                        await db_store.close()
+                    except Exception:
+                        pass
+
+                # Apply pattern quality management
+                patterns = filtered
+                if self.pattern_quality_manager and patterns:
+                    try:
+                        domain = self.domain_classifier.classify(task) if self.domain_classifier else None
+                        patterns = self.pattern_quality_manager.process(patterns, target_domain=domain)
+                    except Exception:
+                        # Non-fatal; proceed with filtered patterns
+                        pass
+
+                # If no usable patterns, fall back to base routing
+                if not patterns:
+                    return super(RAGTeamRouter, self).route(task, teams)
+
+                # Analyze and route with hints
+                hints = self._analyze_patterns(patterns)
+                return self._route_with_hints(task, teams, hints)
+
+            # Run the async RAG flow in a separate thread with its own event loop
+            from concurrent.futures import ThreadPoolExecutor
+
+            def _runner():
+                return asyncio.run(_rag_route_once())
+
+            with ThreadPoolExecutor(max_workers=1) as pool:
+                return pool.submit(_runner).result()
+
+        except Exception as e:
+            logger.warning(f"RAG route failed in sync wrapper: {e}. Using base routing.")
+            return super().route(task, teams)
+
+
     async def route_with_rag(self, task: Task, teams: List[AgentTeam]) -> Agent:
         """
         Route task using RAG-enhanced decision making.
@@ -109,13 +224,41 @@ class RAGTeamRouter(TeamRouter):
                     logger.debug(f"Baseline tracking failed (non-critical): {e}")
 
             return agent
-        
+
         try:
             # Step 1: Retrieve similar patterns
-            patterns = await self._retrieve_similar_patterns(task)
+            raw_patterns = await self._retrieve_similar_patterns(task)
+
+            if not raw_patterns:
+                logger.debug("No similar patterns found, using base routing and tracking decision")
+                agent = self.route(task, teams)
+                try:
+                    await self._track_routing_decision(
+                        task=task,
+                        selected_agent=agent,
+                        patterns_used=[],
+                        routing_hints={},
+                        strategy="fallback",
+                        fallback_used=True,
+                    )
+                except Exception:
+                    pass
+                return agent
+
+            # Step 1.5: Apply pattern quality management (if enabled)
+            if self.pattern_quality_manager:
+                # Get task domain for domain-aware scoring
+                task_domain = self.domain_classifier.classify(task.description) if self.domain_classifier else None
+
+                # Process patterns: deduplicate → score → filter → select top-K
+                patterns = self.pattern_quality_manager.process(raw_patterns, target_domain=task_domain)
+
+                logger.debug(f"Pattern quality: {len(raw_patterns)} raw → {len(patterns)} high-quality")
+            else:
+                patterns = raw_patterns
 
             if not patterns:
-                logger.debug("No similar patterns found, using base routing and tracking decision")
+                logger.debug("No high-quality patterns after filtering, using base routing")
                 agent = self.route(task, teams)
                 try:
                     await self._track_routing_decision(
@@ -135,7 +278,7 @@ class RAGTeamRouter(TeamRouter):
 
             # Step 3: Make RAG-informed routing decision
             agent = self._route_with_hints(task, teams, routing_hints)
-            
+
             # Step 4: Track routing decision
             await self._track_routing_decision(
                 task=task,
@@ -144,14 +287,14 @@ class RAGTeamRouter(TeamRouter):
                 routing_hints=routing_hints,
                 strategy="rag"
             )
-            
+
             return agent
-            
+
         except Exception as e:
             logger.warning(f"RAG routing failed: {e}. Falling back to base routing.")
             # Fallback to base routing
             agent = self.route(task, teams)
-            
+
             # Track fallback decision
             try:
                 await self._track_routing_decision(
@@ -164,16 +307,16 @@ class RAGTeamRouter(TeamRouter):
                 )
             except Exception:
                 pass  # Don't fail routing due to tracking errors
-            
+
             return agent
-    
+
     async def _retrieve_similar_patterns(self, task: Task) -> List[Dict[str, Any]]:
         """
         Retrieve similar successful execution patterns.
-        
+
         Args:
             task: Task to find patterns for
-            
+
         Returns:
             List of similar patterns with metadata
         """
@@ -181,7 +324,7 @@ class RAGTeamRouter(TeamRouter):
             # Generate embedding for task
             query_text = f"Task: {task.description}"
             query_embedding = await self.embedding_pipeline.embed_text(query_text)
-            
+
             # Search for similar successful executions
             patterns = await self.db_store.search_similar_execution(
                 query_embedding=query_embedding,
@@ -189,60 +332,60 @@ class RAGTeamRouter(TeamRouter):
                 domain=None,  # Search across all domains
                 success_only=True  # Only successful patterns
             )
-            
+
             # Filter by similarity threshold
             filtered = [
                 p for p in patterns
                 if p.get('similarity', 0) >= self.similarity_threshold
             ]
-            
+
             logger.debug(f"Retrieved {len(filtered)} similar patterns (threshold={self.similarity_threshold})")
-            
+
             return filtered
-            
+
         except Exception as e:
             logger.warning(f"Failed to retrieve patterns: {e}")
             return []
-    
+
     def _analyze_patterns(self, patterns: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
         Analyze patterns to extract routing hints.
-        
+
         Args:
             patterns: Similar successful patterns
-            
+
         Returns:
             Dict with routing hints (agent_role, team, confidence, etc.)
         """
         if not patterns:
             return {}
-        
+
         # Count agent roles in successful patterns
         agent_counts = {}
         team_counts = {}
         domain_counts = {}
-        
+
         for pattern in patterns:
             agent_role = pattern.get('agent_role')
             team_id = pattern.get('team_id')
             domain = pattern.get('task_domain')
             similarity = pattern.get('similarity', 0)
-            
+
             if agent_role:
                 agent_counts[agent_role] = agent_counts.get(agent_role, 0) + similarity
             if team_id:
                 team_counts[team_id] = team_counts.get(team_id, 0) + similarity
             if domain:
                 domain_counts[domain] = domain_counts.get(domain, 0) + similarity
-        
+
         # Find most common (weighted by similarity)
         best_agent = max(agent_counts.items(), key=lambda x: x[1])[0] if agent_counts else None
         best_team = max(team_counts.items(), key=lambda x: x[1])[0] if team_counts else None
         best_domain = max(domain_counts.items(), key=lambda x: x[1])[0] if domain_counts else None
-        
+
         # Calculate confidence (average similarity of top patterns)
         avg_similarity = sum(p.get('similarity', 0) for p in patterns) / len(patterns)
-        
+
         hints = {
             'suggested_agent': best_agent,
             'suggested_team': best_team,
@@ -252,11 +395,11 @@ class RAGTeamRouter(TeamRouter):
             'agent_distribution': agent_counts,
             'team_distribution': team_counts
         }
-        
+
         logger.debug(f"Routing hints: agent={best_agent}, team={best_team}, confidence={avg_similarity:.2f}")
-        
+
         return hints
-    
+
     def _route_with_hints(
         self,
         task: Task,
@@ -265,31 +408,31 @@ class RAGTeamRouter(TeamRouter):
     ) -> Agent:
         """
         Make routing decision using hints from patterns.
-        
+
         Strategy:
             1. If high confidence (>0.7) and agent exists, use suggested agent
             2. If medium confidence (>0.5) and team exists, route to suggested team
             3. Otherwise, fallback to base routing
-        
+
         Args:
             task: Task to route
             teams: Available teams
             hints: Routing hints from pattern analysis
-            
+
         Returns:
             Selected agent
         """
         confidence = hints.get('confidence', 0)
         suggested_agent = hints.get('suggested_agent')
         suggested_team = hints.get('suggested_team')
-        
+
         # High confidence: Try to use exact agent
         if confidence > 0.7 and suggested_agent:
             agent = self._find_agent_by_role(teams, suggested_agent)
             if agent:
                 logger.info(f"RAG routing (high confidence): {suggested_agent} (confidence={confidence:.2f})")
                 return agent
-        
+
         # Medium confidence: Route to suggested team
         if confidence > 0.5 and suggested_team:
             team = self._get_team_by_name(teams, suggested_team)
@@ -297,11 +440,11 @@ class RAGTeamRouter(TeamRouter):
                 agent = team.route_internally(task)
                 logger.info(f"RAG routing (medium confidence): {suggested_team} → {agent.role} (confidence={confidence:.2f})")
                 return agent
-        
+
         # Low confidence or no match: Fallback to base routing
         logger.debug(f"RAG routing (low confidence): using base routing (confidence={confidence:.2f})")
         return self.route(task, teams)
-    
+
     def _find_agent_by_role(self, teams: List[AgentTeam], role: str) -> Optional[Agent]:
         """Find agent by role across all teams."""
         for team in teams:
@@ -309,7 +452,7 @@ class RAGTeamRouter(TeamRouter):
                 if agent.role == role:
                     return agent
         return None
-    
+
     async def _track_routing_decision(
         self,
         task: Task,
@@ -321,7 +464,7 @@ class RAGTeamRouter(TeamRouter):
     ):
         """
         Track routing decision for feedback loop.
-        
+
         Args:
             task: Task that was routed
             selected_agent: Agent selected for task
@@ -333,9 +476,9 @@ class RAGTeamRouter(TeamRouter):
         try:
             if not self.db_store:
                 return
-            
+
             import uuid
-            
+
             await self.db_store.store_routing_decision(
                 task_id=task.task_id,
                 task_description=task.description,
@@ -360,7 +503,7 @@ class RAGTeamRouter(TeamRouter):
                     ]
                 }
             )
-            
+
         except Exception as e:
             logger.warning(f"Failed to track routing decision: {e}")
 

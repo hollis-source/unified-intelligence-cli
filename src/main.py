@@ -60,6 +60,27 @@ if env_file.exists():
               help="Enable metrics collection for monitoring (Week 13)")
 @click.option("--metrics-dir", type=click.Path(), default="data/metrics",
               help="Directory to store metrics (default: data/metrics)")
+# Prompt Framework CLI (Phase 5)
+@click.option("--validate-prompts", is_flag=True, default=False,
+              help="Enable prompt validation before LLM calls (Phase 2)")
+@click.option("--prompt-min-score", type=float, default=60.0,
+              help="Minimum prompt validation score to consider pass (default: 60.0)")
+@click.option("--use-prompt-templates", is_flag=True, default=False,
+              help="Enable PromptStrategy templates when available (Phase 3)")
+@click.option("--collect-prompt-metrics", is_flag=True, default=False,
+              help="Enable prompt metrics logging (Phase 4)")
+@click.option("--prompt-metrics-store", type=click.Choice(["none", "memory", "surreal"]), default="none",
+              help="Prompt metrics store backend (none, memory, surreal)")
+@click.option("--surreal-url", type=str, default="",
+              help="SurrealDB base URL, e.g., http://localhost:8000")
+@click.option("--surreal-namespace", type=str, default="",
+              help="SurrealDB namespace")
+@click.option("--surreal-database", type=str, default="",
+              help="SurrealDB database")
+@click.option("--surreal-user", type=str, default="",
+              help="SurrealDB username")
+@click.option("--surreal-pass", type=str, default="",
+              help="SurrealDB password")
 @click.option("--feedback-loops", is_flag=True, default=False,
               help="Enable feedback loops for automatic replanning on failures (Phase 3)")
 @click.option("--max-replanning-attempts", type=int, default=3,
@@ -99,7 +120,17 @@ def main(
     load_state: str,
     enable_cache: bool,
     cache_ttl: int,
-    enable_rag: bool
+    enable_rag: bool,
+    validate_prompts: bool,
+    prompt_min_score: float,
+    use_prompt_templates: bool,
+    collect_prompt_metrics: bool,
+    prompt_metrics_store: str,
+    surreal_url: str,
+    surreal_namespace: str,
+    surreal_database: str,
+    surreal_user: str,
+    surreal_pass: str,
 ) -> None:
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.
@@ -129,7 +160,10 @@ def main(
     app_config = load_config(
         config, provider, verbose, debug, no_cache, parallel, timeout,
         orchestrator, collect_data, data_dir, agents, routing,
-        collect_metrics, metrics_dir, enable_rag
+        collect_metrics, metrics_dir, enable_rag,
+        validate_prompts, use_prompt_templates, prompt_min_score,
+        collect_prompt_metrics, prompt_metrics_store,
+        surreal_url, surreal_namespace, surreal_database, surreal_user, surreal_pass
     )
 
     # Generate correlation ID and set up logging
@@ -220,7 +254,18 @@ def main(
             cache_enabled=app_config.cache_enabled,
             cache_ttl_seconds=app_config.cache_ttl_seconds,
             cache_namespace=cache_namespace,
-            enable_rag=app_config.enable_rag
+            enable_rag=app_config.enable_rag,
+            # Prompt Framework wiring
+            validate_prompts=app_config.validate_prompts,
+            use_prompt_strategy=app_config.use_prompt_strategy,
+            prompt_min_score=app_config.prompt_min_score,
+            collect_prompt_metrics=app_config.collect_prompt_metrics,
+            prompt_metrics_store=app_config.prompt_metrics_store,
+            surreal_url=app_config.surreal_url,
+            surreal_namespace=app_config.surreal_namespace,
+            surreal_database=app_config.surreal_database,
+            surreal_user=app_config.surreal_user,
+            surreal_pass=app_config.surreal_pass,
         )
 
         # Execute with timeout and cleanup
@@ -502,7 +547,17 @@ def load_config(
     routing_mode: str = "individual",
     collect_metrics: bool = False,
     metrics_dir: str = "data/metrics",
-    enable_rag: bool = False
+    enable_rag: bool = False,
+    validate_prompts: bool = False,
+    use_prompt_templates: bool = False,
+    prompt_min_score: float = 60.0,
+    collect_prompt_metrics: bool = False,
+    prompt_metrics_store: str = "none",
+    surreal_url: str = "",
+    surreal_namespace: str = "",
+    surreal_database: str = "",
+    surreal_user: str = "",
+    surreal_pass: str = "",
 ) -> Config:
     """
     Load configuration from file and merge with CLI arguments.
@@ -541,6 +596,16 @@ def load_config(
             routing_mode=routing_mode,
             collect_metrics=collect_metrics,
             metrics_dir=metrics_dir,
+            validate_prompts=validate_prompts,
+            use_prompt_strategy=use_prompt_templates,
+            prompt_min_score=prompt_min_score,
+            collect_prompt_metrics=collect_prompt_metrics,
+            prompt_metrics_store=prompt_metrics_store,
+            surreal_url=surreal_url,
+            surreal_namespace=surreal_namespace,
+            surreal_database=surreal_database,
+            surreal_user=surreal_user,
+            surreal_pass=surreal_pass,
             cache_enabled=False if no_cache else None,
             enable_rag=enable_rag
         )
@@ -558,7 +623,17 @@ def load_config(
             agent_mode=agent_mode,
             routing_mode=routing_mode,
             collect_metrics=collect_metrics,
-            metrics_dir=metrics_dir
+            metrics_dir=metrics_dir,
+            validate_prompts=validate_prompts,
+            use_prompt_strategy=use_prompt_templates,
+            prompt_min_score=prompt_min_score,
+            collect_prompt_metrics=collect_prompt_metrics,
+            prompt_metrics_store=prompt_metrics_store,
+            surreal_url=surreal_url,
+            surreal_namespace=surreal_namespace,
+            surreal_database=surreal_database,
+            surreal_user=surreal_user,
+            surreal_pass=surreal_pass,
         )
         return base.merge_cli_args(
             cache_enabled=False if no_cache else None,

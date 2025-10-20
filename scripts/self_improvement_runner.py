@@ -45,11 +45,17 @@ async def run_cycles(args) -> int:
         llm_provider = None
         if args.use_llm:
             try:
-                from src.adapters.llm.qwen_agent_adapter import QwenAgentAdapter
-                llm_provider = QwenAgentAdapter()
-                logger.info("LLM provider initialized: Qwen")
+                # Use Qwen3-Next-80B via HuggingFace serverless inference
+                from src.adapters.llm.qwen3_next_adapter import Qwen3NextAdapter
+                llm_provider = Qwen3NextAdapter(
+                    max_tokens=4000,
+                    temperature=0.7,
+                    timeout=60
+                )
+                logger.info("LLM provider initialized: Qwen3-Next-80B (HF Serverless)")
             except Exception as e:
-                logger.warning(f"Could not initialize LLM provider: {e}")
+                logger.warning(f"Could not initialize Qwen3-Next: {e}")
+                logger.warning("Falling back to heuristic task generation")
         
         # Initialize orchestrator
         orchestrator = SelfImprovementOrchestrator(

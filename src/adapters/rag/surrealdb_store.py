@@ -517,3 +517,72 @@ class SurrealDBStore:
         except Exception:
             return []
 
+    # =============================
+    # Audit Log Methods
+    # =============================
+
+    async def store_audit_log(
+        self,
+        *,
+        action: str,
+        actor: str = "system",
+        reason: Optional[str] = None,
+        before: Optional[Dict[str, Any]] = None,
+        after: Optional[Dict[str, Any]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """Store an audit log entry.
+
+        Schema (SurrealDB):
+          CREATE audit_log SET
+            id = rand::uuid(),
+            ts = time::now(),
+            action = <string>,
+            actor = <string>,
+            reason = <string|null>,
+            before = <object|null>,
+            after = <object|null>,
+            metadata = <object|null>;
+        """
+        sql = (
+            "CREATE audit_log SET id = rand::uuid(), ts = time::now(), "
+            "action = $action, actor = $actor, reason = $reason, before = $before, after = $after, metadata = $metadata;"
+        )
+        await self.query(
+            sql,
+            {
+                "action": action,
+                "actor": actor,
+                "reason": reason,
+                "before": before or {},
+                "after": after or {},
+                "metadata": metadata or {},
+            },
+        )
+
+    # =============================
+    # Routing Weight Helpers
+    # =============================
+
+    async def fetch_weights_for_domains(self, domains: list[str]) -> List[Dict[str, Any]]:
+        if not domains:
+            return []
+        sql = "SELECT domain, agent, weight FROM routing_weight WHERE domain IN $domains"
+        rows = await self.query(sql, {"domains": domains})
+        # Surreal returns list of result sets; flatten if needed
+        if isinstance(rows, list) and rows and isinstance(rows[0], list):
+            out = []
+            for rs in rows:
+                out.extend(rs)
+            return out
+        return rows or []
+
+    async def apply_domain_multipliers(self, weights: Dict[str, float]) -> None:
+        """Multiply weights per domain by given multipliers with clamp [0.1, 2.0]."""
+        for domain, mult in (weights or {}).items():
+            sql = (
+                "UPDATE routing_weight SET weight = math::max(0.1, math::min(2.0, weight * $mult)), "
+                "update_count = update_count + 1, last_updated = time::now() WHERE domain = $domain"
+            )
+            await self.query(sql, {"domain": domain, "mult": float(mult)})
+

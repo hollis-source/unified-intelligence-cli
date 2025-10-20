@@ -33,7 +33,18 @@ def compose_dependencies(
     cache_enabled: bool = True,
     cache_ttl_seconds: int = 14400,
     cache_namespace: str = "",
-    enable_rag: bool = False
+    enable_rag: bool = False,
+    # Prompt Framework (Phase 2-5)
+    validate_prompts: bool = False,
+    use_prompt_strategy: bool = False,
+    prompt_min_score: float = 60.0,
+    collect_prompt_metrics: bool = False,
+    prompt_metrics_store: str = "none",
+    surreal_url: str = "",
+    surreal_namespace: str = "",
+    surreal_database: str = "",
+    surreal_user: str = "",
+    surreal_pass: str = "",
 ) -> tuple[IAgentCoordinator, Optional[MetricsCollector]]:
     """
     Compose dependencies for the coordinator use case.
@@ -80,13 +91,58 @@ def compose_dependencies(
         key_prefix=(cache_namespace or "llm_cache:")
     )
 
+    # Phase 2-5: Prompt framework wiring (validator, strategy, metrics)
+    prompt_validator = None
+    if validate_prompts:
+        try:
+            from src.adapters.prompt import PromptStrategyValidator  # local import
+            prompt_validator = PromptStrategyValidator(min_score=prompt_min_score)
+            if logger:
+                logger.info(f"Prompt validation enabled (min_score={prompt_min_score})")
+        except Exception as e:
+            if logger:
+                logger.warning(f"Prompt validation unavailable: {e}")
+            prompt_validator = None
+
+    metrics_store = None
+    if collect_prompt_metrics and prompt_metrics_store != "none":
+        try:
+            if prompt_metrics_store == "memory":
+                from src.adapters.db.prompt_metrics_store import InMemoryPromptMetricsStore
+                metrics_store = InMemoryPromptMetricsStore()
+                if logger:
+                    logger.info("Prompt metrics store: InMemory")
+            elif prompt_metrics_store == "surreal":
+                from src.adapters.db.prompt_metrics_store import SurrealDBPromptMetricsStore
+                if not (surreal_url and surreal_namespace and surreal_database and surreal_user and surreal_pass):
+                    if logger:
+                        logger.warning("SurrealDB config incomplete; falling back to NoOp metrics store")
+                else:
+                    metrics_store = SurrealDBPromptMetricsStore(
+                        base_url=surreal_url,
+                        namespace=surreal_namespace,
+                        database=surreal_database,
+                        username=surreal_user,
+                        password=surreal_pass,
+                    )
+                    if logger:
+                        logger.info(f"Prompt metrics store: SurrealDB at {surreal_url}")
+        except Exception as e:
+            if logger:
+                logger.warning(f"Failed to initialize prompt metrics store: {e}")
+            metrics_store = None
+
     agent_executor = LLMAgentExecutor(
         llm_provider,
         data_collector=data_collector,
         provider_name=provider_name,
         orchestrator=orchestrator_mode,
         cache_config=cache_config,
-        enable_cache=cache_enabled
+        enable_cache=cache_enabled,
+        prompt_validator=prompt_validator,
+        validate_prompts=bool(prompt_validator) and validate_prompts,
+        use_prompt_strategy=use_prompt_strategy,
+        metrics_store=metrics_store,
     )
 
     # Week 12/13: Create agent selector based on routing mode (with metrics integration)

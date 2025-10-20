@@ -152,43 +152,132 @@ class PatternCollector:
         
         return tasks
     
-    def select_balanced_tasks(
+    async def _get_db_domain_counts(self) -> Dict[str, int]:
+        """Try to read existing pattern counts by domain from SurrealDB.
+        Returns {} on failure.
+        """
+        try:
+            from src.adapters.llm.rag_config import RAGConfig  # type: ignore
+            from src.adapters.rag.surrealdb_store import SurrealDBStore  # type: ignore
+            import os, asyncio
+            cfg = RAGConfig()
+            store = SurrealDBStore(
+                url=os.getenv("SURREALDB_URL", "ws://localhost:8000"),
+                namespace=cfg.db_namespace,
+                database=cfg.db_database,
+                user=cfg.db_user,
+                password=cfg.db_password,
+            )
+            async def _go():
+                try:
+                    await store.connect()
+                except Exception:
+                    return {}
+                rows = await store.query("SELECT task_domain, count() as count FROM execution_log GROUP BY task_domain;")
+                out: Dict[str, int] = {}
+                for r in rows or []:
+                    d = r.get("task_domain") or "unknown"
+                    out[d] = int(r.get("count", 0))
+                return out
+            try:
+                return await _go()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                try:
+                    return loop.run_until_complete(_go())
+                finally:
+                    loop.close()
+        except Exception:
+            return {}
+
+    def _allocate_by_underrepresentation(self, by_domain: Dict[str, List[TaskTemplate]], target_count: int, domain_counts: Dict[str, int]) -> Dict[str, int]:
+        """Compute allocation per domain, prioritizing under-represented domains.
+        Rule: prefer domains below 0.8×mean; de-emphasize above 1.2×mean.
+        Fallback to even if counts empty.
+        """
+        domains = list(by_domain.keys())
+        if not domains:
+            return {}
+        if not domain_counts:
+            # Even allocation
+            base = target_count // len(domains)
+            rem = target_count % len(domains)
+            alloc = {d: base for d in domains}
+            for d in sorted(domains)[:rem]:
+                alloc[d] += 1
+            # cap to availability
+            for d in domains:
+                alloc[d] = min(alloc[d], len(by_domain[d]))
+            return alloc
+        # Compute mean across present domains; default 0 if missing
+        values = [domain_counts.get(d, 0) for d in domains]
+        mean = (sum(values) / max(len(values), 1)) if values else 0.0
+        low_thr = 0.8 * mean
+        high_thr = 1.2 * mean
+        # Score = how underrepresented: max(mean - count, 0) + 1e-6 to avoid 0
+        scores: Dict[str, float] = {}
+        for d in domains:
+            c = float(domain_counts.get(d, 0))
+            # Emphasize below low threshold; dampen above high
+            if c < low_thr:
+                s = (mean - c) + 1.0
+            elif c > high_thr:
+                s = max(0.2, 0.5 * (mean / (c + 1e-6)))
+            else:
+                s = 1.0
+            # availability cap weight
+            if len(by_domain[d]) == 0:
+                s = 0.0
+            scores[d] = max(0.0, s)
+        total_score = sum(scores.values()) or 1.0
+        alloc: Dict[str, int] = {}
+        # Initial fractional allocation
+        fracs: Dict[str, float] = {d: (scores[d] / total_score) * target_count for d in domains}
+        # Round down first
+        used = 0
+        for d in domains:
+            alloc[d] = min(int(fracs[d]), len(by_domain[d]))
+            used += alloc[d]
+        # Distribute remainder by largest fractional parts
+        remainder = target_count - used
+        order = sorted(domains, key=lambda d: (fracs[d] - int(fracs[d])), reverse=True)
+        for d in order:
+            if remainder <= 0:
+                break
+            if alloc[d] < len(by_domain[d]):
+                alloc[d] += 1
+                remainder -= 1
+        return alloc
+
+    async def select_balanced_tasks(
         self,
         tasks: List[TaskTemplate],
-        count: int
+        count: int,
+        balance_source: str = "db"
     ) -> List[TaskTemplate]:
         """Select balanced set of tasks across domains.
-        
-        Args:
-            tasks: Available tasks
-            count: Number of tasks to select
-            
-        Returns:
-            Balanced list of tasks
+        If balance_source == 'db', uses SurrealDB domain counts to favor under-represented domains;
+        otherwise uses even allocation. Caps domains within availability and aims to reduce skew towards over-represented ones.
         """
         # Group by domain
         by_domain: Dict[str, List[TaskTemplate]] = {}
         for task in tasks:
-            if task.domain not in by_domain:
-                by_domain[task.domain] = []
-            by_domain[task.domain].append(task)
-
-        # Calculate per-domain allocation
-        num_domains = len(by_domain)
-        if num_domains == 0:
+            by_domain.setdefault(task.domain, []).append(task)
+        if not by_domain:
             print("\u26a0\ufe0f No tasks available for the selected domain(s).")
             return []
-        per_domain = count // num_domains
-        remainder = count % num_domains
-
-        selected = []
-        for i, (domain, domain_tasks) in enumerate(sorted(by_domain.items())):
-            # Add extra task to first domains for remainder
-            domain_count = per_domain + (1 if i < remainder else 0)
-            domain_count = min(domain_count, len(domain_tasks))
-
-            selected.extend(domain_tasks[:domain_count])
-
+        domain_counts: Dict[str, int] = {}
+        if balance_source == "db":
+            try:
+                domain_counts = await self._get_db_domain_counts()
+            except Exception:
+                domain_counts = {}
+        alloc = self._allocate_by_underrepresentation(by_domain, count, domain_counts)
+        # Build selection deterministically per domain
+        selected: List[TaskTemplate] = []
+        for d in sorted(by_domain.keys()):
+            n = max(0, min(alloc.get(d, 0), len(by_domain[d])))
+            selected.extend(by_domain[d][:n])
         return selected[:count]
 
     async def execute_task(
@@ -378,6 +467,13 @@ async def main():
         choices=['qwen3', 'granite'],
         help='LLM provider to use (default: qwen3 for 47-95x speedup, fallback: granite)'
     )
+    parser.add_argument(
+        '--balance-source',
+        type=str,
+        default='db',
+        choices=['db', 'even'],
+        help="Balance selection using 'db' (SurrealDB domain counts) or 'even' allocation"
+    )
 
     args = parser.parse_args()
 
@@ -392,6 +488,7 @@ async def main():
     print(f"Parallel execution: {args.parallel}")
     print(f"Domain filter: {args.domain or 'all'}")
     print(f"Provider: {args.provider}")
+    print(f"Balance source: {args.balance_source}")
     print(f"Dry run: {args.dry_run}")
     print()
 
@@ -403,18 +500,32 @@ async def main():
         dry_run=args.dry_run,
         provider=args.provider
     )
-    
+
     print("Loading tasks...")
     all_tasks = collector.load_tasks(domain=args.domain)
     print(f"✅ Loaded {len(all_tasks)} tasks")
 
     print("Selecting balanced task set...")
-    selected_tasks = collector.select_balanced_tasks(all_tasks, args.target)
+    selected_tasks = await collector.select_balanced_tasks(all_tasks, args.target, args.balance_source)
     print(f"✅ Selected {len(selected_tasks)} tasks")
 
     if not selected_tasks:
         print("Nothing to execute. Exiting.")
         return
+
+    # Optional: advise generating drafts for underrepresented domains
+    if args.balance_source == 'db':
+        try:
+            domain_counts = await collector._get_db_domain_counts()
+            if domain_counts:
+                mean = sum(domain_counts.values()) / max(len(domain_counts), 1)
+                low_thr = 0.8 * mean
+                low_domains = sorted([d for d,c in domain_counts.items() if c < low_thr])
+                if low_domains:
+                    print("\nTip: Some domains are under-represented:", ", ".join(low_domains))
+                    print("You can pre-generate DRAFT templates: \n  python scripts/generate_missing_templates.py --min 5 --domains " + ",".join(low_domains))
+        except Exception:
+            pass
 
     # Execute
     print(f"\nStarting execution...")
