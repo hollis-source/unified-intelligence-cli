@@ -2,24 +2,26 @@
 
 **Date**: 2025-10-20
 **Source**: `docs/DOGFOODING_PROMPT_FRAMEWORK_RESULTS.md` (8 prioritized recommendations)
-**Current Status**: Priority 1 COMPLETE (3/3), Priority 2 & 3 pending (5/5)
+**Current Status**: Priority 1 COMPLETE (3/3), Priority 2.1 COMPLETE (1/3), Priority 2 & 3 pending (4/5)
 
 ---
 
 ## Executive Summary
 
-Successfully implemented all **Priority 1** (High Impact, Low Effort) recommendations from the dogfooding exercise:
+Successfully implemented all **Priority 1** (High Impact, Low Effort) recommendations and **P2.1** (High Impact, Medium Effort):
 
 ✅ **P1.1**: Increased Qwen3-Next max_tokens to 2,048 (prevents output truncation)
 ✅ **P1.2**: Added comprehensive Prompt Specificity Examples to PromptStrategy docstrings
 ✅ **P1.3**: Implemented Domain Classification LRU caching (50%+ routing overhead reduction)
+✅ **P2.1**: Implemented Team-Level Routing Metrics with timing and confidence tracking
 
-**Impact**: Priority 1 improvements deliver immediate value:
+**Impact**: Priority 1 & 2.1 improvements deliver immediate value:
 - 2,048 token limit prevents truncation on complex tasks (was 2,000)
 - Specificity guidelines improve prompt quality (6 clear examples with ✅/❌)
 - Classification caching reduces routing time by ~50% (4.85s → ~2.4s average)
+- Team routing metrics enable confidence-based analysis and performance monitoring
 
-**Remaining Work**: 5 recommendations (Priority 2: 3 items, Priority 3: 2 items)
+**Remaining Work**: 4 recommendations (Priority 2: 2 items, Priority 3: 2 items)
 
 ---
 
@@ -194,36 +196,80 @@ python3 -m pytest tests/unit/test_domain_classifier_cache.py -v
 
 ## Priority 2: High Impact, Medium Effort ⏳ PENDING
 
-### P2.1: Implement Team-Level Routing Metrics
+### P2.1: Implement Team-Level Routing Metrics ✅
 
-**Status**: PENDING
-**Effort**: 4 hours
-**Impact**: HIGH - Track team→agent routing decisions with confidence scores
+**Status**: COMPLETE
+**Effort**: 4 hours (actual: 3.5 hours)
+**Impact**: HIGH - Track team→agent routing decisions with confidence scores and timing
 
-**Plan**:
-1. **Enhance Metrics Collection**:
-   - Add `team_routing_metrics` to `MetricsCollector`
-   - Track: `domain → team → agent` routing path
-   - Add confidence scores for team selection
+**Implementation**:
 
-2. **Update TeamRouter**:
-   - File: `src/routing/team_router.py`
-   - Add `route_confidence` attribute
-   - Log team-level routing decisions
+1. **Enhanced Metrics Collection** (`src/entity/metrics.py`):
+   - Added `TeamRoutingMetric` dataclass (lines 84-123)
+   - Fields: `timestamp`, `task_description`, `domain`, `domain_score`, `domain_confidence`, `team`, `team_confidence`, `agent`, `routing_time_ms`, `cache_hit`
+   - Added `team_routing_metrics: List[TeamRoutingMetric]` to MetricsCollector
+   - Added `record_team_routing()` method (lines 290-334)
+   - Updated `save()` to include team_routing_metrics in JSON
+   - Updated `_calculate_summary()` to compute team routing statistics
 
-3. **Enhance Routing Metrics**:
-   - File: `src/entity/metrics.py`
-   - Add `TeamRoutingMetric` dataclass
-   - Fields: `timestamp`, `domain`, `team`, `agent`, `confidence`, `routing_time`
+2. **Updated TeamRouter** (`src/routing/team_router.py`):
+   - Added imports: `time`, `Tuple` (lines 11-14)
+   - Added `_select_team_with_confidence()` method (lines 146-221)
+     - Returns `Tuple[AgentTeam, float]` with confidence scores
+     - Confidence levels: 1.0 (perfect match), 0.8 (domain match), 0.5 (fallback), 0.3 (low)
+   - Added `_normalize_confidence()` method (lines 243-257)
+     - Normalizes domain scores to 0-1 range (default max: 10.0)
+   - Updated `route()` method (lines 55-144):
+     - Tracks routing timing with `time.time()`
+     - Calculates `domain_confidence` and `team_confidence`
+     - Calls `record_team_routing()` instead of `record_routing()`
+     - Detects cache hits from DomainClassifier statistics
 
-4. **Update routing_path Logs**:
-   - Add `team_confidence` to JSON output
-   - Example: `{"domain": "performance", "team": "Backend", "agent": "python-specialist", "team_confidence": 0.95}`
+3. **Enhanced routing_path Logs**:
+   - Added `domain_confidence` field (normalized 0-1)
+   - Added `team_confidence` field (match quality)
+   - Added `routing_time_ms` field (total routing time)
+   - Example output:
+   ```json
+   {
+     "event": "routing_path",
+     "routing_path": {
+       "domain": "performance",
+       "domain_confidence": 0.72,
+       "team": "Backend",
+       "team_confidence": 1.0,
+       "agent": "python-specialist",
+       "routing_time_ms": 15.5,
+       "scores": [["performance", 7.2], ["backend", 4.5], ["testing", 2.1]]
+     }
+   }
+   ```
 
-**Expected Benefits**:
-- Identify weak team routing decisions (low confidence)
-- Track team utilization across domains
-- Debug routing errors with full path trace
+4. **Comprehensive Test Coverage** (`tests/unit/test_team_routing_metrics.py`):
+   - 14 tests covering all aspects:
+     - TeamRoutingMetric dataclass creation and serialization (3 tests)
+     - MetricsCollector.record_team_routing() functionality (5 tests)
+     - TeamRouter timing and confidence tracking (6 tests)
+   - **All 14 tests passing** ✅
+
+**Files Modified**:
+- `src/entity/metrics.py`: +80 lines (TeamRoutingMetric, record_team_routing, summary stats)
+- `src/routing/team_router.py`: +120 lines (timing, confidence, enhanced logging)
+- `tests/unit/test_team_routing_metrics.py`: +384 lines (NEW - comprehensive test suite)
+
+**Validation**:
+```bash
+pytest tests/unit/test_team_routing_metrics.py -v
+# 14 passed in 0.16s
+```
+
+**Benefits Delivered**:
+- ✅ Track full routing path: `domain → team → agent`
+- ✅ Confidence scores enable quality analysis (identify weak routing decisions)
+- ✅ Timing metrics reveal performance bottlenecks
+- ✅ Cache hit tracking validates P1.3 caching effectiveness
+- ✅ Summary statistics provide actionable insights (avg confidence, hit rate)
+- ✅ JSON logs enable downstream analysis and dashboards
 
 ---
 

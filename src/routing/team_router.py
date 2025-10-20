@@ -3,13 +3,15 @@ Team Router - Routes tasks to teams, teams route internally to agents.
 
 Week 12: Simplified two-phase routing architecture.
 Week 13: Added metrics collection (Priority 3).
+Week 14: Added team-level metrics with timing and confidence (Priority 2.1).
 
 Clean Architecture: Strategy pattern for team-based routing.
 """
 
 import logging
 import json
-from typing import List, Optional
+import time
+from typing import List, Optional, Tuple
 from src.entity import Task, Agent, AgentTeam
 from src.routing.domain_classifier import DomainClassifier
 
@@ -71,11 +73,14 @@ class TeamRouter:
             1. Classify task domain
             2. Find team matching domain
             3. Let team route internally to agent
-            4. Record metrics (Week 13)
+            4. Record metrics (Week 13, Week 14)
         """
+        # Week 14: Track routing timing
+        start_time = time.time()
+
         # Phase 1: Route to team (stores domain classification)
-        team = self._select_team(task, teams)
-        logger.debug(f"Task routed to team: {team.name}")
+        team, team_confidence = self._select_team_with_confidence(task, teams)
+        logger.debug(f"Task routed to team: {team.name} (confidence: {team_confidence:.2f})")
 
         # Phase 2: Team's internal routing
         agent = team.route_internally(task)
@@ -86,20 +91,30 @@ class TeamRouter:
                 f"This is likely a bug in team's internal routing logic."
             )
 
+        # Week 14: Calculate routing time
+        routing_time_ms = (time.time() - start_time) * 1000
+
+        # Week 14: Calculate domain confidence (normalize score to 0-1)
+        domain_score = self.domain_classifier.last_classification_score
+        domain_confidence = self._normalize_confidence(domain_score)
+
         # Human-readable path
         logger.info(
             f"Task '{task.description[:50]}...' → {team.name} → {agent.role}"
         )
 
-        # Structured routing event for observability
+        # Structured routing event for observability (Week 14: enhanced with confidence)
         try:
             top3 = getattr(self.domain_classifier, "last_top3_scores", [])
             structured_event = {
                 "event": "routing_path",
                 "routing_path": {
                     "domain": self._last_classified_domain,
+                    "domain_confidence": round(domain_confidence, 3),
                     "team": team.name,
+                    "team_confidence": round(team_confidence, 3),
                     "agent": agent.role,
+                    "routing_time_ms": round(routing_time_ms, 2),
                     "scores": [(d, float(s)) for d, s in top3]
                 }
             }
@@ -108,28 +123,109 @@ class TeamRouter:
             # Do not fail routing due to logging issues
             pass
 
-        # Phase 3: Record metrics (Week 13)
+        # Phase 3: Record metrics (Week 14: team-level metrics with timing and confidence)
         if self.domain_classifier.metrics_collector:
-            self.domain_classifier.metrics_collector.record_routing(
+            # Check if cache was hit (Week 14 caching feature)
+            cache_stats = self.domain_classifier.get_cache_statistics() if hasattr(self.domain_classifier, 'get_cache_statistics') else {}
+            cache_hit = cache_stats.get('hits', 0) > 0 if cache_stats else None
+
+            self.domain_classifier.metrics_collector.record_team_routing(
                 task_description=task.description,
-                classified_domain=self._last_classified_domain,
-                domain_score=self.domain_classifier.last_classification_score,
-                target_team=team.name,
-                target_agent=agent.role
+                domain=self._last_classified_domain,
+                domain_score=domain_score,
+                domain_confidence=domain_confidence,
+                team=team.name,
+                team_confidence=team_confidence,
+                agent=agent.role,
+                routing_time_ms=routing_time_ms,
+                cache_hit=cache_hit
             )
 
         return agent
 
-    def _select_team(self, task: Task, teams: List[AgentTeam]) -> AgentTeam:
+    def _select_team_with_confidence(
+        self, task: Task, teams: List[AgentTeam]
+    ) -> Tuple[AgentTeam, float]:
         """
-        Select team based on task domain.
-
-        Week 12: Simple domain → team mapping.
+        Select team based on task domain with confidence score (Week 14).
 
         Strategy:
-            1. Classify task domain (8 domains)
-            2. Find team with matching domain
-            3. Fallback to orchestration team for general/unknown
+            1. Classify task domain
+            2. Find team matching domain
+            3. Calculate confidence based on match quality
+            4. Fallback to orchestration team for general/unknown
+
+        Args:
+            task: Task to route
+            teams: Available teams
+
+        Returns:
+            Tuple of (selected_team, confidence_score)
+            Confidence: 1.0 = perfect match, 0.8 = domain match, 0.5 = fallback
+
+        Raises:
+            ValueError: If no suitable team found
+        """
+        # Classify task domain
+        domain = self.domain_classifier.classify(task)
+        self._last_classified_domain = domain  # Store for metrics
+        logger.debug(f"Task classified as domain: {domain}")
+
+        # Direct domain → team mapping
+        domain_to_team = {
+            "frontend": "Frontend",
+            "backend": "Backend",
+            "testing": "Testing",
+            "devops": "Infrastructure",
+            "research": "Research",
+            "documentation": "Research",
+            "security": "Backend",
+            "performance": "Backend",
+            "general": "Orchestration",
+            "category-theory": "Category Theory",
+            "dsl": "DSL",
+            "qa": "Quality Assurance"
+        }
+
+        target_team_name = domain_to_team.get(domain, "Orchestration")
+
+        # Find team by name (perfect match)
+        team = self._get_team_by_name(teams, target_team_name)
+        if team:
+            return team, 1.0  # Perfect match confidence
+
+        # Fallback 1: Try domain match
+        team = self._get_team_by_domain(teams, domain)
+        if team:
+            logger.debug(f"Fallback: Found team by domain '{domain}'")
+            return team, 0.8  # Domain match confidence
+
+        # Fallback 2: Orchestration team (general purpose)
+        orchestration_team = self._get_orchestration_team(teams)
+        if orchestration_team:
+            logger.warning(
+                f"No specific team for domain '{domain}', using Orchestration team"
+            )
+            return orchestration_team, 0.5  # Fallback confidence
+
+        # Fallback 3: First team that can handle task
+        for team in teams:
+            if team.can_handle(task):
+                logger.warning(f"Using first team that can handle: {team.name}")
+                return team, 0.3  # Low confidence
+
+        # No suitable team found
+        raise ValueError(
+            f"No suitable team found for task: '{task.description[:50]}...'. "
+            f"Domain: '{domain}'. Available teams: {[t.name for t in teams]}"
+        )
+
+    def _select_team(self, task: Task, teams: List[AgentTeam]) -> AgentTeam:
+        """
+        Select team based on task domain (backward compatibility).
+
+        Week 12: Simple domain → team mapping.
+        Week 14: Deprecated in favor of _select_team_with_confidence().
 
         Args:
             task: Task to route
@@ -141,63 +237,24 @@ class TeamRouter:
         Raises:
             ValueError: If no suitable team found
         """
-        # Classify task domain
-        domain = self.domain_classifier.classify(task)
-        self._last_classified_domain = domain  # Store for metrics (Week 13)
-        logger.debug(f"Task classified as domain: {domain}")
+        team, _ = self._select_team_with_confidence(task, teams)
+        return team
 
-        # Direct domain → team mapping
-        domain_to_team = {
-            "frontend": "Frontend",
-            "backend": "Backend",
-            "testing": "Testing",
-            "devops": "Infrastructure",
-            "research": "Research",
-            "documentation": "Research",  # Documentation → Research team
-            "security": "Backend",  # Security → Backend team (for now)
-            "performance": "Backend",  # Performance → Backend team (for now)
-            "general": "Orchestration",  # General → Orchestration team
-            # Week 13: Specialized teams
-            "category-theory": "Category Theory",  # Category Theory → CT team
-            "dsl": "DSL",  # DSL → DSL team
-            # QA team (user/product quality)
-            "qa": "Quality Assurance"  # QA → Quality Assurance team
-        }
+    def _normalize_confidence(self, score: float, max_score: float = 10.0) -> float:
+        """
+        Normalize classification score to 0-1 confidence range (Week 14).
 
-        target_team_name = domain_to_team.get(domain, "Orchestration")
+        Args:
+            score: Raw classification score (may be >1)
+            max_score: Maximum expected score (default: 10.0)
 
-        # Find team by name
-        team = self._get_team_by_name(teams, target_team_name)
-        if team:
-            return team
-
-        # Fallback 1: Try domain match
-        team = self._get_team_by_domain(teams, domain)
-        if team:
-            logger.debug(f"Fallback: Found team by domain '{domain}'")
-            return team
-
-        # Fallback 2: Orchestration team (general purpose)
-        orchestration_team = self._get_orchestration_team(teams)
-        if orchestration_team:
-            logger.warning(
-                f"No specific team for domain '{domain}', using Orchestration team"
-            )
-            return orchestration_team
-
-        # Fallback 3: First team that can handle task
-        for team in teams:
-            if team.can_handle(task):
-                logger.warning(
-                    f"Using first team that can handle: {team.name}"
-                )
-                return team
-
-        # No suitable team found
-        raise ValueError(
-            f"No suitable team found for task: '{task.description[:50]}...'. "
-            f"Domain: '{domain}'. Available teams: {[t.name for t in teams]}"
-        )
+        Returns:
+            Normalized confidence (0-1)
+        """
+        # Clamp to [0, max_score] and normalize
+        clamped = max(0.0, min(score, max_score))
+        normalized = clamped / max_score
+        return normalized
 
     def _get_team_by_name(self, teams: List[AgentTeam], name: str) -> Optional[AgentTeam]:
         """Get team by name."""

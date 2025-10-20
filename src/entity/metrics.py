@@ -81,6 +81,48 @@ class TeamUtilizationMetric:
         return asdict(self)
 
 
+@dataclass
+class TeamRoutingMetric:
+    """
+    Team-level routing decision metric (Week 14, Priority 2.1).
+
+    Tracks detailed team→agent routing decisions with confidence scores
+    and timing information.
+
+    Purpose:
+    - Monitor team routing quality (confidence scores)
+    - Identify routing bottlenecks (timing)
+    - Track team→agent decision patterns
+    - Debug routing errors
+
+    Attributes:
+        timestamp: ISO format timestamp
+        task_description: Task description (truncated to 100 chars)
+        domain: Classified domain
+        domain_score: Domain classification score (raw, may be >1)
+        domain_confidence: Normalized confidence 0-1 (domain_score / max_possible)
+        team: Selected team name
+        team_confidence: Team selection confidence 0-1
+        agent: Final agent role
+        routing_time_ms: Total routing time in milliseconds
+        cache_hit: Whether domain classification was cache hit (optional)
+    """
+    timestamp: str
+    task_description: str
+    domain: str
+    domain_score: float
+    domain_confidence: float
+    team: str
+    team_confidence: float
+    agent: str
+    routing_time_ms: float
+    cache_hit: Optional[bool] = None
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for JSON serialization."""
+        return asdict(self)
+
+
 class MetricsCollector:
     """
     Collects and stores system metrics.
@@ -117,6 +159,7 @@ class MetricsCollector:
         self.routing_metrics: List[RoutingMetric] = []
         self.model_metrics: List[ModelSelectionMetric] = []
         self.team_metrics: List[TeamUtilizationMetric] = []
+        self.team_routing_metrics: List[TeamRoutingMetric] = []  # Week 14, Priority 2.1
 
         # Thread safety
         self._lock = threading.Lock()
@@ -244,6 +287,52 @@ class MetricsCollector:
             self.team_metrics.append(metric)
             logger.debug(f"Recorded team utilization: {team_name} ({tasks_handled} tasks)")
 
+    def record_team_routing(
+        self,
+        task_description: str,
+        domain: str,
+        domain_score: float,
+        domain_confidence: float,
+        team: str,
+        team_confidence: float,
+        agent: str,
+        routing_time_ms: float,
+        cache_hit: Optional[bool] = None
+    ) -> None:
+        """
+        Record team-level routing decision (Week 14, Priority 2.1).
+
+        Args:
+            task_description: Task description (will be truncated to 100 chars)
+            domain: Classified domain
+            domain_score: Domain classification score (raw, may be >1)
+            domain_confidence: Normalized confidence 0-1
+            team: Selected team name
+            team_confidence: Team selection confidence 0-1
+            agent: Final agent role
+            routing_time_ms: Total routing time in milliseconds
+            cache_hit: Whether domain classification was cache hit (optional)
+        """
+        with self._lock:
+            metric = TeamRoutingMetric(
+                timestamp=datetime.now().isoformat(),
+                task_description=task_description[:100],
+                domain=domain,
+                domain_score=domain_score,
+                domain_confidence=domain_confidence,
+                team=team,
+                team_confidence=team_confidence,
+                agent=agent,
+                routing_time_ms=routing_time_ms,
+                cache_hit=cache_hit
+            )
+
+            self.team_routing_metrics.append(metric)
+            logger.debug(
+                f"Recorded team routing: {domain} ({domain_confidence:.2f}) → "
+                f"{team} ({team_confidence:.2f}) → {agent} ({routing_time_ms:.1f}ms)"
+            )
+
     def save(self) -> None:
         """
         Save all metrics to JSON file.
@@ -257,6 +346,7 @@ class MetricsCollector:
                 "routing_metrics": [metric.to_dict() for metric in self.routing_metrics],
                 "model_metrics": [metric.to_dict() for metric in self.model_metrics],
                 "team_metrics": [metric.to_dict() for metric in self.team_metrics],
+                "team_routing_metrics": [metric.to_dict() for metric in self.team_routing_metrics],
                 "summary": self._calculate_summary()
             }
 
@@ -295,6 +385,24 @@ class MetricsCollector:
         for team_metric in self.team_metrics:
             team_counts[team_metric.team_name] = team_metric.tasks_handled
 
+        # Team routing statistics (Week 14, Priority 2.1)
+        team_routing_stats = {}
+        if self.team_routing_metrics:
+            avg_domain_confidence = sum(m.domain_confidence for m in self.team_routing_metrics) / len(self.team_routing_metrics)
+            avg_team_confidence = sum(m.team_confidence for m in self.team_routing_metrics) / len(self.team_routing_metrics)
+            avg_routing_time_ms = sum(m.routing_time_ms for m in self.team_routing_metrics) / len(self.team_routing_metrics)
+
+            cache_hits = sum(1 for m in self.team_routing_metrics if m.cache_hit is True)
+            cache_hit_rate = (cache_hits / len(self.team_routing_metrics) * 100) if self.team_routing_metrics else 0.0
+
+            team_routing_stats = {
+                "total_decisions": len(self.team_routing_metrics),
+                "avg_domain_confidence": round(avg_domain_confidence, 3),
+                "avg_team_confidence": round(avg_team_confidence, 3),
+                "avg_routing_time_ms": round(avg_routing_time_ms, 2),
+                "cache_hit_rate": round(cache_hit_rate, 2)
+            }
+
         return {
             "routing_accuracy": round(routing_accuracy, 2),
             "total_routing_decisions": routing_total,
@@ -303,7 +411,8 @@ class MetricsCollector:
             "fallback_usage_rate": round(fallback_rate, 2),
             "team_utilization": team_counts,
             "total_model_selections": len(self.model_metrics),
-            "total_team_snapshots": len(self.team_metrics)
+            "total_team_snapshots": len(self.team_metrics),
+            "team_routing_statistics": team_routing_stats
         }
 
     def get_summary(self) -> dict:
