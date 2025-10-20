@@ -1,0 +1,55 @@
+name: Weekly RAG Report
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'  # Mondays at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  rag-weekly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Generate weekly report
+        run: |
+          PYTHONPATH=. python scripts/weekly_rag_report.py || true
+
+      - name: Upload weekly report
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-rag-report
+          path: logs/weekly_rag_report_*.md
+          if-no-files-found: warn
+          retention-days: 21
+
+      - name: Append summary
+        if: always()
+        run: |
+          LAST=$(ls -1 logs/weekly_rag_report_*.md 2>/dev/null | tail -n 1 || true)
+          if [ -n "$LAST" ]; then
+            echo "## Weekly RAG Report" >> "$GITHUB_STEP_SUMMARY"
+            tail -n +1 "$LAST" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No weekly report generated" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+
+      - name: Post to Slack (optional)
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          LAST=$(ls -1 logs/weekly_rag_report_*.md 2>/dev/null | tail -n 1 || true)
+          if [ -n "$SLACK_WEBHOOK_URL" ] && [ -n "$LAST" ]; then
+            echo "Posting weekly report to Slack"
+            TEXT=$(sed 's/"/\\"/g' "$LAST")
+            curl -X POST -H 'Content-type: application/json' --data "{\"text\": \"$TEXT\"}" "$SLACK_WEBHOOK_URL" || true
+          else
+            echo "Slack webhook or report not available; skipping"
+          fi
