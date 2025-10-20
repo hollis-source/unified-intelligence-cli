@@ -1,0 +1,62 @@
+id: devops-03
+agent: devops
+prompt: |
+  Configure secrets management for CI/CD and runtime using provider-native secrets and least-privilege access.
+
+  Requirements:
+  1. Store secrets securely (e.g., GitHub Secrets, AWS Secrets Manager, Vault)
+  2. Use environment-specific scoping and rotation guidance
+  3. Avoid plaintext outputs and redact logs
+  4. MANDATORY: Your response MUST include at least 3 file:line references to configuration files
+  5. MANDATORY: Include YAML workflow examples showing secrets usage
+
+  Secrets Management Template (include in your response):
+  ```yaml
+  # GitHub Actions workflow with secrets
+  name: [Pipeline Name]
+
+  jobs:
+    [job-name]:
+      steps:
+        - name: [Step using secrets]
+          env:
+            SECRET_KEY: ${{ secrets.SECRET_NAME }}
+          run: [command using $SECRET_KEY]
+  ```
+
+  Expected files to reference:
+  - .github/workflows/deploy.yml (workflow using secrets)
+  - .github/workflows/ci.yml (CI workflow with secret access)
+  - config/secrets.yml or .env.example (secret key templates, NOT values)
+  - docs/secrets-rotation.md (rotation procedures)
+
+  Example of proper file:line references:
+  - .github/workflows/deploy.yml:25 (secrets usage in env block)
+  - .github/workflows/ci.yml:18 (masked secret reference)
+  - config/secrets.yml:8 (secret key template)
+  - docs/secrets-rotation.md:15 (rotation procedure)
+
+  Deliverables:
+  1. Secrets usage documentation with file:line references to workflows
+  2. CI/CD integration YAML examples with name:, env:, run: keywords showing ${{ secrets.X }} usage
+  3. Rotation procedure and audit notes with specific file references
+
+checks:
+  - type: regex
+    pattern: '\b(secrets?|vault|secret\s+manager|KMS)\b'
+    description: Must mention secrets management solution(s)
+  - type: regex
+    pattern: '\b(rotation|encrypt(ion)?|least\s+privilege)\b'
+    description: Should cover rotation, encryption, or least privilege
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3600
+  tags: [devops, security, secrets, ci]
+
+

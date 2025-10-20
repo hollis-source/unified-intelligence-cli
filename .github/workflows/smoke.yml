@@ -1,0 +1,139 @@
+name: Smoke Tests (Non-Dry-Run)
+
+on:
+  workflow_dispatch:
+    inputs:
+      domain_matrix:
+        description: "Comma-separated domains for optional A/B smoke (e.g., frontend,backend)"
+        required: false
+        default: ""
+
+
+  schedule:
+    - cron: '0 6 * * *'  # daily at 06:00 UTC
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run smoke tests (non-dry-run)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+        run: |
+          PYTHONPATH=. pytest tests/integration/test_build_rag_patterns_smoke.py -v --junitxml=pytest_smoke.xml
+
+      - name: Upload smoke logs artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-smoke-logs
+          path: |
+            logs/
+          if-no-files-found: ignore
+
+      - name: Upload smoke JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-smoke-junit
+          path: pytest_smoke.xml
+          if-no-files-found: ignore
+
+  ab-smoke-optin:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.domain_matrix != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Gate: determine RUN or SKIP (opt-in A/B)
+        id: gate_ab
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+        run: |
+          if [ -z "$HF_TOKEN" ] && [ -z "$HUGGINGFACE_TOKEN" ]; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Job summary (opt-in A/B)
+        if: always()
+        run: |
+          if [ "${{ steps.gate_ab.outputs.run }}" = "true" ]; then
+            {
+              echo "# A/B smoke (opt-in)"
+              echo "Status: RUN"
+              echo "Domains: ${{ github.event.inputs.domain_matrix }}"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            {
+              echo "# A/B smoke (opt-in)"
+              echo "Status: SKIP (missing HF/HUGGINGFACE tokens)"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Run A/B evaluator (opt-in small N)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+        run: |
+          if [ "${{ steps.gate_ab.outputs.run }}" != "true" ]; then
+            echo "Skipping A/B smoke: missing HF/HUGGINGFACE tokens";
+            mkdir -p logs && echo "SKIPPED: missing HF/HUGGINGFACE tokens" > logs/SKIPPED.txt;
+          else
+            PYTHONPATH=. python scripts/ab_routing_eval.py --domains ${{ github.event.inputs.domain_matrix }} --per-domain 1 --provider qwen3 --bins 8;
+          fi
+
+      - name: Upload A/B smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ab-smoke-optin-artifacts
+          path: |
+            logs/ab_eval_*.json
+            logs/ab_eval_*.csv
+            logs/ab_eval_diff_*.csv
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload SKIPPED marker (opt-in A/B)
+        if: always() && steps.gate_ab.outputs.run == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ab-smoke-optin-skipped
+          path: logs/SKIPPED.txt
+          if-no-files-found: ignore
+          retention-days: 7
+
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-smoke-junit
+          path: pytest_smoke.xml
+          if-no-files-found: ignore
+

@@ -27,13 +27,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Run tests with pytest
+    - name: Run tests with pytest (fast suite)
       run: |
-        PYTHONPATH=. pytest tests/ -v --tb=short
+        PYTHONPATH=. pytest tests/ -v --tb=short -k "not build_rag_patterns_smoke"
 
-    - name: Generate coverage report
+    - name: Generate coverage report (fast suite)
       run: |
-        PYTHONPATH=. pytest tests/ --cov=src --cov-report=term --cov-report=xml
+        PYTHONPATH=. pytest tests/ --cov=src --cov-report=term --cov-report=xml -k "not build_rag_patterns_smoke"
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4

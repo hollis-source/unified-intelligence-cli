@@ -18,7 +18,7 @@ async def implement_entities(input_data: Any = None) -> Dict[str, Any]:
         EntitiesCode with Python implementation
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -54,7 +54,7 @@ async def implement_use_cases(input_data: Any = None) -> Dict[str, Any]:
         UseCasesCode with Python implementation
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -97,7 +97,7 @@ async def implement_adapters(input_data: Any = None) -> Dict[str, Any]:
         AdaptersCode with Python implementation
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -140,7 +140,7 @@ async def implement_orchestrator(input_data: Any = None) -> Dict[str, Any]:
         OrchestratorCode with Python implementation
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -204,7 +204,7 @@ async def integrate_components(input_data: Any = None) -> Dict[str, Any]:
         components_summary = "All components implemented"
 
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -261,7 +261,7 @@ async def test_system(input_data: Any = None) -> Dict[str, Any]:
         TestResults with pytest code
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",

@@ -1,0 +1,17 @@
+id: frontend-04
+agent: frontend-engineer
+prompt: |
+  Optimize a React list rendering 1,000 items for performance.
+  Requirements:
+  - Implement windowing/virtualization
+  - Avoid unnecessary re-renders (memoization, keys)
+  - Add a lightweight perf note in comments
+checks:
+  - "List renders smoothly without jank"
+  - "Re-renders minimized when props unchanged"
+  - "Virtualization limits DOM nodes to viewport"
+metadata:
+  tags: ["frontend", "react", "performance"]
+  difficulty: "hard"
+  est_runtime_s: 25
+

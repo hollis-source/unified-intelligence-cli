@@ -1,0 +1,282 @@
+id: test-06
+agent: test
+prompt: |
+  Implement integration tests for the REST API (catalog and cart). Spin up the app in test
+  mode, seed minimal data, and verify endpoints for list/detail, add-to-cart, and totals.
+
+  Requirements:
+  - Use a test client and isolated test database
+  - Validate status codes, payloads, and error handling
+  - Include negative cases for invalid inputs
+
+  Expected files to reference:
+  - tests/integration/test_catalog_api.py (catalog API integration tests)
+  - tests/integration/test_cart_api.py (cart API integration tests)
+  - tests/integration/conftest.py (test client and database fixtures)
+  - tests/integration/fixtures/catalog_data.json (seed data)
+
+  Example of proper file:line references:
+  - tests/integration/test_catalog_api.py:8 (def test_list_products_returns_200)
+  - tests/integration/test_cart_api.py:15 (def test_add_to_cart_success)
+  - tests/integration/conftest.py:12 (@pytest.fixture def test_client)
+  - tests/integration/test_catalog_api.py:45 (assert response.status_code == 404)
+
+  Deliverables:
+  1. tests/integration/test_catalog_api.py
+  2. tests/integration/test_cart_api.py
+  - MANDATORY: Your response MUST include at least 3 file:line references to integration test files
+  - MANDATORY: Include test client usage, status code assertions (200/201/400/404), and payload validation
+
+  Integration Test Template (use this structure):
+  ```python
+  # tests/integration/conftest.py
+  import pytest
+  from app import create_app
+  from database import db, init_db
+
+  @pytest.fixture(scope="session")
+  def app():
+      \"\"\"Create test application\"\"\"
+      app = create_app(config="testing")
+      with app.app_context():
+          init_db()
+          yield app
+
+  @pytest.fixture(scope="function")
+  def client(app):
+      \"\"\"Create test client\"\"\"
+      return app.test_client()
+
+  @pytest.fixture(scope="function")
+  def clean_database(app):
+      \"\"\"Clear database before each test\"\"\"
+      with app.app_context():
+          db.drop_all()
+          db.create_all()
+          yield
+          db.session.remove()
+          db.drop_all()
+
+  @pytest.fixture
+  def seed_catalog(clean_database, app):
+      \"\"\"Seed minimal catalog data\"\"\"
+      with app.app_context():
+          products = [
+              {"id": 1, "name": "Laptop", "price": 999.99, "stock": 10},
+              {"id": 2, "name": "Mouse", "price": 29.99, "stock": 50},
+              {"id": 3, "name": "Keyboard", "price": 79.99, "stock": 30},
+          ]
+          for product in products:
+              db.session.execute(
+                  \"INSERT INTO products (id, name, price, stock) VALUES (:id, :name, :price, :stock)\",
+                  product
+              )
+          db.session.commit()
+  ```
+
+  ```python
+  # tests/integration/test_catalog_api.py
+  import pytest
+  import json
+
+  class TestCatalogAPI:
+      def test_list_products_returns_200(self, client, seed_catalog):
+          \"\"\"Test GET /api/products returns 200 with product list\"\"\"
+          response = client.get('/api/products')
+
+          assert response.status_code == 200
+          data = json.loads(response.data)
+          assert isinstance(data, list)
+          assert len(data) == 3
+          assert data[0]['name'] == 'Laptop'
+
+      def test_list_products_pagination(self, client, seed_catalog):
+          \"\"\"Test GET /api/products?page=1&limit=2 returns paginated results\"\"\"
+          response = client.get('/api/products?page=1&limit=2')
+
+          assert response.status_code == 200
+          data = json.loads(response.data)
+          assert len(data) == 2
+
+      def test_get_product_detail_success(self, client, seed_catalog):
+          \"\"\"Test GET /api/products/1 returns 200 with product details\"\"\"
+          response = client.get('/api/products/1')
+
+          assert response.status_code == 200
+          data = json.loads(response.data)
+          assert data['id'] == 1
+          assert data['name'] == 'Laptop'
+          assert data['price'] == 999.99
+          assert data['stock'] == 10
+
+      def test_get_product_detail_not_found(self, client, seed_catalog):
+          \"\"\"Test GET /api/products/999 returns 404 for non-existent product\"\"\"
+          response = client.get('/api/products/999')
+
+          assert response.status_code == 404
+          data = json.loads(response.data)
+          assert 'error' in data
+          assert 'not found' in data['error'].lower()
+
+      def test_search_products_by_name(self, client, seed_catalog):
+          \"\"\"Test GET /api/products/search?q=mouse returns filtered results\"\"\"
+          response = client.get('/api/products/search?q=mouse')
+
+          assert response.status_code == 200
+          data = json.loads(response.data)
+          assert len(data) == 1
+          assert data[0]['name'] == 'Mouse'
+
+      def test_search_products_invalid_query(self, client, seed_catalog):
+          \"\"\"Test GET /api/products/search?q= returns 400 for empty query\"\"\"
+          response = client.get('/api/products/search?q=')
+
+          assert response.status_code == 400
+          data = json.loads(response.data)
+          assert 'error' in data
+  ```
+
+  ```python
+  # tests/integration/test_cart_api.py
+  import pytest
+  import json
+
+  class TestCartAPI:
+      def test_add_to_cart_success(self, client, seed_catalog):
+          \"\"\"Test POST /api/cart/add returns 201 with cart item\"\"\"
+          payload = {
+              "product_id": 1,
+              "quantity": 2
+          }
+          response = client.post(
+              '/api/cart/add',
+              data=json.dumps(payload),
+              content_type='application/json'
+          )
+
+          assert response.status_code == 201
+          data = json.loads(response.data)
+          assert data['product_id'] == 1
+          assert data['quantity'] == 2
+          assert 'cart_id' in data
+
+      def test_add_to_cart_invalid_product(self, client, seed_catalog):
+          \"\"\"Test POST /api/cart/add returns 404 for non-existent product\"\"\"
+          payload = {
+              "product_id": 999,
+              "quantity": 1
+          }
+          response = client.post(
+              '/api/cart/add',
+              data=json.dumps(payload),
+              content_type='application/json'
+          )
+
+          assert response.status_code == 404
+          data = json.loads(response.data)
+          assert 'error' in data
+
+      def test_add_to_cart_insufficient_stock(self, client, seed_catalog):
+          \"\"\"Test POST /api/cart/add returns 400 when quantity exceeds stock\"\"\"
+          payload = {
+              "product_id": 1,
+              "quantity": 100  # Stock is only 10
+          }
+          response = client.post(
+              '/api/cart/add',
+              data=json.dumps(payload),
+              content_type='application/json'
+          )
+
+          assert response.status_code == 400
+          data = json.loads(response.data)
+          assert 'error' in data
+          assert 'stock' in data['error'].lower()
+
+      def test_add_to_cart_invalid_quantity(self, client, seed_catalog):
+          \"\"\"Test POST /api/cart/add returns 400 for negative quantity\"\"\"
+          payload = {
+              "product_id": 1,
+              "quantity": -1
+          }
+          response = client.post(
+              '/api/cart/add',
+              data=json.dumps(payload),
+              content_type='application/json'
+          )
+
+          assert response.status_code == 400
+          data = json.loads(response.data)
+          assert 'error' in data
+
+      def test_get_cart_total(self, client, seed_catalog):
+          \"\"\"Test GET /api/cart/total returns 200 with calculated total\"\"\"
+          # Add items to cart first
+          client.post('/api/cart/add', data=json.dumps({"product_id": 1, "quantity": 1}), content_type='application/json')
+          client.post('/api/cart/add', data=json.dumps({"product_id": 2, "quantity": 2}), content_type='application/json')
+
+          response = client.get('/api/cart/total')
+
+          assert response.status_code == 200
+          data = json.loads(response.data)
+          # Laptop (999.99) + Mouse (29.99 * 2) = 1059.97
+          assert abs(data['total'] - 1059.97) < 0.01
+          assert data['item_count'] == 3
+
+      def test_remove_from_cart(self, client, seed_catalog):
+          \"\"\"Test DELETE /api/cart/remove/1 returns 200\"\"\"
+          # Add item first
+          client.post('/api/cart/add', data=json.dumps({"product_id": 1, "quantity": 1}), content_type='application/json')
+
+          response = client.delete('/api/cart/remove/1')
+
+          assert response.status_code == 200
+          data = json.loads(response.data)
+          assert data['success'] is True
+
+      def test_clear_cart(self, client, seed_catalog):
+          \"\"\"Test POST /api/cart/clear returns 200\"\"\"
+          # Add items first
+          client.post('/api/cart/add', data=json.dumps({"product_id": 1, "quantity": 1}), content_type='application/json')
+
+          response = client.post('/api/cart/clear')
+
+          assert response.status_code == 200
+          data = json.loads(response.data)
+          assert data['success'] is True
+
+          # Verify cart is empty
+          response = client.get('/api/cart/total')
+          data = json.loads(response.data)
+          assert data['total'] == 0
+  ```
+
+  Expected integration test patterns:
+  - Test client: Flask test_client() or FastAPI TestClient
+  - Status codes: 200 (OK), 201 (Created), 400 (Bad Request), 404 (Not Found), 500 (Error)
+  - Payload validation: json.loads(response.data), assert keys exist
+  - Test database: Isolated per test with clean_database fixture
+  - Negative cases: Invalid product IDs, insufficient stock, negative quantities
+  - End-to-end flows: Add to cart → verify total → remove → verify empty
+
+checks:
+  - type: regex
+    pattern: '\b(integration\s+tests?|test\s+client)\b'
+    description: Must explicitly be integration tests
+  - type: regex
+    pattern: '\b(REST|API|endpoint(s)?)\b'
+    description: Targets REST API endpoints
+  - type: regex
+    pattern: '\b(status\s*codes?|payloads?|errors?)\b'
+    description: Verifies codes, payloads, and errors
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3600
+  tags: [testing, integration, api]
+

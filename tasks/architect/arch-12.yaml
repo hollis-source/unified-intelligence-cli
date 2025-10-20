@@ -1,0 +1,36 @@
+id: arch-12
+agent: architect
+prompt: |
+  Design configuration management and feature flag architecture enabling safe, gradual rollouts across environments.
+
+  Expected files to reference:
+  - docs/config/hierarchy_and_precedence.md:15 (config hierarchy: defaults → env vars → remote config)
+  - infrastructure/feature_flags/flag_lifecycle.md:25 (flag states: disabled → pilot → GA → deprecated → removed)
+  - infrastructure/secrets/vault_rotation_policy.yaml:35 (secrets rotation schedule and automation)
+  - docs/operations/rollout_playbook.md:45 (canary rollout with kill switch and automatic rollback)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include config/feature flag patterns with config separation from code, secrets management, flag evaluation with targeting rules, auditability, kill switches, and multi-environment promotion/rollback
+
+  Template includes: Configuration hierarchy and precedence, feature flag lifecycle and governance, secrets management and rotation, rollout/rollback playbooks with guardrails
+
+checks:
+  - type: regex
+    pattern: '\b(feature\s+flag|toggle|configuration)\b'
+    description: Must include feature flag/config concepts
+  - type: regex
+    pattern: '\b(gradual\s+rollout|canary|kill\s+switch)\b'
+    description: Must include rollout and kill switch strategies
+  - type: regex
+    pattern: '\b(secrets?\s+management|rotation)\b'
+    description: Must cover secrets management/rotation
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3400
+  tags: [configuration, feature-flags, governance, reliability]

@@ -1,0 +1,109 @@
+id: db-04
+agent: database
+prompt: |
+  Design a partitioning strategy for a time-series events table with 1B+ rows and growing.
+
+  Context:
+  - Table: events (user_id, event_type, properties JSONB, created_at)
+  - Current size: 1.2B rows, 450GB
+  - Growth: 50M rows/month
+  - Access pattern: 90% queries filter by created_at (last 90 days)
+  - Retention: Keep 2 years, archive to cold storage after
+  - Database: PostgreSQL 15
+
+  Requirements:
+  1. Partition scheme (range, list, or hash)
+  2. Partition key selection and justification
+  3. Partition maintenance strategy (creation, archival, deletion)
+  4. Query performance impact analysis
+  5. Migration plan from non-partitioned to partitioned table
+  6. MANDATORY: Your response MUST include at least 3 file:line references to partitioning files
+  7. MANDATORY: Include PARTITION BY RANGE, CREATE TABLE PARTITION OF statements
+
+  Table Partitioning Template (use this structure):
+  ```sql
+  -- db/schema/events_partitioned.sql
+  CREATE TABLE events (
+      event_id BIGSERIAL,
+      user_id UUID NOT NULL,
+      event_type VARCHAR(100) NOT NULL,
+      properties JSONB,
+      created_at TIMESTAMP NOT NULL,
+      PRIMARY KEY (event_id, created_at)
+  ) PARTITION BY RANGE (created_at);
+
+  -- Create indexes on parent table (inherited by partitions)
+  CREATE INDEX idx_events_user_created ON events(user_id, created_at);
+  CREATE INDEX idx_events_type ON events(event_type);
+
+  -- db/schema/partitions/events_2025_01.sql
+  CREATE TABLE events_2025_01 PARTITION OF events
+      FOR VALUES FROM ('2025-01-01') TO ('2025-02-01');
+
+  CREATE TABLE events_2025_02 PARTITION OF events
+      FOR VALUES FROM ('2025-02-01') TO ('2025-03-01');
+
+  -- db/maintenance/create_monthly_partition.sql
+  CREATE OR REPLACE FUNCTION create_monthly_partition(target_month DATE)
+  RETURNS void AS $$
+  DECLARE
+      partition_name TEXT;
+      start_date DATE;
+      end_date DATE;
+  BEGIN
+      partition_name := 'events_' || to_char(target_month, 'YYYY_MM');
+      start_date := date_trunc('month', target_month);
+      end_date := start_date + INTERVAL '1 month';
+
+      EXECUTE format(
+          'CREATE TABLE IF NOT EXISTS %I PARTITION OF events FOR VALUES FROM (%L) TO (%L)',
+          partition_name, start_date, end_date
+      );
+  END;
+  $$ LANGUAGE plpgsql;
+
+  -- db/maintenance/archive_old_partitions.sql
+  -- Detach partitions older than 2 years
+  SELECT tablename FROM pg_tables
+  WHERE schemaname = 'public'
+    AND tablename LIKE 'events_____'
+    AND tablename < 'events_' || to_char(NOW() - INTERVAL '2 years', 'YYYY_MM');
+  ```
+
+  Expected files to reference:
+  - db/schema/events_partitioned.sql (parent table with PARTITION BY RANGE)
+  - db/schema/partitions/events_2025_01.sql (partition creation examples)
+  - db/maintenance/create_monthly_partition.sql (automated partition creation function)
+  - db/maintenance/archive_old_partitions.sql (partition detachment for archival)
+
+  Example of proper file:line references:
+  - db/schema/events_partitioned.sql:8 (PARTITION BY RANGE on created_at)
+  - db/schema/partitions/events_2025_01.sql:2 (CREATE TABLE PARTITION OF with range)
+  - db/maintenance/create_monthly_partition.sql:15 (dynamic partition creation with EXECUTE)
+  - db/maintenance/archive_old_partitions.sql:3 (partition detection query)
+
+  Deliverables:
+  1. SQL DDL with PARTITION BY RANGE, CREATE TABLE PARTITION OF, PRIMARY KEY keywords and file:line refs
+  2. Maintenance scripts with CREATE OR REPLACE FUNCTION, EXECUTE, format() for automation
+  3. Performance comparison (single table vs partitioned: query pruning benefits)
+
+checks:
+  - type: regex
+    pattern: "PARTITION BY RANGE|PARTITION BY LIST|PARTITION BY HASH"
+    description: Must specify partition strategy
+  - type: regex
+    pattern: "CREATE TABLE.*PARTITION OF"
+    description: Must show partition creation examples
+  - type: regex
+    pattern: "maintenance|pg_partman|automatic"
+    description: Must address partition maintenance
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 6000
+  tags: [partitioning, time-series, scalability]

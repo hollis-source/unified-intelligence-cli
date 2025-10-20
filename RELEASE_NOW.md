@@ -105,8 +105,8 @@ Should show:
 ## Next Steps After Release
 
 1. Monitor GitHub Actions: `gh run list`
-2. Verify PyPI: https://pypi.org/project/unified-intelligence-cli/
-3. Test install: `pip install unified-intelligence-cli`
+2. Verify PyPI: https://pypi.org/project/autonomous-task-agent-dev-orchestration/
+3. Test install: `pip install autonomous-task-agent-dev-orchestration`
 4. Begin alpha rollout (Week 3-4)
 
 Ready? Run: `./scripts/fix-github-auth.sh`

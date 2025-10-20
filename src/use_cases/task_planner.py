@@ -3,8 +3,8 @@
 import json
 import logging
 from typing import List, Optional, Set
-from src.entities import Agent, Task, ExecutionContext
-from src.interfaces import (
+from src.entity import Agent, Task, ExecutionContext
+from src.interface import (
     ITaskPlanner,
     ExecutionPlan,
     ITextGenerator,
@@ -65,12 +65,14 @@ class TaskPlannerUseCase(ITaskPlanner):
         Invoke LLM for planning strategy.
 
         Clean Code: Extract method - single responsibility.
+        Phase 2: Extract content from GenerationResult.
         """
         prompt = self._build_planning_prompt(tasks, agents)
         messages = [{"role": "user", "content": prompt}]
         config = LLMConfig(temperature=0.3, max_tokens=500)
 
-        return self.llm_provider.generate(messages, config)
+        result = self.llm_provider.generate(messages, config)
+        return result.content
 
     def _build_planning_prompt(
         self,

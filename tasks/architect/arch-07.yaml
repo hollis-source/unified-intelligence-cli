@@ -1,0 +1,36 @@
+id: arch-07
+agent: architect
+prompt: |
+  Architect system resilience using circuit breaker, bulkhead, timeout, and retry patterns for critical external integrations.
+
+  Expected files to reference:
+  - docs/architecture/resilience_patterns.md:15 (resilience catalog with configuration defaults)
+  - src/resilience/circuit_breaker.py:35 (circuit breaker states: closed/open/half-open with fallback)
+  - src/resilience/bulkhead_executor.py:25 (thread pool isolation for failure domains)
+  - tests/chaos/failure_injection_tests.py:45 (chaos experiments with dependency failures)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include resilience patterns with circuit breaker states, bulkhead isolation, timeout budgets, retry/backoff strategies, fallback behaviors, and chaos engineering validation
+
+  Template includes: Resilience patterns catalog, failure domain isolation, sequence diagrams for failure/recovery paths, fallback and degradation strategies, load shedding, chaos experiments with failure injection
+
+checks:
+  - type: regex
+    pattern: '\b(circuit\s+breaker|bulkhead|retry|timeout)\b'
+    description: Must include key resilience patterns
+  - type: regex
+    pattern: '\b(fallback|load\s+shedding|backoff)\b'
+    description: Must describe fallback and backoff strategies
+  - type: regex
+    pattern: '\b(chaos\s+engineering|failure\s+injection)\b'
+    description: Must include testing via chaos/failure injection
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5300
+  tags: [resilience, reliability, design-patterns, scalability]

@@ -2,13 +2,14 @@
 
 import logging
 from typing import Optional, List
-from src.entities import Agent, AgentTeam, MetricsCollector
+from src.entity import Agent, AgentTeam, MetricsCollector
 from src.use_cases.task_planner import TaskPlannerUseCase
 from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 from src.adapters.agent.capability_selector import CapabilityBasedSelector
 from src.adapters.agent.team_selector import TeamBasedSelector
 from src.adapters.agent.llm_executor import LLMAgentExecutor
-from src.interfaces import ITextGenerator, IAgentCoordinator
+from src.adapters.agent.llm_cache import CacheConfig
+from src.interface import ITextGenerator, IAgentCoordinator
 from src.factories.provider_factory import ProviderFactory
 from src.factories.agent_factory import AgentFactory
 from src.factories.orchestration_factory import OrchestrationFactory
@@ -28,7 +29,24 @@ def compose_dependencies(
     routing_mode: str = "individual",
     teams: Optional[List[AgentTeam]] = None,
     collect_metrics: bool = False,
-    metrics_dir: str = "data/metrics"
+    metrics_dir: str = "data/metrics",
+    cache_enabled: bool = True,
+    cache_ttl_seconds: int = 14400,
+    cache_namespace: str = "",
+    enable_rag: bool = False,
+    # Prompt Framework (Phase 2-5)
+    validate_prompts: bool = False,
+    use_prompt_strategy: bool = False,
+    prompt_min_score: float = 60.0,
+    collect_prompt_metrics: bool = False,
+    prompt_metrics_store: str = "none",
+    surreal_url: str = "",
+    surreal_namespace: str = "",
+    surreal_database: str = "",
+    surreal_user: str = "",
+    surreal_pass: str = "",
+    # Week 14: P2.2 - Output validation
+    enable_output_validation: bool = False,
 ) -> tuple[IAgentCoordinator, Optional[MetricsCollector]]:
     """
     Compose dependencies for the coordinator use case.
@@ -68,20 +86,179 @@ def compose_dependencies(
             logger.info(f"Metrics collection enabled: {metrics_dir}")
 
     # Create adapters
+    # Phase 1: Cache configuration
+    cache_config = CacheConfig(
+        enabled=cache_enabled,
+        ttl_seconds=cache_ttl_seconds,
+        key_prefix=(cache_namespace or "llm_cache:")
+    )
+
+    # Phase 2-5: Prompt framework wiring (validator, strategy, metrics)
+    prompt_validator = None
+    if validate_prompts:
+        try:
+            from src.adapters.prompt import PromptStrategyValidator  # local import
+            prompt_validator = PromptStrategyValidator(min_score=prompt_min_score)
+            if logger:
+                logger.info(f"Prompt validation enabled (min_score={prompt_min_score})")
+        except Exception as e:
+            if logger:
+                logger.warning(f"Prompt validation unavailable: {e}")
+            prompt_validator = None
+
+    metrics_store = None
+    if collect_prompt_metrics and prompt_metrics_store != "none":
+        try:
+            if prompt_metrics_store == "memory":
+                from src.adapters.db.prompt_metrics_store import InMemoryPromptMetricsStore
+                metrics_store = InMemoryPromptMetricsStore()
+                if logger:
+                    logger.info("Prompt metrics store: InMemory")
+            elif prompt_metrics_store == "surreal":
+                from src.adapters.db.prompt_metrics_store import SurrealDBPromptMetricsStore
+                if not (surreal_url and surreal_namespace and surreal_database and surreal_user and surreal_pass):
+                    if logger:
+                        logger.warning("SurrealDB config incomplete; falling back to NoOp metrics store")
+                else:
+                    metrics_store = SurrealDBPromptMetricsStore(
+                        base_url=surreal_url,
+                        namespace=surreal_namespace,
+                        database=surreal_database,
+                        username=surreal_user,
+                        password=surreal_pass,
+                    )
+                    if logger:
+                        logger.info(f"Prompt metrics store: SurrealDB at {surreal_url}")
+        except Exception as e:
+            if logger:
+                logger.warning(f"Failed to initialize prompt metrics store: {e}")
+            metrics_store = None
+
+    # Week 14: P2.2 - Create output validator if enabled
+    output_validator = None
+    if enable_output_validation:
+        try:
+            from src.validation import OutputValidator
+            output_validator = OutputValidator()
+            if logger:
+                logger.info("Output validation enabled")
+        except Exception as e:
+            if logger:
+                logger.warning(f"Output validation unavailable: {e}")
+            output_validator = None
+
     agent_executor = LLMAgentExecutor(
         llm_provider,
         data_collector=data_collector,
         provider_name=provider_name,
-        orchestrator=orchestrator_mode
+        orchestrator=orchestrator_mode,
+        cache_config=cache_config,
+        enable_cache=cache_enabled,
+        prompt_validator=prompt_validator,
+        validate_prompts=bool(prompt_validator) and validate_prompts,
+        use_prompt_strategy=use_prompt_strategy,
+        metrics_store=metrics_store,
+        output_validator=output_validator,  # Week 14: P2.2
+        enable_output_validation=bool(output_validator) and enable_output_validation,  # Week 14: P2.2
+        metrics_collector=metrics_collector,  # Week 14: P2.2
     )
 
     # Week 12/13: Create agent selector based on routing mode (with metrics integration)
+    # Phase 2: Use RAG-enhanced routing if enabled
     if routing_mode == "team" and teams:
         # Create domain classifier with metrics integration
         domain_classifier = DomainClassifier(metrics_collector=metrics_collector)
-        team_router = TeamRouter(domain_classifier=domain_classifier)
+
+        # Use RAG-enhanced router if RAG is enabled and components are available
+        if enable_rag:
+            try:
+                from src.routing.rag_team_router import RAGTeamRouter
+                from src.adapters.rag.surrealdb_store import SurrealDBStore
+                from src.adapters.rag.embedding_pipeline import EmbeddingPipeline
+                from src.adapters.llm.rag_config import RAGConfig
+
+                # Get RAG components (will be created later if not exists)
+                rag_config = RAGConfig()
+
+                # Use environment variable or localhost for DB URL
+                import os
+                db_url = os.getenv("SURREALDB_URL", rag_config.db_url)
+                if "project-builder-db" in db_url:
+                    db_url = "ws://localhost:8000"
+
+                # Create RAG components for routing
+                db_store = SurrealDBStore(
+                    url=db_url,
+                    namespace=rag_config.db_namespace,
+                    database=rag_config.db_database,
+                    user=rag_config.db_user,
+                    password=rag_config.db_password
+                )
+
+                # Connect to DB (async)
+                import asyncio
+                try:
+                    asyncio.get_event_loop().run_until_complete(db_store.connect())
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(db_store.connect())
+
+                # Create embedding pipeline
+                embedder = EmbeddingPipeline(
+                    provider=rag_config.embedding_provider,
+                    model=rag_config.embedding_model
+                )
+
+                # Create RAG-enhanced router
+                team_router = RAGTeamRouter(
+                    domain_classifier=domain_classifier,
+                    db_store=db_store,
+                    embedding_pipeline=embedder,
+                    top_k=rag_config.top_k,
+                    similarity_threshold=rag_config.similarity_threshold,
+                    use_rag=True
+                )
+
+                if logger:
+                    logger.info(f"Using RAG-enhanced team routing with {len(teams)} teams")
+
+            except Exception as e:
+                if logger:
+                    logger.warning(f"Failed to enable RAG routing: {e}. Using base TeamRouter.")
+                team_router = TeamRouter(domain_classifier=domain_classifier)
+        else:
+            # Optional: track baseline routing decisions behind env flag
+            import os
+            if os.getenv("RAG_BASELINE_TRACK_DECISIONS", "0") in ("1", "true", "TRUE", "yes", "on"):
+                try:
+                    from src.adapters.llm.rag_config import RAGConfig
+                    from src.adapters.rag.surrealdb_store import SurrealDBStore
+                    from src.routing.tracking_router import TrackingTeamRouter
+                    rag_config = RAGConfig()
+                    db_url = os.getenv("SURREALDB_URL", rag_config.db_url)
+                    if "project-builder-db" in db_url:
+                        db_url = "ws://localhost:8000"
+                    db_store = SurrealDBStore(
+                        url=db_url,
+                        namespace=rag_config.db_namespace,
+                        database=rag_config.db_database,
+                        user=rag_config.db_user,
+                        password=rag_config.db_password
+                    )
+                    # Lazy connect inside store methods to avoid event loop conflicts
+                    team_router = TrackingTeamRouter(domain_classifier=domain_classifier, db_store=db_store)
+                    if logger:
+                        logger.info("Using TeamRouter with baseline decision tracking (flag enabled)")
+                except Exception as e:
+                    if logger:
+                        logger.warning(f"Baseline tracking flag set but initialization failed: {e}. Using base TeamRouter.")
+                    team_router = TeamRouter(domain_classifier=domain_classifier)
+            else:
+                team_router = TeamRouter(domain_classifier=domain_classifier)
+
         agent_selector = TeamBasedSelector(teams, team_router=team_router)
-        if logger:
+        if logger and not enable_rag:
             logger.info(f"Using team-based routing with {len(teams)} teams")
     else:
         agent_selector = CapabilityBasedSelector()
@@ -104,6 +281,57 @@ def compose_dependencies(
         agents=agents,
         logger_instance=logger
     )
+
+    # RAG Integration: Wrap coordinator with RAGTaskCoordinator if enabled
+    if enable_rag:
+        try:
+            from src.use_cases.rag_task_coordinator import RAGTaskCoordinator
+            from src.adapters.rag.surrealdb_store import SurrealDBStore
+            from src.adapters.rag.embedding_pipeline import EmbeddingPipeline
+            from src.adapters.llm.rag_config import RAGConfig
+            import asyncio
+
+            # Create RAG components
+            rag_config = RAGConfig()
+
+            # Use environment variable or localhost for DB URL (handles both host and container)
+            import os
+            db_url = os.getenv("SURREALDB_URL", rag_config.db_url)
+            # If using Docker container name, try localhost first (for host execution)
+            if "project-builder-db" in db_url:
+                db_url = "ws://localhost:8000"
+
+            db_store = SurrealDBStore(
+                url=db_url,
+                namespace=rag_config.db_namespace,
+                database=rag_config.db_database,
+                user=rag_config.db_user,
+                password=rag_config.db_password
+            )
+
+            # NOTE: Do NOT connect here! Connection will be established lazily
+            # inside the async context to avoid event loop conflicts.
+            # The db_store.connect() will be called automatically on first use.
+
+            embedder = EmbeddingPipeline(
+                provider=rag_config.embedding_provider,
+                model=rag_config.embedding_model
+            )
+
+            # Wrap coordinator with RAG
+            coordinator = RAGTaskCoordinator(
+                task_planner=task_planner,
+                agent_executor=agent_executor,
+                db_store=db_store,
+                embedding_pipeline=embedder,
+                logger=logger
+            )
+
+            if logger:
+                logger.info(f"RAG enabled: {rag_config}")
+        except Exception as e:
+            if logger:
+                logger.warning(f"Failed to enable RAG: {e}. Continuing without RAG.")
 
     return coordinator, metrics_collector
 

@@ -13,7 +13,7 @@ from src.dsl.entities.composition import Composition
 from src.dsl.entities.product import Product
 from src.dsl.entities.functor import Functor
 from src.dsl.entities.ast_node import ASTNode
-from src.entities.htn.htn_node import HTNNode
+from src.entity.htn.htn_node import HTNNode
 
 
 class HTNCompiler:

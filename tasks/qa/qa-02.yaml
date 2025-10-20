@@ -1,0 +1,31 @@
+id: qa-02
+agent: qa
+prompt: |
+  Design exploratory testing session for the checkout flow with test charters.
+
+  Expected files to reference:
+  - tests/qa/exploratory/checkout_charters.md:8 (Charter #1: Payment method exploration)
+  - src/pages/CheckoutPage.tsx:45 (payment method selector component)
+  - src/components/PaymentForm.tsx:120 (payment validation logic)
+  - src/api/orders.py:78 (POST /api/orders order creation endpoint)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include exploratory testing patterns with test charters (30-45 min sessions), risk areas, and usability considerations
+
+  Template includes: Test charter format with scope/implementation/test ideas/risk areas/success criteria, multiple payment methods (credit card, PayPal, crypto), guest vs logged-in checkout, coupon codes, shipping validation
+
+checks:
+  - "exploratory"
+  - "test charter"
+  - "edge case"
+  - "risk"
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3500
+  tags: [exploratory-testing, test-charters, checkout, risk-analysis]

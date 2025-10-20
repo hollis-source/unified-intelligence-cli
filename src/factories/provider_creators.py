@@ -11,7 +11,7 @@ Week 13: Extracted from ProviderFactory to fix DIP violation.
 
 import os
 from typing import Optional, Dict, Any, Protocol
-from src.interfaces import ITextGenerator
+from src.interface import ITextGenerator
 
 
 class IProviderCreator(Protocol):
@@ -62,6 +62,40 @@ class GrokProviderCreator:
 
         from src.adapters.llm.grok_adapter import GrokAdapter
         return GrokAdapter()
+
+
+class GraniteProviderCreator:
+    """
+    Creator for IBM Granite 4.0-H provider (local llama.cpp).
+
+    Features:
+    - Zero-cost local inference
+    - 512K context window
+    - Load balancing across 2 instances (ports 8080, 8081)
+    - Better instruction-following than Grok
+    - OpenAI-compatible API
+    """
+
+    def create(self, config: Optional[Dict[str, Any]] = None) -> ITextGenerator:
+        from src.adapters.llm.granite_adapter_v3 import GraniteAdapterV3
+
+        instances = ["http://localhost:8080", "http://localhost:8081"]
+        enable_rag = False
+        timeout = 300
+
+        if config:
+            if "instances" in config:
+                instances = config["instances"]
+            if "enable_rag" in config:
+                enable_rag = config["enable_rag"]
+            if "timeout" in config:
+                timeout = config["timeout"]
+
+        return GraniteAdapterV3(
+            instances=instances,
+            enable_rag=enable_rag,
+            timeout=timeout
+        )
 
 
 class TongyiProviderCreator:
@@ -144,6 +178,48 @@ class Qwen3ProviderCreator:
         return Qwen3InferenceAdapter(space_id=space_id, timeout=timeout)
 
 
+class QwenAgentProviderCreator:
+    """
+    Creator for Qwen-Agent provider (Official Qwen framework).
+
+    Wraps Qwen-Agent framework for optimized Qwen3 model inference.
+
+    Features:
+    - Hermes-style function calling (Qwen3-optimized)
+    - Parallel tool calls
+    - MCP support
+    - Built-in Qwen-Agent tools
+
+    Configuration:
+        model: Model ID (default: Qwen/Qwen3-Next-80B-A3B-Instruct)
+        endpoint_url: Inference endpoint URL (default: from QWEN_ENDPOINT env)
+        thinking_mode: Enable thinking mode (default: False)
+        temperature: Sampling temperature (default: 0.7)
+        max_tokens: Maximum output tokens (default: 16384)
+    """
+
+    def create(self, config: Optional[Dict[str, Any]] = None) -> ITextGenerator:
+        from src.adapters.llm.qwen_agent_adapter import create_qwen_agent_adapter
+
+        model = "Qwen/Qwen3-Next-80B-A3B-Instruct"
+        endpoint_url = None
+        thinking_mode = False
+
+        if config:
+            if "model" in config:
+                model = config["model"]
+            if "endpoint_url" in config:
+                endpoint_url = config["endpoint_url"]
+            if "thinking_mode" in config:
+                thinking_mode = config["thinking_mode"]
+
+        return create_qwen_agent_adapter(
+            model=model,
+            endpoint_url=endpoint_url,
+            thinking_mode=thinking_mode
+        )
+
+
 class OrchestratorProviderCreator:
     """
     Creator for intelligent multi-model orchestrator.
@@ -215,4 +291,37 @@ class OrchestratorProviderCreator:
             available_providers=available_providers,
             enable_fallback=enable_fallback,
             max_fallback_attempts=max_fallback_attempts
+        )
+
+
+class Qwen3NextProviderCreator:
+    """Creator for Qwen3-Next-80B via HuggingFace Inference API.
+
+    Performance: 47-95x faster than local Granite (1.88s vs 60-120s per task)
+    Model: Qwen/Qwen3-Next-80B-A3B-Instruct (80B parameters, latest generation)
+    Infrastructure: HuggingFace serverless Inference API
+
+    Note: max_tokens increased to 2048 (from 2000) per dogfooding recommendation
+    to prevent output truncation on complex tasks.
+    """
+
+    def create(self, config: Optional[Dict[str, Any]] = None) -> ITextGenerator:
+        from src.adapters.llm.qwen3_next_adapter import Qwen3NextAdapter
+
+        max_tokens = 2048
+        temperature = 0.7
+        timeout = 30
+
+        if config:
+            if "max_tokens" in config:
+                max_tokens = config["max_tokens"]
+            if "temperature" in config:
+                temperature = config["temperature"]
+            if "timeout" in config:
+                timeout = config["timeout"]
+
+        return Qwen3NextAdapter(
+            max_tokens=max_tokens,
+            temperature=temperature,
+            timeout=timeout
         )

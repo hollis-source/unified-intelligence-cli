@@ -10,8 +10,8 @@ SOLID: SRP (single responsibility: graph-based workflow execution)
 """
 
 from typing import Any, Dict, List, Optional
-from src.entities.graph import Graph
-from src.entities.htn import HTNNode
+from src.entity.graph import Graph
+from src.entity.htn import HTNNode
 
 
 class GraphWorkflowExecutor:

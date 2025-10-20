@@ -1,0 +1,36 @@
+id: arch-20
+agent: architect
+prompt: |
+  Define security architecture with threat modeling, layered defenses, and secure-by-default controls for platform.
+
+  Expected files to reference:
+  - docs/security/threat_model_stride.md:20 (STRIDE threat model with mitigations per trust boundary)
+  - infrastructure/secrets/vault_architecture.yaml:35 (secrets management with HashiCorp Vault and rotation policies)
+  - infrastructure/network/zero_trust_enforcement.yaml:45 (mTLS enforcement points with least privilege policies)
+  - docs/security/incident_response_playbook.md:55 (detection/response runbooks with anomaly detection integration)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include security patterns with threat modeling (STRIDE/attack surface), trust boundaries, secrets management/key rotation, encryption standards, zero-trust networking (mTLS/least privilege), hardening baselines, and detection/response with logging/anomaly detection
+
+  Template includes: Threat model with mitigations per boundary, secrets and key management architecture, hardening baselines and zero-trust enforcement, detection/response runbooks, security observability plan
+
+checks:
+  - type: regex
+    pattern: '\b(threat\s+model|STRIDE|attack\s+surface)\b'
+    description: Must include a formal threat modeling approach
+  - type: regex
+    pattern: '\b(secrets?\s+management|mTLS|encryption|least\s+privilege)\b'
+    description: Must cover secrets, encryption, and zero-trust controls
+  - type: regex
+    pattern: '\b(detection|response|playbook|anomaly)\b'
+    description: Must include detection and response strategies
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 7000
+  tags: [security, zero-trust, threat-modeling, operations]

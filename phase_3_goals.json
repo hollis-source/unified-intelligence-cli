@@ -1,0 +1,1947 @@
+{
+  "phase": 3,
+  "priority": "High Priority",
+  "description": "Service/use case function names, adapter method names, frequently used utilities",
+  "estimated_hours": 62.5,
+  "total_violations": 172,
+  "files_to_refactor": {
+    "projects": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "projects",
+        "line_number": null,
+        "current_name": "projects",
+        "suggested_name": "project",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'projects' uses plural form, should be singular"
+      }
+    ],
+    "hf_spaces": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "hf_spaces",
+        "line_number": null,
+        "current_name": "hf_spaces",
+        "suggested_name": "hf_space",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'hf_spaces' uses plural form, should be singular"
+      }
+    ],
+    "k8s": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "k8s",
+        "line_number": null,
+        "current_name": "k8s",
+        "suggested_name": "k8",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'k8s' uses plural form, should be singular"
+      }
+    ],
+    ".hypothesis": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": ".hypothesis",
+        "line_number": null,
+        "current_name": ".hypothesis",
+        "suggested_name": ".hypothesi",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory '.hypothesis' uses plural form, should be singular"
+      }
+    ],
+    "tmp": [
+      {
+        "violation_type": "directory_ambiguous",
+        "file_path": "tmp",
+        "line_number": null,
+        "current_name": "tmp",
+        "suggested_name": "Use descriptive name based on contents",
+        "severity": "high",
+        "ruleset_reference": "Be Descriptive and Specific",
+        "description": "Directory name 'tmp' is ambiguous and unclear"
+      }
+    ],
+    "tests/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "tests/js": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/js",
+        "line_number": null,
+        "current_name": "js",
+        "suggested_name": "j",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'js' uses plural form, should be singular"
+      }
+    ],
+    "tests/adapters": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/adapters",
+        "line_number": null,
+        "current_name": "adapters",
+        "suggested_name": "adapter",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'adapters' uses plural form, should be singular"
+      }
+    ],
+    "tests/properties": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/properties",
+        "line_number": null,
+        "current_name": "properties",
+        "suggested_name": "propertie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'properties' uses plural form, should be singular"
+      }
+    ],
+    "projects/next-priorities-analysis": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "projects/next-priorities-analysis",
+        "line_number": null,
+        "current_name": "next-priorities-analysis",
+        "suggested_name": "next-priorities-analysi",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'next-priorities-analysis' uses plural form, should be singular"
+      }
+    ],
+    "projects/debug-effects": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "projects/debug-effects",
+        "line_number": null,
+        "current_name": "debug-effects",
+        "suggested_name": "debug-effect",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'debug-effects' uses plural form, should be singular"
+      }
+    ],
+    "projects/test-011-microservices": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "projects/test-011-microservices",
+        "line_number": null,
+        "current_name": "test-011-microservices",
+        "suggested_name": "test-011-microservice",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'test-011-microservices' uses plural form, should be singular"
+      }
+    ],
+    "projects/syd2-test-3-typehints": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "projects/syd2-test-3-typehints",
+        "line_number": null,
+        "current_name": "syd2-test-3-typehints",
+        "suggested_name": "syd2-test-3-typehint",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'syd2-test-3-typehints' uses plural form, should be singular"
+      }
+    ],
+    "projects/test-real-artifacts": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "projects/test-real-artifacts",
+        "line_number": null,
+        "current_name": "test-real-artifacts",
+        "suggested_name": "test-real-artifact",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'test-real-artifacts' uses plural form, should be singular"
+      }
+    ],
+    "dev/experiments": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "dev/experiments",
+        "line_number": null,
+        "current_name": "experiments",
+        "suggested_name": "experiment",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'experiments' uses plural form, should be singular"
+      }
+    ],
+    "dev/notebooks": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "dev/notebooks",
+        "line_number": null,
+        "current_name": "notebooks",
+        "suggested_name": "notebook",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'notebooks' uses plural form, should be singular"
+      }
+    ],
+    ".claude/hooks": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": ".claude/hooks",
+        "line_number": null,
+        "current_name": "hooks",
+        "suggested_name": "hook",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'hooks' uses plural form, should be singular"
+      }
+    ],
+    "src/utils": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/utils",
+        "line_number": null,
+        "current_name": "utils",
+        "suggested_name": "util",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'utils' uses plural form, should be singular"
+      }
+    ],
+    "src/factories": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/factories",
+        "line_number": null,
+        "current_name": "factories",
+        "suggested_name": "factorie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'factories' uses plural form, should be singular"
+      }
+    ],
+    "src/adapters": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/adapters",
+        "line_number": null,
+        "current_name": "adapters",
+        "suggested_name": "adapter",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'adapters' uses plural form, should be singular"
+      }
+    ],
+    "src/validators": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/validators",
+        "line_number": null,
+        "current_name": "validators",
+        "suggested_name": "validator",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'validators' uses plural form, should be singular"
+      }
+    ],
+    "src/use_cases": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/use_cases",
+        "line_number": null,
+        "current_name": "use_cases",
+        "suggested_name": "use_case",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'use_cases' uses plural form, should be singular"
+      }
+    ],
+    "training/models": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "training/models",
+        "line_number": null,
+        "current_name": "models",
+        "suggested_name": "model",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'models' uses plural form, should be singular"
+      }
+    ],
+    ".hypothesis/constants": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": ".hypothesis/constants",
+        "line_number": null,
+        "current_name": "constants",
+        "suggested_name": "constant",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'constants' uses plural form, should be singular"
+      }
+    ],
+    "data/metrics": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "data/metrics",
+        "line_number": null,
+        "current_name": "metrics",
+        "suggested_name": "metric",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'metrics' uses plural form, should be singular"
+      }
+    ],
+    "data/syd2_metrics": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "data/syd2_metrics",
+        "line_number": null,
+        "current_name": "syd2_metrics",
+        "suggested_name": "syd2_metric",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'syd2_metrics' uses plural form, should be singular"
+      }
+    ],
+    "data/redis_backups": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "data/redis_backups",
+        "line_number": null,
+        "current_name": "redis_backups",
+        "suggested_name": "redis_backup",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'redis_backups' uses plural form, should be singular"
+      }
+    ],
+    "tests/monitoring/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/monitoring/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "tests/monitoring/interfaces": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/monitoring/interfaces",
+        "line_number": null,
+        "current_name": "interfaces",
+        "suggested_name": "interface",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'interfaces' uses plural form, should be singular"
+      }
+    ],
+    "tests/monitoring/adapters": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/monitoring/adapters",
+        "line_number": null,
+        "current_name": "adapters",
+        "suggested_name": "adapter",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'adapters' uses plural form, should be singular"
+      }
+    ],
+    "tests/monitoring/use_cases": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/monitoring/use_cases",
+        "line_number": null,
+        "current_name": "use_cases",
+        "suggested_name": "use_case",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'use_cases' uses plural form, should be singular"
+      }
+    ],
+    "tests/priority_queue/adapters": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/priority_queue/adapters",
+        "line_number": null,
+        "current_name": "adapters",
+        "suggested_name": "adapter",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'adapters' uses plural form, should be singular"
+      }
+    ],
+    "tests/core/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/core/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "tests/dsl/types": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/dsl/types",
+        "line_number": null,
+        "current_name": "types",
+        "suggested_name": "type",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'types' uses plural form, should be singular"
+      }
+    ],
+    "tests/dsl/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/dsl/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "tests/dsl/tasks": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/dsl/tasks",
+        "line_number": null,
+        "current_name": "tasks",
+        "suggested_name": "task",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'tasks' uses plural form, should be singular"
+      }
+    ],
+    "tests/dsl/adapters": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/dsl/adapters",
+        "line_number": null,
+        "current_name": "adapters",
+        "suggested_name": "adapter",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'adapters' uses plural form, should be singular"
+      }
+    ],
+    "tests/dsl/use_cases": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/dsl/use_cases",
+        "line_number": null,
+        "current_name": "use_cases",
+        "suggested_name": "use_case",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'use_cases' uses plural form, should be singular"
+      }
+    ],
+    "tests/adapters/files": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/adapters/files",
+        "line_number": null,
+        "current_name": "files",
+        "suggested_name": "file",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'files' uses plural form, should be singular"
+      }
+    ],
+    "tests/unit/dsl/types": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/unit/dsl/types",
+        "line_number": null,
+        "current_name": "types",
+        "suggested_name": "type",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'types' uses plural form, should be singular"
+      }
+    ],
+    "tests/unit/claude_orchestrator/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/unit/claude_orchestrator/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "tests/adapters/agent/tools": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "tests/adapters/agent/tools",
+        "line_number": null,
+        "current_name": "tools",
+        "suggested_name": "tool",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'tools' uses plural form, should be singular"
+      }
+    ],
+    "backups/pre-docker-migration-20251004_133230/metrics": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "backups/pre-docker-migration-20251004_133230/metrics",
+        "line_number": null,
+        "current_name": "metrics",
+        "suggested_name": "metric",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'metrics' uses plural form, should be singular"
+      }
+    ],
+    ".remote_sync/opt_docserver/src/adapters": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": ".remote_sync/opt_docserver/src/adapters",
+        "line_number": null,
+        "current_name": "adapters",
+        "suggested_name": "adapter",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'adapters' uses plural form, should be singular"
+      }
+    ],
+    ".remote_sync/opt_docserver/src/adapters/database": [
+      {
+        "violation_type": "directory_deep_nesting",
+        "file_path": ".remote_sync/opt_docserver/src/adapters/database",
+        "line_number": null,
+        "current_name": ".remote_sync/opt_docserver/src/adapters/database",
+        "suggested_name": "Consider flattening directory structure",
+        "severity": "medium",
+        "ruleset_reference": "Avoid Deep Nesting and Ambiguity",
+        "description": "Directory nesting depth 5 exceeds recommended 4 levels"
+      }
+    ],
+    ".remote_sync/opt_docserver/src/adapters/web": [
+      {
+        "violation_type": "directory_deep_nesting",
+        "file_path": ".remote_sync/opt_docserver/src/adapters/web",
+        "line_number": null,
+        "current_name": ".remote_sync/opt_docserver/src/adapters/web",
+        "suggested_name": "Consider flattening directory structure",
+        "severity": "medium",
+        "ruleset_reference": "Avoid Deep Nesting and Ambiguity",
+        "description": "Directory nesting depth 5 exceeds recommended 4 levels"
+      }
+    ],
+    "src/monitoring/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/monitoring/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "src/monitoring/interfaces": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/monitoring/interfaces",
+        "line_number": null,
+        "current_name": "interfaces",
+        "suggested_name": "interface",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'interfaces' uses plural form, should be singular"
+      }
+    ],
+    "src/monitoring/adapters": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/monitoring/adapters",
+        "line_number": null,
+        "current_name": "adapters",
+        "suggested_name": "adapter",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'adapters' uses plural form, should be singular"
+      }
+    ],
+    "src/monitoring/use_cases": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/monitoring/use_cases",
+        "line_number": null,
+        "current_name": "use_cases",
+        "suggested_name": "use_case",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'use_cases' uses plural form, should be singular"
+      }
+    ],
+    "src/priority_queue/adapters": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/priority_queue/adapters",
+        "line_number": null,
+        "current_name": "adapters",
+        "suggested_name": "adapter",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'adapters' uses plural form, should be singular"
+      }
+    ],
+    "src/syd2_ml/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/syd2_ml/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "src/dsl/types": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/dsl/types",
+        "line_number": null,
+        "current_name": "types",
+        "suggested_name": "type",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'types' uses plural form, should be singular"
+      }
+    ],
+    "src/dsl/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/dsl/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "src/dsl/tasks": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/dsl/tasks",
+        "line_number": null,
+        "current_name": "tasks",
+        "suggested_name": "task",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'tasks' uses plural form, should be singular"
+      }
+    ],
+    "src/dsl/interfaces": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/dsl/interfaces",
+        "line_number": null,
+        "current_name": "interfaces",
+        "suggested_name": "interface",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'interfaces' uses plural form, should be singular"
+      }
+    ],
+    "src/dsl/adapters": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/dsl/adapters",
+        "line_number": null,
+        "current_name": "adapters",
+        "suggested_name": "adapter",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'adapters' uses plural form, should be singular"
+      }
+    ],
+    "src/dsl/use_cases": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/dsl/use_cases",
+        "line_number": null,
+        "current_name": "use_cases",
+        "suggested_name": "use_case",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'use_cases' uses plural form, should be singular"
+      }
+    ],
+    "src/observability/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/observability/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "src/observability/interfaces": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/observability/interfaces",
+        "line_number": null,
+        "current_name": "interfaces",
+        "suggested_name": "interface",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'interfaces' uses plural form, should be singular"
+      }
+    ],
+    "src/observability/adapters": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/observability/adapters",
+        "line_number": null,
+        "current_name": "adapters",
+        "suggested_name": "adapter",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'adapters' uses plural form, should be singular"
+      }
+    ],
+    "src/observability/use_cases": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/observability/use_cases",
+        "line_number": null,
+        "current_name": "use_cases",
+        "suggested_name": "use_case",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'use_cases' uses plural form, should be singular"
+      }
+    ],
+    "src/adapters/files": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/adapters/files",
+        "line_number": null,
+        "current_name": "files",
+        "suggested_name": "file",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'files' uses plural form, should be singular"
+      }
+    ],
+    "src/claude_orchestrator/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/claude_orchestrator/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "src/claude_orchestrator/interfaces": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/claude_orchestrator/interfaces",
+        "line_number": null,
+        "current_name": "interfaces",
+        "suggested_name": "interface",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'interfaces' uses plural form, should be singular"
+      }
+    ],
+    "src/claude_orchestrator/adapters": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/claude_orchestrator/adapters",
+        "line_number": null,
+        "current_name": "adapters",
+        "suggested_name": "adapter",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'adapters' uses plural form, should be singular"
+      }
+    ],
+    "src/claude_orchestrator/orchestrators": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/claude_orchestrator/orchestrators",
+        "line_number": null,
+        "current_name": "orchestrators",
+        "suggested_name": "orchestrator",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'orchestrators' uses plural form, should be singular"
+      }
+    ],
+    "src/claude_orchestrator/use_cases": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/claude_orchestrator/use_cases",
+        "line_number": null,
+        "current_name": "use_cases",
+        "suggested_name": "use_case",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'use_cases' uses plural form, should be singular"
+      }
+    ],
+    "src/monitoring/adapters/metrics": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/monitoring/adapters/metrics",
+        "line_number": null,
+        "current_name": "metrics",
+        "suggested_name": "metric",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'metrics' uses plural form, should be singular"
+      }
+    ],
+    "src/adapters/agent/tools": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/adapters/agent/tools",
+        "line_number": null,
+        "current_name": "tools",
+        "suggested_name": "tool",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'tools' uses plural form, should be singular"
+      }
+    ],
+    "tests/test_llm_cache.py": [
+      {
+        "violation_type": "function_boolean_flag",
+        "file_path": "tests/test_llm_cache.py",
+        "line_number": 27,
+        "current_name": "test_cache_set_and_get",
+        "suggested_name": "Split into separate functions (e.g., test_cache_set_and_get_for_web, test_cache_set_and_get_for_console)",
+        "severity": "high",
+        "ruleset_reference": "Avoid Flag Arguments",
+        "description": "Function 'test_cache_set_and_get' has boolean flag arguments, should be split"
+      },
+      {
+        "violation_type": "function_boolean_flag",
+        "file_path": "tests/test_llm_cache.py",
+        "line_number": 57,
+        "current_name": "test_cache_miss",
+        "suggested_name": "Split into separate functions (e.g., test_cache_miss_for_web, test_cache_miss_for_console)",
+        "severity": "high",
+        "ruleset_reference": "Avoid Flag Arguments",
+        "description": "Function 'test_cache_miss' has boolean flag arguments, should be split"
+      },
+      {
+        "violation_type": "function_boolean_flag",
+        "file_path": "tests/test_llm_cache.py",
+        "line_number": 128,
+        "current_name": "test_cache_invalidation",
+        "suggested_name": "Split into separate functions (e.g., test_cache_invalidation_for_web, test_cache_invalidation_for_console)",
+        "severity": "high",
+        "ruleset_reference": "Avoid Flag Arguments",
+        "description": "Function 'test_cache_invalidation' has boolean flag arguments, should be split"
+      },
+      {
+        "violation_type": "function_boolean_flag",
+        "file_path": "tests/test_llm_cache.py",
+        "line_number": 147,
+        "current_name": "test_cache_stats",
+        "suggested_name": "Split into separate functions (e.g., test_cache_stats_for_web, test_cache_stats_for_console)",
+        "severity": "high",
+        "ruleset_reference": "Avoid Flag Arguments",
+        "description": "Function 'test_cache_stats' has boolean flag arguments, should be split"
+      }
+    ],
+    "src/routing/hierarchical_router.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/hierarchical_router.py",
+        "line_number": 287,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/hierarchical_router.py",
+        "line_number": 295,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/hierarchical_router.py",
+        "line_number": 83,
+        "current_name": "p",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'p' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/hierarchical_router.py",
+        "line_number": 84,
+        "current_name": "p",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'p' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/hierarchical_router.py",
+        "line_number": 241,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/hierarchical_router.py",
+        "line_number": 237,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      }
+    ],
+    "src/routing/team_router.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/team_router.py",
+        "line_number": 235,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/team_router.py",
+        "line_number": 235,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/team_router.py",
+        "line_number": 241,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/team_router.py",
+        "line_number": 241,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/team_router.py",
+        "line_number": 247,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/team_router.py",
+        "line_number": 247,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/team_router.py",
+        "line_number": 252,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/team_router.py",
+        "line_number": 178,
+        "current_name": "t",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 't' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/team_router.py",
+        "line_number": 212,
+        "current_name": "t",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 't' should have descriptive name"
+      }
+    ],
+    "src/routing/orchestrator_router.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/orchestrator_router.py",
+        "line_number": 83,
+        "current_name": "p",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'p' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/orchestrator_router.py",
+        "line_number": 84,
+        "current_name": "p",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'p' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/orchestrator_router.py",
+        "line_number": 85,
+        "current_name": "p",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'p' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/orchestrator_router.py",
+        "line_number": 220,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/routing/orchestrator_router.py",
+        "line_number": 221,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      }
+    ],
+    "src/routing/domain_classifier.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/routing/domain_classifier.py",
+        "line_number": 371,
+        "current_name": "classify",
+        "suggested_name": "process_classify",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'classify' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/routing/domain_classifier.py",
+        "line_number": 453,
+        "current_name": "classify_multi",
+        "suggested_name": "process_classify_multi",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'classify_multi' should follow verb-noun pattern"
+      }
+    ],
+    "src/use_cases/task_coordinator.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/use_cases/task_coordinator.py",
+        "line_number": 152,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/use_cases/task_coordinator.py",
+        "line_number": 151,
+        "current_name": "t",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 't' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/use_cases/task_coordinator.py",
+        "line_number": 49,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      }
+    ],
+    "src/use_cases/task_planner.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/use_cases/task_planner.py",
+        "line_number": 186,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/use_cases/task_planner.py",
+        "line_number": 110,
+        "current_name": "a",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'a' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/use_cases/task_planner.py",
+        "line_number": 124,
+        "current_name": "t",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 't' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/use_cases/task_planner.py",
+        "line_number": 190,
+        "current_name": "t",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 't' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/use_cases/task_planner.py",
+        "line_number": 236,
+        "current_name": "t",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 't' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/use_cases/task_planner.py",
+        "line_number": 105,
+        "current_name": "t",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 't' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/use_cases/task_planner.py",
+        "line_number": 228,
+        "current_name": "t",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 't' should have descriptive name"
+      }
+    ],
+    "src/adapters/agent/llm_cache.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/adapters/agent/llm_cache.py",
+        "line_number": 200,
+        "current_name": "invalidate",
+        "suggested_name": "validate_invalidate",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'invalidate' should follow verb-noun pattern"
+      }
+    ],
+    "src/adapters/llm/grok_adapter.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/llm/grok_adapter.py",
+        "line_number": 58,
+        "current_name": "m",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'm' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/llm/grok_adapter.py",
+        "line_number": 103,
+        "current_name": "m",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'm' should have descriptive name"
+      }
+    ],
+    "src/adapters/llm/qwen3_zerogpu_adapter.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/adapters/llm/qwen3_zerogpu_adapter.py",
+        "line_number": 57,
+        "current_name": "client",
+        "suggested_name": "process_client",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'client' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/adapters/llm/qwen3_zerogpu_adapter.py",
+        "line_number": 215,
+        "current_name": "client",
+        "suggested_name": "process_client",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'client' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/llm/qwen3_zerogpu_adapter.py",
+        "line_number": 285,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      }
+    ],
+    "src/adapters/web/api_server.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/web/api_server.py",
+        "line_number": 26,
+        "current_name": "t",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 't' should have descriptive name"
+      }
+    ],
+    "src/adapters/orchestration/hybrid_orchestrator.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/orchestration/hybrid_orchestrator.py",
+        "line_number": 153,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/orchestration/hybrid_orchestrator.py",
+        "line_number": 167,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/orchestration/hybrid_orchestrator.py",
+        "line_number": 144,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/orchestration/hybrid_orchestrator.py",
+        "line_number": 158,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      }
+    ],
+    "src/adapters/orchestration/openai_agents_sdk_adapter.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/orchestration/openai_agents_sdk_adapter.py",
+        "line_number": 198,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      }
+    ],
+    "src/adapters/agent/tools/base.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/adapters/agent/tools/base.py",
+        "line_number": 22,
+        "current_name": "name",
+        "suggested_name": "process_name",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'name' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/adapters/agent/tools/base.py",
+        "line_number": 33,
+        "current_name": "description",
+        "suggested_name": "process_description",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'description' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/adapters/agent/tools/base.py",
+        "line_number": 44,
+        "current_name": "parameters",
+        "suggested_name": "get_parameters",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'parameters' should follow verb-noun pattern"
+      }
+    ],
+    "src/adapters/agent/tools/file_writer.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/adapters/agent/tools/file_writer.py",
+        "line_number": 18,
+        "current_name": "parameters",
+        "suggested_name": "get_parameters",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'parameters' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/agent/tools/file_writer.py",
+        "line_number": 29,
+        "current_name": "p",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'p' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/agent/tools/file_writer.py",
+        "line_number": 31,
+        "current_name": "p",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'p' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/agent/tools/file_writer.py",
+        "line_number": 33,
+        "current_name": "p",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'p' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/agent/tools/file_writer.py",
+        "line_number": 45,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      }
+    ],
+    "src/adapters/agent/tools/bash_executor.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/adapters/agent/tools/bash_executor.py",
+        "line_number": 19,
+        "current_name": "parameters",
+        "suggested_name": "get_parameters",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'parameters' should follow verb-noun pattern"
+      }
+    ],
+    "src/adapters/agent/tools/team_aware_registry.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/agent/tools/team_aware_registry.py",
+        "line_number": 40,
+        "current_name": "v",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'v' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/agent/tools/team_aware_registry.py",
+        "line_number": 67,
+        "current_name": "v",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'v' should have descriptive name"
+      }
+    ],
+    "src/adapters/agent/tools/file_reader.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/adapters/agent/tools/file_reader.py",
+        "line_number": 21,
+        "current_name": "parameters",
+        "suggested_name": "get_parameters",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'parameters' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/agent/tools/file_reader.py",
+        "line_number": 32,
+        "current_name": "p",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'p' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/agent/tools/file_reader.py",
+        "line_number": 34,
+        "current_name": "p",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'p' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/agent/tools/file_reader.py",
+        "line_number": 36,
+        "current_name": "p",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'p' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/agent/tools/file_reader.py",
+        "line_number": 56,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/adapters/agent/tools/file_reader.py",
+        "line_number": 63,
+        "current_name": "_",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable '_' should have descriptive name"
+      }
+    ],
+    "src/claude_orchestrator/entities/goal.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/entities/goal.py",
+        "line_number": 110,
+        "current_name": "progress_percentage",
+        "suggested_name": "process_progress_percentage",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'progress_percentage' should follow verb-noun pattern"
+      }
+    ],
+    "src/claude_orchestrator/entities/validation_result.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/entities/validation_result.py",
+        "line_number": 72,
+        "current_name": "passed",
+        "suggested_name": "process_passed",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'passed' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/entities/validation_result.py",
+        "line_number": 165,
+        "current_name": "c",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'c' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/entities/validation_result.py",
+        "line_number": 131,
+        "current_name": "c",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'c' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/entities/validation_result.py",
+        "line_number": 132,
+        "current_name": "c",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'c' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/entities/validation_result.py",
+        "line_number": 133,
+        "current_name": "c",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'c' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/entities/validation_result.py",
+        "line_number": 145,
+        "current_name": "c",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'c' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/entities/validation_result.py",
+        "line_number": 187,
+        "current_name": "c",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'c' should have descriptive name"
+      }
+    ],
+    "src/claude_orchestrator/entities/worker.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/claude_orchestrator/entities/worker.py",
+        "line_number": 299,
+        "current_name": "elapsed_seconds",
+        "suggested_name": "get_elapsed_seconds",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'elapsed_seconds' should follow verb-noun pattern"
+      }
+    ],
+    "src/claude_orchestrator/adapters/heuristic_task_generator.py": [
+      {
+        "violation_type": "function_boolean_flag",
+        "file_path": "src/claude_orchestrator/adapters/heuristic_task_generator.py",
+        "line_number": 40,
+        "current_name": "generate_task",
+        "suggested_name": "Split into separate functions (e.g., generate_task_for_web, generate_task_for_console)",
+        "severity": "high",
+        "ruleset_reference": "Avoid Flag Arguments",
+        "description": "Function 'generate_task' has boolean flag arguments, should be split"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/heuristic_task_generator.py",
+        "line_number": 160,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      }
+    ],
+    "src/claude_orchestrator/adapters/goal_parser.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/goal_parser.py",
+        "line_number": 47,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/goal_parser.py",
+        "line_number": 79,
+        "current_name": "g",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'g' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/goal_parser.py",
+        "line_number": 96,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/goal_parser.py",
+        "line_number": 114,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      }
+    ],
+    "src/claude_orchestrator/adapters/kubernetes_worker_pool.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/kubernetes_worker_pool.py",
+        "line_number": 255,
+        "current_name": "w",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'w' should have descriptive name"
+      }
+    ],
+    "src/claude_orchestrator/adapters/auggie_pr_reviewer.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/auggie_pr_reviewer.py",
+        "line_number": 491,
+        "current_name": "r",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'r' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/auggie_pr_reviewer.py",
+        "line_number": 496,
+        "current_name": "r",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'r' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/auggie_pr_reviewer.py",
+        "line_number": 501,
+        "current_name": "r",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'r' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/auggie_pr_reviewer.py",
+        "line_number": 310,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/auggie_pr_reviewer.py",
+        "line_number": 513,
+        "current_name": "r",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'r' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/auggie_pr_reviewer.py",
+        "line_number": 479,
+        "current_name": "r",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'r' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/auggie_pr_reviewer.py",
+        "line_number": 480,
+        "current_name": "r",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'r' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/auggie_pr_reviewer.py",
+        "line_number": 505,
+        "current_name": "r",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'r' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/auggie_pr_reviewer.py",
+        "line_number": 506,
+        "current_name": "r",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'r' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/auggie_pr_reviewer.py",
+        "line_number": 507,
+        "current_name": "r",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'r' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/auggie_pr_reviewer.py",
+        "line_number": 510,
+        "current_name": "r",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'r' should have descriptive name"
+      }
+    ],
+    "src/claude_orchestrator/adapters/conflict_pr_validator.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/adapters/conflict_pr_validator.py",
+        "line_number": 185,
+        "current_name": "f",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'f' should have descriptive name"
+      }
+    ],
+    "src/claude_orchestrator/orchestrators/minimal_orchestrator.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/orchestrators/minimal_orchestrator.py",
+        "line_number": 147,
+        "current_name": "o",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'o' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/orchestrators/minimal_orchestrator.py",
+        "line_number": 148,
+        "current_name": "o",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'o' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/orchestrators/minimal_orchestrator.py",
+        "line_number": 149,
+        "current_name": "o",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'o' should have descriptive name"
+      }
+    ],
+    "src/claude_orchestrator/use_cases/generate_next_task_use_case.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/use_cases/generate_next_task_use_case.py",
+        "line_number": 77,
+        "current_name": "g",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'g' should have descriptive name"
+      }
+    ],
+    "src/claude_orchestrator/use_cases/analyze_context_use_case.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/use_cases/analyze_context_use_case.py",
+        "line_number": 132,
+        "current_name": "g",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'g' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/use_cases/analyze_context_use_case.py",
+        "line_number": 134,
+        "current_name": "g",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'g' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/claude_orchestrator/use_cases/analyze_context_use_case.py",
+        "line_number": 144,
+        "current_name": "c",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'c' should have descriptive name"
+      }
+    ],
+    "scripts/lib/ui.py": [
+      {
+        "violation_type": "file_cryptic_name",
+        "file_path": "scripts/lib/ui.py",
+        "line_number": null,
+        "current_name": "ui",
+        "suggested_name": "Use descriptive name based on file purpose",
+        "severity": "high",
+        "ruleset_reference": "Choose Descriptive and Unambiguous Names",
+        "description": "File name 'ui' is too short and cryptic"
+      }
+    ],
+    "training/scripts/evaluate_qwen3.py": [
+      {
+        "violation_type": "function_boolean_flag",
+        "file_path": "training/scripts/evaluate_qwen3.py",
+        "line_number": 29,
+        "current_name": "load_model",
+        "suggested_name": "Split into separate functions (e.g., load_model_for_web, load_model_for_console)",
+        "severity": "high",
+        "ruleset_reference": "Avoid Flag Arguments",
+        "description": "Function 'load_model' has boolean flag arguments, should be split"
+      }
+    ]
+  },
+  "summary": {
+    "by_type": {
+      "directory_plural": 67,
+      "directory_ambiguous": 1,
+      "directory_deep_nesting": 2,
+      "function_boolean_flag": 6,
+      "variable_single_letter": 81,
+      "function_no_verb_noun": 14,
+      "file_cryptic_name": 1
+    },
+    "by_severity": {
+      "high": 75,
+      "medium": 16,
+      "low": 81
+    }
+  }
+}

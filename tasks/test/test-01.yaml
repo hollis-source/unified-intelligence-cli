@@ -1,0 +1,168 @@
+id: test-01
+agent: test
+prompt: |
+  Write pytest unit tests for the authentication module covering happy paths and edge cases
+  for login, signup, and token refresh. Include fixtures and parametrized tests for
+  boundary conditions (e.g., invalid credentials, locked accounts, expired tokens).
+
+  Requirements:
+  - Organize tests by feature with clear naming
+  - Use fixtures for user setup/teardown
+  - Cover success and failure scenarios with parametrization
+  - Include mocking for external services (e.g., email/SMS)
+
+  Expected files to reference:
+  - tests/auth/test_login.py (login test cases)
+  - tests/auth/test_signup.py (signup test cases)
+  - tests/auth/test_token_refresh.py (token refresh tests)
+  - tests/auth/conftest.py (shared fixtures)
+  - pytest.ini (pytest configuration)
+
+  Example of proper file:line references:
+  - tests/auth/test_login.py:15 (@pytest.mark.parametrize for invalid credentials)
+  - tests/auth/test_signup.py:8 (def test_signup_success with fixtures)
+  - tests/auth/conftest.py:12 (@pytest.fixture for user setup)
+  - tests/auth/test_token_refresh.py:22 (@mock.patch for external service)
+  - pytest.ini:3 (addopts for coverage configuration)
+
+  Deliverables:
+  1. Pytest test files under tests/auth/
+  2. Reusable fixtures in conftest.py
+  3. Mocks for external side effects
+  - MANDATORY: Your response MUST include at least 3 file:line references to test files
+  - MANDATORY: Include pytest test functions with @pytest.fixture and @mock.patch decorators
+
+  Pytest Test Template (use this structure):
+  ```python
+  # tests/auth/test_login.py
+  import pytest
+  from unittest.mock import Mock, patch
+  from auth.service import AuthService
+
+  @pytest.fixture
+  def auth_service():
+      """Fixture for AuthService instance"""
+      return AuthService()
+
+  @pytest.fixture
+  def valid_user():
+      """Fixture for valid user credentials"""
+      return {
+          "email": "test@example.com",
+          "password": "SecurePassword123"
+      }
+
+  @pytest.mark.parametrize("email,password,expected", [
+      ("test@example.com", "ValidPass123", True),
+      ("invalid@example.com", "WrongPass", False),
+      ("", "password", False),
+      ("test@example.com", "", False),
+  ])
+  def test_login_parametrized(auth_service, email, password, expected):
+      """Test login with various credential combinations"""
+      result = auth_service.login(email, password)
+      assert result.success == expected
+
+  def test_login_success(auth_service, valid_user):
+      """Test successful login returns token"""
+      result = auth_service.login(valid_user["email"], valid_user["password"])
+      assert result.success is True
+      assert result.token is not None
+      assert len(result.token) > 20
+
+  @patch('auth.service.send_email')
+  def test_signup_with_email_verification(mock_send_email, auth_service):
+      """Test signup triggers email verification"""
+      auth_service.signup("new@example.com", "Password123")
+      mock_send_email.assert_called_once()
+      assert "new@example.com" in str(mock_send_email.call_args)
+
+  def test_locked_account_prevents_login(auth_service):
+      """Test locked account returns error"""
+      with pytest.raises(AccountLockedException):
+          auth_service.login("locked@example.com", "password")
+
+  @pytest.mark.parametrize("token", [
+      "expired_token_xyz",
+      "invalid_format",
+      "",
+      None,
+  ])
+  def test_token_refresh_invalid_tokens(auth_service, token):
+      """Test token refresh fails for invalid tokens"""
+      with pytest.raises(InvalidTokenException):
+          auth_service.refresh_token(token)
+  ```
+
+  ```python
+  # tests/auth/conftest.py
+  import pytest
+  from auth.models import User
+  from auth.database import db
+
+  @pytest.fixture(scope="function")
+  def clean_database():
+      """Clear database before each test"""
+      db.clear()
+      yield
+      db.clear()
+
+  @pytest.fixture
+  def sample_user(clean_database):
+      """Create a sample user for testing"""
+      user = User.create(
+          email="test@example.com",
+          password="HashedPassword123"
+      )
+      return user
+
+  @pytest.fixture
+  def locked_user(clean_database):
+      """Create a locked user account"""
+      user = User.create(
+          email="locked@example.com",
+          password="password",
+          is_locked=True
+      )
+      return user
+  ```
+
+  ```ini
+  # pytest.ini
+  [pytest]
+  addopts = --strict-markers --cov=auth --cov-report=term-missing
+  testpaths = tests
+  python_files = test_*.py
+  python_classes = Test*
+  python_functions = test_*
+  markers =
+      slow: marks tests as slow (deselect with '-m "not slow"')
+      integration: marks tests requiring external services
+  ```
+
+  Expected test coverage:
+  - Login: Happy path (valid credentials) + Edge cases (invalid, empty, locked account)
+  - Signup: Success + Email verification + Duplicate email
+  - Token refresh: Valid token + Expired + Invalid format
+
+checks:
+  - type: regex
+    pattern: '\b(pytest|unit\s+tests?)\b'
+    description: Must clearly reference unit tests using pytest
+  - type: regex
+    pattern: '\b(auth(entication)?|login|signup)\b'
+    description: Must target authentication flows like login/signup
+  - type: regex
+    pattern: '\b(mock|fixture|parametrize)\b'
+    description: Must mention mocking, fixtures, or parametrization
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3600
+  tags: [testing, unit, pytest, auth]
+

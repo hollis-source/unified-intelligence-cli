@@ -6,15 +6,18 @@ Week 13: Refactored to fix DIP violation (no direct adapter imports).
 """
 
 from typing import Optional, Dict, Any
-from src.interfaces import ITextGenerator, IProviderFactory
+from src.interface import ITextGenerator, IProviderFactory
 from src.factories.provider_creators import (
     IProviderCreator,
     MockProviderCreator,
     GrokProviderCreator,
+    GraniteProviderCreator,
     TongyiProviderCreator,
     TongyiLocalProviderCreator,
     ReplicateProviderCreator,
     Qwen3ProviderCreator,
+    Qwen3NextProviderCreator,
+    QwenAgentProviderCreator,
     OrchestratorProviderCreator
 )
 
@@ -50,10 +53,13 @@ class ProviderFactory(IProviderFactory):
         """
         self._creators["mock"] = MockProviderCreator()
         self._creators["grok"] = GrokProviderCreator()
+        self._creators["granite"] = GraniteProviderCreator()
         self._creators["tongyi"] = TongyiProviderCreator()
         self._creators["tongyi-local"] = TongyiLocalProviderCreator()
         self._creators["replicate"] = ReplicateProviderCreator()
         self._creators["qwen3_zerogpu"] = Qwen3ProviderCreator()
+        self._creators["qwen3"] = Qwen3NextProviderCreator()  # Qwen3-Next-80B via HF Inference API
+        self._creators["qwen-agent"] = QwenAgentProviderCreator()
 
         # Orchestrator needs factory reference (circular dependency handled via lazy import)
         self._creators["auto"] = OrchestratorProviderCreator(provider_factory=self)
@@ -104,7 +110,7 @@ class ProviderFactory(IProviderFactory):
         DIP Compliance: All creation delegated to IProviderCreator implementations.
 
         Args:
-            provider_type: Type of provider (mock, grok, tongyi-local, qwen3_zerogpu, auto)
+            provider_type: Type of provider (mock, grok, tongyi-local, qwen3_zerogpu, qwen-agent, auto)
             config: Provider configuration dict
 
         Returns:

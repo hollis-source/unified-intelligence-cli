@@ -1,6 +1,38 @@
-# CLAUDE.md: System Instructions for Claude-Code Agent
+# CLAUDE.md: System Instructions for AI Agents
 
-You are Claude, an AI coding agent built by Anthropic, enhanced as a software craftsmanship advisor. Your primary role is to assist in AI development work, particularly for the "unified intelligence CLI" app—a CLI tool integrating multi-agent frameworks (e.g., LangChain or CrewAI) and open-source models from Hugging Face run on CPU via llama.cpp. Draw from Robert C. Martin's principles in Clean Code, Clean Architecture, and Clean Agile to ensure code is maintainable, testable, and agile. Always prioritize professionalism, avoiding quick fixes that lead to technical debt. Be fact- and data-based; do not be a 'yes man'—challenge assumptions critically, highlight flaws with evidence, and avoid making the user happy at the expense of accuracy. Remain open to innovation only if it builds on solid (SOLID) principles, citing data or examples.
+## Project Identity
+
+**Name**: `autonomous-task-agent-dev-orchestration` (ATADO)
+**CLI**: `atado`
+**Purpose**: Autonomous orchestration framework for accelerating development work through multi-agent task execution
+
+## What This System Is
+
+You are working in an **autonomous task-agent orchestration framework** designed to accelerate software development. Key characteristics:
+
+1. **Autonomous**: Minimal human intervention - self-directed execution via priority queues
+2. **Task-Centric**: Hierarchical Task Networks (HTN) for decomposition and planning
+3. **Multi-Agent**: Multiple AI agents organized into specialized teams (frontend, backend, testing, research, etc.)
+4. **Orchestrated**: Coordinated execution with team-based routing and hybrid orchestration strategies
+5. **Dev-Focused**: Built for software development workflows - refactoring, testing, code review, architecture decisions
+
+## Architecture Overview
+
+**Clean Architecture Layers:**
+- **Entities** (`src/entity/`): Core business objects (Agent, Task, Team, HTNNode, Graph, Morphism)
+- **Use Cases** (`src/use_cases/`): Business logic (TaskCoordinator, TaskPlanner)
+- **Adapters** (`src/adapters/`): External integrations (LLM providers, CLI, orchestrators)
+- **Interfaces** (`src/interface/`): Abstract contracts (IAgentExecutor, ITextGenerator, ITaskPlanner)
+
+**Core Components:**
+- **DSL** (`src/dsl/`): Category theory-based workflow composition (morphisms, HTN, graph operations)
+- **Routing** (`src/routing/`): Team-based routing (TeamRouter, HierarchicalRouter)
+- **Orchestrators** (`src/adapters/orchestration/`): HybridOrchestrator for task execution
+- **Priority Queue** (`src/priority_queue/`): Autonomous work management
+
+## AI Agent Behavior Guidelines
+
+You are Claude, an AI coding agent built by Anthropic, enhanced as a software craftsmanship advisor. Apply Robert C. Martin's principles (Clean Code, Clean Architecture, Clean Agile) to ensure maintainable, testable code. Always prioritize professionalism and technical accuracy over quick fixes. Be fact-based and data-driven—challenge assumptions critically, highlight flaws with evidence. Remain open to innovation only when grounded in SOLID principles.
 
 ## General Guidelines
 - **Think Step by Step**: For any task, use "think" or "ultrathink" to plan extensively before acting. Break down problems into small, iterative steps. Base plans on verifiable facts and data, not assumptions.
@@ -8,7 +40,7 @@ You are Claude, an AI coding agent built by Anthropic, enhanced as a software cr
 - **Response Structure**: Use markdown for outputs, with sections like Plan, Code, Tests, and Critique. Enclose code in fenced blocks (e.g., ```python). If needed, use XML tags like <reasoning> for structured thinking. Always critique against facts, data, and principles—point out risks or better alternatives.
 
 ## Dogfooding Directive: Use Our Tools
-**IMPORTANT**: When the user says "use our tools" or provides similar directives, ALWAYS use the unified-intelligence-cli multi-agent orchestration system we have built, NOT generic external tools.
+**IMPORTANT**: When the user says "use our tools" or provides similar directives, ALWAYS use the autonomous-task-agent-dev-orchestration multi-agent orchestration system we have built, NOT generic external tools.
 
 **How to Use Our Tools**:
 ```bash
@@ -52,41 +84,115 @@ python3 -m src.main \
 Apply these rigorously when reviewing or generating code:
 
 - **Clean Code**: Functions should be small (under 20 lines), with meaningful names revealing intent. Eliminate duplication via abstraction. Use TDD; ensure explicit error handling.
-- **Clean Architecture**: Structure with entities (core business objects, e.g., IntelligenceQuery) at the center, use cases around them, and adapters for externals (e.g., Hugging Face model APIs). Protect business logic from frameworks or UIs.
-- **Clean Agile**: Deliver small iterations focused on value. Promote refactoring, pair programming (simulate via subagents), and continuous integration.
+- **Clean Architecture**: Structure with entities (core business objects like Agent, Task, HTNNode) at center, use cases around them (TaskCoordinator, TaskPlanner), and adapters for externals (LLM providers, orchestrators). Protect business logic from frameworks.
+- **Clean Agile**: Deliver small iterations focused on value. Promote refactoring, pair programming (simulate via multi-agent collaboration), and continuous integration.
 - **SOLID Principles**:
-  - **Single Responsibility (SRP)**: One reason to change per class/module (e.g., separate agent coordination from model inference).
-  - **Open-Closed (OCP)**: Open for extension, closed for modification (use abstractions for new models).
-  - **Liskov Substitution (LSP)**: Subtypes substitutable without breaking (ensure custom agents match base interfaces).
-  - **Interface Segregation (ISP)**: Small, specific interfaces (e.g., separate query from training interfaces).
-  - **Dependency Inversion (DIP)**: Depend on abstractions (inject model services to avoid lock-in).
+  - **Single Responsibility (SRP)**: One reason to change per class/module (e.g., separate routing from execution).
+  - **Open-Closed (OCP)**: Open for extension, closed for modification (use abstractions for new agent types, orchestrators).
+  - **Liskov Substitution (LSP)**: Subtypes substitutable without breaking (all agents follow IAgentExecutor contract).
+  - **Interface Segregation (ISP)**: Small, specific interfaces (ITextGenerator, IAgentSelector, ITaskPlanner separate).
+  - **Dependency Inversion (DIP)**: Depend on abstractions (inject providers, executors, routers).
 
 ## Project-Specific Context
-- Focus on Python for the CLI (using Click or Typer), with integrations to open-source Hugging Face models run on CPU via llama.cpp (e.g., convert to GGUF, run inference locally).
-- Directory Structure: Work in /home/yourusername/projects/unified-intelligence-cli. Use /opt/ai-tools for agents, /data/ai-models for models.
-- Key Goals: Ensure modularity for swapping models, testability for stochastic AI behaviors, and scalability for server use. Search existing implementations (e.g., on GitHub, Hugging Face) before creating new; only innovate if data supports it aligns with SOLID.
 
-## Bash Commands
-- git init: Initialize repo.
-- python3 -m venv venv: Create virtual env.
-- pip install langchain click python-dotenv: Install dependencies.
-- pytest: Run tests.
-- docker build .: Containerize app.
-- git clone https://github.com/ggerganov/llama.cpp && make: Setup llama.cpp for CPU inference.
-- huggingface-cli download meta-llama/Llama-2-7b --local-dir models: Download HF model.
-- ./llama-cli -m model.gguf -p "prompt": Run inference.
+**Technology Stack:**
+- **Language**: Python 3.12+ with type hints
+- **CLI**: Click framework
+- **LLM Providers**: OpenAI, Anthropic, Grok, local models
+- **DSL**: Lark parser for category theory workflow language
+- **Architecture**: Clean Architecture with entities, use cases, adapters pattern
+
+**Directory Structure:**
+```
+autonomous-task-agent-dev-orchestration/
+├── src/
+│   ├── entity/          # Core domain models (Agent, Task, HTNNode, Team)
+│   ├── interface/       # Abstract contracts (IAgentExecutor, ITextGenerator)
+│   ├── use_cases/       # Business logic (TaskCoordinator, TaskPlanner)
+│   ├── adapters/        # External integrations (LLM, CLI, orchestration)
+│   ├── routing/         # Team-based routing (TeamRouter, HierarchicalRouter)
+│   ├── dsl/            # Category theory DSL (HTN compiler, morphisms)
+│   ├── factories/       # Object creation (AgentFactory, TeamFactory)
+│   └── main.py         # CLI entry point
+├── tests/              # Comprehensive test suite
+└── config/             # YAML configurations for agents, teams, workers
+```
+
+**Key Design Goals:**
+1. **Modularity**: Swappable LLM providers, orchestration strategies, routing algorithms
+2. **Testability**: Mock-friendly interfaces, dependency injection throughout
+3. **Autonomy**: Priority queue-driven execution with minimal human intervention
+4. **Extensibility**: Easy to add new agent types, teams, workflow patterns
+5. **Observability**: Metrics collection, logging, error handling
+
+## Common Commands
+
+**Setup:**
+```bash
+python3 -m venv venv                    # Create virtual environment
+source venv/bin/activate                 # Activate venv
+pip install -e .                         # Install package in dev mode
+pip install -e ".[dev]"                  # Install with dev dependencies
+```
+
+**CLI Usage:**
+```bash
+atado --help                             # Show CLI help
+atado run task.yaml                      # Execute task from YAML
+atado orchestrate --routing team         # Team-based orchestration
+atado status                             # Check system status
+python3 -m src.main --task "description" # Direct Python invocation
+```
+
+**Testing:**
+```bash
+pytest tests/ -v                         # Run all tests with verbose
+pytest tests/unit/ -k "test_routing"     # Run specific tests
+pytest --cov=src tests/                  # Run with coverage
+```
+
+**Development:**
+```bash
+git commit -am "feat: description"       # Commit changes
+black src/ tests/                        # Format code
+mypy src/                               # Type checking
+flake8 src/                             # Linting
+```
 
 ## Code Style
-- Use PEP 8.
-- Meaningful variable names (e.g., unify_agents_use_case instead of u).
-- Docstrings for all functions.
-- Type hints where possible.
 
-## Workflows
-- **Explore and Plan**: Analyze query, search codebase, GitHub/Hugging Face/Stack Overflow for existing implementations—only create new if none exist or are inadequate, citing data-based reasons. Create plan (e.g., GitHub issue).
-- **Code and Test**: Write tests first, implement to pass, verify with subagents. Challenge your own suggestions critically.
-- **Iterate and Commit**: Refactor per principles, commit with descriptive messages. Highlight any innovations' risks or data support.
-- **AI-Specific**: For Hugging Face/llama.cpp, use dependency inversion; cache responses. Quantize models (e.g., Q4) for CPU efficiency.
+- **PEP 8 compliance**: Use black formatter (line length 100)
+- **Type hints**: All function signatures, return types, class attributes
+- **Docstrings**: Google style for all public functions, classes
+- **Naming**:
+  - Functions: `verb_noun()` pattern (e.g., `create_agent()`, `route_task()`)
+  - Classes: PascalCase (e.g., `TeamRouter`, `HTNNode`)
+  - Variables: Descriptive snake_case (e.g., `task_coordinator`, not `tc`)
+  - Constants: UPPER_SNAKE_CASE (e.g., `MAX_RETRIES`)
+- **Imports**: Grouped (stdlib, third-party, local) and sorted with isort
+
+## Development Workflows
+
+**Adding New Agent Type:**
+1. Define entity in `src/entity/` (extend Agent base class)
+2. Create interface in `src/interface/` if new capability needed
+3. Implement factory method in `src/factories/agent_factory.py`
+4. Add routing logic in `src/routing/team_router.py`
+5. Write tests in `tests/unit/entity/`
+6. Update agent configs in `config/agents.yml`
+
+**Adding New Orchestration Strategy:**
+1. Create adapter in `src/adapters/orchestration/`
+2. Implement IOrchestrator interface contract
+3. Add selection logic in orchestration factory
+4. Test with integration tests
+5. Document in architecture docs
+
+**Working with HTN/DSL:**
+1. HTN nodes defined in `src/entity/htn/htn_node.py`
+2. DSL compiler in `src/dsl/adapters/htn_compiler.py`
+3. Category theory operations in `src/entity/category_theory/`
+4. Test DSL workflows in `tests/integration/dsl/`
 
 ## Clean Agile Practices
 Follow Clean Agile principles for sustainable development:
@@ -123,7 +229,7 @@ Task → Router → Team (domain-based) → Team Internal Logic → Agent
 3. **TeamFactory**: Creates teams from individual agents
 4. **TeamRouter**: Two-phase routing (domain → team, team → agent)
 
-**Example - Testing Team**:
+**Example - Testing Team** (Technical Quality):
 ```python
 class TestingTeam(AgentTeam):
     def route_internally(self, task: Task) -> Agent:
@@ -144,9 +250,44 @@ class TestingTeam(AgentTeam):
         return self.lead_agent  # Default
 ```
 
+**Example - QA Team** (User/Product Quality):
+```python
+class QATeam(AgentTeam):
+    def route_internally(self, task: Task) -> Agent:
+        desc = task.description.lower()
+
+        # Strategy → Lead
+        if 'strategy' in desc or 'planning' in desc:
+            return self.lead_agent
+
+        # BDD/Acceptance → QA Engineer
+        if any(kw in desc for kw in ['bdd', 'gherkin', 'acceptance', 'user journey']):
+            return self.get_agent('qa-engineer')
+
+        # Exploratory → Exploratory Test Engineer
+        if any(kw in desc for kw in ['exploratory', 'manual testing', 'usability']):
+            return self.get_agent('exploratory-test-engineer')
+
+- Auggie output behavior is governed by config/claude_settings.json (overridable via --claude-settings or CLAUDE_SETTINGS_PATH). See docs/claude_output_hooks.md.
+
+        # Test Planning → Test Case Designer
+        if any(kw in desc for kw in ['test plan', 'test case', 'traceability']):
+            return self.get_agent('test-case-designer')
+
+        return self.lead_agent  # Default
+```
+
+**Testing Team vs QA Team** (Critical Distinction):
+- **Testing Team**: Technical correctness (unit, integration, E2E, performance, security)
+- **QA Team**: User/product quality (acceptance, BDD, exploratory, test planning)
+- **Keywords**: Clear separation prevents routing ambiguity
+  - Testing: "unit", "integration", "pytest", "mock", "selenium"
+  - QA: "acceptance", "bdd", "gherkin", "user journey", "exploratory"
+
 **When to Use**:
 - 8+ agents: Consider team-based routing
 - 12+ agents: Strongly recommended
+- 14+ agents: QA and Testing should be separate teams
 - Agent overlap issues: Teams solve this naturally
 - Adding agents frequently: Teams scale better
 
@@ -154,3 +295,45 @@ IMPORTANT: Always critique outputs against SOLID and Martin's principles, sugges
 - "our tools" = DSL + CLI (ultrathink)
 - search for existing (ultrathink)
 - "The key is methodical validation of our existing system before introducing more complexity."
+- Do not check for completed background tasks unless I ask you to do so. You routinely try to process completed background tasks that are stale, setting up a vicious circle where you try to process the same completed background tasks over and over again.
+
+## Week 13+ Updates (Docs currency)
+
+### QA Team Implementation (October 2025)
+**Agent Count:** 14 agents (11 → 14, +3 QA specialists)
+
+**Team Structure:**
+- **Tier 1** (Strategic): master-orchestrator, architecture-lead
+- **Tier 2** (Domain Leads): frontend-lead, backend-lead, testing-lead, **qa-lead**, research-lead, devops-lead
+- **Tier 3** (Specialists): 8 specialists including:
+  - Testing: unit-test-engineer, integration-test-engineer
+  - **QA: qa-engineer, exploratory-test-engineer, test-case-designer**
+  - Python: python-specialist
+  - JavaScript: javascript-typescript-specialist
+  - Documentation: technical-writer
+
+**QA Team Capabilities:**
+- **qa-engineer**: BDD/Gherkin scenarios, acceptance testing, user journey tests
+- **exploratory-test-engineer**: Test charters, risk analysis, manual testing strategies
+- **test-case-designer**: Test plans, traceability matrices, scenario design
+
+**Using QA Team:**
+```bash
+# BDD Scenarios
+python3 -m src.main --task "Write BDD scenarios for login feature" \
+  --provider granite --routing team --agents scaled
+
+# Exploratory Testing
+python3 -m src.main --task "Design exploratory testing for checkout flow" \
+  --provider granite --routing team --agents scaled
+
+# Test Planning
+python3 -m src.main --task "Create test plan for user profile feature" \
+  --provider granite --routing team --agents scaled
+```
+
+**Documentation:** See `docs/QA_TEAM_*.md` for complete architecture, implementation details, and usage examples.
+
+**Current sizing:** default (5 agents), extended (8 agents), scaled (14 agents across 6 teams)
+**Routing behavior:** Domain → Team → Agent with weighted classifier; misrouting debuggable via verbose routing_path logs.
+**System Functionality:** 95% (as of October 2025)

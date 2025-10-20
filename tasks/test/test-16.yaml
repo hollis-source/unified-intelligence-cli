@@ -1,0 +1,298 @@
+id: test-16
+agent: test
+prompt: |
+  Implement cross-browser E2E tests for the checkout flow using Playwright. Cover add-to-cart,
+  address/payment entry, and order confirmation, including edge cases like invalid payments
+  and out-of-stock items.
+
+  Requirements:
+  - Use Playwright with multiple browsers (Chromium, Firefox, WebKit)
+  - Stable selectors (data-testid) and deterministic test data
+  - Screenshots or traces on failure for debugging
+
+  Expected files to reference:
+  - tests/e2e/checkout.spec.ts (checkout flow E2E tests)
+  - tests/e2e/fixtures/test_products.json (deterministic test data)
+  - playwright.config.ts (Playwright configuration with browsers)
+  - tests/e2e/helpers/page_objects.ts (page object models)
+
+  Example of proper file:line references:
+  - tests/e2e/checkout.spec.ts:25 (test('should complete checkout with valid payment'))
+  - tests/e2e/fixtures/test_products.json:5 (test product with price $99.99)
+  - playwright.config.ts:12 (projects: chromium, firefox, webkit)
+  - tests/e2e/helpers/page_objects.ts:18 (class CheckoutPage with fillShippingAddress)
+
+  Deliverables:
+  1. tests/e2e/checkout.spec.ts with cross-browser E2E tests
+  2. Playwright config with trace/screenshot on failure
+  - MANDATORY: Your response MUST include at least 3 file:line references to E2E test files
+  - MANDATORY: Include Playwright patterns with page.locator(), data-testid, and multi-browser projects
+
+  E2E Testing Template (use this structure):
+  ```typescript
+  // tests/e2e/checkout.spec.ts
+  import { test, expect } from '@playwright/test';
+  import { CheckoutPage } from './helpers/page_objects';
+  import testProducts from './fixtures/test_products.json';
+
+  test.describe('Checkout Flow', () => {
+    test.beforeEach(async ({ page }) => {
+      // Seed database with deterministic test data
+      await page.request.post('/api/test/seed', {
+        data: { products: testProducts }
+      });
+
+      await page.goto('/');
+    });
+
+    test('should complete checkout with valid payment', async ({ page }) => {
+      const checkout = new CheckoutPage(page);
+
+      // Add product to cart
+      await page.locator('[data-testid="product-1"]').click();
+      await page.locator('[data-testid="add-to-cart-btn"]').click();
+
+      // Navigate to checkout
+      await page.locator('[data-testid="cart-icon"]').click();
+      await page.locator('[data-testid="checkout-btn"]').click();
+
+      // Fill shipping address
+      await checkout.fillShippingAddress({
+        name: 'Test User',
+        address: '123 Main St',
+        city: 'San Francisco',
+        zip: '94102'
+      });
+
+      // Fill payment details
+      await checkout.fillPaymentDetails({
+        cardNumber: '4242424242424242',
+        expiry: '12/25',
+        cvv: '123'
+      });
+
+      // Submit order
+      await page.locator('[data-testid="place-order-btn"]').click();
+
+      // Verify order confirmation
+      await expect(page.locator('[data-testid="order-confirmation"]')).toBeVisible();
+      await expect(page.locator('[data-testid="order-number"]')).toContainText(/ORD-\d+/);
+    });
+
+    test('should show error for invalid payment card', async ({ page }) => {
+      const checkout = new CheckoutPage(page);
+
+      await page.locator('[data-testid="product-1"]').click();
+      await page.locator('[data-testid="add-to-cart-btn"]').click();
+      await page.locator('[data-testid="cart-icon"]').click();
+      await page.locator('[data-testid="checkout-btn"]').click();
+
+      await checkout.fillShippingAddress({
+        name: 'Test User',
+        address: '123 Main St',
+        city: 'San Francisco',
+        zip: '94102'
+      });
+
+      // Use test card that triggers decline
+      await checkout.fillPaymentDetails({
+        cardNumber: '4000000000000002',  // Declined card
+        expiry: '12/25',
+        cvv: '123'
+      });
+
+      await page.locator('[data-testid="place-order-btn"]').click();
+
+      // Verify error message displayed
+      await expect(page.locator('[data-testid="payment-error"]')).toBeVisible();
+      await expect(page.locator('[data-testid="payment-error"]')).toContainText('card was declined');
+    });
+
+    test('should prevent checkout for out-of-stock items', async ({ page }) => {
+      // Add out-of-stock product to cart
+      await page.locator('[data-testid="product-out-of-stock"]').click();
+
+      // Verify "Add to Cart" button is disabled
+      await expect(page.locator('[data-testid="add-to-cart-btn"]')).toBeDisabled();
+
+      // Verify out-of-stock message
+      await expect(page.locator('[data-testid="stock-status"]')).toContainText('Out of Stock');
+    });
+
+    test('should persist cart across page refreshes', async ({ page }) => {
+      // Add items to cart
+      await page.locator('[data-testid="product-1"]').click();
+      await page.locator('[data-testid="add-to-cart-btn"]').click();
+      await page.goto('/');
+
+      await page.locator('[data-testid="product-2"]').click();
+      await page.locator('[data-testid="add-to-cart-btn"]').click();
+
+      // Verify cart count
+      await expect(page.locator('[data-testid="cart-count"]')).toHaveText('2');
+
+      // Refresh page
+      await page.reload();
+
+      // Verify cart persisted
+      await expect(page.locator('[data-testid="cart-count"]')).toHaveText('2');
+    });
+  });
+
+  // tests/e2e/helpers/page_objects.ts
+  import { Page } from '@playwright/test';
+
+  export class CheckoutPage {
+    constructor(private page: Page) {}
+
+    async fillShippingAddress(address: {
+      name: string;
+      address: string;
+      city: string;
+      zip: string;
+    }) {
+      await this.page.locator('[data-testid="shipping-name"]').fill(address.name);
+      await this.page.locator('[data-testid="shipping-address"]').fill(address.address);
+      await this.page.locator('[data-testid="shipping-city"]').fill(address.city);
+      await this.page.locator('[data-testid="shipping-zip"]').fill(address.zip);
+      await this.page.locator('[data-testid="continue-to-payment-btn"]').click();
+    }
+
+    async fillPaymentDetails(payment: {
+      cardNumber: string;
+      expiry: string;
+      cvv: string;
+    }) {
+      await this.page.locator('[data-testid="card-number"]').fill(payment.cardNumber);
+      await this.page.locator('[data-testid="card-expiry"]').fill(payment.expiry);
+      await this.page.locator('[data-testid="card-cvv"]').fill(payment.cvv);
+    }
+
+    async verifyOrderTotal(expectedTotal: string) {
+      const total = await this.page.locator('[data-testid="order-total"]').textContent();
+      return total?.includes(expectedTotal);
+    }
+  }
+
+  // tests/e2e/fixtures/test_products.json
+  [
+    {
+      "id": 1,
+      "name": "Laptop",
+      "price": 999.99,
+      "stock": 10,
+      "sku": "LAP-001"
+    },
+    {
+      "id": 2,
+      "name": "Mouse",
+      "price": 29.99,
+      "stock": 50,
+      "sku": "MOU-001"
+    },
+    {
+      "id": 999,
+      "name": "Out of Stock Item",
+      "price": 49.99,
+      "stock": 0,
+      "sku": "OOS-001"
+    }
+  ]
+
+  // playwright.config.ts
+  import { defineConfig, devices } from '@playwright/test';
+
+  export default defineConfig({
+    testDir: './tests/e2e',
+
+    // Run tests in parallel across all projects
+    fullyParallel: true,
+
+    // Fail build on CI if you accidentally left test.only
+    forbidOnly: !!process.env.CI,
+
+    // Retry on CI only
+    retries: process.env.CI ? 2 : 0,
+
+    // Reporter configuration
+    reporter: [
+      ['html'],
+      ['junit', { outputFile: 'test-results/junit.xml' }]
+    ],
+
+    use: {
+      // Base URL for all tests
+      baseURL: 'http://localhost:3000',
+
+      // Collect trace on failure
+      trace: 'on-first-retry',
+
+      // Screenshot on failure
+      screenshot: 'only-on-failure',
+
+      // Video on failure
+      video: 'retain-on-failure',
+    },
+
+    // Configure projects for multiple browsers
+    projects: [
+      {
+        name: 'chromium',
+        use: { ...devices['Desktop Chrome'] },
+      },
+      {
+        name: 'firefox',
+        use: { ...devices['Desktop Firefox'] },
+      },
+      {
+        name: 'webkit',
+        use: { ...devices['Desktop Safari'] },
+      },
+      // Mobile viewports
+      {
+        name: 'Mobile Chrome',
+        use: { ...devices['Pixel 5'] },
+      },
+      {
+        name: 'Mobile Safari',
+        use: { ...devices['iPhone 13'] },
+      },
+    ],
+
+    // Run local dev server before tests
+    webServer: {
+      command: 'npm run start',
+      url: 'http://localhost:3000',
+      reuseExistingServer: !process.env.CI,
+    },
+  });
+  ```
+
+  Expected patterns:
+  - Playwright selectors: page.locator('[data-testid="..."]')
+  - Page Object Model: Encapsulate page interactions in classes
+  - Multi-browser testing: projects with chromium, firefox, webkit
+  - Deterministic data: JSON fixtures seeded before tests
+  - Failure debugging: trace, screenshot, video on failure
+  - Stable waits: expect().toBeVisible() instead of hardcoded sleeps
+
+checks:
+  - type: regex
+    pattern: '\b(E2E|end\s*to\s*end|Playwright)\b'
+    description: Uses E2E testing with Playwright
+  - type: regex
+    pattern: '\b(browser|Chrom(ium)?|Firefox|WebKit)\b'
+    description: Cross-browser coverage
+  - type: regex
+    pattern: '\b(checkout|cart|payment)\b'
+    description: Checkout/cart/payment flow coverage
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 3600
+  tags: [testing, e2e, playwright]

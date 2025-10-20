@@ -1,0 +1,11 @@
+# llama.cpp server flags (CPU-optimized)
+# Usage example:
+#   export LLAMA_BLAS=1 OMP_NUM_THREADS=40 OPENBLAS_NUM_THREADS=40 OMP_PROC_BIND=TRUE OMP_PLACES=cores
+#   llama-server $(cat server_cpu_optimized.args) --host 127.0.0.1 --port 8080
+
+-m models/ibm-granite_granite-4.0-h-small-Q5_K_M.gguf
+-t 40
+-c 4096
+-b 512
+-ngl 0
+

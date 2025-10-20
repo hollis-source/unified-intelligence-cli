@@ -4,7 +4,7 @@ Clean Architecture: Use Cases layer (business logic for pipeline tasks).
 SOLID: SRP - each task has one responsibility, OCP - extensible for new providers.
 
 This module implements actual tasks for integrating GPU inference providers
-(Modal, Together.ai) into the unified-intelligence-cli system.
+(Modal, Together.ai) into the autonomous-task-agent-dev-orchestration system.
 """
 
 import asyncio
@@ -511,8 +511,8 @@ async def build_package(input_data: Any = None) -> Dict[str, Any]:
         "task": "build_package",
         "status": "success",
         "build_artifacts": {
-            "wheel": "dist/unified_intelligence_cli-0.12.0-py3-none-any.whl",
-            "tarball": "dist/unified-intelligence-cli-0.12.0.tar.gz",
+            "wheel": "dist/autonomous_task_agent_dev_orchestration-0.12.0-py3-none-any.whl",
+            "tarball": "dist/autonomous-task-agent-dev-orchestration-0.12.0.tar.gz",
             "size_mb": 2.4,
         },
         "version": "0.12.0",
@@ -533,7 +533,7 @@ async def deploy_to_staging(input_data: Any = None) -> Dict[str, Any]:
         "status": "success",
         "deployment": {
             "environment": "staging",
-            "url": "https://staging.unified-intelligence-cli.io",
+            "url": "https://staging.autonomous-task-agent-dev-orchestration.io",
             "health_check": "✅ HEALTHY",
             "smoke_tests": "✅ PASS (4/4)",
         },

@@ -1,6 +1,20 @@
-# Unified Intelligence CLI
 
-![Tests](https://github.com/hollis-source/unified-intelligence-cli/workflows/Tests/badge.svg)
+## A/B Artifacts Quickstart
+See docs/ab_artifacts_guide.md for fields, interpretation tips, and jq one-liners.
+
+# Autonomous Task-Agent Dev Orchestration (ATADO)
+- Advanced metrics: see docs/advanced_metrics.md and run scripts/advanced_metrics_report.py to generate drift/performance/cross-domain insights.
+
+
+- Monitoring: see docs/monitoring.md; CI workflow .github/workflows/metrics_daily.yml generates snapshots
+- Philosophy: see docs/philosophy_alignment.md
+- Success criteria status: generated via scripts/success_criteria_check.py
+
+- Weekly success criteria snapshot: generated automatically in A/B weekly workflow; artifacts logs/success_criteria_*.{md,json}
+
+![Tests](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/workflows/Tests/badge.svg)
+[![Smoke Tests](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions/workflows/smoke.yml/badge.svg)](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/actions/workflows/smoke.yml)
+
 ![Python](https://img.shields.io/badge/python-3.12+-blue)
 ![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen)
 
@@ -25,6 +39,8 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 ✅ **95% Test Coverage**: 670 tests (all passing, including 61 Sprint 3 tests)
 
 ## Quick Start
+For the fastest path, see docs/quickstart.md. For caching controls, see docs/developer/caching.md.
+
 
 ### Installation
 
@@ -32,8 +48,8 @@ A CLI tool that intelligently distributes tasks to specialized agents (coder, te
 
 ```bash
 # Clone repository
-git clone https://github.com/hollis-source/unified-intelligence-cli.git
-cd unified-intelligence-cli
+git clone https://github.com/hollis-source/autonomous-task-agent-dev-orchestration.git
+cd autonomous-task-agent-dev-orchestration
 
 # Create virtual environment
 python3 -m venv venv
@@ -53,7 +69,7 @@ cp .env.example .env  # Then edit .env with your API keys
 
 **Option 1: Using wrapper script (works without venv activation)**
 ```bash
-./bin/ui-cli \
+./bin/atado \
   --task "Write a Python function for factorial" \
   --task "Write tests for factorial function" \
   --provider auto
@@ -62,7 +78,7 @@ cp .env.example .env  # Then edit .env with your API keys
 **Option 2: Using entry point (requires venv activation)**
 ```bash
 source venv/bin/activate
-ui-cli \
+atado \
   --task "Implement FizzBuzz in Python" \
   --task "Create comprehensive tests" \
   --provider grok \
@@ -95,6 +111,31 @@ python3 src/main.py \
   --provider grok \
   --verbose
 ```
+
+
+### Week 2 Pattern Collection Defaults (qwen3, RAG)
+
+For Week 2 RAG pattern collection using scripts/build_rag_patterns.py:
+- Default provider: qwen3 (Qwen/Qwen3-Next-80B-A3B-Instruct via HF Inference API)
+- Default parallelism: P=6 (locked in as the standard for reliability)
+- RAG: Enabled for each task invocation; embeddings stored with sentence-transformers/all-mpnet-base-v2
+
+Quick start:
+```bash
+# In repo root (requires venv + HF token)
+source venv/bin/activate
+export HF_TOKEN=...  # or HUGGINGFACE_TOKEN
+
+# Collect 25 patterns (defaults to --parallel 6)
+python scripts/build_rag_patterns.py --target 25
+
+# Override parallelism if needed (temporary):
+python scripts/build_rag_patterns.py --target 25 --parallel 6
+```
+
+Notes:
+- SurrealDB execution_log is used for storage; verify with the SurrealDB CLI if needed
+- Keep domain-balanced selection (the script auto-balances across architecture, backend, devops, qa, testing)
 
 ### With Timeout and Parallel Execution
 
@@ -296,9 +337,9 @@ python3 demo_full_workflow.py
 
 ```
 src/
-├── entities/          # Core business objects (Agent, Task, ExecutionResult)
+├── entity/            # Core business objects (Agent, Task, ExecutionResult)
 ├── use_cases/         # Business logic (TaskCoordinator, TaskPlanner)
-├── interfaces/        # Abstractions (ITextGenerator, IAgentExecutor, IAgentCoordinator)
+├── interface/         # Abstractions (ITextGenerator, IAgentExecutor, IAgentCoordinator)
 ├── adapters/          # External integrations
 │   ├── llm/          # LLM providers (GrokAdapter, MockProvider, TongyiAdapter)
 │   ├── agent/        # Agent implementations (LLMAgentExecutor)
@@ -343,6 +384,59 @@ PYTHONPATH=. pytest tests/ -v
 ```bash
 PYTHONPATH=. pytest tests/ --cov=src --cov-report=term-missing
 ```
+
+### Test Profiles
+
+Fast/dry-run suite (excludes non-dry-run smoke tests):
+```bash
+source venv/bin/activate
+PYTHONPATH=. pytest tests/ -v -k "not build_rag_patterns_smoke"
+```
+
+Non-dry-run smoke tests (minimal end-to-end):
+```bash
+source venv/bin/activate
+PYTHONPATH=. pytest tests/integration/test_build_rag_patterns_smoke.py -v
+```
+
+### CI Workflows
+
+- Default Tests workflow runs the fast suite and coverage (excludes non-dry-run smoke)
+- Smoke Tests (Non-Dry-Run) workflow runs the minimal end-to-end smokes
+  - Triggers: Manual (workflow_dispatch) and daily schedule (06:00 UTC)
+  - Requires HF_TOKEN/HUGGINGFACE_TOKEN secrets if your provider uses HF
+
+See:
+- .github/workflows/tests.yml (fast suite)
+### A/B Routing Evaluation
+
+Run a small A/B evaluation (baseline vs RAG) and save a JSON report under logs/:
+```bash
+source venv/bin/activate
+PYTHONPATH=. python scripts/ab_routing_eval.py --domains frontend research backend --per-domain 2 --provider qwen3
+```
+
+Summarize recent routing decisions (grouped by rag_used) to Markdown and JSON:
+```bash
+PYTHONPATH=. python scripts/routing_decisions_summary.py --limit 100
+```
+Notes:
+- Proportions use both normal and Wilson score 95% CIs; difference in proportions uses Newcombe (1998) Wilson-based method.
+- CSV includes per-condition aggregates and a diff row with both normal and Newcombe CIs for the difference.
+
+- A separate diff CSV is also saved: logs/ab_eval_diff_<timestamp>.csv
+
+
+CI:
+- .github/workflows/ab_evaluation.yml runs a nightly small-N A/B evaluation and uploads the report as an artifact.
+
+- .github/workflows/ab_evaluation.yml runs a daily small-N A/B and a weekly larger-N A/B (with CSV and routing summary artifacts)
+
+For methodology, troubleshooting sparse routing_decisions, domain normalization rules, and interpreting CIs, see docs/ab_rag_vs_baseline.md.
+
+
+- .github/workflows/smoke.yml (non-dry-run smokes)
+
 
 ### Add New Agent Type
 
@@ -391,6 +485,8 @@ GitHub Actions workflows automatically run on push/PR:
 - **Coverage**: Generate and upload coverage reports
 - **Linting**: Check code style with flake8
 - **Security**: Scan with bandit and safety
+- See docs/claude_output_hooks.md for configuration-driven control of assistant output (redaction, verbosity, routing trace, code wrapping).
+
 
 See [.github/workflows/tests.yml](.github/workflows/tests.yml) for configuration.
 

@@ -1,0 +1,32 @@
+id: qa-04
+agent: qa
+prompt: |
+  Design smoke testing suite for REST API endpoints of social media application.
+
+  Expected files to reference:
+  - tests/smoke/api_smoke_tests.py:15 (test_critical_path_auth_and_post_creation P0 test)
+  - src/api/routes/users.py:35 (GET /api/users endpoint handler)
+  - src/api/routes/posts.py:58 (POST /api/posts create post logic)
+  - tests/fixtures/api_data.json:8 (valid_user_payload test data)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include smoke testing patterns with critical path identification, priority levels (P0/P1/P2), response code validation, and execution time estimates
+
+  Template includes: 10-15 critical smoke tests covering auth (login/logout/refresh), user CRUD, posts CRUD, comments, media uploads, search endpoints
+
+checks:
+  - "smoke test"
+  - "critical path"
+  - "priority"
+  - type: regex
+    pattern: "(?i)(response|status|HTTP).{0,10}code"
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: none
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 2900
+  tags: [smoke-testing, api-testing, critical-path, rest-api]

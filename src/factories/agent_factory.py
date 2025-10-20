@@ -1,8 +1,8 @@
 """Agent factory - Creates agents from configuration."""
 
 from typing import List, Dict, Any
-from src.entities import Agent
-from src.interfaces import IAgentFactory
+from src.entity import Agent
+from src.interface import IAgentFactory
 
 
 class AgentFactory(IAgentFactory):
@@ -121,14 +121,14 @@ class AgentFactory(IAgentFactory):
             ),
 
             Agent(
-                role="qa-lead",
+                role="architecture-lead",
                 capabilities=[
                     # Code review
                     "review", "code review", "inspect", "evaluate",
                     # Architecture validation
                     "architecture", "solid", "clean code", "clean architecture",
-                    # Quality assurance
-                    "quality", "qa", "quality assurance", "validate",
+                    # Code quality (not product QA)
+                    "code quality", "technical debt", "refactoring",
                     # Best practices
                     "best practices", "standards", "conventions",
                     "assess", "audit", "critique", "feedback"
@@ -270,16 +270,17 @@ class AgentFactory(IAgentFactory):
 
     def create_scaled_agents(self) -> List[Agent]:
         """
-        Create scaled agent team with full 3-tier hierarchy (130 agents - Phase 2 Aggressive Scaling).
+        Create scaled agent team with full 3-tier hierarchy (134 agents - Phase 2 Aggressive Scaling).
 
         Week 11 Phase 2: Agent scaling expansion (12 agents).
         Week 13: Added Category Theory & DSL specialization (4 agents).
-        Phase 2 (Aggressive): Scaled to 130 agents for massive parallelism on 96-core EPYC + ZeroGPU H200.
+        Week 14: Added QA team specialization (4 agents).
+        Phase 2 (Aggressive): Scaled to 134 agents for massive parallelism on 96-core EPYC + ZeroGPU H200.
 
         Architecture:
             Tier 1 (2 agents): Orchestration & Quality Assurance
-            Tier 2 (7 agents): Domain Leads (Frontend, Backend, Testing, Research, DevOps, Category Theory, DSL)
-            Tier 3 (121 agents): Specialized Executors across all domains
+            Tier 2 (8 agents): Domain Leads (Frontend, Backend, Testing, Research, DevOps, QA, Category Theory, DSL)
+            Tier 3 (124 agents): Specialized Executors across all domains
                 - Frontend: 19 specialists (React, Vue, Angular, Svelte, CSS, Tailwind, etc.)
                 - Backend: 21 specialists (Django, Flask, FastAPI, PostgreSQL, Redis, etc.)
                 - Testing: 20 specialists (Unit, Integration, Performance, Security, etc.)
@@ -294,7 +295,7 @@ class AgentFactory(IAgentFactory):
             - Hardware: 96 CPU cores + 1TB RAM + ZeroGPU H200 80GB VRAM
 
         Returns:
-            List of 130 agents with complete tier metadata
+            List of 134 agents with complete tier metadata
         """
         return [
             # ===== TIER 1: Planning & Coordination (2 agents) =====
@@ -318,14 +319,14 @@ class AgentFactory(IAgentFactory):
             ),
 
             Agent(
-                role="qa-lead",
+                role="architecture-lead",
                 capabilities=[
                     # Code review
                     "review", "code review", "inspect", "evaluate",
                     # Architecture validation
                     "architecture", "solid", "clean code", "clean architecture",
-                    # Quality assurance
-                    "quality", "qa", "quality assurance", "validate",
+                    # Code quality (not product QA)
+                    "code quality", "technical debt", "refactoring",
                     # Best practices
                     "best practices", "standards", "conventions",
                     "assess", "audit", "critique", "feedback"
@@ -437,7 +438,30 @@ class AgentFactory(IAgentFactory):
                 specialization="devops"
             ),
 
-            # ===== TIER 3: Specialized Executors (5 agents) =====
+            Agent(
+                role="qa-lead",
+                capabilities=[
+                    # Product quality (not code quality - that's architecture-lead)
+                    "quality assurance", "qa", "product quality",
+                    # Acceptance testing strategy
+                    "acceptance", "acceptance testing", "uat", "user acceptance",
+                    # Requirements & validation
+                    "requirements validation", "feature validation",
+                    "acceptance criteria", "story validation",
+                    # Test planning
+                    "test strategy", "test planning", "test case design",
+                    "test scenarios", "test plan",
+                    # User perspective
+                    "user journey", "user flow", "user testing",
+                    # Exploratory & manual testing
+                    "exploratory testing", "manual testing"
+                ],
+                tier=2,
+                parent_agent="master-orchestrator",
+                specialization="qa"
+            ),
+
+            # ===== TIER 3: Specialized Executors (8 agents) =====
 
             Agent(
                 role="python-specialist",
@@ -523,6 +547,63 @@ class AgentFactory(IAgentFactory):
                 tier=3,
                 parent_agent="testing-lead",
                 specialization="testing"
+            ),
+
+            Agent(
+                role="qa-engineer",
+                capabilities=[
+                    # User acceptance testing
+                    "acceptance", "acceptance test", "acceptance testing", "uat",
+                    "user acceptance", "user acceptance testing",
+                    # Feature validation
+                    "feature validation", "feature testing", "feature verification",
+                    "requirements validation", "requirements testing",
+                    # BDD (Behavior-Driven Development)
+                    "bdd", "behavior driven", "gherkin", "cucumber", "behave",
+                    "given when then", "scenario", "feature file",
+                    # User perspective testing
+                    "user journey", "user flow", "user scenario", "user story testing",
+                    "acceptance criteria", "story validation"
+                ],
+                tier=3,
+                parent_agent="qa-lead",
+                specialization="qa"
+            ),
+
+            Agent(
+                role="exploratory-test-engineer",
+                capabilities=[
+                    # Exploratory testing
+                    "exploratory", "exploratory testing", "exploratory test",
+                    "ad hoc testing", "informal testing",
+                    # Manual testing
+                    "manual testing", "manual test", "manual verification",
+                    # Bug hunting
+                    "bug hunting", "edge cases", "corner cases",
+                    # Usability testing
+                    "usability", "usability testing", "user experience testing"
+                ],
+                tier=3,
+                parent_agent="qa-lead",
+                specialization="qa"
+            ),
+
+            Agent(
+                role="test-case-designer",
+                capabilities=[
+                    # Test case design
+                    "test case", "test cases", "test case design",
+                    "test scenarios", "scenario design",
+                    # Test planning
+                    "test plan", "test planning", "test strategy",
+                    # Coverage analysis
+                    "test coverage", "requirement coverage", "scenario coverage",
+                    # Test data
+                    "test data", "test data design"
+                ],
+                tier=3,
+                parent_agent="qa-lead",
+                specialization="qa"
             ),
 
             Agent(

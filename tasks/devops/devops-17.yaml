@@ -1,0 +1,69 @@
+id: devops-17
+agent: devops
+prompt: |
+  Enable zero-downtime database migrations integrated with CI/CD, including pre-checks and automated rollback.
+
+  Requirements:
+  1. Use migration tooling (e.g., Flyway/Liquibase) with immutable artifacts
+  2. Apply online-safe changes with pre/post checks
+  3. Define rollback and backfill strategies
+  4. MANDATORY: Your response MUST include at least 3 file:line references to migration files
+  5. MANDATORY: Include CI/CD workflow with migration steps and Flyway/Liquibase examples
+
+  Migration CI/CD Template (use this structure):
+  ```yaml
+  name: DB Migration Pipeline
+
+  jobs:
+    migrate:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Pre-migration checks
+          run: flyway validate -configFiles=flyway.conf
+
+        - name: Apply migrations
+          run: flyway migrate -configFiles=flyway.conf
+
+        - name: Post-migration verification
+          run: ./scripts/verify-schema.sh
+  ```
+
+  Expected files to reference:
+  - .github/workflows/db-migration.yml (migration CI/CD pipeline)
+  - db/migrations/V001__initial_schema.sql (versioned migration script)
+  - flyway.conf or liquibase.properties (migration tool configuration)
+  - docs/migration-runbook.md (rollback procedures)
+
+  Example of proper file:line references:
+  - .github/workflows/db-migration.yml:12 (flyway validate pre-check step)
+  - .github/workflows/db-migration.yml:18 (flyway migrate execution)
+  - db/migrations/V001__initial_schema.sql:5 (online-safe ALTER TABLE)
+  - docs/migration-runbook.md:35 (rollback procedure steps)
+
+  Deliverables:
+  1. Migration pipeline YAML with name:, jobs:, steps:, run: keywords and flyway/liquibase commands with file:line refs
+  2. Versioned migration scripts (V###__description.sql) with online-safe DDL
+  3. Runbook with rollback commands and verification queries with file references
+
+checks:
+  - type: regex
+    pattern: '\b(migrations?|schema|Liquibase|Flyway)\b'
+    description: Must reference DB migration tooling
+  - type: regex
+    pattern: '\b(zero-?downtime|online|rolling)\b'
+    description: Should mention online/zero-downtime approach
+  - type: regex
+    pattern: '\b(rollback|pre\s*checks?|post\s*checks?)\b'
+    description: Must include checks and rollback
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 7000
+  tags: [devops, database, migrations, ci]
+
+

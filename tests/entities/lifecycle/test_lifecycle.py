@@ -5,8 +5,8 @@ and complete lifecycle execution.
 """
 
 import pytest
-from src.entities.lifecycle import Lifecycle, LifecycleState
-from src.entities.lifecycle.lifecycle import run_full_lifecycle
+from src.entity.lifecycle import Lifecycle, LifecycleState
+from src.entity.lifecycle.lifecycle import run_full_lifecycle
 
 
 class TestLifecycleCreation:

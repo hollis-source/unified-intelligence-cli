@@ -1,0 +1,190 @@
+id: test-05
+agent: test
+prompt: |
+  Define a test coverage strategy for the core services. Identify critical paths to reach
+  80%+ meaningful coverage, including guidelines for when to mock vs integrate, and how to
+  measure gaps using coverage reports.
+
+  Requirements:
+  - Prioritize high-risk code paths
+  - Document mocking vs integration trade-offs
+  - Include steps to generate coverage reports
+
+  Expected files to reference:
+  - docs/testing_strategy.md (coverage strategy documentation)
+  - .coveragerc (coverage configuration)
+  - pytest.ini (pytest coverage settings)
+  - scripts/run_coverage.sh (coverage script)
+
+  Example of proper file:line references:
+  - docs/testing_strategy.md:8 (Critical path prioritization: auth, payments, orders)
+  - .coveragerc:5 (exclude_lines for defensive code)
+  - pytest.ini:3 (addopts = --cov=src --cov-report=html)
+  - scripts/run_coverage.sh:12 (pytest --cov=src --cov-report=term-missing)
+
+  Deliverables:
+  1. Testing strategy document with priorities
+  2. Coverage configuration and invocation instructions
+  - MANDATORY: Your response MUST include at least 3 file:line references to coverage files
+  - MANDATORY: Include pytest-cov configuration and coverage report generation commands
+
+  Coverage Strategy Template (use this structure):
+  ```markdown
+  # docs/testing_strategy.md
+
+  ## Test Coverage Strategy
+
+  ### Goal: 80%+ Meaningful Coverage
+
+  #### Critical Paths (Priority 1 - Must reach 95%+)
+  - **Authentication**: Login, signup, password reset, token validation
+  - **Payments**: Charge processing, refunds, webhook handling
+  - **Order Processing**: Cart → checkout → fulfillment pipeline
+  - **Data Privacy**: PII handling, GDPR compliance, data deletion
+
+  #### High-Risk Paths (Priority 2 - Target 85%+)
+  - **API Endpoints**: Public-facing REST/GraphQL APIs
+  - **Database Migrations**: Schema changes, data transformations
+  - **External Integrations**: Payment gateways, email/SMS providers
+  - **Security**: Input validation, SQL injection prevention, XSS protection
+
+  #### Standard Paths (Priority 3 - Target 75%+)
+  - **Business Logic**: Product catalog, search, filtering
+  - **UI Components**: React components with user interactions
+  - **Utilities**: Helper functions, formatters, validators
+
+  #### Low Priority (Target 50%+)
+  - **Configuration**: Static config loaders
+  - **Generated Code**: Auto-generated API clients
+  - **Deprecated Code**: Legacy modules scheduled for removal
+
+  ### Mocking vs Integration Trade-offs
+
+  | Scenario | Use Mocking | Use Integration | Rationale |
+  |----------|-------------|-----------------|-----------|
+  | External API calls | ✓ | | Avoid network dependency, faster tests |
+  | Database queries | | ✓ (test DB) | Verify SQL correctness, schema integrity |
+  | Email/SMS sending | ✓ | | Avoid sending real messages |
+  | File I/O | Hybrid | Hybrid | Mock for speed, integrate for correctness |
+  | Crypto operations | | ✓ | Test actual security behavior |
+  | Time-dependent logic | ✓ (freeze_time) | | Control time for deterministic tests |
+  | Payment processing | ✓ (sandbox) | ✓ (test mode) | Use provider's test endpoints |
+
+  ### Coverage Measurement
+
+  #### Tools
+  - **pytest-cov**: Line and branch coverage
+  - **coverage.py**: Detailed HTML reports
+  - **codecov**: Track coverage over time (CI integration)
+
+  #### Commands
+  ```bash
+  # Generate coverage report
+  pytest --cov=src --cov-report=html --cov-report=term-missing
+
+  # Show missing lines
+  pytest --cov=src --cov-report=term-missing
+
+  # Generate XML for CI
+  pytest --cov=src --cov-report=xml
+
+  # Set minimum coverage threshold (fail if below 80%)
+  pytest --cov=src --cov-fail-under=80
+  ```
+
+  #### Analyzing Gaps
+  1. **Run coverage**: `pytest --cov=src --cov-report=html`
+  2. **Open report**: `open htmlcov/index.html`
+  3. **Identify gaps**: Look for red (uncovered) lines in critical modules
+  4. **Prioritize**: Focus on auth, payments, orders first
+  5. **Write tests**: Add tests for uncovered branches
+  6. **Verify**: Re-run coverage, ensure improvement
+
+  ### Exclusions (.coveragerc)
+  ```ini
+  [run]
+  source = src
+  omit =
+      */tests/*
+      */migrations/*
+      */venv/*
+      */settings.py
+      */__init__.py
+
+  [report]
+  exclude_lines =
+      pragma: no cover
+      def __repr__
+      raise AssertionError
+      raise NotImplementedError
+      if __name__ == .__main__.:
+      if TYPE_CHECKING:
+      @abstract
+  ```
+  ```
+
+  ```ini
+  # .coveragerc
+  [run]
+  source = src
+  omit =
+      */tests/*
+      */migrations/*
+      */venv/*
+
+  [report]
+  precision = 2
+  show_missing = True
+  skip_covered = False
+  exclude_lines =
+      pragma: no cover
+      def __repr__
+      raise AssertionError
+      raise NotImplementedError
+      if __name__ == .__main__.:
+  ```
+
+  ```ini
+  # pytest.ini
+  [pytest]
+  addopts = --cov=src --cov-report=html --cov-report=term-missing --cov-fail-under=80
+  testpaths = tests
+  ```
+
+  ```bash
+  # scripts/run_coverage.sh
+  #!/bin/bash
+  set -e
+
+  echo "Running tests with coverage..."
+  pytest --cov=src --cov-report=html --cov-report=term-missing
+
+  echo "Coverage report generated at htmlcov/index.html"
+  echo "Opening coverage report..."
+  open htmlcov/index.html || xdg-open htmlcov/index.html
+  ```
+
+  Expected deliverables:
+  - docs/testing_strategy.md: Prioritized coverage targets (critical 95%+, high-risk 85%+, standard 75%+)
+  - .coveragerc: Exclusions for migrations, venv, __init__.py
+  - pytest.ini: --cov-fail-under=80 threshold
+  - Mocking vs integration decision matrix
+
+checks:
+  - type: regex
+    pattern: '\b(coverage|pytest\s*-cov|report)\b'
+    description: Mentions coverage reporting
+  - type: regex
+    pattern: '\b(mock(ing)?|integration)\b'
+    description: Discusses mocking vs integration choices
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3600
+  tags: [testing, strategy, coverage]
+

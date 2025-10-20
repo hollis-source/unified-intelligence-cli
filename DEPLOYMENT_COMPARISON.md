@@ -39,7 +39,7 @@ Both approaches require **one-time sudo** to install prerequisites:
 ### Native Build Architecture
 
 ```
-Python CLI (unified-intelligence-cli)
+Python CLI (autonomous-task-agent-dev-orchestration)
     ↓ subprocess call
 llama-cli binary (~/llama.cpp/llama-cli)
     ↓ loads
@@ -62,7 +62,7 @@ AMD EPYC 9454P (AVX-512)
 ### Docker Architecture
 
 ```
-Python CLI (unified-intelligence-cli)
+Python CLI (autonomous-task-agent-dev-orchestration)
     ↓ HTTP request (localhost:8080)
 llama-cpp-server (Docker container)
     ↓ loads

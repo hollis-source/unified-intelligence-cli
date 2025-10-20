@@ -1,0 +1,76 @@
+id: devops-16
+agent: devops
+prompt: |
+  Design and implement progressive delivery (canary) for a high-traffic service using automated analysis and rollbacks.
+
+  Requirements:
+  1. Gradually shift traffic based on health metrics and error budgets
+  2. Automate analysis and rollback on failure
+  3. Document promotion criteria and guardrails
+  4. MANDATORY: Your response MUST include at least 3 file:line references to canary deployment files
+  5. MANDATORY: Include Argo Rollouts or Flagger canary configuration YAML
+
+  Argo Rollouts Canary Template (use this structure):
+  ```yaml
+  apiVersion: argoproj.io/v1alpha1
+  kind: Rollout
+  metadata:
+    name: myapp-canary
+  spec:
+    replicas: 5
+    strategy:
+      canary:
+        steps:
+          - setWeight: 20
+          - pause: {duration: 5m}
+          - setWeight: 50
+          - pause: {duration: 10m}
+          - setWeight: 80
+          - pause: {duration: 5m}
+        analysis:
+          templates:
+            - templateName: success-rate
+          args:
+            - name: service-name
+              value: myapp
+  ```
+
+  Expected files to reference:
+  - k8s/rollout.yaml (Argo Rollout canary configuration)
+  - k8s/analysis-template.yaml (AnalysisTemplate for success rate metrics)
+  - k8s/service.yaml (Service for canary traffic splitting)
+  - docs/canary-playbook.md (promotion and rollback procedures)
+
+  Example of proper file:line references:
+  - k8s/rollout.yaml:12 (canary traffic weight progression steps)
+  - k8s/rollout.yaml:20 (analysis template reference)
+  - k8s/analysis-template.yaml:15 (success rate PromQL metric query)
+  - docs/canary-playbook.md:28 (manual rollback procedure)
+
+  Deliverables:
+  1. Rollout YAML with kind: Rollout, strategy:, canary:, setWeight:, analysis: keywords and file:line refs
+  2. AnalysisTemplate YAML with metrics:, successCondition:, failureCondition: for automated rollback
+  3. Playbook with kubectl argo rollouts promote/abort commands and file references
+
+checks:
+  - type: regex
+    pattern: '\b(canary|progressive|Argo\s+Rollouts|Flagger)\b'
+    description: Must reference canary/progressive delivery tooling
+  - type: regex
+    pattern: '\b(traffic|weights?|analysis)\b'
+    description: Should include traffic weighting or analysis
+  - type: regex
+    pattern: '\b(rollback|promotion|guardrails?)\b'
+    description: Must include rollback/promote guardrails
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 7000
+  tags: [devops, deployment, canary, reliability]
+
+

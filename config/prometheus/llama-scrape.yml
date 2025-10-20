@@ -1,0 +1,13 @@
+# Example Prometheus scrape job snippets
+# 1) If llama-server exposes /metrics (some builds/patches do):
+- job_name: 'llama-server'
+  metrics_path: /metrics
+  static_configs:
+    - targets: ['127.0.0.1:8080']
+
+# 2) Textfile collector via node_exporter
+# Ensure node_exporter is started with: --collector.textfile --collector.textfile.directory=/var/lib/node_exporter/textfile_collector
+- job_name: 'node-exporter'
+  static_configs:
+    - targets: ['127.0.0.1:9100']
+

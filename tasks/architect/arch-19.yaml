@@ -1,0 +1,36 @@
+id: arch-19
+agent: architect
+prompt: |
+  Develop performance and capacity planning framework to scale platform by 10x traffic over next year.
+
+  Expected files to reference:
+  - docs/capacity/capacity_planning_model.xlsx:Sheet1 (growth projections with traffic, storage, and compute drivers)
+  - tests/performance/load_testing_suite.py:35 (baseline, soak, and stress test scenarios with p95/p99 targets)
+  - docs/scaling/bottleneck_remediation.md:45 (tier-by-tier scaling playbooks for database, API, cache layers)
+  - monitoring/slos/latency_targets.yaml:12 (p95 < 100ms, p99 < 500ms latency SLOs with alerting)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include capacity/performance patterns with load models/forecasts, capacity targets, bottleneck analysis, performance testing (baseline/soak/stress), profiling, SLOs tied to p95/p99 latency, and autoscaling/rightsizing
+
+  Template includes: Capacity planning model with growth assumptions, performance testing plan and tooling, bottleneck remediation and scaling playbooks per tier, monitoring dashboards and SLOs with cost management
+
+checks:
+  - type: regex
+    pattern: '\b(capacity\s+planning|load\s+test|profiling)\b'
+    description: Must include capacity and performance testing/profiling
+  - type: regex
+    pattern: '\b(QPS|RPS|latency|p95|p99)\b'
+    description: Must reference throughput/latency targets
+  - type: regex
+    pattern: '\b(autoscaling|rightsizing|bottleneck)\b'
+    description: Must include scaling and bottleneck strategies
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 6400
+  tags: [performance, capacity-planning, scalability, cost]

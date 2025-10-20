@@ -1,0 +1,36 @@
+id: py-15
+agent: python
+prompt: |
+  Break the monolithic function process_all() in pipelines/process.py into cohesive units.
+
+  Expected files to reference:
+  - pipelines/process.py:15 (def _validate_items helper function)
+  - pipelines/process.py:35 (def _transform_items with pure logic)
+  - pipelines/process.py:58 (def _enrich_items data enrichment)
+  - tests/test_process_pipeline.py:22 (test_validate_items_unit_test)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include decomposition patterns with extracted helpers, pure functions, and unit testability
+
+  Template includes: Before/after comparison, helper extraction, pipeline pattern, testable units
+
+checks:
+  - type: regex
+    pattern: "def process_all\\(items: list\\[dict\\]\\)"
+    description: Public API retains type hints
+  - type: regex
+    pattern: "def _validate_items\\(items:"
+    description: Extracted validation helper present
+  - type: cmd
+    run: "python -m py_compile pipelines/process.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3000
+  tags: [refactoring, decomposition, clean-code, type-hints]

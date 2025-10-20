@@ -1,0 +1,36 @@
+id: arch-15
+agent: architect
+prompt: |
+  Design authentication and authorization architecture using OAuth2/OIDC with fine-grained RBAC/ABAC across services.
+
+  Expected files to reference:
+  - docs/security/authn_authz_architecture.md:20 (reference architecture with trust boundaries and token flows)
+  - infrastructure/auth/token_schema.yaml:15 (JWT token structure with scopes, audience, and lifetime policies)
+  - src/authz/policy_engine.py:35 (ABAC policy evaluation with context attributes)
+  - infrastructure/secrets/key_rotation_schedule.yaml:25 (automated key rotation and revocation procedures)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include auth patterns with OAuth2/OIDC, token types/lifetimes/scopes, service-to-service auth (mTLS/JWT), RBAC/ABAC models, policy enforcement points, and session revocation/key rotation
+
+  Template includes: AuthN/AuthZ reference architecture, token schemas and validation flows, RBAC/ABAC policy model and enforcement, gateway integration, key management/rotation/revocation, zero-trust posture
+
+checks:
+  - type: regex
+    pattern: '\b(OAuth2|OIDC|OpenID\s+Connect)\b'
+    description: Must include modern auth protocols
+  - type: regex
+    pattern: '\b(RBAC|ABAC|scopes?)\b'
+    description: Must define authorization models and scopes
+  - type: regex
+    pattern: '\b(mTLS|JWT|key\s+rotation|revocation)\b'
+    description: Must address trust, keys, and revocation
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5500
+  tags: [security, authentication, authorization, zero-trust]

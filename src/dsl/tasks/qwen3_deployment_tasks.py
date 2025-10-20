@@ -222,7 +222,7 @@ with gr.Blocks(title="Qwen3-8B Production Inference", theme=gr.themes.Soft()) as
 
     - [Evaluation Space](https://huggingface.co/spaces/hollis-source/qwen3-eval)
     - [Model Card](https://huggingface.co/Qwen/Qwen3-8B)
-    - [GitHub](https://github.com/hollis-source/unified-intelligence-cli)
+    - [GitHub](https://github.com/hollis-source/autonomous-task-agent-dev-orchestration)
     """)
 
 
@@ -256,7 +256,7 @@ if __name__ == "__main__":
 
 async def test_qwen3_adapter(input_data: Any = None) -> Dict[str, Any]:
     """
-    Test Qwen3 ZeroGPU adapter integration with unified-intelligence-cli.
+    Test Qwen3 ZeroGPU adapter integration with autonomous-task-agent-dev-orchestration.
 
     Validates that the adapter works correctly with the DSL system.
     """
@@ -301,7 +301,7 @@ async def test_qwen3_adapter(input_data: Any = None) -> Dict[str, Any]:
 
 async def integrate_qwen3_with_cli(input_data: Any = None) -> Dict[str, Any]:
     """
-    Integrate Qwen3 adapter with unified-intelligence-cli.
+    Integrate Qwen3 adapter with autonomous-task-agent-dev-orchestration.
 
     Updates provider factory and configuration to support Qwen3 as a provider option.
     """
@@ -403,7 +403,7 @@ response = client.predict(
 print(response)
 ```
 
-### 3. Via unified-intelligence-cli
+### 3. Via autonomous-task-agent-dev-orchestration
 ```bash
 python src/main.py --provider qwen3_zerogpu --query "Explain SOLID principles"
 ```

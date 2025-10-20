@@ -1,5 +1,5 @@
 """
-Custom exceptions for unified-intelligence-cli.
+Custom exceptions for autonomous-task-agent-dev-orchestration.
 
 Clean Code: Explicit error handling with meaningful exception types.
 Week 1: Enhanced with error_details conversion for better debugging.

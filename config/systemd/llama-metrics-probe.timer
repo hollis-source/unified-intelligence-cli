@@ -1,0 +1,11 @@
+[Unit]
+Description=Run llama-server metrics probe periodically
+
+[Timer]
+OnUnitActiveSec=60s
+OnBootSec=30s
+Unit=llama-metrics-probe.service
+
+[Install]
+WantedBy=timers.target
+

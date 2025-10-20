@@ -1,0 +1,76 @@
+id: devops-14
+agent: devops
+prompt: |
+  Implement end-to-end observability for CI/CD and runtime: pipeline status, deployment events, and service health.
+
+  Requirements:
+  1. Emit metrics/logs/traces for pipeline steps and deployments
+  2. Correlate releases with application health and error rates
+  3. Create dashboards and alerts for failed releases
+  4. MANDATORY: Your response MUST include at least 3 file:line references to observability configuration files
+  5. MANDATORY: Include Prometheus scrape config and Grafana dashboard examples
+
+  Observability Configuration Template (use this structure):
+  ```yaml
+  # prometheus.yml - CI/CD metrics
+  scrape_configs:
+    - job_name: 'ci-cd-events'
+      static_configs:
+        - targets: ['ci-events-exporter:9090']
+      metric_relabel_configs:
+        - source_labels: [deployment_status]
+          target_label: status
+
+  # grafana-dashboard.json excerpt
+  {
+    "title": "Deployments & SLOs",
+    "panels": [
+      {
+        "title": "Deploy Success Rate",
+        "targets": [
+          {"expr": "rate(deployments_total{status='success'}[5m])"}
+        ]
+      }
+    ]
+  }
+  ```
+
+  Expected files to reference:
+  - config/prometheus-ci.yml (CI/CD events scrape configuration)
+  - dashboards/deployment-slo.json (Grafana deployment correlation dashboard)
+  - config/alert-rules-releases.yml (failed release alert rules)
+  - .github/workflows/ci.yml (pipeline instrumentation steps)
+
+  Example of proper file:line references:
+  - config/prometheus-ci.yml:12 (CI events scrape job configuration)
+  - dashboards/deployment-slo.json:25 (deployment correlation panel)
+  - config/alert-rules-releases.yml:8 (failed release alert rule)
+  - .github/workflows/ci.yml:45 (metrics emission step)
+
+  Deliverables:
+  1. Instrumentation YAML with prometheus scrape_configs:, job_name:, targets: keywords and file:line refs
+  2. Grafana dashboard JSON with panels:, targets:, expr: keywords correlating deploys with SLOs
+  3. Alert rules YAML with alert:, expr:, for: keywords for failed/unhealthy releases
+
+checks:
+  - type: regex
+    pattern: '\b(observability|metrics?|logging|traces?)\b'
+    description: Must mention metrics/logs/traces
+  - type: regex
+    pattern: '\b(deploy(ment|s)?|release|rollout)\b'
+    description: Should correlate deployments/releases
+  - type: regex
+    pattern: '\b(dashboard|alerts?|SLO)\b'
+    description: Must include dashboards or alerts/SLOs
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5900
+  tags: [devops, observability, ci, cd]
+
+

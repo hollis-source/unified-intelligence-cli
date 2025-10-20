@@ -1,0 +1,80 @@
+id: devops-11
+agent: devops
+prompt: |
+  Package and deploy the application using Helm with configurable values for environments.
+
+  Requirements:
+  1. Create a Helm chart with templates and default values
+  2. Parameterize image, resources, env vars, and ingress
+  3. Provide upgrade, rollback, and diff procedures
+  4. MANDATORY: Your response MUST include at least 3 file:line references to Helm chart files
+  5. MANDATORY: Include Helm chart structure with Chart.yaml and values.yaml examples
+
+  Helm Chart Template (use this structure):
+  ```yaml
+  # Chart.yaml
+  apiVersion: v2
+  name: [app-name]
+  version: 1.0.0
+
+  # values.yaml
+  replicaCount: 3
+  image:
+    repository: [registry/image]
+    tag: [version]
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  # templates/deployment.yaml
+  apiVersion: apps/v1
+  kind: Deployment
+  spec:
+    replicas: {{ .Values.replicaCount }}
+    template:
+      spec:
+        containers:
+          - image: {{ .Values.image.repository }}:{{ .Values.image.tag }}
+            resources: {{ toYaml .Values.resources | nindent 12 }}
+  ```
+
+  Expected files to reference:
+  - helm/mychart/Chart.yaml (chart metadata)
+  - helm/mychart/values.yaml (default values)
+  - helm/mychart/templates/deployment.yaml (deployment template)
+  - helm/mychart/values-prod.yaml (production-specific values)
+
+  Example of proper file:line references:
+  - helm/mychart/Chart.yaml:3 (chart version)
+  - helm/mychart/values.yaml:8 (image repository and tag)
+  - helm/mychart/templates/deployment.yaml:15 (values reference with {{ .Values.* }})
+  - helm/mychart/values-prod.yaml:5 (prod replica count override)
+
+  Deliverables:
+  1. Helm chart with Chart.yaml, values.yaml, and templates/ directory structure with file:line refs
+  2. Environment-specific values files (values-prod.yaml, values-staging.yaml)
+  3. Release workflow with helm upgrade, helm rollback commands and file references
+
+checks:
+  - type: regex
+    pattern: '\b(Helm|charts?)\b'
+    description: Must use Helm charts
+  - type: regex
+    pattern: '\b(values|templates?)\b'
+    description: Should reference values/templates configuration
+  - type: regex
+    pattern: '\b(upgrade|rollback|release)\b'
+    description: Must include release lifecycle steps
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5900
+  tags: [devops, helm, kubernetes, deployment]
+
+

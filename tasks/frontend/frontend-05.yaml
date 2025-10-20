@@ -1,0 +1,17 @@
+id: frontend-05
+agent: frontend-engineer
+prompt: |
+  Build a theme-aware Button component with light/dark modes and focus styles.
+  Requirements:
+  - Uses CSS variables for theming
+  - Visible focus ring and ARIA-pressed for toggle state
+  - Include Storybook stories or MDX docs
+checks:
+  - "Button reflects light/dark CSS variables"
+  - "Focus ring visible and accessible"
+  - "ARIA-pressed toggles correctly when used as toggle"
+metadata:
+  tags: ["frontend", "react", "ui"]
+  difficulty: "medium"
+  est_runtime_s: 16
+

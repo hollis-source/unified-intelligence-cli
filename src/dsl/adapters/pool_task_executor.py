@@ -11,11 +11,11 @@ SOLID: OCP (extensible without modification), DIP (depends on abstractions)
 
 from typing import Any, Dict, Optional
 import asyncio
-from src.entities.executor import Executor, ExecutorPool, ExecutionResult, ExecutorStatus
-from src.entities import Agent, Task, ExecutionStatus
+from src.entity.executor import Executor, ExecutorPool, ExecutionResult, ExecutorStatus
+from src.entity import Agent, Task, ExecutionStatus
 from src.factories.agent_factory import AgentFactory
 from src.adapters.agent.llm_executor import LLMAgentExecutor
-from src.interfaces import ITextGenerator
+from src.interface import ITextGenerator
 
 
 class AgentExecutor(Executor):
@@ -121,8 +121,22 @@ class AgentExecutor(Executor):
             else:
                 output = str(llm_result)
 
+            # Determine success robustly across enum/string implementations
+            success_flag = True
+            if hasattr(llm_result, 'status'):
+                status = llm_result.status
+                try:
+                    name = getattr(status, 'name', None)
+                    if name is not None:
+                        success_flag = (name.upper() == 'SUCCESS')
+                    else:
+                        # Fallback: compare string directly
+                        success_flag = str(status).upper().endswith('SUCCESS') or str(status).upper() == 'SUCCESS'
+                except Exception:
+                    success_flag = True
+
             return ExecutionResult(
-                success=llm_result.status == ExecutionStatus.SUCCESS if hasattr(llm_result, 'status') else True,
+                success=success_flag,
                 output=output,
                 metadata={
                     "agent": self.agent.role,

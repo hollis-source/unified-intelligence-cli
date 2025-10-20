@@ -6,14 +6,17 @@ Clean Architecture: Composition root with minimal responsibilities.
 import click
 import asyncio
 import logging
+import os
+import uuid
 from pathlib import Path
 from typing import List, Any, Coroutine
 from dotenv import load_dotenv
 
-from src.entities import Task
+from src.entity import Task
 from src.composition import compose_dependencies
 from src.factories import AgentFactory, ProviderFactory, TeamFactory
 from src.adapters.cli import ResultFormatter
+from src.adapters.cli.claude_settings import load_claude_settings, ClaudeOutputSettings
 from src.config import Config
 
 # Load environment variables from .env file
@@ -25,14 +28,18 @@ if env_file.exists():
 
 
 @click.command()
+@click.option("--goal", "-g", type=str,
+              help="Natural language goal for decomposition (goal mode)")
 @click.option("--workflow", "-w", type=click.Path(exists=True),
               help="Execute .ct workflow file (DSL mode)")
 @click.option("--task", "-t", "task_descriptions", multiple=True,
               help="Task description (can be specified multiple times, direct mode)")
-@click.option("--provider", type=click.Choice(["mock", "grok", "tongyi", "tongyi-local", "replicate", "qwen3_zerogpu", "auto"]), default="mock",
-              help="LLM provider to use (auto: Week 13 intelligent selection, qwen3_zerogpu: ZeroGPU inference, tongyi-local: async local model)")
+@click.option("--provider", type=click.Choice(["mock", "grok", "granite", "tongyi", "tongyi-local", "replicate", "qwen3_zerogpu", "qwen3", "auto"]), default="mock",
+              help="LLM provider to use (granite: local IBM Granite 4.0, qwen3: Qwen3-Next-80B via HF Inference API [47-95x faster], auto: intelligent selection, qwen3_zerogpu: ZeroGPU inference)")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.option("--debug", is_flag=True, help="Enable debug output (LLM calls, tool details)")
+@click.option("--no-cache", is_flag=True, help="Disable LLM response cache (env ATADO_CACHE=0)")
+@click.option("--claude-settings", type=click.Path(), help="Path to claude_settings.json to control output hooks")
 @click.option("--parallel/--sequential", default=True,
               help="Enable/disable parallel execution")
 @click.option("--config", type=click.Path(exists=True),
@@ -46,62 +53,135 @@ if env_file.exists():
 @click.option("--data-dir", type=click.Path(), default="data/training",
               help="Directory to store collected training data (default: data/training)")
 @click.option("--agents", type=click.Choice(["default", "extended", "scaled"]), default="default",
-              help="Agent configuration: default (5 agents), extended (8 agents), scaled (16 agents with Category Theory & DSL teams)")
+              help="Agent configuration: default (5 agents), extended (8 agents), scaled (134 agents across 9 teams including QA, Category Theory & DSL)")
 @click.option("--routing", type=click.Choice(["individual", "team"]), default="individual",
               help="Routing mode: individual (agent-based), team (team-based, recommended for scaled)")
 @click.option("--collect-metrics", is_flag=True,
               help="Enable metrics collection for monitoring (Week 13)")
 @click.option("--metrics-dir", type=click.Path(), default="data/metrics",
               help="Directory to store metrics (default: data/metrics)")
+# Prompt Framework CLI (Phase 5)
+@click.option("--validate-prompts", is_flag=True, default=False,
+              help="Enable prompt validation before LLM calls (Phase 2)")
+@click.option("--prompt-min-score", type=float, default=60.0,
+              help="Minimum prompt validation score to consider pass (default: 60.0)")
+@click.option("--use-prompt-templates", is_flag=True, default=False,
+              help="Enable PromptStrategy templates when available (Phase 3)")
+@click.option("--collect-prompt-metrics", is_flag=True, default=False,
+              help="Enable prompt metrics logging (Phase 4)")
+@click.option("--prompt-metrics-store", type=click.Choice(["none", "memory", "surreal"]), default="none",
+              help="Prompt metrics store backend (none, memory, surreal)")
+@click.option("--surreal-url", type=str, default="",
+              help="SurrealDB base URL, e.g., http://localhost:8000")
+@click.option("--surreal-namespace", type=str, default="",
+              help="SurrealDB namespace")
+@click.option("--surreal-database", type=str, default="",
+              help="SurrealDB database")
+@click.option("--surreal-user", type=str, default="",
+              help="SurrealDB username")
+@click.option("--surreal-pass", type=str, default="",
+              help="SurrealDB password")
+@click.option("--feedback-loops", is_flag=True, default=False,
+              help="Enable feedback loops for automatic replanning on failures (Phase 3)")
+@click.option("--max-replanning-attempts", type=int, default=3,
+              help="Maximum replanning attempts (default: 3)")
+@click.option("--state-persistence", type=click.Path(), default=None,
+              help="Enable state persistence with file path (Phase 4)")
+@click.option("--load-state", type=click.Path(exists=True), default=None,
+              help="Load initial state from file (Phase 4)")
+@click.option("--enable-cache", is_flag=True, default=False,
+              help="Enable workflow result caching (Phase 6)")
+@click.option("--cache-ttl", type=int, default=3600,
+              help="Cache TTL in seconds (default: 3600)")
+@click.option("--enable-rag", is_flag=True, default=False,
+              help="Enable RAG (Retrieval-Augmented Generation) for pattern learning and adaptive routing")
+@click.option("--validate-outputs", is_flag=True, default=False,
+              help="Enable post-execution output validation (Week 14: P2.2)")
 def main(
+    goal: str,
     workflow: str,
     task_descriptions: tuple,
     provider: str,
     verbose: bool,
     debug: bool,
+    no_cache: bool,
     parallel: bool,
     config: str,
     timeout: int,
+    claude_settings: str,
     orchestrator: str,
     collect_data: bool,
     data_dir: str,
     agents: str,
     routing: str,
     collect_metrics: bool,
-    metrics_dir: str
+    metrics_dir: str,
+    feedback_loops: bool,
+    max_replanning_attempts: int,
+    state_persistence: str,
+    load_state: str,
+    enable_cache: bool,
+    cache_ttl: int,
+    enable_rag: bool,
+    validate_outputs: bool,
+    validate_prompts: bool,
+    prompt_min_score: float,
+    use_prompt_templates: bool,
+    collect_prompt_metrics: bool,
+    prompt_metrics_store: str,
+    surreal_url: str,
+    surreal_namespace: str,
+    surreal_database: str,
+    surreal_user: str,
+    surreal_pass: str,
 ) -> None:
     """
     Unified Intelligence CLI: Orchestrate agents for tasks.
 
-    Supports two execution modes:
-    1. Workflow mode (--workflow): Execute .ct DSL workflow files with lifecycle
-    2. Direct mode (--task): Direct multi-agent task execution
+    Supports three execution modes:
+    1. Goal mode (--goal): LLM-driven goal decomposition into HTN
+    2. Workflow mode (--workflow): Execute .ct DSL workflow files with lifecycle
+    3. Direct mode (--task): Direct multi-agent task execution
 
     Clean Architecture: Main only handles CLI concerns.
     Composition logic is delegated to compose_dependencies.
     """
-    # Validate: Must provide either workflow or task (but not both)
-    if not workflow and not task_descriptions:
-        click.echo("Error: Must provide either --workflow or --task", err=True)
+    # Validate: Must provide exactly one mode
+    modes = [bool(goal), bool(workflow), bool(task_descriptions)]
+    if sum(modes) == 0:
+        click.echo("Error: Must provide one of --goal, --workflow, or --task", err=True)
         click.echo("\nExamples:")
+        click.echo("  Goal mode:     python -m src.main --goal 'Build a REST API with authentication'")
         click.echo("  Workflow mode: python -m src.main --workflow examples/workflows/ci_pipeline.ct")
         click.echo("  Direct mode:   python -m src.main --task 'analyze code'")
         raise click.Abort()
 
-    if workflow and task_descriptions:
-        click.echo("Warning: Both --workflow and --task provided. Using workflow mode.", err=True)
+    if sum(modes) > 1:
+        click.echo("Warning: Multiple modes provided. Priority: goal > workflow > task", err=True)
 
     # Load configuration
     app_config = load_config(
-        config, provider, verbose, debug, parallel, timeout,
+        config, provider, verbose, debug, no_cache, parallel, timeout,
         orchestrator, collect_data, data_dir, agents, routing,
-        collect_metrics, metrics_dir
+        collect_metrics, metrics_dir, enable_rag, validate_outputs,
+        validate_prompts, use_prompt_templates, prompt_min_score,
+        collect_prompt_metrics, prompt_metrics_store,
+        surreal_url, surreal_namespace, surreal_database, surreal_user, surreal_pass
     )
 
-    # Setup logging based on verbosity
-    logger = setup_logging(app_config.verbose, app_config.debug)
+    # Generate correlation ID and set up logging
+    correlation_id = os.getenv("ATADO_CORRELATION_ID", str(uuid.uuid4()))
+    logger = setup_logging(app_config.verbose, app_config.debug, correlation_id)
+
+    # Load Claude/Auggie output settings with precedence
+    claude_output_settings: ClaudeOutputSettings = load_claude_settings(claude_settings)
 
     try:
+        # GOAL MODE: LLM-driven goal decomposition into HTN
+        if goal:
+            execute_goal_mode(goal, app_config, logger, claude_output_settings, correlation_id)
+            return
+
         # WORKFLOW MODE: Execute DSL workflow with lifecycle
         if workflow:
             execute_workflow_mode(workflow, app_config, logger)
@@ -118,7 +198,7 @@ def main(
             # Team-based routing (Week 12/13)
             if app_config.agent_mode == "scaled":
                 teams = team_factory.create_scaled_teams()
-                logger.info(f"Created {len(teams)} teams (scaled mode: 16 agents across 9 teams including Category Theory & DSL)")
+                logger.info(f"Created {len(teams)} teams (scaled mode: 134 agents across 9 teams including QA, Category Theory & DSL)")
             elif app_config.agent_mode == "extended":
                 teams = team_factory.create_extended_teams()
                 logger.info(f"Created {len(teams)} teams (extended mode: 8 agents across teams)")
@@ -133,7 +213,7 @@ def main(
             teams = None
             if app_config.agent_mode == "scaled":
                 agents = agent_factory.create_scaled_agents()
-                logger.info(f"Created {len(agents)} agents (scaled mode: 16 agents including Category Theory & DSL, individual routing)")
+                logger.info(f"Created {len(agents)} agents (scaled mode: 134 agents across 9 teams including QA, Category Theory & DSL, individual routing)")
             elif app_config.agent_mode == "extended":
                 agents = agent_factory.create_extended_agents()
                 logger.info(f"Created {len(agents)} agents (extended mode: 8 agents, individual routing)")
@@ -158,6 +238,10 @@ def main(
         logger.info(f"Created {len(tasks)} tasks")
 
         # Compose dependencies (Week 7: orchestrator mode, Week 9: data collection, Week 12: team routing, Week 13: metrics)
+        # Phase 1: Cache namespace defaulting
+        env_name = os.getenv("ATADO_ENV", "dev")
+        cache_namespace = app_config.cache_namespace or f"atado:{env_name}:llm:response:"
+
         coordinator, metrics_collector = compose_dependencies(
             llm_provider=llm_provider,
             agents=agents,
@@ -169,19 +253,47 @@ def main(
             routing_mode=app_config.routing_mode,
             teams=teams,
             collect_metrics=app_config.collect_metrics,
-            metrics_dir=app_config.metrics_dir
+            metrics_dir=app_config.metrics_dir,
+            cache_enabled=app_config.cache_enabled,
+            cache_ttl_seconds=app_config.cache_ttl_seconds,
+            cache_namespace=cache_namespace,
+            enable_rag=app_config.enable_rag,
+            # Prompt Framework wiring
+            validate_prompts=app_config.validate_prompts,
+            use_prompt_strategy=app_config.use_prompt_strategy,
+            prompt_min_score=app_config.prompt_min_score,
+            collect_prompt_metrics=app_config.collect_prompt_metrics,
+            prompt_metrics_store=app_config.prompt_metrics_store,
+            surreal_url=app_config.surreal_url,
+            surreal_namespace=app_config.surreal_namespace,
+            surreal_database=app_config.surreal_database,
+            surreal_user=app_config.surreal_user,
+            surreal_pass=app_config.surreal_pass,
+            # Week 14: P2.2 - Output validation
+            enable_output_validation=app_config.validate_outputs,
         )
 
-        # Execute with timeout
-        results = asyncio.run(
-            execute_with_timeout(
-                coordinator.coordinate(
-                    tasks=tasks,
-                    agents=agents
-                ),
-                app_config.timeout
-            )
-        )
+        # Execute with timeout and cleanup
+        async def execute_and_cleanup():
+            try:
+                results = await execute_with_timeout(
+                    coordinator.coordinate(
+                        tasks=tasks,
+                        agents=agents
+                    ),
+                    app_config.timeout
+                )
+                return results
+            finally:
+                # Cleanup RAG resources if enabled
+                if app_config.enable_rag and hasattr(coordinator, 'db'):
+                    try:
+                        await coordinator.db.close()
+                    except Exception as e:
+                        if logger:
+                            logger.warning(f"Failed to close RAG database connection: {e}")
+
+        results = asyncio.run(execute_and_cleanup())
 
         # Save metrics if enabled (Week 13)
         if metrics_collector:
@@ -189,8 +301,19 @@ def main(
             if logger:
                 logger.info(f"Metrics saved to {metrics_collector.session_file}")
 
+        # Phase 2: Output token usage metadata to stderr for metrics harness
+        if app_config.collect_metrics and results:
+            import json
+            import sys
+            # Extract usage from first result's metadata
+            usage = {}
+            if results[0].metadata and "usage" in results[0].metadata:
+                usage = results[0].metadata["usage"]
+            # Output as JSON to stderr for metrics_harness to parse
+            print(json.dumps(usage), file=sys.stderr)
+
         # Display results (Clean Architecture: Use CLI adapter)
-        formatter = ResultFormatter(verbose=app_config.verbose)
+        formatter = ResultFormatter(verbose=app_config.verbose, settings=claude_output_settings, correlation_id=correlation_id)
         formatter.format_results(results)
 
     except asyncio.TimeoutError:
@@ -262,6 +385,130 @@ def execute_workflow_mode(workflow_file: str, app_config: Config, logger) -> Non
         raise click.Abort()
 
 
+def execute_goal_mode(goal: str, app_config: Config, logger, claude_output_settings, correlation_id: str) -> None:
+    """Execute goal decomposition mode.
+
+    Args:
+        goal: Natural language goal description
+        app_config: Application configuration
+        logger: Logger instance
+        claude_output_settings: Claude output settings
+        correlation_id: Correlation ID for tracking
+
+    Clean Architecture: Orchestrates goal decomposition and HTN execution.
+    """
+    from src.use_cases.goal_decomposer import GoalDecomposerUseCase
+    from src.factories import ProviderFactory
+    from src.dsl.use_cases.htn_workflow_executor import HTNWorkflowExecutor
+    from src.dsl.adapters.cli_task_executor import CLITaskExecutor
+    from src.adapters.cli import ResultFormatter
+
+    if logger:
+        logger.info(f"Goal mode: Decomposing goal '{goal}'")
+
+    click.echo(f"\n{'='*70}")
+    click.echo(click.style("🎯 Goal Decomposition Mode", fg="cyan", bold=True))
+    click.echo(f"{'='*70}")
+    click.echo(f"Goal: {goal}")
+    click.echo(f"Provider: {app_config.provider}")
+    click.echo(f"{'='*70}\n")
+
+    try:
+        # Create LLM provider
+        provider_factory = ProviderFactory()
+        llm_provider = provider_factory.create_provider(app_config.provider)
+
+        # Create goal decomposer
+        decomposer = GoalDecomposerUseCase(
+            llm_provider=llm_provider,
+            max_retries=3,
+            logger=logger
+        )
+
+        # Decompose goal into HTN
+        click.echo("🔄 Decomposing goal into task hierarchy...")
+        htn = asyncio.run(decomposer.decompose_goal(goal))
+
+        click.echo(click.style("✓ Goal decomposed successfully!", fg="green"))
+        click.echo(f"  - Top-level tasks: {len(htn.subtasks)}")
+        click.echo(f"  - Total depth: {htn.get_depth()}")
+        click.echo(f"  - Root task: {htn.task_id}\n")
+
+        # Display HTN structure
+        click.echo("📋 Task Hierarchy:")
+        _print_htn_structure(htn, indent=2)
+        click.echo()
+
+        # Execute HTN via workflow executor
+        click.echo("🚀 Executing task hierarchy...")
+        task_executor = CLITaskExecutor()
+        workflow_executor = HTNWorkflowExecutor(task_executor=task_executor)
+
+        result = asyncio.run(workflow_executor.execute_htn(
+            htn=htn,
+            verbose=app_config.verbose
+        ))
+
+        # Display results
+        if result.success:
+            click.echo(f"\n{'='*70}")
+            click.echo(click.style("✓ Goal Completed Successfully", fg="green", bold=True))
+            click.echo(f"{'='*70}")
+            click.echo(f"Execution time: {result.execution_time:.2f}s")
+            click.echo(f"Tasks executed: {len(htn.subtasks)}")
+            click.echo(f"{'='*70}")
+        else:
+            click.echo(f"\n{'='*70}")
+            click.echo(click.style("✗ Goal Execution Failed", fg="red", bold=True))
+            click.echo(f"{'='*70}")
+            click.echo(f"Error: {result.error}")
+            click.echo(f"Execution time: {result.execution_time:.2f}s")
+            click.echo(f"{'='*70}")
+            raise click.Abort()
+
+    except ValueError as e:
+        formatter = ResultFormatter()
+        formatter.format_error(str(e), "Goal Decomposition Error")
+        raise click.Abort()
+    except Exception as e:
+        logger.error(f"Goal mode error: {e}")
+        formatter = ResultFormatter(verbose=app_config.verbose)
+        if app_config.verbose:
+            raise
+        else:
+            formatter.format_error(str(e))
+            raise click.Abort()
+
+
+def _print_htn_structure(node, indent: int = 0, prefix: str = ""):
+    """Print HTN structure recursively.
+
+    Args:
+        node: HTN node to print
+        indent: Indentation level
+        prefix: Prefix for tree structure
+    """
+    indent_str = " " * indent
+
+    # Print current node
+    task_type = "🔹" if node.is_primitive() else "📦"
+    click.echo(f"{indent_str}{prefix}{task_type} {node.task_id}: {node.description}")
+
+    # Print preconditions if any
+    if node.preconditions:
+        click.echo(f"{indent_str}  ⚙️  Preconditions: {node.preconditions}")
+
+    # Print effects if any
+    if node.effects:
+        click.echo(f"{indent_str}  ✨ Effects: {node.effects}")
+
+    # Print subtasks recursively
+    for i, subtask in enumerate(node.subtasks):
+        is_last = i == len(node.subtasks) - 1
+        subtask_prefix = "└─ " if is_last else "├─ "
+        _print_htn_structure(subtask, indent + 2, subtask_prefix)
+
+
 def _print_workflow_result(result, indent: int = 0):
     """Print workflow result recursively.
 
@@ -295,6 +542,7 @@ def load_config(
     provider: str,
     verbose: bool,
     debug: bool,
+    no_cache: bool,
     parallel: bool,
     timeout: int,
     orchestrator: str = "simple",
@@ -303,7 +551,19 @@ def load_config(
     agent_mode: str = "default",
     routing_mode: str = "individual",
     collect_metrics: bool = False,
-    metrics_dir: str = "data/metrics"
+    metrics_dir: str = "data/metrics",
+    enable_rag: bool = False,
+    validate_outputs: bool = False,
+    validate_prompts: bool = False,
+    use_prompt_templates: bool = False,
+    prompt_min_score: float = 60.0,
+    collect_prompt_metrics: bool = False,
+    prompt_metrics_store: str = "none",
+    surreal_url: str = "",
+    surreal_namespace: str = "",
+    surreal_database: str = "",
+    surreal_user: str = "",
+    surreal_pass: str = "",
 ) -> Config:
     """
     Load configuration from file and merge with CLI arguments.
@@ -341,11 +601,24 @@ def load_config(
             agent_mode=agent_mode,
             routing_mode=routing_mode,
             collect_metrics=collect_metrics,
-            metrics_dir=metrics_dir
+            metrics_dir=metrics_dir,
+            validate_prompts=validate_prompts,
+            use_prompt_strategy=use_prompt_templates,
+            prompt_min_score=prompt_min_score,
+            collect_prompt_metrics=collect_prompt_metrics,
+            prompt_metrics_store=prompt_metrics_store,
+            surreal_url=surreal_url,
+            surreal_namespace=surreal_namespace,
+            surreal_database=surreal_database,
+            surreal_user=surreal_user,
+            surreal_pass=surreal_pass,
+            cache_enabled=False if no_cache else None,
+            enable_rag=enable_rag,
+            validate_outputs=validate_outputs
         )
     else:
-        # Use CLI args only
-        return Config(
+        # Use CLI args only and merge with env-based cache defaults
+        base = Config(
             provider=provider,
             verbose=verbose,
             debug=debug,
@@ -357,29 +630,56 @@ def load_config(
             agent_mode=agent_mode,
             routing_mode=routing_mode,
             collect_metrics=collect_metrics,
-            metrics_dir=metrics_dir
+            metrics_dir=metrics_dir,
+            validate_prompts=validate_prompts,
+            use_prompt_strategy=use_prompt_templates,
+            prompt_min_score=prompt_min_score,
+            collect_prompt_metrics=collect_prompt_metrics,
+            prompt_metrics_store=prompt_metrics_store,
+            surreal_url=surreal_url,
+            surreal_namespace=surreal_namespace,
+            surreal_database=surreal_database,
+            surreal_user=surreal_user,
+            surreal_pass=surreal_pass,
+            validate_outputs=validate_outputs,
+        )
+        return base.merge_cli_args(
+            cache_enabled=False if no_cache else None,
+            enable_rag=enable_rag
         )
 
 
-def setup_logging(verbose: bool, debug: bool) -> logging.Logger:
+def setup_logging(verbose: bool, debug: bool, correlation_id: str) -> logging.Logger:
     """
-    Configure logging based on verbosity.
+    Configure logging based on verbosity and inject correlation_id.
 
     Week 3: Three-level logging (WARNING/INFO/DEBUG).
-    Clean Code: Extract method for clarity.
+    Phase 1: Add correlation_id to all logs for traceability.
     """
     if debug:
         level = logging.DEBUG
-        log_format = "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s"
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - cid=%(correlation_id)s - [%(filename)s:%(lineno)d] - %(message)s"
     elif verbose:
         level = logging.INFO
-        log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        log_format = "%(asctime)s - %(name)s - %(levelname)s - cid=%(correlation_id)s - %(message)s"
     else:
         level = logging.WARNING
-        log_format = "%(levelname)s - %(message)s"
+        log_format = "%(levelname)s - cid=%(correlation_id)s - %(message)s"
 
-    # Week 4: force=True ensures reconfiguration works
+    # Configure root logger
     logging.basicConfig(level=level, format=log_format, force=True)
+
+    # Inject correlation_id via filter on all handlers
+    class CorrelationIdFilter(logging.Filter):
+        def filter(self, record: logging.LogRecord) -> bool:
+            if not hasattr(record, "correlation_id"):
+                record.correlation_id = correlation_id
+            return True
+
+    root = logging.getLogger()
+    for handler in root.handlers:
+        handler.addFilter(CorrelationIdFilter())
+
     return logging.getLogger(__name__)
 
 

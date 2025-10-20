@@ -1,0 +1,32 @@
+id: qa-05
+agent: qa
+prompt: |
+  Create regression test plan for database migration adding user role-based permissions.
+
+  Expected files to reference:
+  - tests/regression/user_roles_migration_test.py:15 (test_admin_migration_backwards_compatibility)
+  - migrations/0042_add_user_roles.sql:25 (INSERT INTO roles with admin/user roles)
+  - src/models/user.py:45 (User.has_permission method using roles)
+  - src/middleware/permissions.py:58 (check_permission decorator with role lookup)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include regression testing patterns with backwards compatibility validation, data migration checks, rollback scenarios, and before/after test states
+
+  Template includes: Migration from admin boolean to roles table, permission granularity (read/write/delete/manage), existing functionality preservation, rollback testing, data validation
+
+checks:
+  - "regression"
+  - "migration"
+  - type: regex
+    pattern: "(?i)backwards?.{0,10}compatib"
+  - "rollback"
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: none
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 3800
+  tags: [regression-testing, database-migration, permissions, backwards-compatibility]

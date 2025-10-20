@@ -1,0 +1,39 @@
+id: py-13
+agent: python
+prompt: |
+  Implement the Strategy pattern for discount rules in pricing/discounts.py.
+
+  Expected files to reference:
+  - pricing/discounts.py:8 (class DiscountStrategy ABC with abstractmethod)
+  - pricing/discounts.py:25 (class PercentDiscountStrategy implementation)
+  - pricing/discounts.py:50 (STRATEGY_REGISTRY for strategy lookup)
+  - tests/test_discounts.py:30 (test_strategy_pattern_extensibility)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include Strategy pattern with ABC, abstractmethod, registry, and concrete strategies
+
+  Template includes: Before/after comparison, abstract base class, concrete strategies, factory pattern
+
+checks:
+  - type: regex
+    pattern: "from abc import ABC, abstractmethod"
+    description: Abstract base class used
+  - type: regex
+    pattern: "class .*Strategy\\(ABC\\)"
+    description: Strategy base class defined
+  - type: regex
+    pattern: "def apply_discount\\(total: int, kind: str\\)"
+    description: Public API preserved
+  - type: cmd
+    run: "python -m py_compile pricing/discounts.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3200
+  tags: [design-patterns, strategy, pricing, refactoring, type-hints]

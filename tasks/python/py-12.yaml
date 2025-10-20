@@ -1,0 +1,39 @@
+id: py-12
+agent: python
+prompt: |
+  Eliminate dead code in feature flags and raise coverage to ≥90% for the module.
+
+  Expected files to reference:
+  - feature/flags.py:8 (def is_enabled with flag registry)
+  - feature/flags.py:22 (FEATURE_FLAGS dict with enabled flags)
+  - tests/feature/test_flags.py:15 (@pytest.mark.parametrize for flag tests)
+  - tests/feature/test_flags.py:45 (test coverage report showing 90%+)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include coverage patterns with pytest-cov, parametrize, and dead code removal examples
+
+  Template includes: Before/after comparison, flag registry, parametrized tests, coverage configuration
+
+checks:
+  - type: regex
+    pattern: "def is_enabled\\(flag: str\\)"
+    description: Function typed explicitly
+  - type: regex
+    pattern: "def test_"
+    description: Tests present for the feature flags
+  - type: cmd
+    run: "python -m py_compile feature/flags.py"
+    description: Feature module compiles
+  - type: cmd
+    run: "python -m py_compile tests/feature/test_flags.py"
+    description: Tests compile
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3000
+  tags: [cleanup, testing, coverage, refactoring, type-hints]

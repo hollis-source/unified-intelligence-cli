@@ -22,7 +22,7 @@ async def assess_p2_readiness(input_data: Any = None) -> Dict[str, Any]:
         TestingReadiness assessment
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -54,7 +54,7 @@ async def assess_type_integration(input_data: Any = None) -> Dict[str, Any]:
         TypeCheckingReadiness assessment
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -87,7 +87,7 @@ async def assess_syd2_opportunities(input_data: Any = None) -> Dict[str, Any]:
         SYD2Enhancement opportunities
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -120,7 +120,7 @@ async def evaluate_technical_debt(input_data: Any = None) -> Dict[str, Any]:
         DebtAssessment with priorities
     """
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",
@@ -162,7 +162,7 @@ async def determine_next_task(input_data: Any = None) -> Dict[str, Any]:
         analyses_text = str(input_data)
 
     cmd = [
-        "./bin/ui-cli",
+        "./bin/atado",
         "--provider", "auto",
         "--routing", "team",
         "--agents", "scaled",

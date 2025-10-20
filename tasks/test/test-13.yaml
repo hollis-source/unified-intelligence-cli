@@ -1,0 +1,151 @@
+id: test-13
+agent: test
+prompt: |
+  Use property-based testing (e.g., Hypothesis) to validate parsing or serialization functions.
+  Define strategies that generate a wide range of inputs and assert invariants (e.g., parse(serialize(x)) == x).
+  Shrink failures to minimal examples and seed tests for reproducibility.
+
+  Requirements:
+  - Generate diverse inputs with Hypothesis strategies
+  - Validate round-trip invariants (serialize → parse)
+  - Shrink counterexamples and use deterministic seeds
+
+  Expected files to reference:
+  - tests/property/test_parser_roundtrip.py (property-based parsing tests)
+  - tests/property/test_serialization.py (serialization invariants)
+  - tests/property/strategies.py (custom Hypothesis strategies)
+  - conftest.py (Hypothesis settings and seed configuration)
+
+  Example of proper file:line references:
+  - tests/property/test_parser_roundtrip.py:12 (@given(st.text()) decorator)
+  - tests/property/test_serialization.py:18 (round-trip invariant assertion)
+  - tests/property/strategies.py:8 (custom email strategy with st.emails())
+  - conftest.py:15 (Hypothesis settings with max_examples=100)
+
+  Deliverables:
+  1. tests/property/test_parser_roundtrip.py with property tests
+  2. Custom strategies for domain objects
+  - MANDATORY: Your response MUST include at least 3 file:line references to property test files
+  - MANDATORY: Include Hypothesis patterns with @given, st.*, examples, and deterministic seeding
+
+  Property-Based Testing Template (use this structure):
+  ```python
+  # tests/property/test_parser_roundtrip.py
+  import pytest
+  from hypothesis import given, settings, example, seed
+  from hypothesis import strategies as st
+  from parsers import JSONParser, XMLParser
+
+  class TestJSONParserRoundtrip:
+      @given(st.dictionaries(st.text(), st.integers()))
+      @example({"key": 42})  # Explicit example for common case
+      @seed(42)  # Deterministic for reproducibility
+      def test_parse_serialize_roundtrip(self, data):
+          """Property: parse(serialize(x)) == x for all valid JSON objects"""
+          parser = JSONParser()
+
+          serialized = parser.serialize(data)
+          parsed = parser.parse(serialized)
+
+          assert parsed == data, f"Round-trip failed for {data}"
+
+      @given(st.text(min_size=1, max_size=100))
+      @settings(max_examples=100, deadline=None)
+      def test_xml_parse_never_crashes(self, xml_string):
+          """Property: Parser should never crash, only return valid data or raise ValueError"""
+          parser = XMLParser()
+
+          try:
+              result = parser.parse(xml_string)
+              assert isinstance(result, dict), "Parser must return dict on success"
+          except ValueError:
+              pass  # Expected for invalid XML
+
+  # tests/property/test_serialization.py
+  from hypothesis import given, strategies as st
+  from models import User, Product
+
+  class TestUserSerialization:
+      @given(
+          email=st.emails(),
+          age=st.integers(min_value=18, max_value=100),
+          username=st.text(min_size=3, max_size=20, alphabet=st.characters(whitelist_categories=('Lu', 'Ll', 'Nd')))
+      )
+      def test_user_to_dict_roundtrip(self, email, age, username):
+          """Property: User.from_dict(user.to_dict()) == user"""
+          user = User(email=email, age=age, username=username)
+
+          user_dict = user.to_dict()
+          reconstructed = User.from_dict(user_dict)
+
+          assert reconstructed.email == user.email
+          assert reconstructed.age == user.age
+          assert reconstructed.username == user.username
+
+  # tests/property/strategies.py
+  from hypothesis import strategies as st
+
+  # Custom strategy for valid product SKUs
+  @st.composite
+  def product_skus(draw):
+      """Generate valid SKU format: ABC-12345"""
+      prefix = draw(st.text(min_size=3, max_size=3, alphabet=st.characters(whitelist_categories=('Lu',))))
+      number = draw(st.integers(min_value=10000, max_value=99999))
+      return f"{prefix}-{number}"
+
+  # Custom strategy for price ranges
+  @st.composite
+  def prices(draw, min_price=0.01, max_price=10000.00):
+      """Generate valid prices with 2 decimal places"""
+      price = draw(st.floats(min_value=min_price, max_value=max_price))
+      return round(price, 2)
+
+  # Strategy for valid order data
+  order_data_strategy = st.fixed_dictionaries({
+      'product_id': st.integers(min_value=1, max_value=10000),
+      'quantity': st.integers(min_value=1, max_value=100),
+      'price': prices(),
+      'sku': product_skus()
+  })
+
+  # conftest.py - Hypothesis configuration
+  from hypothesis import settings, Verbosity
+
+  # Register profile for CI (fewer examples, faster)
+  settings.register_profile("ci", max_examples=50, deadline=1000)
+
+  # Register profile for thorough testing (more examples)
+  settings.register_profile("dev", max_examples=200, verbosity=Verbosity.verbose)
+
+  # Load profile from environment or default to "dev"
+  settings.load_profile(os.getenv("HYPOTHESIS_PROFILE", "dev"))
+  ```
+
+  Expected patterns:
+  - Hypothesis decorators: @given, @example, @settings, @seed
+  - Strategies: st.text(), st.integers(), st.emails(), st.dictionaries()
+  - Custom strategies: @st.composite for domain-specific data
+  - Round-trip invariants: parse(serialize(x)) == x
+  - Deterministic testing: seed(42) for reproducibility
+  - Shrinking: Hypothesis automatically shrinks failing examples
+
+checks:
+  - type: regex
+    pattern: '\b(property|Hypothesis|@given)\b'
+    description: Uses property-based testing with Hypothesis
+  - type: regex
+    pattern: '\b(round\s*trip|invariant|serialize|parse)\b'
+    description: Validates round-trip invariants
+  - type: regex
+    pattern: '\b(seed|shrink|example|strategy)\b'
+    description: Uses seeding, shrinking, and custom strategies
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 3600
+  tags: [testing, property-based, hypothesis]

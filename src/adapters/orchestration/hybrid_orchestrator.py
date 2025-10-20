@@ -8,8 +8,8 @@ Strategy Pattern: Selects strategy at runtime based on task characteristics.
 import logging
 from typing import List, Optional
 
-from src.entities import Agent, Task, ExecutionResult, ExecutionContext
-from src.interfaces import IAgentCoordinator, ITextGenerator, ITaskPlanner, IAgentExecutor
+from src.entity import Agent, Task, ExecutionResult, ExecutionContext
+from src.interface import IAgentCoordinator, ITextGenerator, ITaskPlanner, IAgentExecutor
 from src.routing.orchestrator_router import OrchestratorRouter
 from src.use_cases.task_coordinator import TaskCoordinatorUseCase
 

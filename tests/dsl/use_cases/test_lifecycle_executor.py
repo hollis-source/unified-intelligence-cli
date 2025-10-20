@@ -13,7 +13,7 @@ from src.dsl.use_cases.lifecycle_executor import (
 from src.dsl.entities.literal import Literal
 from src.dsl.entities.composition import Composition
 from src.dsl.entities.functor import Functor
-from src.entities.lifecycle import LifecycleState
+from src.entity.lifecycle import LifecycleState
 
 
 class MockTaskExecutor:
@@ -355,7 +355,7 @@ class TestWorkflowExecutionResult:
 
     def test_create_success_result(self):
         """Test creating successful execution result."""
-        from src.entities.lifecycle import Lifecycle
+        from src.entity.lifecycle import Lifecycle
 
         lifecycle = Lifecycle()
         # Go through all phases to reach COMPLETED
@@ -379,7 +379,7 @@ class TestWorkflowExecutionResult:
 
     def test_create_failure_result(self):
         """Test creating failed execution result."""
-        from src.entities.lifecycle import Lifecycle
+        from src.entity.lifecycle import Lifecycle
 
         lifecycle = Lifecycle()
         lifecycle.fail(error="test error")

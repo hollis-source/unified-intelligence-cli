@@ -3,27 +3,29 @@ requires = ["setuptools>=61.0", "wheel", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "unified-intelligence-cli"
+name = "autonomous-task-agent-dev-orchestration"
 version = "1.0.0"
-description = "Production-ready multi-agent task orchestration framework with Clean Architecture"
+description = "Autonomous task-agent orchestration framework for accelerating development work"
 readme = "README.md"
 requires-python = ">=3.12"
 license = {text = "MIT"}
 authors = [
-    {name = "Unified Intelligence CLI Team", email = "noreply@example.com"}
+    {name = "ATADO Team", email = "noreply@example.com"}
 ]
 maintainers = [
-    {name = "Unified Intelligence CLI Team", email = "noreply@example.com"}
+    {name = "ATADO Team", email = "noreply@example.com"}
 ]
 keywords = [
-    "ai",
-    "agents",
+    "autonomous",
+    "task",
+    "agent",
     "multi-agent",
     "orchestration",
+    "htn",
+    "dev-tools",
+    "automation",
     "cli",
     "llm",
-    "grok",
-    "automation",
     "clean-architecture"
 ]
 classifiers = [
@@ -67,17 +69,21 @@ dev = [
     "safety>=3.0.0",
     "mypy>=1.8.0",
 ]
+rag = [
+    "surrealdb>=0.3.0",
+    "sentence-transformers>=2.2.0",
+]
 
 [project.urls]
-Homepage = "https://github.com/hollis-source/unified-intelligence-cli"
-Documentation = "https://github.com/hollis-source/unified-intelligence-cli#readme"
-Repository = "https://github.com/hollis-source/unified-intelligence-cli"
-Issues = "https://github.com/hollis-source/unified-intelligence-cli/issues"
-Changelog = "https://github.com/hollis-source/unified-intelligence-cli/releases"
+Homepage = "https://github.com/hollis-source/autonomous-task-agent-dev-orchestration"
+Documentation = "https://github.com/hollis-source/autonomous-task-agent-dev-orchestration#readme"
+Repository = "https://github.com/hollis-source/autonomous-task-agent-dev-orchestration"
+Issues = "https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/issues"
+Changelog = "https://github.com/hollis-source/autonomous-task-agent-dev-orchestration/releases"
 
 [project.scripts]
-ui-cli = "src.main:main"
-unified-intelligence-cli = "src.main:main"
+atado = "src.main:main"
+autonomous-task-agent-dev-orchestration = "src.main:main"
 
 [tool.setuptools]
 packages = [
@@ -112,19 +118,51 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "--strict-markers --tb=short"
+asyncio_mode = "auto"
 markers = [
     "slow: marks tests as slow",
-    "integration: marks tests as integration tests"
+    "integration: marks tests as integration tests",
+    "asyncio: marks tests as async"
 ]
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["*/tests/*", "*/test_*.py"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "src/__pycache__/*",
+    "src/*/__pycache__/*",
+    "src/*/*/__pycache__/*"
+]
+branch = true
+data_file = ".coverage"
 
 [tool.coverage.report]
 precision = 2
 show_missing = true
 skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod"
+]
+fail_under = 55
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.xml]
+output = "coverage.xml"
+
+[tool.coverage.json]
+output = "coverage.json"
 
 [tool.black]
 line-length = 100

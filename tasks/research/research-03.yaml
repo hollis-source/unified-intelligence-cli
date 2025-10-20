@@ -1,0 +1,14 @@
+id: research-03
+agent: research-analyst
+prompt: |
+  Produce a tradeoff study comparing local vs hosted embeddings for RAG.
+  Discuss performance, cost, scalability, and operational complexity.
+checks:
+  - "Includes performance and cost comparisons"
+  - "Notes operational risks and mitigations"
+  - "Recommends a default with rationale"
+metadata:
+  tags: ["research", "rag", "embeddings"]
+  difficulty: "medium"
+  est_runtime_s: 18
+

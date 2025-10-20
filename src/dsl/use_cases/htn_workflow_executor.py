@@ -6,6 +6,8 @@ while preserving all lifecycle functionality.
 
 Clean Architecture: Use Case layer (orchestrates HTN compilation).
 SOLID: OCP - extends base executor without modification, LSP - fully substitutable.
+
+Sprint 5 P1-2: Refactored to use IWorkflowEnvironment for HTN compiler dependency.
 """
 
 import asyncio
@@ -17,10 +19,10 @@ from src.dsl.use_cases.lifecycle_executor import (
     LifecycleWorkflowExecutor,
     WorkflowExecutionResult
 )
-from src.dsl.adapters.htn_compiler import HTNCompiler
 from src.dsl.use_cases.interpreter import Interpreter
 from src.dsl.use_cases.graph_workflow_executor import GraphWorkflowExecutor
-from src.entities.lifecycle import Lifecycle
+from src.dsl.interface.workflow_environment import IWorkflowEnvironment
+from src.entity.lifecycle import Lifecycle
 
 
 class HTNWorkflowExecutor(LifecycleWorkflowExecutor):
@@ -39,15 +41,29 @@ class HTNWorkflowExecutor(LifecycleWorkflowExecutor):
         # Output shows HTN decomposition info in DECOMPOSE phase
     """
 
-    def __init__(self, task_executor=None, parser=None):
+    def __init__(
+        self,
+        environment: Optional[IWorkflowEnvironment] = None,
+        task_executor=None,
+        parser=None
+    ):
         """Initialize HTN workflow executor.
 
         Args:
-            task_executor: Task executor implementation (defaults to CLITaskExecutor)
-            parser: DSL parser (defaults to Parser())
+            environment: Workflow environment providing dependencies (recommended)
+            task_executor: DEPRECATED - Task executor implementation (for backward compatibility)
+            parser: DEPRECATED - DSL parser (for backward compatibility)
+
+        Recommended Usage:
+            env = ConfiguredWorkflowEnvironment(...)
+            executor = HTNWorkflowExecutor(environment=env)
+
+        Backward Compatible Usage:
+            executor = HTNWorkflowExecutor(task_executor=executor, parser=parser)
         """
-        super().__init__(task_executor, parser)
-        self.htn_compiler = HTNCompiler()
+        # Sprint 5 P1-2: Pass environment to parent, use it for HTN compiler
+        super().__init__(environment=environment, task_executor=task_executor, parser=parser)
+        self.htn_compiler = self.environment.get_htn_compiler()
         self.graph_executor = GraphWorkflowExecutor(self.task_executor)
 
     async def execute_workflow(

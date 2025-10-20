@@ -1,0 +1,14 @@
+id: research-04
+agent: research-analyst
+prompt: |
+  Write a short analysis on routing accuracy measurement for domain classifiers.
+  Define a metric, sampling approach, and statistical test to compare RAG vs baseline.
+checks:
+  - "Defines routing accuracy metric and sampling method"
+  - "Outlines statistical test (e.g., two-proportion z-test)"
+  - "Specifies data sources (routing_decisions, execution_log)"
+metadata:
+  tags: ["research", "routing", "metrics"]
+  difficulty: "easy"
+  est_runtime_s: 14
+

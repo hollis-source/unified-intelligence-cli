@@ -1,0 +1,89 @@
+id: devops-08
+agent: devops
+prompt: |
+  Configure Kubernetes deployments and services for a stateless web application with rolling updates.
+
+  Requirements:
+  1. Define Deployment, Service, and ConfigMap/Secret resources
+  2. Implement rolling update strategy with readiness/liveness probes
+  3. Parameterize images and replicas via environment or Helm values
+  4. MANDATORY: Your response MUST include at least 3 file:line references to Kubernetes manifests
+  5. MANDATORY: Include complete YAML manifests with proper Kubernetes resource structure
+
+  Kubernetes Deployment Template (use this structure):
+  ```yaml
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: [app-name]
+  spec:
+    replicas: 3
+    selector:
+      matchLabels:
+        app: [app-name]
+    strategy:
+      type: RollingUpdate
+      rollingUpdate:
+        maxUnavailable: 1
+    template:
+      spec:
+        containers:
+          - name: [container]
+            image: [image:tag]
+            readinessProbe:
+              httpGet:
+                path: /ready
+            livenessProbe:
+              httpGet:
+                path: /health
+  ---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: [app-name]
+  spec:
+    selector:
+      app: [app-name]
+    ports:
+      - port: 80
+  ```
+
+  Expected files to reference:
+  - k8s/deployment.yaml (main Deployment resource)
+  - k8s/service.yaml (Service resource)
+  - k8s/configmap.yaml (ConfigMap for configuration)
+  - k8s/secret.yaml (Secret for sensitive data)
+
+  Example of proper file:line references:
+  - k8s/deployment.yaml:15 (RollingUpdate strategy configuration)
+  - k8s/deployment.yaml:28 (readinessProbe definition)
+  - k8s/service.yaml:8 (selector matching deployment labels)
+  - k8s/configmap.yaml:6 (application configuration data)
+
+  Deliverables:
+  1. Deployment YAML with kind:, spec:, strategy:, readinessProbe:, livenessProbe: keywords and file:line refs
+  2. Service YAML with selector:, ports: keywords and ConfigMap/Secret examples
+  3. Rollout procedures with kubectl rollout commands and file references
+
+checks:
+  - type: regex
+    pattern: '\b(Kubernetes|k8s|Deployment|Service)\b'
+    description: Must reference Kubernetes resources
+  - type: regex
+    pattern: '\b(roll(ing)?\s*update|rollout|strategy)\b'
+    description: Should include rollout/update strategy
+  - type: regex
+    pattern: '\b(readiness|liveness|probes?)\b'
+    description: Must mention health probes
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5900
+  tags: [devops, kubernetes, deployment, k8s]
+
+

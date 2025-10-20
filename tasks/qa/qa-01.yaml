@@ -1,0 +1,32 @@
+id: qa-01
+agent: qa
+prompt: |
+  Write BDD scenarios for the user login feature using Gherkin syntax.
+
+  Expected files to reference:
+  - tests/acceptance/login.feature:5 (Feature: User Login declaration)
+  - tests/acceptance/login.feature:12 (Scenario: Successful login with valid credentials)
+  - src/components/LoginForm.tsx:35 (handleSubmit form validation logic)
+  - src/api/auth.py:45 (POST /api/auth/login endpoint implementation)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include Gherkin patterns with Feature, Scenario, Given/When/Then, and edge cases
+
+  Template includes: Feature declaration, positive/negative scenarios, Remember Me functionality, password masking, error handling
+
+checks:
+  - "feature:"
+  - "scenario:"
+  - "given"
+  - "when"
+  - "then"
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 2800
+  tags: [bdd, gherkin, acceptance-testing, login]

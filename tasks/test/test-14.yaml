@@ -1,0 +1,269 @@
+id: test-14
+agent: test
+prompt: |
+  Create a centralized mocking strategy for third-party APIs (payments, shipping). Mock error
+  scenarios, retries, and idempotency checks. Document how to update or replace mock responses
+  without touching individual test files.
+
+  Requirements:
+  - Centralized mock response fixtures
+  - Error and retry scenario coverage
+  - Idempotency validation (duplicate request detection)
+
+  Expected files to reference:
+  - tests/mocks/payments_api_mock.py (payments API mock helper)
+  - tests/mocks/shipping_api_mock.py (shipping API mock helper)
+  - tests/integration/test_payment_with_mocks.py (tests using payment mocks)
+  - tests/fixtures/api_responses.json (mock response library)
+
+  Example of proper file:line references:
+  - tests/mocks/payments_api_mock.py:15 (class MockPaymentsAPI with charge/refund)
+  - tests/mocks/shipping_api_mock.py:22 (def get_rates with retry simulation)
+  - tests/integration/test_payment_with_mocks.py:35 (test_payment_retry_on_timeout)
+  - tests/fixtures/api_responses.json:8 (charge_success response fixture)
+
+  Deliverables:
+  1. tests/mocks/*.py with centralized mock helpers
+  2. Tests exercising error/retry/idempotency scenarios
+  - MANDATORY: Your response MUST include at least 3 file:line references to mock helper files
+  - MANDATORY: Include retry decorators, idempotency keys, and error scenario patterns
+
+  Third-Party API Mocking Template (use this structure):
+  ```python
+  # tests/mocks/payments_api_mock.py
+  from typing import Dict, Optional
+  from unittest.mock import Mock
+  import json
+
+  class MockPaymentsAPI:
+      """Centralized mock for payments API (Stripe/Square/etc)"""
+
+      def __init__(self, failure_mode: Optional[str] = None):
+          self.failure_mode = failure_mode
+          self.request_history = []  # Track requests for idempotency checks
+          self.idempotency_keys = set()
+
+      def charge(self, amount: float, card_token: str, idempotency_key: str) -> Dict:
+          """Mock charge request with error scenarios"""
+          self.request_history.append({
+              'method': 'charge',
+              'amount': amount,
+              'card_token': card_token,
+              'idempotency_key': idempotency_key
+          })
+
+          # Idempotency check: duplicate request returns cached response
+          if idempotency_key in self.idempotency_keys:
+              return self._load_response('charge_duplicate')
+
+          self.idempotency_keys.add(idempotency_key)
+
+          # Simulate error scenarios
+          if self.failure_mode == 'timeout':
+              raise TimeoutError("Payment gateway timeout")
+          elif self.failure_mode == 'card_declined':
+              return self._load_response('charge_declined')
+          elif self.failure_mode == 'network_error':
+              raise ConnectionError("Network unreachable")
+
+          # Success case
+          return self._load_response('charge_success')
+
+      def refund(self, charge_id: str, amount: float) -> Dict:
+          """Mock refund request"""
+          if self.failure_mode == 'refund_failed':
+              return self._load_response('refund_failed')
+
+          return self._load_response('refund_success')
+
+      def _load_response(self, response_name: str) -> Dict:
+          """Load mock response from fixtures"""
+          with open('tests/fixtures/api_responses.json') as f:
+              responses = json.load(f)
+          return responses['payments'][response_name]
+
+  # tests/mocks/shipping_api_mock.py
+  import time
+  from functools import wraps
+
+  def retry_on_timeout(max_retries=3, delay=0.1):
+      """Decorator to simulate retry logic"""
+      def decorator(func):
+          @wraps(func)
+          def wrapper(*args, **kwargs):
+              for attempt in range(max_retries):
+                  try:
+                      return func(*args, **kwargs)
+                  except TimeoutError:
+                      if attempt == max_retries - 1:
+                          raise
+                      time.sleep(delay)
+              return None
+          return wrapper
+      return decorator
+
+  class MockShippingAPI:
+      """Centralized mock for shipping API (UPS/FedEx/etc)"""
+
+      def __init__(self, failure_mode: Optional[str] = None):
+          self.failure_mode = failure_mode
+          self.call_count = 0
+
+      @retry_on_timeout(max_retries=3)
+      def get_rates(self, origin: str, destination: str, weight: float) -> Dict:
+          """Mock shipping rate lookup with retry simulation"""
+          self.call_count += 1
+
+          # Simulate transient failure on first 2 attempts
+          if self.failure_mode == 'transient_timeout' and self.call_count < 3:
+              raise TimeoutError("Shipping API timeout")
+
+          if self.failure_mode == 'invalid_address':
+              return self._load_response('invalid_address_error')
+
+          return self._load_response('rates_success')
+
+      def _load_response(self, response_name: str) -> Dict:
+          with open('tests/fixtures/api_responses.json') as f:
+              responses = json.load(f)
+          return responses['shipping'][response_name]
+
+  # tests/integration/test_payment_with_mocks.py
+  import pytest
+  from unittest.mock import patch
+  from tests.mocks.payments_api_mock import MockPaymentsAPI
+  from services.payment_service import PaymentService
+
+  class TestPaymentWithMocks:
+
+      @pytest.fixture
+      def payment_service(self):
+          return PaymentService()
+
+      def test_successful_charge(self, payment_service):
+          """Test successful payment charge"""
+          mock_api = MockPaymentsAPI(failure_mode=None)
+
+          with patch('services.payment_service.payments_api', mock_api):
+              result = payment_service.charge(
+                  amount=99.99,
+                  card_token='tok_visa',
+                  idempotency_key='order_123'
+              )
+
+          assert result['status'] == 'succeeded'
+          assert result['amount'] == 99.99
+
+      def test_payment_retry_on_timeout(self, payment_service):
+          """Test payment retries on timeout error"""
+          mock_api = MockPaymentsAPI(failure_mode='timeout')
+
+          with patch('services.payment_service.payments_api', mock_api):
+              with pytest.raises(TimeoutError):
+                  payment_service.charge_with_retry(
+                      amount=99.99,
+                      card_token='tok_visa',
+                      idempotency_key='order_456',
+                      max_retries=3
+                  )
+
+          # Verify 3 retry attempts were made
+          assert len(mock_api.request_history) == 3
+
+      def test_idempotency_key_prevents_duplicate_charge(self, payment_service):
+          """Test idempotency key prevents duplicate charges"""
+          mock_api = MockPaymentsAPI(failure_mode=None)
+          idempotency_key = 'order_789'
+
+          with patch('services.payment_service.payments_api', mock_api):
+              # First charge
+              result1 = payment_service.charge(
+                  amount=99.99,
+                  card_token='tok_visa',
+                  idempotency_key=idempotency_key
+              )
+
+              # Duplicate charge with same idempotency key
+              result2 = payment_service.charge(
+                  amount=99.99,
+                  card_token='tok_visa',
+                  idempotency_key=idempotency_key
+              )
+
+          # Both should return same cached response
+          assert result1['charge_id'] == result2['charge_id']
+          assert len(mock_api.request_history) == 2  # Both requests logged
+
+  # tests/fixtures/api_responses.json
+  {
+    "payments": {
+      "charge_success": {
+        "charge_id": "ch_123abc",
+        "status": "succeeded",
+        "amount": 99.99,
+        "currency": "USD",
+        "created": 1609459200
+      },
+      "charge_declined": {
+        "error": {
+          "type": "card_error",
+          "code": "card_declined",
+          "message": "Your card was declined"
+        }
+      },
+      "charge_duplicate": {
+        "charge_id": "ch_123abc",
+        "status": "succeeded",
+        "amount": 99.99,
+        "idempotent": true
+      },
+      "refund_success": {
+        "refund_id": "re_456def",
+        "status": "succeeded",
+        "amount": 99.99
+      }
+    },
+    "shipping": {
+      "rates_success": {
+        "rates": [
+          {"service": "ground", "cost": 8.99, "days": 5},
+          {"service": "express", "cost": 24.99, "days": 2}
+        ]
+      },
+      "invalid_address_error": {
+        "error": {
+          "type": "validation_error",
+          "message": "Invalid destination address"
+        }
+      }
+    }
+  }
+  ```
+
+  Expected patterns:
+  - Centralized mocks: MockPaymentsAPI, MockShippingAPI classes
+  - Idempotency: Track idempotency_keys, return cached responses
+  - Retry logic: @retry_on_timeout decorator with max_retries
+  - Error scenarios: failure_mode parameter (timeout, declined, network_error)
+  - Fixture library: JSON file with reusable mock responses
+
+checks:
+  - type: regex
+    pattern: '\b(mock|third\s*party|API)\b'
+    description: Mocks third-party APIs
+  - type: regex
+    pattern: '\b(payments?|shipping)\b'
+    description: Targets payment or shipping APIs
+  - type: regex
+    pattern: '\b(retry|idempotency|error\s+scenario)\b'
+    description: Covers retry, idempotency, and error scenarios
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3600
+  tags: [testing, mocking, integration]

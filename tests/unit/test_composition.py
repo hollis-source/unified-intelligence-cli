@@ -5,7 +5,7 @@ import logging
 from unittest.mock import Mock
 
 from src.composition import compose_dependencies
-from src.entities import Agent
+from src.entity import Agent
 from src.interfaces import ITextGenerator, IAgentCoordinator
 
 

@@ -1,0 +1,73 @@
+id: devops-07
+agent: devops
+prompt: |
+  Write Terraform to provision core AWS infrastructure (networking, compute, IAM) with modules and remote state.
+
+  Requirements:
+  1. Create VPC, subnets, security groups, and IAM roles/policies
+  2. Use Terraform modules, variables, and workspaces
+  3. Configure remote state and state locking
+  4. MANDATORY: Your response MUST include at least 3 file:line references to Terraform files
+  5. MANDATORY: Include Terraform HCL code examples with proper resource blocks
+
+  Terraform Module Template (use this structure):
+  ```hcl
+  # VPC module
+  resource "aws_vpc" "main" {
+    cidr_block = var.vpc_cidr
+    tags = {
+      Name = "${var.environment}-vpc"
+    }
+  }
+
+  # Backend configuration
+  terraform {
+    backend "s3" {
+      bucket = "[state-bucket]"
+      key    = "[state-key]"
+      region = "[region]"
+      dynamodb_table = "[lock-table]"
+    }
+  }
+  ```
+
+  Expected files to reference:
+  - terraform/main.tf (root configuration with provider and modules)
+  - terraform/modules/vpc/main.tf (VPC module resources)
+  - terraform/modules/iam/main.tf (IAM module resources)
+  - terraform/backend.tf (remote state backend configuration)
+  - terraform/variables.tf (variable definitions)
+
+  Example of proper file:line references:
+  - terraform/main.tf:15 (VPC module invocation)
+  - terraform/modules/vpc/main.tf:8 (VPC resource definition)
+  - terraform/backend.tf:3 (S3 backend configuration)
+  - terraform/modules/iam/main.tf:12 (IAM role resource)
+
+  Deliverables:
+  1. Terraform modules with HCL resource blocks (resource, module, var keywords) and file:line references
+  2. Remote state backend configuration with terraform {}, backend "s3" {} blocks
+  3. README with terraform apply/destroy commands and file references to key configurations
+
+checks:
+  - type: regex
+    pattern: '\b(Terraform|HCL|modules?)\b'
+    description: Must use Terraform modules/HCL
+  - type: regex
+    pattern: '\b(AWS|VPC|subnets?|IAM)\b'
+    description: Should reference AWS core resources
+  - type: regex
+    pattern: '\b(remote\s+state|backend|lock(ing)?)\b'
+    description: Must include remote state/locking
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5900
+  tags: [devops, terraform, aws, iac]
+
+

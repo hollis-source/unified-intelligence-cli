@@ -1,0 +1,113 @@
+id: db-05
+agent: database
+prompt: |
+  Model a many-to-many relationship between users and roles with complete audit trail.
+
+  Requirements:
+  - Users can have multiple roles in multiple tenants
+  - Track who assigned/revoked each role and when
+  - Support role expiration dates
+  - Maintain history (never delete, only mark inactive)
+  - Query: "What roles did user X have in tenant Y on date Z?"
+  - Query: "Who granted role R to user U?"
+
+  Deliverables:
+  1. ER diagram (text-based or dbdiagram.io)
+  2. SQL DDL for all tables with constraints
+  3. Indexes for common access patterns
+  4. Sample queries demonstrating audit trail access
+  5. Explanation of normalization choices (3NF/4NF)
+  6. MANDATORY: Your response MUST include at least 3 file:line references to schema files
+  7. MANDATORY: Include CREATE TABLE with FOREIGN KEY, UNIQUE, CHECK constraints
+
+  Many-to-Many with Audit Template (use this structure):
+  ```sql
+  -- db/schema/user_role_assignments.sql
+  CREATE TABLE user_role_assignments (
+      assignment_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      tenant_id UUID NOT NULL,
+      user_id UUID NOT NULL,
+      role_id UUID NOT NULL,
+      assigned_by UUID NOT NULL,
+      assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      expires_at TIMESTAMP,
+      revoked_by UUID,
+      revoked_at TIMESTAMP,
+      is_active BOOLEAN GENERATED ALWAYS AS (
+          revoked_at IS NULL AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+      ) STORED,
+      FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+      FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE CASCADE,
+      FOREIGN KEY (assigned_by) REFERENCES users(user_id),
+      FOREIGN KEY (revoked_by) REFERENCES users(user_id),
+      CHECK (revoked_at IS NULL OR revoked_at > assigned_at),
+      CHECK (expires_at IS NULL OR expires_at > assigned_at)
+  );
+
+  -- Composite index for tenant + user queries
+  CREATE INDEX idx_assignments_tenant_user_active
+      ON user_role_assignments(tenant_id, user_id, is_active)
+      WHERE is_active = true;
+
+  -- Index for audit queries
+  CREATE INDEX idx_assignments_audit
+      ON user_role_assignments(assigned_at DESC, assigned_by);
+
+  -- db/queries/audit_trail.sql
+  -- Query: What roles did user X have in tenant Y on date Z?
+  SELECT
+      r.role_name,
+      ura.assigned_at,
+      ura.expires_at,
+      ura.revoked_at,
+      assigner.email as assigned_by_email,
+      revoker.email as revoked_by_email
+  FROM user_role_assignments ura
+  JOIN roles r ON ura.role_id = r.role_id
+  LEFT JOIN users assigner ON ura.assigned_by = assigner.user_id
+  LEFT JOIN users revoker ON ura.revoked_by = revoker.user_id
+  WHERE ura.user_id = $1
+    AND ura.tenant_id = $2
+    AND ura.assigned_at <= $3
+    AND (ura.revoked_at IS NULL OR ura.revoked_at > $3)
+    AND (ura.expires_at IS NULL OR ura.expires_at > $3);
+  ```
+
+  Expected files to reference:
+  - db/schema/user_role_assignments.sql (junction table with audit fields)
+  - db/schema/roles.sql (roles table definition)
+  - db/queries/audit_trail.sql (temporal audit queries)
+  - docs/audit_design.md (audit trail design decisions)
+
+  Example of proper file:line references:
+  - db/schema/user_role_assignments.sql:10 (assigned_by audit field)
+  - db/schema/user_role_assignments.sql:18 (CHECK constraint for temporal consistency)
+  - db/queries/audit_trail.sql:12 (temporal query with date filtering)
+  - docs/audit_design.md:25 (explanation of never-delete audit strategy)
+
+  Deliverables:
+  1. SQL DDL with CREATE TABLE, FOREIGN KEY, CHECK, GENERATED ALWAYS AS keywords and file:line refs
+  2. Composite indexes with CREATE INDEX on (tenant_id, user_id, is_active) patterns
+  3. Audit queries with temporal filtering (assigned_at <= $date AND revoked_at > $date)
+
+checks:
+  - type: regex
+    pattern: "CREATE TABLE.*user_roles|user_role_assignments"
+    description: Must create junction table
+  - type: regex
+    pattern: "assigned_by|assigned_at|revoked_by|revoked_at"
+    description: Must include audit fields
+  - type: regex
+    pattern: "CREATE INDEX.*tenant_id.*user_id|user_id.*tenant_id"
+    description: Must have composite index for tenant+user queries
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 4500
+  tags: [schema-design, many-to-many, audit-trail]

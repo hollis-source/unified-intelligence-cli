@@ -1,7 +1,7 @@
 """
 Realistic User Scenarios - Based on actual use cases.
 
-These scenarios simulate how real users would interact with ui-cli.
+These scenarios simulate how real users would interact with atado.
 """
 
 import asyncio

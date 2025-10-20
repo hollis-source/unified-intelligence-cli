@@ -1,0 +1,122 @@
+id: db-09
+agent: database
+prompt: |
+  Design a safe migration strategy to add a NOT NULL constraint to an existing column.
+
+  Context:
+  - Table: orders (50M rows)
+  - Column: email (currently nullable, 98% populated)
+  - Goal: Make email NOT NULL
+  - Constraint: Zero downtime required
+  - Database: PostgreSQL 15
+  - Application: Continuous deployment (10 releases/day)
+
+  Problem:
+  - Direct ALTER TABLE...SET NOT NULL locks table for minutes
+  - 2% of rows have NULL email (1M rows)
+  - Need backward-compatible rollout
+
+  Requirements:
+  1. Backfill strategy for NULL values
+  2. Constraint validation approach (NOT VALID, then VALIDATE)
+  3. Multi-phase deployment plan:
+     - Phase 1: Backfill NULLs
+     - Phase 2: Add CHECK constraint (NOT VALID)
+     - Phase 3: VALIDATE constraint
+     - Phase 4: ALTER column SET NOT NULL
+  4. Application code changes needed per phase
+  5. Rollback strategy for each phase
+  6. Testing strategy
+
+  Deliverables:
+  - SQL for each migration phase
+  - Timing estimates
+  - Risk assessment per phase
+  - Monitoring queries to track progress
+  - MANDATORY: Your response MUST include at least 3 file:line references to migration files
+  - MANDATORY: Include ALTER TABLE with NOT VALID, CHECK constraint, and VALIDATE statements
+
+  NOT NULL Migration Template (use this structure):
+  ```sql
+  -- db/migrations/002_add_not_null_check.sql
+  -- Phase 1: Backfill NULL values (run first, takes 5-10 minutes)
+  UPDATE orders
+  SET email = 'unknown+' || id || '@example.com'
+  WHERE email IS NULL;
+
+  -- Phase 2: Add CHECK constraint (NOT VALID - no table scan, instant)
+  ALTER TABLE orders
+    ADD CONSTRAINT orders_email_not_null
+    CHECK (email IS NOT NULL) NOT VALID;
+
+  -- Phase 3: VALIDATE constraint (scans table, takes 10-15 minutes, but allows reads/writes)
+  ALTER TABLE orders
+    VALIDATE CONSTRAINT orders_email_not_null;
+
+  -- Phase 4: Make column NOT NULL (instant, constraint proves no NULLs exist)
+  ALTER TABLE orders
+    ALTER COLUMN email SET NOT NULL;
+
+  -- Phase 5: Drop redundant CHECK constraint
+  ALTER TABLE orders
+    DROP CONSTRAINT orders_email_not_null;
+
+  -- db/migrations/rollback_002.sql
+  -- Rollback for each phase
+  -- Phase 4 rollback:
+  ALTER TABLE orders ALTER COLUMN email DROP NOT NULL;
+
+  -- Phase 3/2 rollback:
+  ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_email_not_null;
+
+  -- db/queries/migration_progress.sql
+  -- Monitor backfill progress
+  SELECT
+    COUNT(*) as total_rows,
+    COUNT(*) FILTER (WHERE email IS NULL) as null_count,
+    ROUND(100.0 * COUNT(*) FILTER (WHERE email IS NOT NULL) / COUNT(*), 2) as percent_complete
+  FROM orders;
+
+  -- Check constraint status
+  SELECT conname, convalidated
+  FROM pg_constraint
+  WHERE conname = 'orders_email_not_null';
+  ```
+
+  Expected files to reference:
+  - db/migrations/002_add_not_null_check.sql (4-phase migration with NOT VALID)
+  - db/migrations/rollback_002.sql (rollback procedures per phase)
+  - db/queries/migration_progress.sql (monitoring queries)
+  - docs/not_null_migration_plan.md (phase-by-phase deployment guide)
+
+  Example of proper file:line references:
+  - db/migrations/002_add_not_null_check.sql:3 (UPDATE backfill for NULL values)
+  - db/migrations/002_add_not_null_check.sql:8 (CHECK constraint with NOT VALID keyword)
+  - db/migrations/002_add_not_null_check.sql:12 (VALIDATE CONSTRAINT for background scan)
+  - db/queries/migration_progress.sql:5 (progress monitoring with FILTER clause)
+
+  Deliverables:
+  1. Migration SQL with UPDATE, ALTER TABLE, CHECK, NOT VALID, VALIDATE CONSTRAINT, SET NOT NULL keywords and file:line refs
+  2. Phase timing (Phase 1: 5-10min, Phase 2: instant, Phase 3: 10-15min, Phase 4: instant)
+  3. Monitoring queries with COUNT, FILTER, pg_constraint system catalog checks
+
+checks:
+  - type: regex
+    pattern: "NOT VALID|CHECK.*IS NOT NULL"
+    description: Must use NOT VALID constraint approach
+  - type: regex
+    pattern: "VALIDATE CONSTRAINT|ALTER TABLE.*VALIDATE"
+    description: Must show constraint validation step
+  - type: regex
+    pattern: "backfill|UPDATE.*SET.*email"
+    description: Must address NULL backfill
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 5000
+  tags: [migration, constraints, zero-downtime]

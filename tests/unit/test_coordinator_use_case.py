@@ -3,8 +3,9 @@
 import pytest
 import asyncio
 from unittest.mock import Mock, AsyncMock, MagicMock
-from src.entities import Agent, Task, ExecutionResult, ExecutionStatus, ExecutionContext
-from src.interfaces import ITaskPlanner, IAgentExecutor, ExecutionPlan
+from src.entity import Agent, Task
+from src.entity.execution import ExecutionResult, ExecutionStatus, ExecutionContext
+from src.interface import ITaskPlanner, IAgentExecutor, ExecutionPlan
 
 
 class TestCoordinateAgentsUseCase:

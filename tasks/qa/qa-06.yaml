@@ -1,0 +1,32 @@
+id: qa-06
+agent: qa
+prompt: |
+  Create UAT checklist for mobile e-commerce app v2.5.0 enhanced checkout release.
+
+  Expected files to reference:
+  - tests/uat/checkout_v2.5_uat_checklist.md:10 (Persona 1: First-time buyer scenarios)
+  - src/mobile/screens/CheckoutScreen.tsx:85 (one-tap checkout component with saved payments)
+  - src/mobile/services/PaymentService.ts:120 (Apple Pay/Google Pay integration)
+  - docs/uat/persona_profiles.md:15 (returning customer persona definition)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include UAT patterns with persona-based scenarios (first-time/returning/power/senior users), pass/fail criteria, usability checks, and critical user journeys
+
+  Template includes: 4 user personas with 3-4 scenarios each, one-tap checkout, Apple/Google Pay, order tracking, push notifications, in-app support, device/OS coverage (iOS 16+, Android 12+)
+
+checks:
+  - "uat"
+  - "user acceptance"
+  - "persona"
+  - type: regex
+    pattern: "(?i)(pass.{0,20}fail|acceptance|success).{0,10}criteria"
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: none
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3600
+  tags: [uat, user-acceptance-testing, personas, mobile-testing]

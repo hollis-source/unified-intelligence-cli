@@ -1,0 +1,37 @@
+id: test-18
+agent: test
+prompt: |
+  Create a comprehensive test pyramid for the project with clear ratios of unit, integration,
+  and E2E tests. Document guidelines for test placement, speed, reliability, and maintenance
+  practices.
+
+  Requirements:
+  - Define test pyramid ratios and rationale
+  - Placement rules for unit/integration/E2E
+  - Guidance on speed, flakiness, and maintenance
+
+  Deliverables:
+  1. Testing strategy document describing the pyramid
+  2. Examples mapping features to test types
+
+checks:
+  - type: regex
+    pattern: '\b(test\s+pyramid|ratio|layers?)\b'
+    description: Mentions the test pyramid and ratios/layers
+  - type: regex
+    pattern: '\b(unit|integration|E2E)\b'
+    description: Covers unit, integration, and E2E
+  - type: regex
+    pattern: '\b(speed|flaky|maintain(able|ability))\b'
+    description: Addresses speed, flakiness, and maintenance
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 3600
+  tags: [testing, strategy, pyramid]
+

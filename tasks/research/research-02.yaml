@@ -1,0 +1,14 @@
+id: research-02
+agent: research-analyst
+prompt: |
+  Draft a benchmarking plan to compare Granite vs Qwen3 models for pattern collection.
+  Include metrics (latency, cost, success), sample sizes, and test protocol.
+checks:
+  - "Plan covers metrics, sample size, and methodology"
+  - "Includes hypotheses and acceptance criteria"
+  - "Defines reproducible commands/scripts to run"
+metadata:
+  tags: ["research", "benchmarking", "llm"]
+  difficulty: "easy"
+  est_runtime_s: 15
+

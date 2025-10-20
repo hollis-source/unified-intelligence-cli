@@ -1,0 +1,31 @@
+id: qa-03
+agent: qa
+prompt: |
+  Create comprehensive test plan for user profile feature validation.
+
+  Expected files to reference:
+  - tests/qa/test_plans/user_profile_test_plan.md:10 (Test Scenario #1: Profile data persistence)
+  - src/models/user_profile.py:25 (UserProfile model with audit fields)
+  - src/components/ProfileForm.tsx:68 (avatar upload validation logic)
+  - tests/fixtures/profile_data.py:15 (valid_profile_data fixture)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include test planning patterns with scenario mapping, acceptance criteria traceability, pass/fail criteria, and time estimates
+
+  Template includes: Test scenarios for profile edit, email verification flow, password change, audit logging, avatar upload (2MB/PNG/JPG), inline validation errors
+
+checks:
+  - "test plan"
+  - "test scenario"
+  - "acceptance criteria"
+  - "pass/fail"
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3200
+  tags: [test-planning, acceptance-criteria, user-profile, traceability]

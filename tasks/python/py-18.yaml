@@ -1,0 +1,36 @@
+id: py-18
+agent: python
+prompt: |
+  Enforce immutability where possible in models/entities.py using frozen dataclasses.
+
+  Expected files to reference:
+  - models/entities.py:8 (@dataclass(frozen=True) for Order class)
+  - models/entities.py:25 (from dataclasses import replace)
+  - models/entities.py:45 (def update_amount functional update helper)
+  - tests/test_entities.py:30 (test_immutability_prevents_mutation)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include immutability patterns with frozen dataclasses, replace(), and functional updates
+
+  Template includes: Before/after comparison, frozen=True, dataclasses.replace, immutability benefits
+
+checks:
+  - type: regex
+    pattern: "@dataclass\\(frozen=True\\)"
+    description: Frozen dataclasses are used
+  - type: regex
+    pattern: "from dataclasses import replace"
+    description: Functional update helper imported
+  - type: cmd
+    run: "python -m py_compile models/entities.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 2900
+  tags: [immutability, dataclasses, refactoring, type-hints]

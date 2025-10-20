@@ -1,0 +1,18 @@
+{
+  "output": {
+    "redact_thoughts": true,
+    "thought_tag_names": ["think"],
+    "verbosity": "normal",
+    "max_chars": 0,
+    "wrap_code_blocks": "augment_code_snippet",
+    "inline_code_allowed": true,
+    "include_routing_trace": true,
+    "show_top3_domain_scores": true,
+    "include_correlation_id": true,
+    "show_cache_annotations": true
+  },
+  "docs": { "quickstart_pointer_enabled": true },
+  "dogfooding": { "banner_enabled": true },
+  "routing": { "trace_format": "both" }
+}
+

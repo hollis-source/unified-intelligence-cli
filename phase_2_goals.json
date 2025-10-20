@@ -1,0 +1,225 @@
+{
+  "phase": 2,
+  "priority": "Critical Priority",
+  "description": "Public API functions, core entity names, architectural layer misalignments",
+  "estimated_hours": 5.0,
+  "total_violations": 19,
+  "files_to_refactor": {
+    "src/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "src/interfaces": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/interfaces",
+        "line_number": null,
+        "current_name": "interfaces",
+        "suggested_name": "interface",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'interfaces' uses plural form, should be singular"
+      }
+    ],
+    "src/core/entities": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/core/entities",
+        "line_number": null,
+        "current_name": "entities",
+        "suggested_name": "entitie",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'entities' uses plural form, should be singular"
+      }
+    ],
+    "src/core/ports": [
+      {
+        "violation_type": "directory_plural",
+        "file_path": "src/core/ports",
+        "line_number": null,
+        "current_name": "ports",
+        "suggested_name": "port",
+        "severity": "high",
+        "ruleset_reference": "Prefer Singular Names for Directories",
+        "description": "Directory 'ports' uses plural form, should be singular"
+      }
+    ],
+    "src/entities/category_theory/workflow_morphism.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 25,
+        "current_name": "htn_flatten",
+        "suggested_name": "process_htn_flatten",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'htn_flatten' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 86,
+        "current_name": "htn_remove_identity",
+        "suggested_name": "process_htn_remove_identity",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'htn_remove_identity' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 143,
+        "current_name": "htn_simplify",
+        "suggested_name": "process_htn_simplify",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'htn_simplify' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/workflow_morphism.py",
+        "line_number": 274,
+        "current_name": "workflow_optimize",
+        "suggested_name": "process_workflow_optimize",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'workflow_optimize' should follow verb-noun pattern"
+      }
+    ],
+    "src/entities/category_theory/morphism.py": [
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 12,
+        "current_name": "A",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'A' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 13,
+        "current_name": "B",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'B' should have descriptive name"
+      },
+      {
+        "violation_type": "variable_single_letter",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 14,
+        "current_name": "C",
+        "suggested_name": "Use descriptive name based on purpose",
+        "severity": "low",
+        "ruleset_reference": "Scale Length with Scope",
+        "description": "Single-letter variable 'C' should have descriptive name"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 93,
+        "current_name": "identity",
+        "suggested_name": "process_identity",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'identity' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/category_theory/morphism.py",
+        "line_number": 77,
+        "current_name": "composed_transform",
+        "suggested_name": "process_composed_transform",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'composed_transform' should follow verb-noun pattern"
+      }
+    ],
+    "src/entities/graph/graph.py": [
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 165,
+        "current_name": "node_count",
+        "suggested_name": "process_node_count",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'node_count' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 169,
+        "current_name": "edge_count",
+        "suggested_name": "process_edge_count",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'edge_count' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 173,
+        "current_name": "dfs",
+        "suggested_name": "get_dfs",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'dfs' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 212,
+        "current_name": "bfs",
+        "suggested_name": "get_bfs",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'bfs' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 290,
+        "current_name": "topological_sort",
+        "suggested_name": "process_topological_sort",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'topological_sort' should follow verb-noun pattern"
+      },
+      {
+        "violation_type": "function_no_verb_noun",
+        "file_path": "src/entities/graph/graph.py",
+        "line_number": 349,
+        "current_name": "subgraph",
+        "suggested_name": "process_subgraph",
+        "severity": "medium",
+        "ruleset_reference": "Form Verb-Noun Pairs",
+        "description": "Function 'subgraph' should follow verb-noun pattern"
+      }
+    ]
+  },
+  "summary": {
+    "by_type": {
+      "directory_plural": 4,
+      "function_no_verb_noun": 12,
+      "variable_single_letter": 3
+    },
+    "by_severity": {
+      "high": 4,
+      "medium": 12,
+      "low": 3
+    }
+  }
+}

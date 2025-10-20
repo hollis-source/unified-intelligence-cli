@@ -1,0 +1,262 @@
+name: A/B Routing Evaluation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 6 * * *'  # daily at 06:30 UTC (small N)
+    - cron: '0 7 * * 1'   # weekly Monday at 07:00 UTC (larger N)
+
+jobs:
+  ab-eval-daily:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run A/B evaluator (small N)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+        run: |
+          if [ -z "${{ secrets.HF_TOKEN }}" ] && [ -z "${{ secrets.HUGGINGFACE_TOKEN }}" ]; then
+            echo "Skipping A/B evaluator: missing HF/HUGGINGFACE tokens";
+          else
+            PYTHONPATH=. python scripts/ab_routing_eval.py --domains frontend research backend --per-domain 2 --provider qwen3;
+          fi
+
+      - name: Upload A/B report artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ab-routing-eval-reports-daily
+          path: |
+            logs/ab_eval_*.json
+            logs/ab_eval_*.csv
+            logs/ab_eval_diff_*.csv
+          if-no-files-found: ignore
+
+      - name: Job summary (A/B stats daily)
+        if: always()
+        run: |
+          python - <<'PY'
+          import glob, json, os
+          paths = sorted(glob.glob('logs/ab_eval_*.json'))
+          if not paths:
+              raise SystemExit(0)
+          p = paths[-1]
+          data = json.load(open(p))
+          lines = [
+              "# A/B evaluator (daily summary)",
+              f"Report: {os.path.basename(p)}",
+          ]
+          for k in ("p_baseline","p_rag","diff_p_rag_minus_baseline","baseline_avg_latency_s","rag_avg_latency_s"):
+              if k in data:
+                  lines.append(f"{k}: {data[k]}")
+          with open(os.environ.get("GITHUB_STEP_SUMMARY","/tmp/summary.txt"),"a") as f:
+              f.write("\n".join(lines)+"\n")
+          PY
+
+
+      - name: Generate A/B trend snapshot (daily)
+        if: always()
+        run: |
+          PYTHONPATH=. python scripts/ab_trend_report.py || true
+
+      - name: Upload trend snapshot (daily)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ab-trends-daily
+          path: |
+            logs/ab_trends_*.md
+            logs/ab_trends_*.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+
+      - name: Routing decisions summary (last 200)
+        if: always()
+        run: |
+          PYTHONPATH=. python scripts/routing_decisions_summary.py --limit 200 || true
+
+      - name: Upload routing summary artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: routing-decisions-summary-daily
+          path: |
+            logs/routing_summary_*.md
+            logs/routing_summary_*.json
+          if-no-files-found: ignore
+
+  ab-eval-weekly:
+    if: github.event.schedule == '0 7 * * 1'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run A/B evaluator (larger N)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HUGGINGFACE_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+        run: |
+          if [ -z "${{ secrets.HF_TOKEN }}" ] && [ -z "${{ secrets.HUGGINGFACE_TOKEN }}" ]; then
+            echo "Skipping A/B evaluator (weekly): missing HF/HUGGINGFACE tokens";
+          else
+            PYTHONPATH=. python scripts/ab_routing_eval.py --domains frontend research backend --per-domain 20 --provider qwen3;
+          fi
+
+      - name: Generate A/B trend snapshot (weekly)
+        if: always()
+        run: |
+          PYTHONPATH=. python scripts/ab_trend_report.py || true
+
+      - name: Job summary (A/B stats weekly)
+        if: always()
+        run: |
+          python - <<'PY'
+          import glob, json, os
+          paths = sorted(glob.glob('logs/ab_eval_*.json'))
+          if not paths:
+              raise SystemExit(0)
+          p = paths[-1]
+          data = json.load(open(p))
+          lines = [
+              "# A/B evaluator (weekly summary)",
+              f"Report: {os.path.basename(p)}",
+          ]
+          for k in ("p_baseline","p_rag","diff_p_rag_minus_baseline","baseline_avg_latency_s","rag_avg_latency_s"):
+              if k in data:
+                  lines.append(f"{k}: {data[k]}")
+          with open(os.environ.get("GITHUB_STEP_SUMMARY","/tmp/summary.txt"),"a") as f:
+              f.write("\n".join(lines)+"\n")
+          PY
+
+      - name: Generate advanced metrics (weekly)
+        if: always()
+        run: |
+          PYTHONPATH=. python scripts/advanced_metrics_report.py --limit 1000 || true
+
+      - name: Upload advanced metrics (weekly)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: advanced-metrics-weekly
+          path: |
+            logs/advanced_metrics_*.md
+            logs/advanced_metrics_*.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Generate success criteria report (weekly)
+        if: always()
+        run: |
+          PYTHONPATH=. python scripts/success_criteria_check.py || true
+
+      - name: Upload success criteria artifacts (weekly)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: success-criteria-weekly
+          path: |
+            logs/success_criteria_*.md
+            logs/success_criteria_*.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Job summary (Success Criteria weekly)
+        if: always()
+        run: |
+          python - <<'PY'
+          import glob, json, os
+          paths = sorted(glob.glob('logs/success_criteria_*.json'))
+          if not paths:
+              raise SystemExit(0)
+          p = paths[-1]
+          data = json.load(open(p))
+          crit = data.get('criteria', {})
+          lines = ["# Success Criteria (weekly)", f"Report: {os.path.basename(p)}"]
+          for k in ("patterns_50_plus","rag_accuracy_gt_70","p_value_lt_0_05","weight_opt_minus_20pct_errors","drift_detection_signals"):
+              st = crit.get(k) or {}
+              lines.append(f"- {k}: {st.get('status','?')} — {st.get('details','')}")
+          with open(os.environ.get('GITHUB_STEP_SUMMARY','/tmp/summary.txt'),'a') as f:
+              f.write("\n".join(lines)+"\n")
+          PY
+
+
+      - name: Promotion proposal (guarded)
+        if: always()
+        run: |
+          PYTHONPATH=. python scripts/auto_promotion_proposal.py || true
+
+      - name: Upload promotion proposal artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: promotion-proposal-weekly
+          path: |
+            logs/promotion_proposal_*.md
+            logs/promotion_proposal_*.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+
+
+      - name: Upload trend snapshot (weekly)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ab-trends-weekly
+          path: |
+            logs/ab_trends_*.md
+            logs/ab_trends_*.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload A/B report artifacts (weekly)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ab-routing-eval-reports-weekly
+          path: |
+            logs/ab_eval_*.json
+            logs/ab_eval_*.csv
+            logs/ab_eval_diff_*.csv
+          if-no-files-found: ignore
+
+      - name: Routing decisions summary (last 500)
+        if: always()
+        run: |
+          PYTHONPATH=. python scripts/routing_decisions_summary.py --limit 500
+
+      - name: Upload routing summary artifacts (weekly)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: routing-decisions-summary-weekly
+          path: |
+            logs/routing_summary_*.md
+            logs/routing_summary_*.json
+          if-no-files-found: ignore
+

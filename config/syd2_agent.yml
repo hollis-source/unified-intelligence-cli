@@ -13,7 +13,7 @@ execution:
 
 metrics:
   local_dir: data/syd2_metrics
-  remote_dir: /opt/unified-intelligence-cli/data/metrics
+  remote_dir: /opt/autonomous-task-agent-dev-orchestration/data/metrics
   sync_interval: 600  # 10 minutes
   retention_days: 30
 
@@ -29,7 +29,7 @@ analysis:
 
 improvement:
   enabled: true
-  tool: claude-code  # "claude-code" (Anthropic API, max access) or "ui-cli" (our multi-agent system)
+  tool: claude-code  # "claude-code" (Anthropic API, max access) or "atado" (our multi-agent system)
   min_pattern_occurrences: 3  # Pattern must persist across N analysis cycles
   max_prs_per_day: 1  # Rate limiting to prevent spam
   require_human_approval: true  # Save fixes for review instead of auto-creating PRs
@@ -42,8 +42,8 @@ logging:
   max_bytes: 10485760  # 10MB
   backup_count: 5
 
-ui_cli:
-  executable: ui-cli
+atado:
+  executable: atado
   default_provider: auto
   routing: team
   agents: scaled

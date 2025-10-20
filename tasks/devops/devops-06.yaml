@@ -1,0 +1,79 @@
+id: devops-06
+agent: devops
+prompt: |
+  Implement a blue-green deployment strategy with health checks and safe traffic switching.
+
+  Requirements:
+  1. Maintain two environments (blue/green) with automated verification
+  2. Switch traffic via load balancer or ingress after health passes
+  3. Provide rollback procedure and cutover checklist
+  4. MANDATORY: Your response MUST include at least 3 file:line references to configuration files
+  5. MANDATORY: Include YAML configuration examples for health checks and traffic switching
+
+  Kubernetes Blue-Green Deployment Template (use this structure):
+  ```yaml
+  # Service configuration
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: [app-name]
+  spec:
+    selector:
+      app: [app-name]
+      version: [blue|green]
+
+  # Deployment with health probes
+  apiVersion: apps/v1
+  kind: Deployment
+  spec:
+    template:
+      spec:
+        containers:
+          - name: [container]
+            livenessProbe:
+              httpGet:
+                path: /health
+            readinessProbe:
+              httpGet:
+                path: /ready
+  ```
+
+  Expected files to reference:
+  - k8s/service.yaml (traffic routing service)
+  - k8s/deployment-blue.yaml (blue environment deployment)
+  - k8s/deployment-green.yaml (green environment deployment)
+  - k8s/ingress.yaml (ingress routing configuration)
+
+  Example of proper file:line references:
+  - k8s/service.yaml:8 (selector for blue/green switching)
+  - k8s/deployment-blue.yaml:25 (readinessProbe configuration)
+  - k8s/deployment-green.yaml:25 (readinessProbe configuration)
+  - k8s/ingress.yaml:12 (traffic routing rules)
+
+  Deliverables:
+  1. Deployment plan with YAML health probes (livenessProbe:, readinessProbe:) and validation steps with file:line refs
+  2. Traffic switching YAML configuration (Service selector:, version:) for LB/Ingress
+  3. Rollback instructions with specific kubectl commands and file references
+
+checks:
+  - type: regex
+    pattern: '\b(blue-?green|blue\s+green)\b'
+    description: Must describe blue-green deployment
+  - type: regex
+    pattern: '\b(health\s+check|readiness|liveness)\b'
+    description: Should include health verification
+  - type: regex
+    pattern: '\b(traffic|load\s+balancer|ingress|rollback)\b'
+    description: Must mention traffic switch or rollback
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5900
+  tags: [devops, deployment, blue-green, reliability]
+
+

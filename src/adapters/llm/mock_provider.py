@@ -1,7 +1,8 @@
 """Mock LLM provider for testing - Adapter layer."""
 
 from typing import List, Dict, Any, Optional
-from src.interfaces import ITextGenerator, IToolSupportedProvider, LLMConfig
+from src.interface import ITextGenerator, IToolSupportedProvider, LLMConfig
+from src.interface.llm_provider import GenerationResult
 
 
 class MockLLMProvider(ITextGenerator):
@@ -19,7 +20,7 @@ class MockLLMProvider(ITextGenerator):
         self,
         messages: List[Dict[str, Any]],
         config: Optional[LLMConfig] = None
-    ) -> str:
+    ) -> GenerationResult:
         """
         Generate mock response.
 
@@ -30,17 +31,24 @@ class MockLLMProvider(ITextGenerator):
             "config": config
         })
 
-        # Return response based on last message
+        # Determine response content based on last message
+        content = self.default_response
         if messages:
             last_msg = messages[-1].get("content", "")
-            if "plan" in last_msg.lower():
-                return "Execute tasks in order: 1, 2, 3"
-            elif "code" in last_msg.lower():
-                return "def hello(): return 'Hello, World!'"
-            elif "test" in last_msg.lower():
-                return "assert hello() == 'Hello, World!'"
+            text = str(last_msg).lower()
+            if "plan" in text:
+                # Return a simple JSON plan to help downstream parsers
+                content = '{"task_order": ["task_1", "task_2"], "task_assignments": {"task_1": "master-orchestrator", "task_2": "unit-test-engineer"}}'
+            elif "code" in text:
+                content = "def hello(): return 'Hello, World!'"
+            elif "test" in text:
+                content = "assert hello() == 'Hello, World!'"
 
-        return self.default_response
+        return GenerationResult(
+            content=content,
+            usage={"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+            metadata={"provider": "mock"}
+        )
 
 
 class MockToolProvider(IToolSupportedProvider):
@@ -57,9 +65,13 @@ class MockToolProvider(IToolSupportedProvider):
         self,
         messages: List[Dict[str, Any]],
         config: Optional[LLMConfig] = None
-    ) -> str:
-        """Generate basic response."""
-        return "Mock tool response"
+    ) -> GenerationResult:
+        """Generate basic response as GenerationResult."""
+        return GenerationResult(
+            content="Mock tool response",
+            usage={"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+            metadata={"provider": "mock"}
+        )
 
     def generate_with_tools(
         self,

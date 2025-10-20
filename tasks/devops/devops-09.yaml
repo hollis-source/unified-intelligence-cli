@@ -1,0 +1,75 @@
+id: devops-09
+agent: devops
+prompt: |
+  Set up GitOps continuous delivery with ArgoCD to synchronize Kubernetes manifests from a Git repository.
+
+  Requirements:
+  1. Define Applications pointing to repo paths with automated sync policies
+  2. Use health checks and sync waves for ordering
+  3. Establish rollback and manual sync overrides
+  4. MANDATORY: Your response MUST include at least 3 file:line references to configuration files
+  5. MANDATORY: Include ArgoCD Application YAML manifests with proper structure
+
+  ArgoCD Application Template (use this structure):
+  ```yaml
+  apiVersion: argoproj.io/v1alpha1
+  kind: Application
+  metadata:
+    name: [app-name]
+    namespace: argocd
+  spec:
+    project: default
+    source:
+      repoURL: [git-repo-url]
+      path: [manifest-path]
+      targetRevision: HEAD
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: [target-namespace]
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=true
+  ```
+
+  Expected files to reference:
+  - argocd/applications/app-prod.yaml (production Application manifest)
+  - argocd/applications/app-staging.yaml (staging Application manifest)
+  - gitops-repo/base/deployment.yaml (Kubernetes manifests in Git)
+  - gitops-repo/overlays/prod/kustomization.yaml (environment-specific overlays)
+
+  Example of proper file:line references:
+  - argocd/applications/app-prod.yaml:12 (source repoURL and path)
+  - argocd/applications/app-prod.yaml:18 (syncPolicy with automated settings)
+  - gitops-repo/base/deployment.yaml:8 (deployment manifest synced by ArgoCD)
+  - gitops-repo/overlays/prod/kustomization.yaml:5 (prod-specific configuration)
+
+  Deliverables:
+  1. ArgoCD Application YAML with apiVersion:, kind:, spec:, syncPolicy: keywords and file:line refs
+  2. Repository structure showing gitops-repo/ layout with base/ and overlays/ directories
+  3. Runbook with argocd app sync, argocd app rollback commands and file references
+
+checks:
+  - type: regex
+    pattern: '\b(GitOps|ArgoCD|Flux)\b'
+    description: Must reference GitOps tooling such as ArgoCD/Flux
+  - type: regex
+    pattern: '\b(sync|reconcile|declarative)\b'
+    description: Should mention sync/reconcile or declarative setup
+  - type: regex
+    pattern: '\b(rollback|health|wave)\b'
+    description: Must include health/ordering or rollback
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5900
+  tags: [devops, gitops, argocd, kubernetes]
+
+

@@ -1,0 +1,108 @@
+id: test-08
+agent: test
+prompt: |
+  Define contract tests for the payments service against a mock provider. Specify request/response
+  schemas and assert that the client and server adhere to the contract using a provider/consumer
+  test setup.
+
+  Requirements:
+  - Use a mock provider with deterministic responses
+  - Validate schema fields and error codes
+  - Separate consumer and provider test responsibilities
+
+  Expected files to reference:
+  - tests/contracts/test_payments_consumer.py (consumer contract tests)
+  - tests/contracts/test_payments_provider.py (provider contract tests)
+  - tests/contracts/schemas/payment_request.json (request schema)
+  - tests/contracts/pact_helper.py (PACT configuration)
+
+  Example of proper file:line references:
+  - tests/contracts/test_payments_consumer.py:15 (def test_charge_request_adheres_to_schema)
+  - tests/contracts/test_payments_provider.py:8 (def test_provider_returns_expected_response)
+  - tests/contracts/schemas/payment_request.json:5 (amount field definition)
+  - tests/contracts/pact_helper.py:12 (MockProvider setup)
+
+  Deliverables:
+  1. tests/contracts/test_payments_consumer.py
+  2. tests/contracts/test_payments_provider.py
+  - MANDATORY: Your response MUST include at least 3 file:line references to contract test files
+  - MANDATORY: Include JSON schema validation and PACT/contract test patterns
+
+  Contract Test Template (use this structure):
+  ```python
+  # tests/contracts/test_payments_consumer.py
+  import pytest
+  from pact import Consumer, Provider
+  from payments_client import PaymentsClient
+
+  @pytest.fixture
+  def mock_provider():
+      return Provider('PaymentsAPI')
+
+  def test_charge_request_adheres_to_schema(mock_provider):
+      """Test consumer sends valid charge request"""
+      expected_request = {
+          "amount": 99.99,
+          "currency": "USD",
+          "card_token": "tok_visa_4242"
+      }
+
+      pact = (Consumer('CheckoutService')
+          .has_pact_with(mock_provider)
+          .upon_receiving('a charge request')
+          .with_request('POST', '/v1/charges', body=expected_request)
+          .will_respond_with(200, body={
+              "id": "ch_123",
+              "status": "succeeded",
+              "amount": 99.99
+          }))
+
+      with pact:
+          client = PaymentsClient()
+          response = client.charge(amount=99.99, currency='USD', card_token='tok_visa_4242')
+          assert response['status'] == 'succeeded'
+
+  # tests/contracts/test_payments_provider.py
+  def test_provider_returns_expected_response():
+      """Test provider adheres to contract schema"""
+      # Verify provider implementation matches contract
+      pass
+
+  # tests/contracts/schemas/payment_request.json
+  {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": ["amount", "currency", "card_token"],
+    "properties": {
+      "amount": {"type": "number", "minimum": 0.01},
+      "currency": {"type": "string", "enum": ["USD", "EUR", "GBP"]},
+      "card_token": {"type": "string", "pattern": "^tok_"}
+    }
+  }
+  ```
+
+  Expected patterns:
+  - PACT framework: Consumer/Provider pact contracts
+  - Schema validation: JSON Schema with required fields, types, constraints
+  - Deterministic mocks: Fixed responses for reproducibility
+
+checks:
+  - type: regex
+    pattern: '\b(contract\s+tests?|schema|PACT)\b'
+    description: Contract testing terminology appears
+  - type: regex
+    pattern: '\b(payments?|provider|consumer)\b'
+    description: Targets payment provider/consumer roles
+  - type: regex
+    pattern: '\b(mock|deterministic)\b'
+    description: Uses mocks with deterministic responses
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3600
+  tags: [testing, contract, integration]

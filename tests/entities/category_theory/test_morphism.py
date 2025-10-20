@@ -5,8 +5,8 @@ associativity, and category-theoretic properties.
 """
 
 import pytest
-from src.entities.category_theory import Morphism
-from src.entities.category_theory.morphism import compose_chain
+from src.entity.category_theory import Morphism
+from src.entity.category_theory.morphism import compose_chain
 
 
 class TestMorphismCreation:

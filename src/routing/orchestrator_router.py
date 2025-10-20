@@ -8,7 +8,7 @@ DIP: Depends on abstractions (task patterns), not concrete implementations.
 import re
 import logging
 from typing import List, Tuple
-from src.entities import Task
+from src.entity import Task
 
 
 logger = logging.getLogger(__name__)

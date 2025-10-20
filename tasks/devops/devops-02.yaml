@@ -1,0 +1,64 @@
+id: devops-02
+agent: devops
+prompt: |
+  Create a Docker multi-stage build to produce a small, secure runtime image with separate builder and runtime stages.
+
+  Requirements:
+  1. Use a builder stage for dependencies/compilation and a minimal runtime stage
+  2. Leverage layer caching and .dockerignore
+  3. Tag images clearly and document local build/run steps
+  4. MANDATORY: Your response MUST include at least 3 file:line references to Docker configuration files
+  5. MANDATORY: Output must include a complete Dockerfile example with proper multi-stage structure
+
+  Dockerfile Multi-Stage Template (use this structure in your response):
+  ```dockerfile
+  # Builder stage
+  FROM [base-image] AS builder
+  WORKDIR /app
+  COPY [files] .
+  RUN [build-commands]
+
+  # Runtime stage
+  FROM [runtime-image]
+  COPY --from=builder /app/[artifact] /app/
+  CMD [runtime-command]
+  ```
+
+  Expected files to reference:
+  - Dockerfile (multi-stage build configuration)
+  - .dockerignore (exclusion patterns for smaller context)
+  - docker-compose.yml (if applicable for local development)
+
+  Example of proper file:line references:
+  - Dockerfile:3 (builder stage FROM directive)
+  - Dockerfile:15 (runtime stage FROM directive)
+  - Dockerfile:18 (COPY --from=builder for artifact)
+  - .dockerignore:5 (node_modules exclusion)
+
+  Deliverables:
+  1. Complete Dockerfile with FROM, COPY, RUN, and CMD keywords
+  2. .dockerignore file content with exclusion patterns
+  3. Build/run instructions (docker build, docker run) with image tagging and file:line references
+
+checks:
+  - type: regex
+    pattern: '\b(Dockerfile|Docker)\b'
+    description: Must reference Docker image build artifacts
+  - type: regex
+    pattern: '\b(multi\s*stage|multi-?stage)\b'
+    description: Must mention multi-stage builds
+  - type: regex
+    pattern: '\b(cache|layers?|\.dockerignore)\b'
+    description: Should include caching, layers, or .dockerignore usage
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3600
+  tags: [devops, docker, containerization, build]
+
+

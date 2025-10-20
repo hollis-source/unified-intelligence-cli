@@ -10,8 +10,8 @@ Tests cover:
 import pytest
 from unittest.mock import AsyncMock, Mock
 from src.dsl.use_cases.graph_workflow_executor import GraphWorkflowExecutor
-from src.entities.htn import HTNNode
-from src.entities.graph import Graph
+from src.entity.htn import HTNNode
+from src.entity.graph import Graph
 
 
 @pytest.fixture

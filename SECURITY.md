@@ -1,6 +1,6 @@
 # Security Documentation
 
-This document outlines security considerations, current protections, and best practices for using the Unified Intelligence CLI.
+This document outlines security considerations, current protections, and best practices for using the Autonomous Task-Agent Dev Orchestration (ATADO).
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ This document outlines security considerations, current protections, and best pr
 
 ## Overview
 
-The Unified Intelligence CLI enables LLM agents to execute commands and file operations on the local system. This provides powerful automation capabilities but requires careful security considerations.
+The Autonomous Task-Agent Dev Orchestration (ATADO) enables LLM agents to execute commands and file operations on the local system. This provides powerful automation capabilities but requires careful security considerations.
 
 **Security Philosophy**: Trust but verify. The CLI is designed for trusted local development workflows, not untrusted remote execution.
 

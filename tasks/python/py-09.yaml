@@ -1,0 +1,42 @@
+id: py-09
+agent: python
+prompt: |
+  Convert synchronous I/O to asyncio in io/file_sync.py and add async tests.
+
+  Expected files to reference:
+  - io/file_sync.py:15 (async def aread_file with aiofiles)
+  - io/file_sync.py:28 (async def awrite_file implementation)
+  - tests/io/test_file_sync.py:22 (@pytest.mark.asyncio for async tests)
+  - tests/io/test_file_sync.py:45 (test_aread_file_concurrent for async performance)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include asyncio patterns with async/await, aiofiles, pytest-asyncio, and concurrent execution
+
+  Template includes: Before/after comparison, aiofiles usage, backward compatibility, async test patterns
+
+checks:
+  - type: regex
+    pattern: "async def aread_file\\(path: str\\)"
+    description: Introduce async read
+  - type: regex
+    pattern: "async def awrite_file\\(path: str, data: str\\)"
+    description: Introduce async write
+  - type: regex
+    pattern: "@pytest\\.mark\\.asyncio"
+    description: Async tests are present
+  - type: cmd
+    run: "python -m py_compile io/file_sync.py"
+    description: io/file_sync.py compiles
+  - type: cmd
+    run: "python -m py_compile tests/io/test_file_sync.py"
+    description: Test file compiles
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3600
+  tags: [asyncio, io, testing, type-hints]

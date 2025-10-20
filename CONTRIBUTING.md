@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-Development guidelines for the Unified Intelligence CLI project, based on Robert C. Martin's Clean Code, Clean Architecture, and Clean Agile principles.
+Development guidelines for the Autonomous Task-Agent Dev Orchestration (ATADO) project, based on Robert C. Martin's Clean Code, Clean Architecture, and Clean Agile principles.
 
 ## Core Development Principles
 

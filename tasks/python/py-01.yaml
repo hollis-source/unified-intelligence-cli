@@ -1,0 +1,222 @@
+id: py-01
+agent: python
+prompt: |
+  Refactor the following code to remove timezone bugs and eliminate the pytz dependency:
+
+  ```python
+  # utils/date.py
+  import pytz
+  from datetime import datetime
+
+  def get_user_local_time(utc_time, timezone_str):
+      tz = pytz.timezone(timezone_str)
+      return utc_time.replace(tzinfo=pytz.utc).astimezone(tz)
+
+  def format_for_display(dt, timezone_str):
+      local = get_user_local_time(dt, timezone_str)
+      return local.strftime('%Y-%m-%d %H:%M:%S %Z')
+  ```
+
+  Requirements:
+  - Use Python 3.9+ zoneinfo instead of pytz
+  - Handle edge cases (invalid timezones, None values)
+  - Maintain the same API (function signatures)
+  - Add type hints
+  - Include docstrings
+
+  Expected files to reference:
+  - utils/date.py (refactored timezone handling)
+  - utils/exceptions.py (custom timezone exceptions)
+  - tests/test_date_utils.py (edge case tests)
+  - docs/migration_pytz_to_zoneinfo.md (migration guide)
+
+  Example of proper file:line references:
+  - utils/date.py:5 (from zoneinfo import ZoneInfo)
+  - utils/date.py:12 (def get_user_local_time with type hints)
+  - tests/test_date_utils.py:25 (test_invalid_timezone_raises_error)
+  - docs/migration_pytz_to_zoneinfo.md:18 (ZoneInfo vs pytz comparison)
+
+  Deliverables:
+  1. utils/date.py with zoneinfo implementation
+  2. Edge case handling and error messages
+  - MANDATORY: Your response MUST include at least 3 file:line references
+  - MANDATORY: Include type hints, docstrings, and error handling patterns
+
+  Refactoring Template (use this structure):
+  ```python
+  # utils/date.py (BEFORE - with pytz)
+  import pytz
+  from datetime import datetime
+
+  def get_user_local_time(utc_time, timezone_str):
+      tz = pytz.timezone(timezone_str)
+      return utc_time.replace(tzinfo=pytz.utc).astimezone(tz)
+
+  def format_for_display(dt, timezone_str):
+      local = get_user_local_time(dt, timezone_str)
+      return local.strftime('%Y-%m-%d %H:%M:%S %Z')
+
+  # utils/date.py (AFTER - with zoneinfo)
+  from datetime import datetime, timezone
+  from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+  from typing import Optional
+
+  class InvalidTimezoneError(ValueError):
+      """Raised when an invalid timezone string is provided."""
+      pass
+
+  def get_user_local_time(
+      utc_time: datetime,
+      timezone_str: str
+  ) -> datetime:
+      """
+      Convert a UTC datetime to a localized datetime.
+
+      Args:
+          utc_time: UTC datetime (must be timezone-aware)
+          timezone_str: IANA timezone name (e.g., 'America/New_York')
+
+      Returns:
+          Localized datetime in the target timezone
+
+      Raises:
+          InvalidTimezoneError: If timezone_str is invalid
+          ValueError: If utc_time is None or naive
+      """
+      if utc_time is None:
+          raise ValueError("utc_time cannot be None")
+
+      if utc_time.tzinfo is None:
+          raise ValueError("utc_time must be timezone-aware")
+
+      try:
+          tz = ZoneInfo(timezone_str)
+      except ZoneInfoNotFoundError:
+          raise InvalidTimezoneError(
+              f"Invalid timezone: {timezone_str}. "
+              f"Use IANA timezone names (e.g., 'America/New_York')"
+          )
+
+      return utc_time.astimezone(tz)
+
+  def format_for_display(
+      dt: datetime,
+      timezone_str: str,
+      format_str: str = '%Y-%m-%d %H:%M:%S %Z'
+  ) -> str:
+      """
+      Format a datetime for display in a specific timezone.
+
+      Args:
+          dt: Datetime to format (UTC or timezone-aware)
+          timezone_str: Target IANA timezone
+          format_str: strftime format string
+
+      Returns:
+          Formatted datetime string
+
+      Raises:
+          InvalidTimezoneError: If timezone_str is invalid
+      """
+      if dt.tzinfo is None:
+          # Assume naive datetime is UTC
+          dt = dt.replace(tzinfo=timezone.utc)
+
+      local = get_user_local_time(dt, timezone_str)
+      return local.strftime(format_str)
+
+  def now_in_timezone(timezone_str: str) -> datetime:
+      """
+      Get current time in a specific timezone.
+
+      Args:
+          timezone_str: IANA timezone name
+
+      Returns:
+          Current datetime in target timezone
+
+      Raises:
+          InvalidTimezoneError: If timezone_str is invalid
+      """
+      utc_now = datetime.now(timezone.utc)
+      return get_user_local_time(utc_now, timezone_str)
+
+  # tests/test_date_utils.py
+  import pytest
+  from datetime import datetime, timezone
+  from utils.date import (
+      get_user_local_time,
+      format_for_display,
+      now_in_timezone,
+      InvalidTimezoneError
+  )
+
+  def test_get_user_local_time_valid_timezone():
+      """Test conversion to valid timezone"""
+      utc_time = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+      ny_time = get_user_local_time(utc_time, 'America/New_York')
+
+      assert ny_time.hour == 7  # EST is UTC-5
+      assert ny_time.tzinfo is not None
+
+  def test_invalid_timezone_raises_error():
+      """Test that invalid timezone raises custom error"""
+      utc_time = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+
+      with pytest.raises(InvalidTimezoneError) as exc_info:
+          get_user_local_time(utc_time, 'Invalid/Timezone')
+
+      assert "Invalid timezone" in str(exc_info.value)
+
+  def test_none_utc_time_raises_error():
+      """Test that None utc_time raises ValueError"""
+      with pytest.raises(ValueError) as exc_info:
+          get_user_local_time(None, 'America/New_York')
+
+      assert "cannot be None" in str(exc_info.value)
+
+  def test_naive_datetime_raises_error():
+      """Test that naive datetime raises ValueError"""
+      naive_time = datetime(2024, 1, 15, 12, 0, 0)
+
+      with pytest.raises(ValueError) as exc_info:
+          get_user_local_time(naive_time, 'America/New_York')
+
+      assert "must be timezone-aware" in str(exc_info.value)
+
+  def test_format_for_display():
+      """Test datetime formatting"""
+      utc_time = datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
+      formatted = format_for_display(utc_time, 'America/New_York')
+
+      assert '2024-01-15 07:00:00 EST' in formatted
+  ```
+
+  Expected patterns:
+  - zoneinfo: from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+  - Type hints: def func(...) -> datetime
+  - Error handling: try/except ZoneInfoNotFoundError, custom exceptions
+  - Docstrings: Google style with Args, Returns, Raises
+  - Edge cases: None checks, naive datetime detection
+  - IANA timezones: 'America/New_York', 'Europe/London', 'Asia/Tokyo'
+
+checks:
+  - type: regex
+    pattern: "from zoneinfo import ZoneInfo"
+    description: Must use zoneinfo
+  - type: regex
+    pattern: "def get_user_local_time.*->.*datetime"
+    description: Must have type hints
+  - type: cmd
+    run: "python -m py_compile utils/date.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3000
+  tags: [refactoring, datetime, type-hints]

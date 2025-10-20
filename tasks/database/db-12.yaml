@@ -1,0 +1,120 @@
+id: db-12
+agent: database
+prompt: |
+  Optimize vector similarity search query performance in multimodel database (SurrealDB example) for RAG.
+
+  Context:
+  - Using SurrealDB (multimodel: graph + vector + document) for RAG storage
+  - Current query retrieves top-k similar embeddings using cosine similarity
+  - Dataset: 50,000 vectors (768 dimensions each)
+  - Current latency: 800ms per query (unacceptable for real-time RAG)
+  - Target: <100ms for k=10 results
+  - SurrealDB version: Latest stable
+  - Question: What vector indexing strategies work best in multimodel databases?
+
+  Current Query:
+  ```surql
+  SELECT id, content, vector::similarity::cosine(embedding, $query_vector) AS score
+  FROM entities
+  ORDER BY score DESC
+  LIMIT 10;
+  ```
+
+  Requirements:
+  1. Analyze current query performance bottleneck
+  2. Index strategies for vector search:
+     - HNSW (Hierarchical Navigable Small World)
+     - IVF (Inverted File Index)
+     - Product Quantization
+  3. Optimized query rewrite
+  4. Trade-offs: accuracy vs speed vs storage
+  5. Benchmark methodology for measuring improvement
+
+  Deliverables:
+  - Optimized SurrealDB query
+  - Index creation statements
+  - Performance comparison (before/after)
+  - Accuracy impact analysis (recall@10)
+  - Recommendations for production deployment
+  - MANDATORY: Your response MUST include at least 3 file:line references to optimization files
+  - MANDATORY: Include DEFINE INDEX MTREE and optimized vector search queries
+
+  Vector Search Optimization Template (use this structure):
+  ```surql
+  -- db/surrealdb/indexes.surql
+  -- Define MTREE vector index for fast similarity search
+  DEFINE INDEX embedding_mtree ON entities
+  FIELDS embedding
+  MTREE DIMENSION 768 DIST COSINE;
+
+  -- Optional: Add metadata index for filtering
+  DEFINE INDEX entity_type_idx ON entities FIELDS entity_type;
+  DEFINE INDEX file_path_idx ON entities FIELDS file_path;
+
+  -- db/surrealdb/queries_optimized.surql
+  -- Before: Brute-force scan (800ms for 50k vectors)
+  SELECT id, content, vector::similarity::cosine(embedding, $query_vector) AS score
+  FROM entities
+  ORDER BY score DESC
+  LIMIT 10;
+
+  -- After: MTREE index + knn operator (<100ms for 50k vectors)
+  SELECT id, content, file_path,
+         vector::similarity::cosine(embedding, $query_vector) AS score
+  FROM entities
+  WHERE entity_type = 'function'
+  ORDER BY embedding <|10|> $query_vector
+  LIMIT 10;
+
+  -- db/benchmarks/vector_search_performance.md
+  ## Performance Comparison
+
+  | Method | Latency (p50) | Latency (p95) | Recall@10 | Index Size |
+  |--------|---------------|---------------|-----------|------------|
+  | Brute-force (no index) | 800ms | 1200ms | 100% | 0 MB |
+  | MTREE index (dim=768) | 45ms | 85ms | 98.5% | 120 MB |
+  | MTREE + quantization | 28ms | 52ms | 96.2% | 45 MB |
+
+  **Recommendation**: MTREE index without quantization
+  - 18x faster (800ms → 45ms)
+  - 98.5% recall (acceptable for RAG)
+  - Moderate storage overhead (120 MB for 50k vectors)
+  ```
+
+  Expected files to reference:
+  - db/surrealdb/indexes.surql (MTREE vector index definition)
+  - db/surrealdb/queries_optimized.surql (knn operator usage)
+  - db/benchmarks/vector_search_performance.md (performance comparison table)
+  - docs/vector_index_tuning.md (MTREE parameters and trade-offs)
+
+  Example of proper file:line references:
+  - db/surrealdb/indexes.surql:3 (DEFINE INDEX MTREE with DIMENSION 768)
+  - db/surrealdb/queries_optimized.surql:12 (knn operator <|10|> for top-10)
+  - db/benchmarks/vector_search_performance.md:8 (800ms → 45ms improvement)
+  - docs/vector_index_tuning.md:22 (recall vs latency trade-off analysis)
+
+  Deliverables:
+  1. Index DDL with DEFINE INDEX, MTREE, DIMENSION, DIST COSINE keywords and file:line refs
+  2. Optimized query with <|k|> knn operator syntax
+  3. Performance table (before: 800ms, after: 45ms, recall: 98.5%)
+
+checks:
+  - type: regex
+    pattern: "DEFINE INDEX.*MTREE|HNSW|vector.*index"
+    description: Must create vector index
+  - type: regex
+    pattern: "vector::similarity::cosine|vector::distance"
+    description: Must use SurrealDB vector functions
+  - type: regex
+    pattern: "benchmark|performance|latency|ms"
+    description: Must measure performance improvement
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 5500
+  tags: [vector-search, optimization, multimodel-databases, surrealdb, rag]

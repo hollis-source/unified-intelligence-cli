@@ -8,7 +8,7 @@ from typing import List, Dict, Any, Optional
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../../scripts"))
 
 from grok_session import GrokSession
-from src.interfaces import IToolSupportedProvider, LLMConfig
+from src.interface import IToolSupportedProvider, LLMConfig, GenerationResult
 
 
 class GrokAdapter(IToolSupportedProvider):
@@ -39,11 +39,14 @@ class GrokAdapter(IToolSupportedProvider):
         self,
         messages: List[Dict[str, Any]],
         config: Optional[LLMConfig] = None
-    ) -> str:
+    ) -> GenerationResult:
         """
         Generate text using Grok.
 
         Adapter pattern: Translates interface to Grok specifics.
+
+        Returns:
+            GenerationResult with content, usage, and metadata
         """
         # Convert messages to Grok format
         for msg in messages:
@@ -57,7 +60,11 @@ class GrokAdapter(IToolSupportedProvider):
         # Get last user message
         user_messages = [m for m in messages if m["role"] == "user"]
         if not user_messages:
-            return "No user message provided"
+            return GenerationResult(
+                content="No user message provided",
+                usage={},
+                metadata={}
+            )
 
         last_user_msg = user_messages[-1]["content"]
 
@@ -71,7 +78,15 @@ class GrokAdapter(IToolSupportedProvider):
             use_tools=False
         )
 
-        return result["response"]
+        # Return structured result with token usage
+        return GenerationResult(
+            content=result["response"],
+            usage=result.get("usage", {}),
+            metadata={
+                "tool_calls": result.get("tool_calls", []),
+                "elapsed_time": result.get("elapsed_time", 0)
+            }
+        )
 
     def generate_with_tools(
         self,

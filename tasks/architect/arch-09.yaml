@@ -1,0 +1,33 @@
+id: arch-09
+agent: architect
+prompt: |
+  Define API versioning and backward compatibility strategy for public clients and internal services.
+
+  Expected files to reference:
+  - docs/api/versioning_policy.md:15 (versioning approaches: URI vs header vs media type with trade-offs)
+  - docs/api/deprecation_process.md:25 (deprecation timeline, SLAs, and communication plan)
+  - tests/contracts/api_v1_v2_compatibility_tests.py:35 (contract tests verifying backward compatibility)
+  - docs/api/migration_playbook.md:18 (client migration guide with adapter patterns)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include API versioning patterns with versioning approaches (URI/header/media type), deprecation policy, backward-compatible schema evolution, contract tests, and client migration strategies
+
+  Template includes: Versioning policy with examples, deprecation/sunset process, contract testing for compatibility verification, migration playbooks, adapter strategies for stragglers
+
+checks:
+  - type: regex
+    pattern: '\b(versioning|backward\s+compatible|deprecation)\b'
+    description: Must cover versioning and deprecation
+  - type: regex
+    pattern: '\b(contract\s+test|schema\s+evolution|adapter)\b'
+    description: Must include compatibility and testing strategies
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3500
+  tags: [api, compatibility, governance, quality]

@@ -1,0 +1,39 @@
+id: py-16
+agent: python
+prompt: |
+  Memoize the expensive pure function compute_score() in ml/metrics.py.
+
+  Expected files to reference:
+  - ml/metrics.py:5 (from functools import lru_cache)
+  - ml/metrics.py:12 (@lru_cache(maxsize=1000) decorator)
+  - ml/metrics.py:15 (def compute_score with type hints)
+  - tests/test_metrics.py:28 (test_cache_hit_performance)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include memoization patterns with lru_cache, maxsize configuration, and cache_clear for testing
+
+  Template includes: Before/after comparison, functools.lru_cache, performance benefits, cache management
+
+checks:
+  - type: regex
+    pattern: "from functools import lru_cache"
+    description: Must import lru_cache
+  - type: regex
+    pattern: "@lru_cache\\(maxsize=.*\\)"
+    description: compute_score memoized with bounded cache
+  - type: regex
+    pattern: "def compute_score\\(a: int, b: int\\) -> float"
+    description: Function has type hints
+  - type: cmd
+    run: "python -m py_compile ml/metrics.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 2400
+  tags: [performance, memoization, functools, type-hints]

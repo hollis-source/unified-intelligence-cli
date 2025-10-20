@@ -6,12 +6,15 @@ SOLID: SRP - only handles DSL file execution.
 
 import asyncio
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 import click
 
 from src.dsl.adapters.parser import Parser
 from src.dsl.use_cases.interpreter import Interpreter
 from src.dsl.adapters.cli_task_executor import CLITaskExecutor
+
+from src.factories.agent_factory import AgentFactory
+from src.dsl.lifecycle.callbacks import DSLExecutionCallbacks, NullDSLExecutionCallbacks
 
 
 def read_dsl_file(file_path: str) -> str:
@@ -40,7 +43,7 @@ def read_dsl_file(file_path: str) -> str:
         return f.read()
 
 
-async def execute_dsl_program(dsl_text: str, verbose: bool = False) -> Any:
+async def execute_dsl_program(dsl_text: str, verbose: bool = False, callbacks: Optional[DSLExecutionCallbacks] = None) -> Any:
     """
     Execute DSL program.
 
@@ -54,6 +57,12 @@ async def execute_dsl_program(dsl_text: str, verbose: bool = False) -> Any:
     if verbose:
         click.echo(f"Parsing DSL program...")
         click.echo(f"Program:\n{dsl_text}\n")
+
+    callbacks = callbacks or NullDSLExecutionCallbacks()
+    try:
+        callbacks.on_start(dsl_text)
+    except Exception:
+        pass
 
     # Parse DSL → AST
     parser = Parser()
@@ -92,7 +101,7 @@ async def execute_dsl_program(dsl_text: str, verbose: bool = False) -> Any:
                 symbol_table[node.name] = node.expression
 
     # Create executor with symbol table support
-    executor = CLITaskExecutor()
+    executor = CLITaskExecutor(agent_factory=AgentFactory(), lifecycle=callbacks)
     interpreter = Interpreter(executor)
 
     # Add symbol table to interpreter (if it supports it)
@@ -105,10 +114,26 @@ async def execute_dsl_program(dsl_text: str, verbose: bool = False) -> Any:
         click.echo("Executing DSL program...")
 
     # Execute
+    # Call lifecycle before executing the main node
+    try:
+        callbacks.on_before_node(main_node)
+    except Exception:
+        pass
+
     try:
         result = await interpreter.execute(main_node)
+        # Lifecycle: after and finish hooks
+        try:
+            callbacks.on_after_node(main_node, result)
+            callbacks.on_finish(result)
+        except Exception:
+            pass
         return result
     except Exception as e:
+        try:
+            callbacks.on_error(e)
+        except Exception:
+            pass
         click.echo(f"Execution error: {e}", err=True)
         raise
 

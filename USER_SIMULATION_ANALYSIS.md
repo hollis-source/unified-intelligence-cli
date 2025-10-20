@@ -365,11 +365,11 @@ def format_error(result: ExecutionResult) -> str:
 **Week 3: Debugging Flags**
 ```bash
 # Basic mode (current)
-ui-cli "Write fibonacci function"
+atado "Write fibonacci function"
 ❌ Task failed
 
 # Verbose mode (shows flow)
-ui-cli --verbose "Write fibonacci function"
+atado --verbose "Write fibonacci function"
 → Task: Write fibonacci function
 → Agent selected: coder
 → Executing with coder agent...
@@ -377,7 +377,7 @@ ui-cli --verbose "Write fibonacci function"
 ❌ MockProvider returned empty output
 
 # Debug mode (shows everything)
-ui-cli --debug "Write fibonacci function"
+atado --debug "Write fibonacci function"
 [DEBUG] TaskCoordinatorUseCase.coordinate_task()
 [DEBUG]   task_id: user_task_12345
 [DEBUG]   description: Write fibonacci function

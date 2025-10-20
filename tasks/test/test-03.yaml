@@ -1,0 +1,217 @@
+id: test-03
+agent: test
+prompt: |
+  Practice TDD for a small password reset service function. Start by writing failing tests
+  for request validation, token generation, and expiry checks; then implement the minimum code
+  to pass, and refactor.
+
+  Requirements:
+  - Red-Green-Refactor loop documented in commits or notes
+  - Tests first for each behavior
+  - Clear separation of unit tests and helper utilities
+
+  Expected files to reference:
+  - tests/services/test_password_reset.py (TDD test cases)
+  - services/password_reset.py (implementation)
+  - tests/conftest.py (test fixtures)
+  - docs/tdd_workflow.md (TDD process documentation)
+
+  Example of proper file:line references:
+  - tests/services/test_password_reset.py:8 (RED: def test_token_generation_fails_initially)
+  - tests/services/test_password_reset.py:15 (GREEN: def test_token_generation_succeeds)
+  - services/password_reset.py:22 (Minimal implementation of generate_token)
+  - services/password_reset.py:35 (Refactored token expiry logic)
+  - docs/tdd_workflow.md:12 (Red-Green-Refactor cycle documentation)
+
+  Deliverables:
+  1. Failing tests that guide implementation (RED phase)
+  2. Minimal implementation to satisfy tests (GREEN phase)
+  3. Refactor with tests still passing (REFACTOR phase)
+  - MANDATORY: Your response MUST include at least 3 file:line references showing TDD workflow
+  - MANDATORY: Include pytest tests demonstrating red-green-refactor cycle with token/expiry logic
+
+  TDD Workflow Template (use this structure):
+  ```python
+  # tests/services/test_password_reset.py (RED phase - failing tests first)
+  import pytest
+  from datetime import datetime, timedelta
+  from services.password_reset import PasswordResetService
+
+  class TestPasswordResetTDD:
+      # RED: Write failing test for token generation
+      def test_generate_reset_token_creates_valid_token(self):
+          \"\"\"RED: Test token generation (will fail initially)\"\"\"
+          service = PasswordResetService()
+          token = service.generate_reset_token("user@example.com")
+
+          assert token is not None
+          assert len(token) == 32  # Expected token length
+          assert token.isalnum()  # Should be alphanumeric
+
+      # RED: Write failing test for token validation
+      def test_validate_token_accepts_valid_token(self):
+          \"\"\"RED: Test valid token is accepted (will fail initially)\"\"\"
+          service = PasswordResetService()
+          token = service.generate_reset_token("user@example.com")
+
+          is_valid = service.validate_token(token)
+          assert is_valid is True
+
+      # RED: Write failing test for token expiry
+      def test_token_expires_after_one_hour(self):
+          \"\"\"RED: Test token expiry logic (will fail initially)\"\"\"
+          service = PasswordResetService()
+          token = service.generate_reset_token("user@example.com")
+
+          # Simulate time passing (1 hour + 1 second)
+          service._set_current_time(datetime.now() + timedelta(hours=1, seconds=1))
+
+          is_valid = service.validate_token(token)
+          assert is_valid is False  # Should be expired
+
+  # GREEN: Minimal implementation to pass tests
+  # services/password_reset.py
+  import secrets
+  from datetime import datetime, timedelta
+
+  class PasswordResetService:
+      def __init__(self):
+          self.tokens = {}  # Store tokens with expiry
+          self._current_time = None  # For testing time-dependent logic
+
+      def generate_reset_token(self, email: str) -> str:
+          \"\"\"GREEN: Minimal implementation to pass test\"\"\"
+          token = secrets.token_hex(16)  # 32 character alphanumeric token
+          expiry = datetime.now() + timedelta(hours=1)
+          self.tokens[token] = {
+              "email": email,
+              "expiry": expiry
+          }
+          return token
+
+      def validate_token(self, token: str) -> bool:
+          \"\"\"GREEN: Minimal implementation to pass test\"\"\"
+          if token not in self.tokens:
+              return False
+
+          current_time = self._current_time if self._current_time else datetime.now()
+          expiry = self.tokens[token]["expiry"]
+
+          return current_time < expiry
+
+      def _set_current_time(self, time: datetime):
+          \"\"\"Test helper to simulate time passing\"\"\"
+          self._current_time = time
+
+  # REFACTOR: Improve implementation while keeping tests green
+  # services/password_reset.py (refactored)
+  class PasswordResetService:
+      TOKEN_LENGTH = 16
+      EXPIRY_HOURS = 1
+
+      def __init__(self, token_store=None):
+          self.token_store = token_store or {}  # Dependency injection for testing
+          self._current_time = None
+
+      def generate_reset_token(self, email: str) -> str:
+          \"\"\"REFACTOR: Extracted constants, added validation\"\"\"
+          if not email or '@' not in email:
+              raise ValueError("Invalid email address")
+
+          token = self._create_token()
+          self._store_token(token, email)
+          return token
+
+      def _create_token(self) -> str:
+          \"\"\"REFACTOR: Extracted token creation logic\"\"\"
+          return secrets.token_hex(self.TOKEN_LENGTH)
+
+      def _store_token(self, token: str, email: str):
+          \"\"\"REFACTOR: Extracted storage logic\"\"\"
+          expiry = self._calculate_expiry()
+          self.token_store[token] = {
+              "email": email,
+              "expiry": expiry
+          }
+
+      def _calculate_expiry(self) -> datetime:
+          \"\"\"REFACTOR: Extracted expiry calculation\"\"\"
+          current = self._current_time if self._current_time else datetime.now()
+          return current + timedelta(hours=self.EXPIRY_HOURS)
+
+      def validate_token(self, token: str) -> bool:
+          \"\"\"REFACTOR: Clearer validation logic\"\"\"
+          if not self._token_exists(token):
+              return False
+
+          return not self._is_expired(token)
+
+      def _token_exists(self, token: str) -> bool:
+          \"\"\"REFACTOR: Extracted existence check\"\"\"
+          return token in self.token_store
+
+      def _is_expired(self, token: str) -> bool:
+          \"\"\"REFACTOR: Extracted expiry check\"\"\"
+          current_time = self._current_time if self._current_time else datetime.now()
+          expiry = self.token_store[token]["expiry"]
+          return current_time >= expiry
+
+      def _set_current_time(self, time: datetime):
+          \"\"\"Test helper\"\"\"
+          self._current_time = time
+  ```
+
+  ```markdown
+  # docs/tdd_workflow.md
+
+  ## TDD Workflow: Password Reset Feature
+
+  ### RED Phase (Write Failing Tests)
+  1. test_generate_reset_token_creates_valid_token - FAIL (no implementation)
+  2. test_validate_token_accepts_valid_token - FAIL (no validation logic)
+  3. test_token_expires_after_one_hour - FAIL (no expiry logic)
+
+  ### GREEN Phase (Minimal Implementation)
+  - Implemented generate_reset_token() with secrets.token_hex()
+  - Implemented validate_token() with expiry check
+  - All tests pass ✓
+
+  ### REFACTOR Phase (Improve Code)
+  - Extracted constants (TOKEN_LENGTH, EXPIRY_HOURS)
+  - Extracted helper methods (_create_token, _store_token, _calculate_expiry)
+  - Added email validation
+  - Improved readability with _token_exists(), _is_expired()
+  - All tests still pass ✓
+
+  ### Benefits
+  - Tests drove design (no unused code)
+  - Confidence to refactor (tests verify behavior unchanged)
+  - Clear separation of concerns
+  ```
+
+  Expected TDD cycle documentation:
+  - RED: 3 failing tests written first (token generation, validation, expiry)
+  - GREEN: Minimal implementation (secrets.token_hex, datetime checks)
+  - REFACTOR: Extracted methods, added constants, improved readability
+
+checks:
+  - type: regex
+    pattern: '\b(TDD|red\s*-\s*green\s*-\s*refactor)\b'
+    description: Must follow TDD workflow
+  - type: regex
+    pattern: '\b(token|expiry|reset)\b'
+    description: Mentions token generation/expiry/reset behavior
+  - type: regex
+    pattern: '\b(pytest|unit\s+tests?)\b'
+    description: Uses pytest unit tests
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3600
+  tags: [testing, tdd, unit, pytest]
+

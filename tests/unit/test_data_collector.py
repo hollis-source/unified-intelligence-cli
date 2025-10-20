@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 import shutil
 from src.utils.data_collector import DataCollector
-from src.entities import Task, Agent
+from src.entity import Task, Agent
 from src.interfaces import LLMConfig
 
 

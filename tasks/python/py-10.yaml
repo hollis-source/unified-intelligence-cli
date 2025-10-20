@@ -1,0 +1,42 @@
+id: py-10
+agent: python
+prompt: |
+  Add type hints across api/v1/* and enforce mypy strict mode.
+
+  Expected files to reference:
+  - api/v1/users.py:8 (def get_user with TypedDict return type)
+  - api/v1/users.py:25 (def create_user with validated input types)
+  - mypy.ini:5 (strict = True for api.v1 modules)
+  - tests/test_mypy_compliance.py:15 (test mypy runs successfully)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include mypy patterns with TypedDict, Protocol, strict mode, and no Any types
+
+  Template includes: Before/after comparison, TypedDict models, mypy.ini configuration, strict mode fixes
+
+checks:
+  - type: regex
+    pattern: "def get_user\\(user_id:"
+    description: Function arguments are typed
+  - type: regex
+    pattern: "->\\s*dict"
+    description: Return type annotated
+  - type: regex
+    pattern: "\\[mypy\\]"
+    description: mypy.ini section present
+  - type: regex
+    pattern: "strict\\s*=\\s*True"
+    description: strict mode enabled
+  - type: cmd
+    run: "python -m py_compile api/v1/users.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3400
+  tags: [typing, mypy, api, type-hints]

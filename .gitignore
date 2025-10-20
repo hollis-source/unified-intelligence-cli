@@ -90,3 +90,41 @@ logs/
 tmp/
 temp/data/metrics/
 data/metrics/session_*.json
+
+# Auggie MCP temporary files
+.auggie_*.txt
+
+# Production secrets and configs
+.env.production
+certs/
+secrets/
+
+# External dependencies and submodules
+node_modules/
+llama.cpp/
+hf_spaces/
+
+# Database data
+data/surrealdb/
+
+# Build artifacts and metrics
+metrics/
+dogfooding_results/
+phase1_hardware_detection/
+
+# Tool configurations
+.githooks/
+.remote_sync/
+.claude/hooks/*.disabled
+
+# Generated/temporary outputs
+*_output.txt
+history.txt
+phase1_verification.txt
+
+# Development directories
+ai_development/
+configs/
+governance/
+k8s/
+impact_analysis_report.json

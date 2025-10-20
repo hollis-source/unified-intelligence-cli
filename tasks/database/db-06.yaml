@@ -1,0 +1,120 @@
+id: db-06
+agent: database
+prompt: |
+  Choose the optimal database for an analytics workload: PostgreSQL vs Clickhouse vs BigQuery.
+
+  Context:
+  - Use case: Product analytics dashboard
+  - Data volume: 500M events/month, 6B total rows
+  - Query patterns: Aggregations (GROUP BY, time-series), JOINs rare
+  - Users: 50 analysts running ad-hoc queries
+  - Budget: Mid-tier startup ($2k-5k/month acceptable)
+  - Team skills: Strong SQL, limited data engineering
+  - Latency requirements: p95 < 5 seconds for dashboard queries
+
+  Requirements:
+  1. Evaluate all 3 options across 5 dimensions:
+     - Query performance (analytical workloads)
+     - Cost (storage + compute)
+     - Operational complexity
+     - Team learning curve
+     - Scalability/future-proofing
+  2. Provide recommendation with decision matrix
+  3. Migration path from current Postgres OLTP database
+  4. Risk assessment for chosen option
+
+  Deliverables:
+  - Comparison table with scoring
+  - Recommendation with justification
+  - Prototype schema for chosen database
+  - Cost estimate with usage projections
+  - MANDATORY: Your response MUST include at least 3 file:line references to comparison/schema files
+  - MANDATORY: Include CREATE TABLE/schema DDL for recommended database
+
+  Database Selection Template (use this structure):
+  ```markdown
+  ## docs/database_comparison.md
+
+  | Criterion | PostgreSQL + TimescaleDB | Clickhouse | BigQuery | Weight |
+  |-----------|-------------------------|------------|----------|--------|
+  | Query Performance | 7/10 (good OLAP) | 9/10 (columnar) | 8/10 (serverless) | 30% |
+  | Cost | 8/10 ($2k/mo) | 9/10 ($1.5k/mo) | 6/10 ($4k/mo) | 25% |
+  | Operational | 6/10 (self-managed) | 7/10 (stable) | 10/10 (serverless) | 20% |
+  | Learning Curve | 9/10 (SQL familiar) | 7/10 (SQL dialects) | 8/10 (SQL standard) | 15% |
+  | Scalability | 7/10 (vertical+sharding) | 10/10 (horizontal) | 10/10 (auto-scale) | 10% |
+  | **Weighted Score** | **7.3/10** | **8.2/10** | **7.6/10** | 100% |
+
+  ### Recommendation: Clickhouse
+
+  **Justification:**
+  - Highest weighted score (8.2/10)
+  - Best query performance for GROUP BY aggregations (3-10x faster)
+  - Cost-effective ($1.5k/mo vs $4k BigQuery)
+  - Team can learn SQL dialect in 1-2 weeks
+  ```
+
+  ```sql
+  -- db/clickhouse/schema.sql
+  CREATE TABLE events (
+      event_id UInt64,
+      user_id UUID,
+      event_type LowCardinality(String),
+      properties String,  -- JSON stored as String
+      created_at DateTime,
+      date Date MATERIALIZED toDate(created_at)
+  ) ENGINE = MergeTree()
+  PARTITION BY toYYYYMM(date)
+  ORDER BY (event_type, user_id, created_at)
+  SETTINGS index_granularity = 8192;
+
+  -- Materialized view for daily aggregations
+  CREATE MATERIALIZED VIEW events_daily_mv
+  ENGINE = SummingMergeTree()
+  PARTITION BY toYYYYMM(date)
+  ORDER BY (event_type, date)
+  AS SELECT
+      event_type,
+      toDate(created_at) as date,
+      count() as event_count,
+      uniq(user_id) as unique_users
+  FROM events
+  GROUP BY event_type, date;
+  ```
+
+  Expected files to reference:
+  - docs/database_comparison.md (decision matrix with scoring)
+  - db/clickhouse/schema.sql (MergeTree table with partitioning)
+  - db/clickhouse/queries.sql (example analytical queries)
+  - docs/migration_plan.md (PostgreSQL to Clickhouse ETL)
+
+  Example of proper file:line references:
+  - docs/database_comparison.md:8 (weighted scoring calculation)
+  - db/clickhouse/schema.sql:9 (MergeTree ENGINE with PARTITION BY)
+  - db/clickhouse/schema.sql:15 (MATERIALIZED VIEW for aggregations)
+  - docs/migration_plan.md:22 (CDC pipeline from Postgres)
+
+  Deliverables:
+  1. Comparison table with PostgreSQL, Clickhouse, BigQuery evaluation and weighted scores
+  2. CREATE TABLE with ENGINE, PARTITION BY, ORDER BY (Clickhouse-specific) keywords and file:line refs
+  3. Cost estimates with storage + compute breakdown ($1.5k-$4k/month range)
+
+checks:
+  - type: regex
+    pattern: "PostgreSQL|Clickhouse|BigQuery"
+    description: Must evaluate all 3 options
+  - type: regex
+    pattern: "recommendation|recommend"
+    description: Must provide clear recommendation
+  - type: regex
+    pattern: "cost|pricing|\\$"
+    description: Must address cost considerations
+
+acceptance:
+  auto_min: 6
+  human_min: 7
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5000
+  tags: [database-selection, analytics, decision-record]

@@ -1,0 +1,129 @@
+id: test-11
+agent: test
+prompt: |
+  Stabilize flaky tests by identifying root causes (timing, randomness, external state).
+  Add retries only as a last resort; prefer proper synchronization, deterministic seeds,
+  and isolation.
+
+  Requirements:
+  - Detect and isolate flakiness sources
+  - Introduce synchronization or timeouts where necessary
+  - Make randomness deterministic with fixed seeds
+
+  Expected files to reference:
+  - tests/test_checkout_stabilized.py (stabilized flaky test)
+  - tests/conftest.py (pytest-rerunfailures configuration)
+  - docs/flaky_test_fixes.md (root cause analysis)
+  - tests/helpers/wait_utils.py (synchronization helpers)
+
+  Example of proper file:line references:
+  - tests/test_checkout_stabilized.py:15 (WebDriverWait for element visibility)
+  - tests/conftest.py:8 (pytest_configure with random.seed(42))
+  - docs/flaky_test_fixes.md:25 (Root cause: race condition in async callback)
+  - tests/helpers/wait_utils.py:12 (def wait_for_condition with timeout)
+
+  Deliverables:
+  1. Updated tests with stability fixes
+  2. Notes explaining root causes and mitigations
+  - MANDATORY: Your response MUST include at least 3 file:line references to flaky test fixes
+  - MANDATORY: Include deterministic seeding (random.seed), wait patterns, and isolation techniques
+
+  Flaky Test Stabilization Template (use this structure):
+  ```python
+  # tests/test_checkout_stabilized.py (BEFORE - flaky)
+  def test_checkout_flaky():
+      user = create_user()
+      order = create_order(user)
+      time.sleep(1)  # ❌ Fixed sleep - unreliable
+      assert order.status == 'completed'
+
+  # tests/test_checkout_stabilized.py (AFTER - stable)
+  from tests.helpers.wait_utils import wait_for_condition
+
+  def test_checkout_stabilized():
+      user = create_user()
+      order = create_order(user)
+
+      # ✓ Wait for condition with timeout
+      wait_for_condition(
+          lambda: order.refresh().status == 'completed',
+          timeout=5.0,
+          message="Order did not complete within 5 seconds"
+      )
+
+      assert order.status == 'completed'
+
+  # tests/helpers/wait_utils.py
+  import time
+
+  def wait_for_condition(condition_fn, timeout=10.0, interval=0.1, message=None):
+      """Wait for condition to be true with timeout"""
+      start = time.time()
+      while time.time() - start < timeout:
+          if condition_fn():
+              return True
+          time.sleep(interval)
+
+      raise TimeoutError(message or f"Condition not met within {timeout}s")
+
+  # tests/conftest.py - deterministic randomness
+  import random
+  import pytest
+
+  def pytest_configure(config):
+      """Set deterministic random seed"""
+      random.seed(42)
+      import numpy as np
+      np.random.seed(42)
+
+  @pytest.fixture(autouse=True)
+  def reset_random_state():
+      """Reset random state before each test"""
+      random.seed(42)
+      yield
+
+  # docs/flaky_test_fixes.md
+  ## Flaky Test Root Causes and Fixes
+
+  ### Test: test_checkout_payment_processing
+  **Root Cause**: Race condition - payment callback arrives async before assertion
+  **Fix**: Added `wait_for_condition()` to poll payment status with 5s timeout
+  **Location**: tests/test_checkout_stabilized.py:45
+
+  ### Test: test_product_search_order
+  **Root Cause**: Non-deterministic ordering (database query without ORDER BY)
+  **Fix**: Added explicit ORDER BY clause to query
+  **Location**: tests/test_product_search.py:22
+
+  ### Test: test_random_coupon_generation
+  **Root Cause**: Random coupon codes different each run
+  **Fix**: Set random.seed(42) in conftest.py
+  **Location**: tests/conftest.py:8
+  ```
+
+  Expected patterns:
+  - Deterministic seeds: random.seed(42), np.random.seed(42)
+  - Wait helpers: wait_for_condition with timeout
+  - Explicit ordering: ORDER BY in database queries
+  - Retry as last resort: @pytest.mark.flaky(reruns=2) only if no other fix
+
+checks:
+  - type: regex
+    pattern: '\b(flaky|flake|flakiness)\b'
+    description: Addresses flaky tests
+  - type: regex
+    pattern: '\b(seed|deterministic|random)\b'
+    description: Uses deterministic seeding
+  - type: regex
+    pattern: '\b(timeout|retry|synchroniz(e|ation))\b'
+    description: Adds sync/timeout strategies (retries last resort)
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3600
+  tags: [testing, stability, unit, integration]

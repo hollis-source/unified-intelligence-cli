@@ -1,0 +1,36 @@
+id: arch-06
+agent: architect
+prompt: |
+  Define API gateway and service mesh strategy for microservices platform covering ingress, routing, and service-to-service security.
+
+  Expected files to reference:
+  - docs/architecture/gateway_mesh_design.md:20 (reference architecture with gateway and mesh components)
+  - infrastructure/gateway/policies/rate_limits.yaml:15 (rate limiting policies per endpoint)
+  - infrastructure/mesh/istio_config.yaml:35 (mTLS and traffic shaping configuration)
+  - infrastructure/mesh/rollout_strategies.yaml:25 (blue/green and canary deployment configs)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include gateway/mesh patterns with routing, auth, rate limiting, mTLS, traffic shaping, circuit breakers, service discovery, and multi-environment rollout strategies
+
+  Template includes: Reference architecture diagram, gateway features (routing/auth/rate limits/aggregation), mesh capabilities (mTLS/retries/observability), policy catalog, deployment plan, observability integrations
+
+checks:
+  - type: regex
+    pattern: '\b(API\s+gateway|service\s+mesh|Envoy|Istio)\b'
+    description: Must include gateway/mesh technologies
+  - type: regex
+    pattern: '\b(circuit\s+breaker|rate\s+limit|mTLS|traffic\s+splitting)\b'
+    description: Must define resilience and security policies
+  - type: regex
+    pattern: '\b(service\s+discovery|sidecar|control\s+plane)\b'
+    description: Must address discovery and control plane aspects
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5600
+  tags: [api-gateway, service-mesh, networking, security]

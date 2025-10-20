@@ -1,0 +1,167 @@
+id: db-14
+agent: database
+prompt: |
+  Design embedding storage strategy for multi-model RAG system.
+
+  Context:
+  - Supporting multiple embedding models:
+    - nomic-embed-text (768 dims) - default
+    - text-embedding-3-small (1536 dims) - OpenAI
+    - text-embedding-3-large (3072 dims) - high accuracy
+  - Use case: Allow users to switch models without re-indexing
+  - Challenge: Different dimensionalities, need efficient storage
+  - Scale: 50k entities × 3 models = 150k embedding vectors
+
+  Requirements:
+  1. Schema design options:
+     - Option A: Multiple embedding columns (embedding_768, embedding_1536, etc.)
+     - Option B: Separate tables per model
+     - Option C: Polymorphic with model metadata
+  2. Storage optimization:
+     - Lazy loading (store only used models)
+     - Compression strategies (quantization, PCA)
+     - Cost analysis (storage vs compute)
+  3. Query strategy per model
+  4. Migration path (add new models without downtime)
+  5. Trade-offs analysis
+
+  Deliverables:
+  - Recommended schema with SurrealDB DDL
+  - Storage calculation (GB per 50k entities)
+  - Query examples for each model
+  - Migration script for adding new models
+  - Cost-benefit comparison of 3 options
+  - MANDATORY: Your response MUST include at least 3 file:line references to schema/migration files
+  - MANDATORY: Include schema DDL supporting multiple embedding dimensions
+
+  Multi-Model Embedding Storage Template (use this structure):
+  ```surql
+  -- db/surrealdb/schema_multi_embedding.surql
+  -- Option C: Polymorphic with model metadata (RECOMMENDED)
+  DEFINE TABLE entities SCHEMAFULL;
+  DEFINE FIELD entity_id ON entities TYPE string;
+  DEFINE FIELD content ON entities TYPE string;
+  DEFINE FIELD file_path ON entities TYPE string;
+
+  -- Embeddings stored as map: {model_name: {vector: [...], created_at: ...}}
+  DEFINE FIELD embeddings ON entities TYPE object;
+
+  -- Indexes per embedding model
+  DEFINE INDEX embedding_nomic_mtree ON entities
+  FIELDS embeddings.nomic_embed_text.vector
+  MTREE DIMENSION 768 DIST COSINE;
+
+  DEFINE INDEX embedding_openai_small_mtree ON entities
+  FIELDS embeddings.text_embedding_3_small.vector
+  MTREE DIMENSION 1536 DIST COSINE;
+
+  DEFINE INDEX embedding_openai_large_mtree ON entities
+  FIELDS embeddings.text_embedding_3_large.vector
+  MTREE DIMENSION 3072 DIST COSINE;
+
+  -- db/surrealdb/queries_multi_model.surql
+  -- Query using nomic-embed-text (768 dims)
+  SELECT id, content,
+         vector::similarity::cosine(
+           embeddings.nomic_embed_text.vector,
+           $query_vector
+         ) AS score
+  FROM entities
+  WHERE embeddings.nomic_embed_text.vector IS NOT NONE
+  ORDER BY score DESC
+  LIMIT 10;
+
+  -- Query using OpenAI small (1536 dims)
+  SELECT id, content,
+         vector::similarity::cosine(
+           embeddings.text_embedding_3_small.vector,
+           $query_vector
+         ) AS score
+  FROM entities
+  WHERE embeddings.text_embedding_3_small.vector IS NOT NONE
+  ORDER BY score DESC
+  LIMIT 10;
+
+  -- db/migrations/add_new_embedding_model.surql
+  -- Add new embedding model without downtime
+  BEGIN TRANSACTION;
+
+  -- Create new index (online operation)
+  DEFINE INDEX embedding_new_model_mtree ON entities
+  FIELDS embeddings.new_model_name.vector
+  MTREE DIMENSION 2048 DIST COSINE;
+
+  -- Backfill strategy (lazy: compute on-demand)
+  -- OR batch backfill:
+  FOR $entity IN (SELECT * FROM entities) {
+      LET $new_embedding = embedding_api::embed($entity.content, 'new_model_name');
+      UPDATE $entity.id SET embeddings.new_model_name = {
+          vector: $new_embedding,
+          created_at: time::now()
+      };
+  };
+
+  COMMIT TRANSACTION;
+  ```
+
+  Storage Calculation:
+  ```markdown
+  ## docs/embedding_storage_analysis.md
+
+  ### Storage per 50k entities:
+
+  **Option A: Multiple columns**
+  - embedding_768: 50k × 768 × 4 bytes = 150 MB
+  - embedding_1536: 50k × 1536 × 4 bytes = 300 MB
+  - embedding_3072: 50k × 3072 × 4 bytes = 600 MB
+  - **Total**: 1.05 GB (all models stored)
+  - **Waste**: High if only using 1-2 models
+
+  **Option B: Separate tables**
+  - Similar storage as Option A
+  - **JOIN overhead**: Complex queries require JOINs
+
+  **Option C: Polymorphic (RECOMMENDED)**
+  - Lazy loading: Store only used models
+  - Example: 50k × 768 × 4 bytes = 150 MB (if only using nomic)
+  - Add models incrementally (no schema migration)
+  - **Best flexibility vs storage trade-off**
+  ```
+
+  Expected files to reference:
+  - db/surrealdb/schema_multi_embedding.surql (polymorphic schema with embeddings map)
+  - db/surrealdb/queries_multi_model.surql (model-specific query examples)
+  - db/migrations/add_new_embedding_model.surql (add new model script)
+  - docs/embedding_storage_analysis.md (storage calculation and comparison)
+
+  Example of proper file:line references:
+  - db/surrealdb/schema_multi_embedding.surql:8 (embeddings object field definition)
+  - db/surrealdb/schema_multi_embedding.surql:12 (MTREE index for nomic 768-dim)
+  - db/migrations/add_new_embedding_model.surql:6 (new index creation)
+  - docs/embedding_storage_analysis.md:18 (Option C recommendation justification)
+
+  Deliverables:
+  1. Schema with DEFINE FIELD embeddings TYPE object, multiple MTREE indexes per model
+  2. Query examples with embeddings.{model_name}.vector access pattern
+  3. Storage calculation (Option C: 150 MB vs Option A: 1.05 GB for single model usage)
+
+checks:
+  - type: regex
+    pattern: "embedding.*768|embedding.*1536|embedding.*3072"
+    description: Must handle multiple embedding dimensions
+  - type: regex
+    pattern: "model.*metadata|model.*type|model.*version"
+    description: Must track embedding model metadata
+  - type: regex
+    pattern: "migration|ALTER TABLE|backward.*compatible"
+    description: Must address migration strategy
+
+acceptance:
+  auto_min: 6
+  human_min: 7
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5000
+  tags: [multimodel-databases, embeddings, schema-design, multi-model, storage]

@@ -12,7 +12,7 @@ from typing import List, Dict, Any, Optional
 import logging
 import threading
 
-from src.interfaces import ITextGenerator, LLMConfig, IProviderFactory
+from src.interface import ITextGenerator, LLMConfig, IProviderFactory
 from src.routing.model_selector import ModelSelector, SelectionCriteria, ScoringWeights
 
 

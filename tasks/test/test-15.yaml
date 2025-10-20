@@ -1,0 +1,240 @@
+id: test-15
+agent: test
+prompt: |
+  Write regression tests for critical calculations (e.g., order totals with items, coupons, taxes).
+  Use parametrized tests with known-good inputs/outputs to prevent regressions from refactors.
+  Document expected behavior and rationale.
+
+  Requirements:
+  - Parametrized test cases with known-good values
+  - Cover edge cases (zero quantities, 100% coupons, rounding)
+  - Precise decimal assertions (avoid floating-point errors)
+
+  Expected files to reference:
+  - tests/regression/test_order_totals.py (order total calculation tests)
+  - tests/regression/test_discount_calculations.py (coupon/discount logic)
+  - tests/regression/test_tax_calculations.py (tax computation)
+  - docs/calculation_specifications.md (expected behavior documentation)
+
+  Example of proper file:line references:
+  - tests/regression/test_order_totals.py:18 (@pytest.mark.parametrize with total scenarios)
+  - tests/regression/test_discount_calculations.py:25 (test_percentage_discount_applied_correctly)
+  - tests/regression/test_tax_calculations.py:12 (Decimal precision for tax amounts)
+  - docs/calculation_specifications.md:35 (order total formula: subtotal + tax - discounts)
+
+  Deliverables:
+  1. tests/regression/*.py with parametrized regression tests
+  2. Documentation of expected calculation behavior
+  - MANDATORY: Your response MUST include at least 3 file:line references to regression test files
+  - MANDATORY: Include Decimal usage, @pytest.mark.parametrize with edge cases, and known-good test data
+
+  Regression Testing Template (use this structure):
+  ```python
+  # tests/regression/test_order_totals.py
+  import pytest
+  from decimal import Decimal
+  from models import Order, OrderItem
+  from services.order_calculator import OrderCalculator
+
+  class TestOrderTotalRegression:
+      """Regression tests to lock down order total calculations"""
+
+      @pytest.mark.parametrize("items,expected_subtotal,expected_tax,expected_total", [
+          # Basic case: 2 items, no discounts
+          (
+              [{'price': Decimal('10.00'), 'quantity': 2}],
+              Decimal('20.00'),
+              Decimal('1.50'),  # 7.5% tax
+              Decimal('21.50')
+          ),
+          # Edge case: zero quantity (should be valid but contribute $0)
+          (
+              [{'price': Decimal('10.00'), 'quantity': 0}],
+              Decimal('0.00'),
+              Decimal('0.00'),
+              Decimal('0.00')
+          ),
+          # Multiple items with different prices
+          (
+              [
+                  {'price': Decimal('99.99'), 'quantity': 1},
+                  {'price': Decimal('29.99'), 'quantity': 3}
+              ],
+              Decimal('189.96'),  # 99.99 + (29.99 * 3)
+              Decimal('14.25'),   # 7.5% tax on 189.96 = 14.247 → 14.25
+              Decimal('204.21')
+          ),
+          # Rounding edge case: ensure pennies handled correctly
+          (
+              [{'price': Decimal('0.33'), 'quantity': 3}],
+              Decimal('0.99'),
+              Decimal('0.07'),  # 7.5% of 0.99 = 0.07425 → 0.07
+              Decimal('1.06')
+          ),
+      ])
+      def test_order_total_calculations(self, items, expected_subtotal, expected_tax, expected_total):
+          """Test order totals match expected values (regression prevention)"""
+          calculator = OrderCalculator(tax_rate=Decimal('0.075'))
+
+          order_items = [
+              OrderItem(price=item['price'], quantity=item['quantity'])
+              for item in items
+          ]
+
+          order = Order(items=order_items)
+          result = calculator.calculate(order)
+
+          assert result.subtotal == expected_subtotal, \
+              f"Subtotal mismatch: got {result.subtotal}, expected {expected_subtotal}"
+          assert result.tax == expected_tax, \
+              f"Tax mismatch: got {result.tax}, expected {expected_tax}"
+          assert result.total == expected_total, \
+              f"Total mismatch: got {result.total}, expected {expected_total}"
+
+  # tests/regression/test_discount_calculations.py
+  import pytest
+  from decimal import Decimal
+  from services.discount_calculator import DiscountCalculator
+
+  class TestDiscountCalculationRegression:
+
+      @pytest.fixture
+      def calculator(self):
+          return DiscountCalculator()
+
+      @pytest.mark.parametrize("subtotal,discount_percent,expected_discount,expected_final", [
+          # Basic percentage discount
+          (Decimal('100.00'), Decimal('10'), Decimal('10.00'), Decimal('90.00')),
+          # 50% discount
+          (Decimal('100.00'), Decimal('50'), Decimal('50.00'), Decimal('50.00')),
+          # 100% discount (free order)
+          (Decimal('100.00'), Decimal('100'), Decimal('100.00'), Decimal('0.00')),
+          # Small discount on large order
+          (Decimal('999.99'), Decimal('5'), Decimal('50.00'), Decimal('949.99')),
+          # Rounding edge case
+          (Decimal('33.33'), Decimal('33.33'), Decimal('11.11'), Decimal('22.22')),
+      ])
+      def test_percentage_discount_applied_correctly(
+          self, calculator, subtotal, discount_percent, expected_discount, expected_final
+      ):
+          """Test percentage discounts calculate correctly (regression prevention)"""
+          result = calculator.apply_percentage_discount(subtotal, discount_percent)
+
+          assert result.discount_amount == expected_discount, \
+              f"Discount amount mismatch: got {result.discount_amount}, expected {expected_discount}"
+          assert result.final_amount == expected_final, \
+              f"Final amount mismatch: got {result.final_amount}, expected {expected_final}"
+
+      @pytest.mark.parametrize("subtotal,fixed_amount,expected_final", [
+          # Basic fixed discount
+          (Decimal('100.00'), Decimal('10.00'), Decimal('90.00')),
+          # Discount larger than subtotal (should cap at 0)
+          (Decimal('10.00'), Decimal('50.00'), Decimal('0.00')),
+          # Exact match
+          (Decimal('25.00'), Decimal('25.00'), Decimal('0.00')),
+      ])
+      def test_fixed_discount_applied_correctly(self, calculator, subtotal, fixed_amount, expected_final):
+          """Test fixed-amount discounts (regression prevention)"""
+          result = calculator.apply_fixed_discount(subtotal, fixed_amount)
+
+          assert result.final_amount == expected_final, \
+              f"Final amount mismatch: got {result.final_amount}, expected {expected_final}"
+          # Ensure discount never exceeds subtotal
+          assert result.discount_amount <= subtotal
+
+  # tests/regression/test_tax_calculations.py
+  import pytest
+  from decimal import Decimal, ROUND_HALF_UP
+  from services.tax_calculator import TaxCalculator
+
+  class TestTaxCalculationRegression:
+
+      @pytest.mark.parametrize("amount,tax_rate,expected_tax", [
+          # Standard 7.5% tax
+          (Decimal('100.00'), Decimal('0.075'), Decimal('7.50')),
+          # High tax rate (15%)
+          (Decimal('100.00'), Decimal('0.15'), Decimal('15.00')),
+          # Rounding: 0.075 * 10.01 = 0.75075 → 0.75
+          (Decimal('10.01'), Decimal('0.075'), Decimal('0.75')),
+          # Rounding: 0.075 * 10.07 = 0.75525 → 0.76
+          (Decimal('10.07'), Decimal('0.075'), Decimal('0.76')),
+          # Zero tax
+          (Decimal('100.00'), Decimal('0.00'), Decimal('0.00')),
+      ])
+      def test_tax_calculation_precision(self, amount, tax_rate, expected_tax):
+          """Test tax calculations use correct rounding (regression prevention)"""
+          calculator = TaxCalculator()
+
+          calculated_tax = calculator.calculate_tax(amount, tax_rate)
+
+          # Ensure Decimal precision (not float)
+          assert isinstance(calculated_tax, Decimal), \
+              f"Tax must be Decimal type, got {type(calculated_tax)}"
+
+          # Verify rounding to 2 decimal places (pennies)
+          assert calculated_tax == expected_tax, \
+              f"Tax calculation mismatch: got {calculated_tax}, expected {expected_tax}"
+
+          # Verify ROUND_HALF_UP strategy used
+          manual_calculation = (amount * tax_rate).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+          assert calculated_tax == manual_calculation
+
+  # docs/calculation_specifications.md
+  # Order Calculation Specifications
+
+  ## Order Total Formula
+  ```
+  subtotal = sum(item.price * item.quantity for item in order.items)
+  discount_amount = apply_discount(subtotal, discount_rules)
+  taxable_amount = subtotal - discount_amount
+  tax = taxable_amount * tax_rate
+  total = taxable_amount + tax
+  ```
+
+  ## Rounding Rules
+  - All monetary values use `Decimal` type (never float)
+  - Tax calculations round to 2 decimal places using `ROUND_HALF_UP`
+  - Example: $0.75525 → $0.76 (rounds up)
+  - Example: $0.75425 → $0.75 (rounds down)
+
+  ## Edge Cases
+  1. **Zero Quantity**: Items with quantity=0 contribute $0 to subtotal (valid)
+  2. **100% Discount**: Final amount can be $0.00
+  3. **Discount > Subtotal**: Cap discount at subtotal (final amount = $0.00, not negative)
+  4. **Tax Rate = 0**: Tax-exempt orders have tax=$0.00
+
+  ## Known-Good Test Cases
+  | Subtotal | Tax Rate | Discount | Expected Total |
+  |----------|----------|----------|----------------|
+  | $100.00  | 7.5%     | 10%      | $96.75         |
+  | $100.00  | 7.5%     | 100%     | $0.00          |
+  | $99.99   | 7.5%     | 5%       | $102.49        |
+  ```
+
+  Expected patterns:
+  - Decimal usage: Decimal('10.00') for all monetary values
+  - Parametrized tests: @pytest.mark.parametrize with edge cases
+  - Rounding: quantize(Decimal('0.01'), ROUND_HALF_UP)
+  - Known-good data: Document expected values in tests and specs
+  - Edge case coverage: zero quantities, 100% discounts, rounding boundaries
+
+checks:
+  - type: regex
+    pattern: '\b(regression|calculation|total)\b'
+    description: Regression tests for calculations
+  - type: regex
+    pattern: '\b(order|discount|tax|coupon)\b'
+    description: Covers order/discount/tax calculations
+  - type: regex
+    pattern: '\b(parametrized|edge\s+case|decimal|precision)\b'
+    description: Uses parametrized tests with precise decimals
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3600
+  tags: [testing, regression, calculations]

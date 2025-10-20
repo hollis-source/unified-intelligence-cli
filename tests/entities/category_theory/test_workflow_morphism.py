@@ -4,12 +4,12 @@ Tests verify category theory laws are preserved during workflow transformations.
 """
 
 import pytest
-from src.entities.category_theory.workflow_morphism import (
+from src.entity.category_theory.workflow_morphism import (
     WorkflowMorphism,
     create_transformation_pipeline
 )
-from src.entities.htn import HTNNode
-from src.entities.graph import Graph
+from src.entity.htn import HTNNode
+from src.entity.graph import Graph
 
 
 class TestHTNFlatten:

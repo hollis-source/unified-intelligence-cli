@@ -1,0 +1,47 @@
+id: py-07
+agent: python
+prompt: |
+  Remove global state in config/settings.py and inject configuration via a factory.
+
+  Current code (example):
+
+  ```python
+  # config/settings.py
+  SETTINGS = {
+      "env": "dev",
+      "db_url": "sqlite:///app.db",
+  }
+  ```
+
+  Refactor:
+  - Introduce a Settings dataclass to hold configuration
+  - Create a factory function get_settings(env: str | None = None) -> Settings that reads env vars and/or defaults
+  - Remove mutable global SETTINGS; ensure callers can import get_settings
+  - Add type hints and docstrings
+
+  Requirements:
+  - No module-level mutable globals for runtime config
+  - Deterministic loading with explicit overrides
+  - Backward compatibility: provide a SETTINGS shim only if needed, but prefer get_settings()
+
+checks:
+  - type: regex
+    pattern: "from dataclasses import dataclass"
+    description: Use dataclasses for Settings
+  - type: regex
+    pattern: "def get_settings\\(env: .*\\)"
+    description: Provide a factory to obtain settings
+  - type: cmd
+    run: "python -m py_compile config/settings.py"
+    description: Must be valid Python
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 3200
+  tags: [refactoring, configuration, dataclasses, factories, type-hints]
+

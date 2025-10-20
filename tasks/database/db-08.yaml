@@ -1,0 +1,110 @@
+id: db-08
+agent: database
+prompt: |
+  Optimize a JOIN query to reduce execution time from 5 seconds to <100ms.
+
+  Query:
+  ```sql
+  SELECT p.id, p.name, p.price, c.name as category, s.stock_count
+  FROM products p
+  JOIN categories c ON p.category_id = c.id
+  JOIN stock s ON p.id = s.product_id
+  WHERE p.active = true
+    AND c.visible = true
+    AND s.warehouse_id = 5
+  ORDER BY p.created_at DESC
+  LIMIT 50;
+  ```
+
+  Context:
+  - products: 2M rows
+  - categories: 500 rows
+  - stock: 8M rows (multiple warehouses)
+  - Current indexes: Primary keys only
+  - Current execution time: 5.2 seconds
+  - Database: PostgreSQL 15
+
+  Requirements:
+  1. Run EXPLAIN ANALYZE (provide sample output analysis)
+  2. Identify bottleneck (seq scan, index scan, nested loop, etc.)
+  3. Recommend composite indexes with CREATE INDEX statements
+  4. Suggest query rewrite if beneficial
+  5. Estimate improvement and explain reasoning
+  6. Discuss trade-offs (write performance, storage)
+  7. MANDATORY: Your response MUST include at least 3 file:line references to optimization files
+  8. MANDATORY: Include EXPLAIN ANALYZE output and CREATE INDEX statements
+
+  JOIN Optimization Template (use this structure):
+  ```sql
+  -- db/analysis/explain_joins_before.sql
+  EXPLAIN (ANALYZE, BUFFERS)
+  SELECT p.id, p.name, p.price, c.name as category, s.stock_count
+  FROM products p
+  JOIN categories c ON p.category_id = c.id
+  JOIN stock s ON p.id = s.product_id
+  WHERE p.active = true
+    AND c.visible = true
+    AND s.warehouse_id = 5
+  ORDER BY p.created_at DESC
+  LIMIT 50;
+
+  -- Output shows:
+  -- Seq Scan on stock (cost=0..180000, rows=8M) - BOTTLENECK
+  -- Nested Loop (cost=1500..5200ms)
+
+  -- db/indexes/products_stock_performance.sql
+  -- Index 1: Cover stock lookup by warehouse
+  CREATE INDEX CONCURRENTLY idx_stock_warehouse_product
+      ON stock(warehouse_id, product_id)
+      INCLUDE (stock_count);
+
+  -- Index 2: Active products ordered by creation
+  CREATE INDEX CONCURRENTLY idx_products_active_created
+      ON products(active, created_at DESC)
+      WHERE active = true;
+
+  -- Index 3: Visible categories
+  CREATE INDEX CONCURRENTLY idx_categories_visible
+      ON categories(id, visible)
+      WHERE visible = true;
+
+  -- db/queries/products_optimized.sql
+  -- Same query, but now uses indexes (Index Scan instead of Seq Scan)
+  ```
+
+  Expected files to reference:
+  - db/analysis/explain_joins_before.sql (EXPLAIN showing Seq Scan bottleneck)
+  - db/indexes/products_stock_performance.sql (composite indexes for JOIN optimization)
+  - db/docs/join_optimization_report.md (5200ms → 85ms improvement analysis)
+
+  Example of proper file:line references:
+  - db/analysis/explain_joins_before.sql:8 (Seq Scan on stock showing 180000 cost)
+  - db/indexes/products_stock_performance.sql:3 (composite index with INCLUDE for covering)
+  - db/indexes/products_stock_performance.sql:9 (partial index with WHERE active = true)
+  - db/docs/join_optimization_report.md:18 (Nested Loop → Hash Join transformation)
+
+  Deliverables:
+  1. EXPLAIN ANALYZE with Seq Scan, Nested Loop, cost, rows keywords and file:line refs
+  2. CREATE INDEX CONCURRENTLY with composite keys, INCLUDE, WHERE clauses
+  3. Performance estimate (5200ms → <100ms with index usage explanation)
+
+checks:
+  - type: regex
+    pattern: "CREATE INDEX.*\\(.*,.*\\)"
+    description: Must recommend at least one composite index
+  - type: regex
+    pattern: "EXPLAIN ANALYZE|EXPLAIN \\(ANALYZE"
+    description: Must reference EXPLAIN ANALYZE
+  - type: regex
+    pattern: "seq scan|index scan|nested loop|hash join"
+    description: Must analyze query plan operations
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5000
+  tags: [query-optimization, indexing, joins]

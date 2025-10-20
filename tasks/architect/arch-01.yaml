@@ -1,0 +1,36 @@
+id: arch-01
+agent: architect
+prompt: |
+  Design microservices architecture for e-commerce platform supporting catalog, cart, checkout, payments, and order fulfillment.
+
+  Expected files to reference:
+  - docs/architecture/microservices_design.md:15 (service boundary diagram with bounded contexts)
+  - services/catalog/api_contracts.yaml:25 (REST API contract for catalog service)
+  - services/order/saga_orchestration.py:45 (order fulfillment saga with compensation logic)
+  - infrastructure/api_gateway/routes.yaml:12 (API gateway routing configuration)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include microservices patterns with service boundaries, API gateway, service discovery, saga/outbox for consistency, and resilience strategies
+
+  Template includes: Context/container diagrams, bounded contexts, REST/GraphQL/gRPC contracts, async messaging topics, data ownership, saga patterns, circuit breakers, distributed tracing, deployment scaling
+
+checks:
+  - type: regex
+    pattern: '\b(microservices?|service\s+boundary|bounded\s+context)\b'
+    description: Must describe service boundaries and bounded contexts
+  - type: regex
+    pattern: '\b(API\s+gateway|gateway|service\s+discovery)\b'
+    description: Must include API gateway and discovery strategy
+  - type: regex
+    pattern: '\b(saga|orchestration|choreography|outbox)\b'
+    description: Must address data consistency via saga/outbox patterns
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3600
+  tags: [architecture, microservices, system-design, scalability]

@@ -1,0 +1,14 @@
+id: research-05
+agent: research-analyst
+prompt: |
+  Create a one-page design for a RAG Metrics API, including endpoints, payloads,
+  and example queries for routing accuracy, domain distribution, and drift alerts.
+checks:
+  - "Endpoints listed with request/response schemas"
+  - "Includes example SQL for SurrealDB queries"
+  - "Documents pagination and time range parameters"
+metadata:
+  tags: ["research", "metrics", "api-design"]
+  difficulty: "medium"
+  est_runtime_s: 16
+

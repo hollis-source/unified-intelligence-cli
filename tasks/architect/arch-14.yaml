@@ -1,0 +1,36 @@
+id: arch-14
+agent: architect
+prompt: |
+  Establish Architecture Decision Record (ADR) process and author initial ADRs for key platform choices.
+
+  Expected files to reference:
+  - docs/adr/adr-template.md:8 (ADR template with context/decision/consequences/status sections)
+  - docs/adr/0001-use-python-for-backend.md:15 (sample ADR: chose Python for backend services with rationale)
+  - docs/adr/index.md:5 (ADR index with status tracking and discoverability)
+  - .github/workflows/adr_review.yml:25 (CI workflow requiring ADR review approval)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include ADR patterns with template definition, naming/lifecycle, context/decision/consequences/status sections, discoverability, review workflow, and code traceability
+
+  Template includes: ADR template and contribution guide, repository layout and indexing, 3-5 sample ADRs for foundational decisions (languages, messaging, database), review/approval workflow integrated with CI
+
+checks:
+  - type: regex
+    pattern: '\bADR\b|\bArchitecture\s+Decision\s+Record\b'
+    description: Must reference ADRs explicitly
+  - type: regex
+    pattern: '\b(context|decision|consequences|status)\b'
+    description: Must include key ADR sections
+  - type: regex
+    pattern: '\b(template|governance|review)\b'
+    description: Must define template and governance workflow
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: easy
+  estimated_tokens: 3000
+  tags: [governance, documentation, process, architecture]

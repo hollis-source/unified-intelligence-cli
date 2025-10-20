@@ -5,17 +5,26 @@ from unified architecture baseline.
 
 Clean Architecture: Use Case layer (orchestrates entities).
 SOLID: SRP - handles DSL workflow execution with lifecycle phases.
+
+Sprint 5 P1-2: Refactored to use IWorkflowEnvironment for dependency injection.
 """
 
 import asyncio
+import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from dataclasses import dataclass
 
-from src.entities.lifecycle import Lifecycle, LifecycleState
-from src.dsl.adapters.parser import Parser
+from src.entity.lifecycle import Lifecycle, LifecycleState
 from src.dsl.use_cases.interpreter import Interpreter, TaskExecutor
-from src.dsl.adapters.cli_task_executor import CLITaskExecutor
+from src.dsl.interface.workflow_environment import (
+    IWorkflowEnvironment,
+    DefaultWorkflowEnvironment
+)
+
+# Configure logger for result validation
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -29,7 +38,15 @@ class ValidationResult:
 
 @dataclass
 class WorkflowExecutionResult:
-    """Complete workflow execution result with lifecycle information."""
+    """Complete workflow execution result with lifecycle information.
+
+    Validates result integrity on construction to prevent silent failures:
+    - Successful executions must have non-None results
+    - Results should be JSON-serializable for API/storage compatibility
+    - Validation failures are logged for diagnostics
+
+    Sprint 5 P1-1: Output Validation Gaps - prevents data corruption and silent failures.
+    """
 
     success: bool
     result: Any
@@ -37,6 +54,50 @@ class WorkflowExecutionResult:
     execution_time: float
     phases_completed: List[str]
     error: Optional[str] = None
+
+    def __post_init__(self):
+        """Validate result integrity after initialization.
+
+        Performs validation checks:
+        1. Successful workflows must have non-None results
+        2. Results should be JSON-serializable (warns if not)
+        3. Logs validation status for diagnostics
+
+        Raises:
+            ValueError: If critical validation fails (success=True with result=None)
+        """
+        # Check 1: Success must have non-None result
+        if self.success and self.result is None:
+            error_msg = (
+                "Result validation failed: successful execution (success=True) "
+                "must have non-None result. This indicates a silent failure in "
+                "workflow execution."
+            )
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        # Check 2: Result should be JSON-serializable (warn only, don't fail)
+        if self.result is not None:
+            try:
+                json.dumps(self.result)
+                logger.debug(
+                    f"Result validation passed: success={self.success}, "
+                    f"result_type={type(self.result).__name__}, "
+                    f"json_serializable=True"
+                )
+            except (TypeError, ValueError) as e:
+                # Warning only - some valid results may not be JSON-serializable
+                logger.warning(
+                    f"Result is not JSON-serializable: {type(self.result).__name__}. "
+                    f"This may cause issues with API responses or storage. "
+                    f"Error: {e}"
+                )
+        else:
+            # Failure case - result is None (expected for failed workflows)
+            logger.debug(
+                f"Result validation: success={self.success}, result=None "
+                f"(expected for failed workflow)"
+            )
 
 
 class LifecycleWorkflowExecutor:
@@ -58,17 +119,40 @@ class LifecycleWorkflowExecutor:
 
     def __init__(
         self,
+        environment: Optional[IWorkflowEnvironment] = None,
         task_executor: Optional[TaskExecutor] = None,
-        parser: Optional[Parser] = None
+        parser: Optional = None
     ):
         """Initialize lifecycle executor.
 
         Args:
-            task_executor: Task executor implementation (defaults to CLITaskExecutor)
-            parser: DSL parser (defaults to Parser())
+            environment: Workflow environment providing dependencies (recommended)
+            task_executor: DEPRECATED - Task executor implementation (for backward compatibility)
+            parser: DEPRECATED - DSL parser (for backward compatibility)
+
+        Recommended Usage:
+            env = ConfiguredWorkflowEnvironment(task_executor=configured_executor)
+            executor = LifecycleWorkflowExecutor(environment=env)
+
+        Backward Compatible Usage:
+            executor = LifecycleWorkflowExecutor(task_executor=executor, parser=parser)
         """
-        self.task_executor = task_executor or CLITaskExecutor()
-        self.parser = parser or Parser()
+        # Sprint 5 P1-2: Use environment for dependency injection
+        if environment is None:
+            # Backward compatibility: create environment from legacy params
+            if task_executor is not None or parser is not None:
+                from src.dsl.interface.workflow_environment import ConfiguredWorkflowEnvironment
+                environment = ConfiguredWorkflowEnvironment(
+                    task_executor=task_executor,
+                    parser=parser
+                )
+            else:
+                # No params: use defaults
+                environment = DefaultWorkflowEnvironment()
+
+        self.environment = environment
+        self.task_executor = environment.get_task_executor()
+        self.parser = environment.get_parser()
 
     async def execute_workflow(
         self,

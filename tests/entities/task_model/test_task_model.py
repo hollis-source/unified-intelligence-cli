@@ -5,8 +5,8 @@ recursive decomposition, and traversal operations.
 """
 
 import pytest
-from src.entities.task_model import Project, Task, Todo, TaskStatus
-from src.entities.task_model.task_model import traverse_hierarchy, find_entity_by_id
+from src.entity.task_model import Project, Task, Todo, TaskStatus
+from src.entity.task_model.task_model import traverse_hierarchy, find_entity_by_id
 
 
 class TestTaskEntityBase:

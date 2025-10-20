@@ -607,7 +607,7 @@ distributed_kubernetes:
     Include: pods, services, ingress, auto-scaling.
     Test: rolling updates, health checks, resource limits.
   params:
-    service: ["ui-cli orchestrator", "agent pool", "metrics collector"]
+    service: ["atado orchestrator", "agent pool", "metrics collector"]
   difficulty: hard
 
 distributed_monitoring:

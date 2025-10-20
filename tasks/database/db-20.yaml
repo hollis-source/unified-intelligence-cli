@@ -1,0 +1,256 @@
+id: db-20
+agent: database
+prompt: |
+  Design SurrealDB monitoring and observability strategy for RAG system.
+
+  Context:
+  - Production RAG system serving 5 specialist agents
+  - Need visibility into:
+    - Query performance (latency distribution)
+    - Vector search accuracy (relevance scores)
+    - Index health (fragmentation, size)
+    - Connection pool status
+    - Error rates and failure modes
+  - Tools available: Prometheus, Grafana, SurrealDB metrics API
+
+  Requirements:
+  1. Metrics to collect:
+     - Query latency (p50, p95, p99)
+     - Vector similarity scores distribution
+     - Result set sizes (k values)
+     - Connection pool usage (active, idle, waiting)
+     - Index size and growth rate
+     - Error rate by error type
+  2. SurrealDB instrumentation:
+     - Query logging (slow query threshold)
+     - Result metadata collection
+     - Connection lifecycle events
+  3. Alerting rules:
+     - High latency (p95 > 500ms)
+     - Low relevance scores (avg < 0.5)
+     - Connection pool exhaustion
+     - Index size anomaly
+  4. Dashboard design (Grafana panels)
+  5. Integration with existing metrics system (if any)
+
+  Expected files to reference:
+  - src/adapters/rag/metrics.py (Prometheus metrics definitions)
+  - config/prometheus/alert_rules.yml (alerting rules)
+  - dashboards/surrealdb_rag.json (Grafana dashboard)
+  - docs/monitoring_runbook.md (troubleshooting guide)
+
+  Example of proper file:line references:
+  - src/adapters/rag/metrics.py:8 (Histogram for query_latency)
+  - config/prometheus/alert_rules.yml:8 (HighQueryLatency alert rule)
+  - dashboards/surrealdb_rag.json:5 (p50/p95/p99 latency panel)
+  - docs/monitoring_runbook.md:32 (connection pool exhaustion troubleshooting)
+
+  Deliverables:
+  - Metrics collection code (Python/Prometheus client)
+  - SurrealDB query logging configuration
+  - Grafana dashboard JSON (or description)
+  - Alerting rules (Prometheus YAML)
+  - Runbook for common issues (low performance, connection errors)
+  - MANDATORY: Your response MUST include at least 3 file:line references to monitoring files
+  - MANDATORY: Include Prometheus metrics (Histogram, Gauge, Counter) and alerting rules
+
+  SurrealDB Monitoring Template (use this structure):
+  ```python
+  # src/adapters/rag/metrics.py
+  from prometheus_client import Histogram, Gauge, Counter, Summary
+  import time
+  from functools import wraps
+
+  # Query performance metrics
+  query_latency = Histogram(
+      'surrealdb_query_latency_seconds',
+      'Query latency in seconds',
+      buckets=[0.01, 0.05, 0.1, 0.5, 1.0, 2.0, 5.0]
+  )
+
+  vector_similarity_score = Histogram(
+      'rag_vector_similarity_score',
+      'Vector similarity scores distribution',
+      buckets=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+  )
+
+  # Connection pool metrics
+  pool_connections_active = Gauge(
+      'surrealdb_pool_connections_active',
+      'Number of active connections'
+  )
+
+  pool_connections_idle = Gauge(
+      'surrealdb_pool_connections_idle',
+      'Number of idle connections in pool'
+  )
+
+  # Error tracking
+  query_errors = Counter(
+      'surrealdb_query_errors_total',
+      'Total query errors',
+      ['error_type']
+  )
+
+  # Result set size
+  result_set_size = Histogram(
+      'rag_result_set_size',
+      'Number of results returned (k value)',
+      buckets=[1, 5, 10, 15, 20, 30, 50]
+  )
+
+  def track_query_latency(func):
+      """Decorator to track query latency"""
+      @wraps(func)
+      async def wrapper(*args, **kwargs):
+          start = time.time()
+          try:
+              result = await func(*args, **kwargs)
+              latency = time.time() - start
+              query_latency.observe(latency)
+
+              # Track similarity scores
+              if result and 'score' in result[0]:
+                  for r in result:
+                      vector_similarity_score.observe(r['score'])
+
+              # Track result set size
+              result_set_size.observe(len(result))
+
+              return result
+          except Exception as e:
+              query_errors.labels(error_type=type(e).__name__).inc()
+              raise
+      return wrapper
+
+  class PoolMetricsCollector:
+      def __init__(self, pool):
+          self.pool = pool
+
+      def collect(self):
+          """Update pool metrics"""
+          pool_connections_active.set(self.pool._size - self.pool._pool.qsize())
+          pool_connections_idle.set(self.pool._pool.qsize())
+  ```
+
+  ```yaml
+  # config/prometheus/alert_rules.yml
+  groups:
+    - name: surrealdb_rag_alerts
+      interval: 30s
+      rules:
+        - alert: HighQueryLatency
+          expr: histogram_quantile(0.95, rate(surrealdb_query_latency_seconds_bucket[5m])) > 0.5
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High RAG query latency"
+            description: "p95 query latency is {{ $value }}s (threshold: 0.5s)"
+
+        - alert: LowRelevanceScores
+          expr: avg(rate(rag_vector_similarity_score_sum[5m]) / rate(rag_vector_similarity_score_count[5m])) < 0.5
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Low RAG relevance scores"
+            description: "Average similarity score is {{ $value }} (threshold: 0.5)"
+
+        - alert: ConnectionPoolExhausted
+          expr: surrealdb_pool_connections_idle == 0 and rate(surrealdb_query_errors_total{error_type="PoolExhausted"}[5m]) > 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: "SurrealDB connection pool exhausted"
+            description: "No idle connections available, queries failing"
+
+        - alert: HighErrorRate
+          expr: rate(surrealdb_query_errors_total[5m]) > 0.1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "High SurrealDB query error rate"
+            description: "Error rate is {{ $value }}/s"
+  ```
+
+  Grafana Dashboard Panels:
+  ```json
+  {
+    "panels": [
+      {
+        "title": "Query Latency (p50, p95, p99)",
+        "targets": [
+          {"expr": "histogram_quantile(0.5, rate(surrealdb_query_latency_seconds_bucket[5m]))"},
+          {"expr": "histogram_quantile(0.95, rate(surrealdb_query_latency_seconds_bucket[5m]))"},
+          {"expr": "histogram_quantile(0.99, rate(surrealdb_query_latency_seconds_bucket[5m]))"}
+        ]
+      },
+      {
+        "title": "Vector Similarity Score Distribution",
+        "targets": [
+          {"expr": "rate(rag_vector_similarity_score_bucket[5m])"}
+        ]
+      },
+      {
+        "title": "Connection Pool Status",
+        "targets": [
+          {"expr": "surrealdb_pool_connections_active"},
+          {"expr": "surrealdb_pool_connections_idle"}
+        ]
+      }
+    ]
+  }
+  ```
+
+  Expected files to reference:
+  - src/adapters/rag/metrics.py (Prometheus metrics definitions)
+  - config/prometheus/alert_rules.yml (alerting rules)
+  - dashboards/surrealdb_rag.json (Grafana dashboard)
+  - docs/monitoring_runbook.md (troubleshooting guide)
+
+  Example of proper file:line references:
+  - src/adapters/rag/metrics.py:8 (Histogram for query_latency)
+  - config/prometheus/alert_rules.yml:8 (HighQueryLatency alert rule)
+  - dashboards/surrealdb_rag.json:5 (p50/p95/p99 latency panel)
+  - docs/monitoring_runbook.md:32 (connection pool exhaustion troubleshooting)
+
+  Deliverables:
+  1. Python code with Histogram, Gauge, Counter, prometheus_client patterns
+  2. Alert rules with histogram_quantile, rate(), avg() PromQL expressions
+  3. Grafana panels (latency percentiles, similarity distribution, pool status)
+
+  Expected files to reference:
+  - src/adapters/rag/metrics.py (Prometheus metrics definitions)
+  - config/prometheus/alert_rules.yml (alerting rules)
+  - dashboards/surrealdb_rag.json (Grafana dashboard)
+  - docs/monitoring_runbook.md (troubleshooting guide)
+
+  Example of proper file:line references:
+  - src/adapters/rag/metrics.py:8 (Histogram for query_latency)
+  - config/prometheus/alert_rules.yml:8 (HighQueryLatency alert rule)
+  - dashboards/surrealdb_rag.json:5 (p50/p95/p99 latency panel)
+  - docs/monitoring_runbook.md:32 (connection pool exhaustion troubleshooting)
+
+checks:
+  - type: regex
+    pattern: "Prometheus|prometheus_client|Gauge|Counter|Histogram"
+    description: Must use Prometheus metrics
+  - type: regex
+    pattern: "latency|p95|p99|percentile"
+    description: Must track query latency
+  - type: regex
+    pattern: "alert|threshold|warn|critical"
+    description: Must define alerting rules
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: medium
+  estimated_tokens: 5500
+  tags: [multimodel-databases, monitoring, observability, surrealdb, prometheus, grafana]

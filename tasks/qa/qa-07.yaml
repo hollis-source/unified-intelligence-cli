@@ -1,0 +1,31 @@
+id: qa-07
+agent: qa
+prompt: |
+  Design accessibility testing scenarios for web-based collaborative document editor.
+
+  Expected files to reference:
+  - tests/accessibility/wcag_compliance_tests.md:8 (Principle 1: Perceivable test scenarios)
+  - src/components/Editor/Editor.tsx:145 (keyboard shortcuts implementation with focus management)
+  - src/components/Toolbar/Toolbar.tsx:68 (ARIA labels for formatting buttons)
+  - docs/accessibility/aria_implementation.md:25 (screen reader announcement strategy)
+
+  MANDATORY: Include at least 3 file:line references in response
+  MANDATORY: Include accessibility testing patterns with WCAG 2.1 Level AA compliance, keyboard navigation (no mouse), screen reader compatibility (NVDA/JAWS/VoiceOver), and focus management
+
+  Template includes: 4 WCAG principles (Perceivable/Operable/Understandable/Robust), collaborative editing a11y, toolbar keyboard access, color contrast, font scaling (200%), Section 508 compliance
+
+checks:
+  - "accessibility"
+  - "wcag"
+  - "screen reader"
+  - "keyboard navigation"
+
+acceptance:
+  auto_min: 6
+  human_min: 6
+  required_checks: all
+
+metadata:
+  difficulty: hard
+  estimated_tokens: 4000
+  tags: [accessibility, wcag, a11y, screen-reader, keyboard-navigation]

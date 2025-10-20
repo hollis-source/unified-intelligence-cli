@@ -1,0 +1,14 @@
+id: research-01
+agent: research-analyst
+prompt: |
+  Write an Architecture Decision Record (ADR) for choosing SurrealDB over PostgreSQL
+  for pattern storage. Include context, decision, alternatives, and consequences.
+checks:
+  - "ADR includes Context, Decision, Alternatives, Consequences"
+  - "Mentions vector search and async event loop considerations"
+  - "Tradeoffs between SurrealDB and PostgreSQL are explicit"
+metadata:
+  tags: ["research", "adr", "architecture"]
+  difficulty: "medium"
+  est_runtime_s: 20
+
