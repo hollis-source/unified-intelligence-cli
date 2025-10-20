@@ -123,6 +123,47 @@ class TeamRoutingMetric:
         return asdict(self)
 
 
+@dataclass
+class OutputValidationMetric:
+    """
+    Output validation metric (Week 14, Priority 2.2).
+
+    Tracks post-execution validation of agent outputs for quality assurance.
+
+    Purpose:
+    - Monitor output quality (syntax errors, validation failures)
+    - Track validation pass/fail rates by type
+    - Identify agents producing low-quality outputs
+    - Debug generation issues
+
+    Attributes:
+        timestamp: ISO format timestamp
+        task_description: Task description (truncated to 100 chars)
+        agent: Agent that generated the output
+        validation_type: Type of validation (python, json, markdown, yaml, generic)
+        passed: Whether validation passed
+        error_message: Error message if validation failed (optional)
+        error_line: Line number of error (optional)
+        error_column: Column number of error (optional)
+        warning_count: Number of warnings (even if passed)
+        output_length: Length of output in characters
+    """
+    timestamp: str
+    task_description: str
+    agent: str
+    validation_type: str
+    passed: bool
+    error_message: Optional[str] = None
+    error_line: Optional[int] = None
+    error_column: Optional[int] = None
+    warning_count: int = 0
+    output_length: int = 0
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary for JSON serialization."""
+        return asdict(self)
+
+
 class MetricsCollector:
     """
     Collects and stores system metrics.
@@ -160,6 +201,7 @@ class MetricsCollector:
         self.model_metrics: List[ModelSelectionMetric] = []
         self.team_metrics: List[TeamUtilizationMetric] = []
         self.team_routing_metrics: List[TeamRoutingMetric] = []  # Week 14, Priority 2.1
+        self.output_validation_metrics: List[OutputValidationMetric] = []  # Week 14, Priority 2.2
 
         # Thread safety
         self._lock = threading.Lock()
@@ -333,6 +375,53 @@ class MetricsCollector:
                 f"{team} ({team_confidence:.2f}) → {agent} ({routing_time_ms:.1f}ms)"
             )
 
+    def record_output_validation(
+        self,
+        task_description: str,
+        agent: str,
+        validation_type: str,
+        passed: bool,
+        error_message: Optional[str] = None,
+        error_line: Optional[int] = None,
+        error_column: Optional[int] = None,
+        warning_count: int = 0,
+        output_length: int = 0
+    ) -> None:
+        """
+        Record output validation result (Week 14, Priority 2.2).
+
+        Args:
+            task_description: Task description (will be truncated to 100 chars)
+            agent: Agent that generated the output
+            validation_type: Type of validation (python, json, markdown, yaml, generic)
+            passed: Whether validation passed
+            error_message: Error message if validation failed (optional)
+            error_line: Line number of error (optional)
+            error_column: Column number of error (optional)
+            warning_count: Number of warnings (even if passed)
+            output_length: Length of output in characters
+        """
+        with self._lock:
+            metric = OutputValidationMetric(
+                timestamp=datetime.now().isoformat(),
+                task_description=task_description[:100],
+                agent=agent,
+                validation_type=validation_type,
+                passed=passed,
+                error_message=error_message,
+                error_line=error_line,
+                error_column=error_column,
+                warning_count=warning_count,
+                output_length=output_length
+            )
+
+            self.output_validation_metrics.append(metric)
+            status = "PASS" if passed else "FAIL"
+            logger.debug(
+                f"Recorded output validation: {agent} → {validation_type} → {status} "
+                f"({warning_count} warnings, {output_length} chars)"
+            )
+
     def save(self) -> None:
         """
         Save all metrics to JSON file.
@@ -347,6 +436,7 @@ class MetricsCollector:
                 "model_metrics": [metric.to_dict() for metric in self.model_metrics],
                 "team_metrics": [metric.to_dict() for metric in self.team_metrics],
                 "team_routing_metrics": [metric.to_dict() for metric in self.team_routing_metrics],
+                "output_validation_metrics": [metric.to_dict() for metric in self.output_validation_metrics],
                 "summary": self._calculate_summary()
             }
 
@@ -403,6 +493,39 @@ class MetricsCollector:
                 "cache_hit_rate": round(cache_hit_rate, 2)
             }
 
+        # Output validation statistics (Week 14, Priority 2.2)
+        output_validation_stats = {}
+        if self.output_validation_metrics:
+            total_validations = len(self.output_validation_metrics)
+            passed_validations = sum(1 for m in self.output_validation_metrics if m.passed)
+            failed_validations = total_validations - passed_validations
+            pass_rate = (passed_validations / total_validations * 100) if total_validations > 0 else 0.0
+
+            # Breakdown by validation type
+            validation_type_breakdown = {}
+            for metric in self.output_validation_metrics:
+                vtype = metric.validation_type
+                if vtype not in validation_type_breakdown:
+                    validation_type_breakdown[vtype] = {"total": 0, "passed": 0, "failed": 0}
+                validation_type_breakdown[vtype]["total"] += 1
+                if metric.passed:
+                    validation_type_breakdown[vtype]["passed"] += 1
+                else:
+                    validation_type_breakdown[vtype]["failed"] += 1
+
+            # Average warnings
+            total_warnings = sum(m.warning_count for m in self.output_validation_metrics)
+            avg_warnings = total_warnings / total_validations if total_validations > 0 else 0.0
+
+            output_validation_stats = {
+                "total_validations": total_validations,
+                "passed": passed_validations,
+                "failed": failed_validations,
+                "pass_rate": round(pass_rate, 2),
+                "avg_warnings_per_output": round(avg_warnings, 2),
+                "validation_type_breakdown": validation_type_breakdown
+            }
+
         return {
             "routing_accuracy": round(routing_accuracy, 2),
             "total_routing_decisions": routing_total,
@@ -412,7 +535,8 @@ class MetricsCollector:
             "team_utilization": team_counts,
             "total_model_selections": len(self.model_metrics),
             "total_team_snapshots": len(self.team_metrics),
-            "team_routing_statistics": team_routing_stats
+            "team_routing_statistics": team_routing_stats,
+            "output_validation_statistics": output_validation_stats
         }
 
     def get_summary(self) -> dict:
