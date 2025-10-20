@@ -120,7 +120,7 @@ class HeuristicTaskGenerator(ITaskGenerator):
         failure = context.test_failures[0]  # Fix first failure
         test_name = failure.get("test_name", "unknown")
 
-        task_id = f"fix-test-{test_name}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        task_id = f"fix-test-{test_name}-{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
 
         instruction = f"""Fix the failing test: {test_name}
 
@@ -165,7 +165,7 @@ Steps:
         if not target_file and context.modified_files:
             target_file = context.modified_files[0]
 
-        task_id = f"coverage-{goal.id}-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        task_id = f"coverage-{goal.id}-{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
 
         if target_file:
             instruction = f"""Add unit tests to improve coverage for: {target_file}
@@ -208,9 +208,26 @@ Steps:
 
     def _generate_improve_coverage_task(self, context: TaskContext) -> GeneratedTask:
         """Generate general coverage improvement task."""
-        task_id = f"improve-coverage-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        # Ensure unique task IDs using microseconds
+        task_id = f"improve-coverage-{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
 
-        instruction = f"""Improve test coverage (current: {context.coverage_percentage:.1f}%)
+        # Pick a target file to avoid duplicate instructions
+        target_file = None
+        if context.modified_files:
+            # Shuffle to diversify across calls
+            target_file = random.choice(context.modified_files)
+
+        if target_file:
+            instruction = f"""Improve test coverage for: {target_file} (current overall: {context.coverage_percentage:.1f}%)
+
+Steps:
+1. Run: pytest --cov=src --cov-report=term-missing
+2. Identify uncovered lines in {target_file}
+3. Write unit tests covering edge cases and main logic in {target_file}
+4. Verify tests pass
+5. Re-run coverage and record improvement"""
+        else:
+            instruction = f"""Improve test coverage (current: {context.coverage_percentage:.1f}%)
 
 Steps:
 1. Run: pytest --cov=src --cov-report=term-missing
@@ -263,7 +280,7 @@ Steps:
 
     def _generate_general_task(self, context: TaskContext) -> GeneratedTask:
         """Generate general improvement task."""
-        task_id = f"general-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        task_id = f"general-{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
 
         # Pick a recently modified file to improve
         target_file = None
