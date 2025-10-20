@@ -1,0 +1,99 @@
+[
+  {
+    "id": "research_001",
+    "domain": "research",
+    "description": "Conduct a comprehensive literature review on {topic} and summarize key findings",
+    "tags": ["research", "literature-review", "analysis"],
+    "complexity": "medium",
+    "estimated_duration_minutes": 45
+  },
+  {
+    "id": "research_002",
+    "domain": "research",
+    "description": "Research and compare {count} different approaches to {problem}",
+    "tags": ["research", "comparison", "analysis"],
+    "complexity": "medium",
+    "estimated_duration_minutes": 40
+  },
+  {
+    "id": "research_003",
+    "domain": "research",
+    "description": "Investigate the latest trends in {technology} and provide recommendations",
+    "tags": ["research", "trends", "recommendations"],
+    "complexity": "medium",
+    "estimated_duration_minutes": 50
+  },
+  {
+    "id": "research_004",
+    "domain": "research",
+    "description": "Analyze the architecture of {system} and document key design patterns",
+    "tags": ["research", "architecture", "documentation"],
+    "complexity": "high",
+    "estimated_duration_minutes": 60
+  },
+  {
+    "id": "research_005",
+    "domain": "research",
+    "description": "Research API documentation for {service} and create integration guide",
+    "tags": ["research", "api", "integration"],
+    "complexity": "medium",
+    "estimated_duration_minutes": 35
+  },
+  {
+    "id": "research_006",
+    "domain": "research",
+    "description": "Evaluate {count} different libraries for {use_case} and recommend the best option",
+    "tags": ["research", "evaluation", "libraries"],
+    "complexity": "medium",
+    "estimated_duration_minutes": 45
+  },
+  {
+    "id": "research_007",
+    "domain": "research",
+    "description": "Research security best practices for {domain} and create checklist",
+    "tags": ["research", "security", "best-practices"],
+    "complexity": "high",
+    "estimated_duration_minutes": 55
+  },
+  {
+    "id": "research_008",
+    "domain": "research",
+    "description": "Investigate performance optimization techniques for {system_type}",
+    "tags": ["research", "performance", "optimization"],
+    "complexity": "high",
+    "estimated_duration_minutes": 50
+  },
+  {
+    "id": "research_009",
+    "domain": "research",
+    "description": "Research and document the state of the art in {field}",
+    "tags": ["research", "state-of-art", "documentation"],
+    "complexity": "high",
+    "estimated_duration_minutes": 65
+  },
+  {
+    "id": "research_010",
+    "domain": "research",
+    "description": "Analyze competitor solutions for {feature} and identify differentiators",
+    "tags": ["research", "competitive-analysis", "strategy"],
+    "complexity": "medium",
+    "estimated_duration_minutes": 40
+  },
+  {
+    "id": "research_011",
+    "domain": "research",
+    "description": "Research scalability patterns for {architecture_type} systems",
+    "tags": ["research", "scalability", "architecture"],
+    "complexity": "high",
+    "estimated_duration_minutes": 55
+  },
+  {
+    "id": "research_012",
+    "domain": "research",
+    "description": "Investigate error handling strategies in {language} and recommend approach",
+    "tags": ["research", "error-handling", "best-practices"],
+    "complexity": "medium",
+    "estimated_duration_minutes": 35
+  }
+]
+
