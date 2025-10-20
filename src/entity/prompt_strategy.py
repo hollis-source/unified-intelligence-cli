@@ -18,21 +18,88 @@ from datetime import datetime, timezone
 class PromptStrategy:
     """
     Core prompt strategy entity following structured frameworks.
-    
+
     Attributes:
         persona: Agent role and expertise level (WHO)
         goal: Measurable outcome to achieve (WHAT)
         task: Concrete action to perform (HOW)
         context: Background, constraints, dependencies (WHY/WHEN/WHERE)
-        
+
         agent_type: Agent role identifier (e.g., 'software-architect')
         domain: Domain classification (e.g., 'frontend', 'backend', 'testing')
         iteration: Version/iteration number for continuous improvement
         quality_score: Validation score (0-100)
-        
+
         validation_passed: Whether validation checks passed
         validation_suggestions: List of improvement suggestions
         metadata: Additional metadata for tracking
+
+    Specificity Guidelines:
+
+    High-specificity prompts (score ≥70) include:
+
+    1. **Explicit File Paths** (not just directories)
+       ✅ Good: "Refactor src/routing/rag_team_router.py:60-150, specifically the route_with_rag() method"
+       ❌ Bad:  "Refactor the routing code"
+
+    2. **Numeric Constraints** (measurable targets)
+       ✅ Good: "Reduce p95 latency from 150ms to <50ms, improve accuracy by >5%, target 90%+ test coverage"
+       ❌ Bad:  "Make the code faster and better tested"
+
+    3. **Code Examples** (actual syntax, not descriptions)
+       ✅ Good: "Use functools.lru_cache(maxsize=1000) for embedding caching, CREATE INDEX idx_vector ON patterns VECTOR(embedding)"
+       ❌ Bad:  "Add caching for embeddings and create database indexes"
+
+    4. **Concrete Tool Names** (specific commands/libraries)
+       ✅ Good: "Profile with cProfile, use pytest-benchmark for p95 metrics, matplotlib.pyplot for visualizations"
+       ❌ Bad:  "Profile the code and create performance charts"
+
+    5. **Quantified Success Criteria** (verifiable outcomes)
+       ✅ Good: "20+ test cases, coverage >90%, all tests passing in <2 minutes, p-value <0.05"
+       ❌ Bad:  "Comprehensive tests that run quickly and show statistical significance"
+
+    6. **Specific Agent Tiers/Roles** (clear expertise level)
+       ✅ Good: "Agent Tier: 2 (Lead), Previous interactions: 0, Available tools: cProfile, line_profiler, pytest-benchmark"
+       ❌ Bad:  "Agent should be experienced and have the right tools"
+
+    Example - High Specificity Prompt (score: 72/100):
+
+        persona = "Senior Backend Engineer with expertise in Python performance optimization and profiling,
+                   experienced in optimizing database queries and caching strategies"
+
+        goal = "Reduce RAG routing decision latency from current 150ms average to under 50ms p95,
+                improving system responsiveness by 3x while maintaining 85%+ accuracy"
+
+        task = "Profile src/routing/rag_team_router.py route_with_rag() method using cProfile,
+                identify bottlenecks in pattern retrieval and embedding generation,
+                implement caching for frequently-used embeddings, optimize SurrealDB queries with indexes,
+                and add p95 latency metrics to track improvement.
+                Target files: src/routing/rag_team_router.py:60-150, src/adapters/rag/surrealdb_store.py:200-300"
+
+        context = "Agent Tier: 2 (Lead)\n
+                   Previous interactions: 0\n
+                   Available tools: cProfile, line_profiler, pytest-benchmark\n
+                   Constraints: Must maintain backward compatibility, no breaking changes to router interface\n
+                   Success criteria: p95 latency <50ms measured via pytest benchmarks, all existing tests passing\n
+                   ULTRATHINK: Enabled - analyze trade-offs between caching complexity and performance gains"
+
+    Example - Low Specificity Prompt (score: 48/100):
+
+        persona = "Experienced developer"
+
+        goal = "Make the routing faster"
+
+        task = "Optimize the code and add some tests"
+
+        context = "The system is slow and needs improvement"
+
+    Validation Scoring:
+    - Specificity: 40% weight (file paths, numbers, code examples, tool names)
+    - Clarity: 30% weight (unambiguous language, clear structure)
+    - Completeness: 30% weight (all 4 sentences present, context includes constraints/success criteria)
+
+    Minimum passing score: 60/100 (configurable via PromptStrategyValidator)
+    Recommended target score: 70/100+ for production prompts
     """
     
     # Core 4-Sentence Framework fields

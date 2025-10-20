@@ -46,14 +46,14 @@ class Qwen3NextAdapter(ITextGenerator):
 
     def __init__(
         self,
-        max_tokens: int = 2000,
+        max_tokens: int = 2048,
         temperature: float = 0.7,
         timeout: int = 30
     ):
         """Initialize Qwen3-Next-80B adapter.
 
         Args:
-            max_tokens: Maximum tokens for completion (default: 2000)
+            max_tokens: Maximum tokens for completion (default: 2048, increased from 2000 per dogfooding recommendation)
             temperature: Sampling temperature (default: 0.7)
             timeout: Request timeout in seconds (default: 30)
 
