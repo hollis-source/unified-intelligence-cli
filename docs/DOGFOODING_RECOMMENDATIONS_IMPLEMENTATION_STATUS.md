@@ -278,9 +278,10 @@ pytest tests/unit/test_team_routing_metrics.py -v
 
 ### P2.2: Add Post-Execution Output Validation ✅
 
-**Status**: COMPLETE
-**Effort**: 8 hours (actual: 6 hours)
+**Status**: COMPLETE (with full end-to-end integration)
+**Effort**: 8 hours (actual: 6 hours core + 2 hours integration)
 **Impact**: HIGH - Catch errors in generated code/outputs
+**Commits**: bb56afa (core), 485239e (fix), f6017a8 (integration)
 
 **Implementation**:
 
@@ -304,15 +305,34 @@ pytest tests/unit/test_team_routing_metrics.py -v
      - Breakdown by validation type (python, json, markdown, etc.)
      - Total warnings and average warnings per output
 
-3. **Integrated with LLMExecutor** (`src/adapters/agent/llm_executor.py`):
-   - Added `output_validator` parameter (optional, backward compatible)
-   - Added `enable_validation` flag (default: False)
-   - Enhanced `run_agent()` to validate final output
-   - Added `_validate_output()` method (never raises exceptions)
-   - Returns `validation_result` in output dict
-   - Logs validation failures as warnings (non-blocking)
+3. **Integrated with LLMAgentExecutor** (`src/adapters/agent/llm_executor.py`):
+   - Added `output_validator`, `enable_output_validation`, `metrics_collector` parameters (lines 45-47)
+   - Initialization logic in `__init__()` (lines 98-101)
+   - Validation logic in `execute()` after LLM response (lines 209-240)
+   - Non-blocking validation (exceptions caught and logged)
+   - Validation results logged (INFO for warnings, WARNING for failures)
+   - Metrics recorded via MetricsCollector.record_output_validation()
+   - Added `validation_result` to ExecutionResult metadata (line 252)
 
-4. **Comprehensive Test Coverage** (`tests/unit/test_output_validator.py` - 35 tests, ALL PASSING ✅):
+4. **Composition Root Integration** (`src/composition.py`):
+   - Added `enable_output_validation` parameter (line 49)
+   - Creates OutputValidator if enabled (lines 137-148)
+   - Passes validator and metrics_collector to LLMAgentExecutor (lines 161-163)
+   - Proper dependency injection following Clean Architecture
+
+5. **CLI Integration** (`src/main.py`):
+   - Added `--validate-outputs` flag (lines 98-99)
+   - Added `validate_outputs` parameter to main() (line 126)
+   - Updated load_config() signature and call (lines 166, 556, 644)
+   - Properly wired through CLI → Config → composition
+
+6. **Configuration Support** (`src/config.py`):
+   - Added `validate_outputs: bool` field (line 71)
+   - Integrated into from_file() (line 127)
+   - Integrated into merge_cli_args() (lines 158, 243)
+   - Integrated into to_dict() (line 281)
+
+7. **Comprehensive Test Coverage** (`tests/unit/test_output_validator.py` - 35 tests, ALL PASSING ✅):
    - **ValidationResult tests** (3): Creation, serialization, default values
    - **Python validation tests** (8): Valid code, syntax errors, indentation, warnings (TODO, print, pass)
    - **JSON validation tests** (4): Valid objects/arrays, parse errors, empty warnings
@@ -327,23 +347,47 @@ pytest tests/unit/test_team_routing_metrics.py -v
 - `src/validation/output_validator.py`: +489 lines (NEW)
 - `src/validation/__init__.py`: +8 lines (NEW)
 - `src/entity/metrics.py`: +80 lines (OutputValidationMetric, summary stats)
-- `src/adapters/agent/llm_executor.py`: +60 lines (integration, validation)
-- `tests/unit/test_output_validator.py`: +551 lines (NEW - 35 tests)
+- `src/adapters/agent/llm_executor.py`: +35 lines (optional validation integration)
+- `src/composition.py`: +14 lines (dependency injection)
+- `src/main.py`: +3 lines (CLI flag and wiring)
+- `src/config.py`: +5 lines (configuration support)
+- `tests/unit/test_output_validator.py`: +614 lines (NEW - 35 tests)
 
-**Validation**:
+**End-to-End Testing**:
 ```bash
+# Test 1: Backward compatibility (validation disabled by default)
+python3 -m src.main --task "Write a Python function" --provider granite
+# Result: SUCCESS - No validation overhead ✅
+
+# Test 2: Validation detects Python syntax errors
+python3 -m src.main --task "Write a function" --provider granite \
+  --orchestrator simple --validate-outputs --collect-metrics
+# Result: WARNING - Output validation failed: Python syntax error ✅
+
+# Test 3: Unit tests
 pytest tests/unit/test_output_validator.py -v
-# 35 passed in 0.19s ✅
+# Result: 35 passed in 0.19s ✅
 ```
 
+**Architecture**:
+- **Clean Architecture**: Validation in infrastructure layer (src/validation/)
+- **Dependency Inversion**: OutputValidator injected via composition root
+- **Single Responsibility**: Each validator method handles one format
+- **Open-Closed**: Easy to add new validation types
+- **Non-blocking**: Validation failures logged but never fail execution
+- **Optional**: Disabled by default (--validate-outputs flag required)
+- **Observable**: Metrics tracked for analysis
+
 **Benefits Delivered**:
-- ✅ Catch syntax errors in Python code generation
+- ✅ Catch syntax errors in Python code generation (AST parsing)
 - ✅ Validate structured outputs (JSON, YAML, Markdown)
 - ✅ Quality warnings don't block execution (TODO, print, pass statements)
 - ✅ Auto-detection of validation type (no manual specification needed)
 - ✅ Comprehensive metrics tracking (pass/fail rates, validation by type)
 - ✅ Thread-safe metrics collection
 - ✅ Backward compatible (validation disabled by default)
+- ✅ Full end-to-end integration (CLI → Config → Composition → Executor)
+- ✅ Production-ready with comprehensive testing
 
 ---
 
